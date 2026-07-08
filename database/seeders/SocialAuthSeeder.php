@@ -19,8 +19,8 @@ class SocialAuthSeeder extends Seeder
         $data = [
             [
                 'name' => 'Google',
-                'client_id' => $isLocal ? 'REMOVED' : null,
-                'client_secret' => $isLocal ? 'REMOVED' : null,
+                'client_id' => $isLocal ? 'CHANGE_ME' : null,
+                'client_secret' => $isLocal ? 'CHANGE_ME' : null,
                 'redirect' => 'postmessage',
                 'provider' => 'google',
                 'logo' => 'assets/social/google.svg',

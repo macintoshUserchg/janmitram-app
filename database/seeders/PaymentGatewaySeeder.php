@@ -63,7 +63,7 @@ class PaymentGatewaySeeder extends Seeder
                 'title' => 'aamarPay',
                 'name' => 'aamarpay',
                 'config' => json_encode([
-                    'store_id' => 'aamarpaytest',
+                    'store_id' => 'CHANGE_ME',
                     'signature_key' => 'REMOVED',
                 ]),
                 'mode' => 'test',
@@ -75,7 +75,7 @@ class PaymentGatewaySeeder extends Seeder
                 'name' => 'bKash',
                 'config' => json_encode([
                     'username' => 'REMOVED',
-                    'password' => 'REMOVED@12345',
+                    'password' => 'CHANGE_ME',
                     'app_key' => 'REMOVED',
                     'app_secret_key' => 'REMOVED',
                 ]),
@@ -88,7 +88,7 @@ class PaymentGatewaySeeder extends Seeder
                 'name' => 'paytabs',
                 'config' => json_encode([
                     'base_url' => 'https://secure-global.paytabs.com',
-                    'profile_id' => '142160',
+                    'profile_id' => 'CHANGE_ME',
                     'server_key' => 'REMOVED',
                     'currency' => 'USD',
                 ]),
@@ -100,7 +100,7 @@ class PaymentGatewaySeeder extends Seeder
                 'title' => 'QiCard',
                 'name' => 'qicard',
                 'config' => json_encode([
-                    'terminalId' => '237984',
+                    'terminalId' => 'CHANGE_ME',
                     'username' => 'REMOVED',
                     'password' => 'REMOVED',
                     'currency' => 'IQD',
@@ -125,7 +125,7 @@ class PaymentGatewaySeeder extends Seeder
                 'title' => 'CashFree',
                 'name' => 'cashfree',
                 'config' => json_encode([
-                    'app_id' => '10284038c1f33442eff5cb81b563048201',
+                    'app_id' => 'CHANGE_ME',
                     'secret_key' => 'REMOVED',
                     'base_url' => 'https://api.cashfree.com/pg/orders',
                 ]),
@@ -137,9 +137,9 @@ class PaymentGatewaySeeder extends Seeder
                 'title' => 'JazzCash',
                 'name' => 'jazzcash',
                 'config' => json_encode([
-                    'merchant_id' => 'MC651136',
-                    'password' => 'u4v42e33xb',
-                    'integrity_salt' => '8118u2byxu',
+                    'merchant_id' => 'CHANGE_ME',
+                    'password' => 'CHANGE_ME',
+                    'integrity_salt' => 'CHANGE_ME',
                     'base_url' => 'https://sandbox.jazzcash.com.pk/CustomerPortal/transactionmanagement/merchantform',
                     'note' => 'You have to setup this return URL in your JazzCash merchant account dashboard: '.route('payment.success.post'),
                 ]),
