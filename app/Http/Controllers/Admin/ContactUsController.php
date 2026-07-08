@@ -15,6 +15,10 @@ class ContactUsController extends Controller
     {
         $contactUs = ContactUs::first();
 
+        if (!$contactUs) {
+            $contactUs = ContactUs::create();
+        }
+
         return view('admin.contact-us', compact('contactUs'));
     }
 
