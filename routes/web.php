@@ -89,7 +89,7 @@ Route::prefix('shop')->name('shop.')->middleware(['web'])->group(function () {
         Route::put('product/{product}', [\App\Http\Controllers\Shop\ProductController::class, 'update'])->name('product.update');
         Route::delete('product/{product}', [\App\Http\Controllers\Shop\ProductController::class, 'destroy'])->name('product.destroy');
         Route::get('product/{product}/toggle', [\App\Http\Controllers\Shop\ProductController::class, 'statusToggle'])->name('product.toggle');
-        Route::get('product/barcode', [\App\Http\Controllers\Shop\ProductController::class, 'generateBarcode'])->name('product.barcode');
+        Route::get('product/{product}/barcode', [\App\Http\Controllers\Shop\ProductController::class, 'generateBarcode'])->name('product.barcode');
         Route::post('product/generate-ai', [\App\Http\Controllers\Shop\ProductController::class, 'generateAIData'])->name('product.generate.AI.data');
         Route::delete('product/{product}/thumbnail', [\App\Http\Controllers\Shop\ProductController::class, 'thumbnailDestroy'])->name('product.remove.thumbnail');
         Route::delete('product/{product}/attachment/{media}', [\App\Http\Controllers\Shop\ProductController::class, 'attachmentDestroy'])->name('product.remove.attachment');

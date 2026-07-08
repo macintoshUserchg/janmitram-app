@@ -12,7 +12,9 @@ class CustomerMessageController extends Controller
 {
     public function index()
     {
-        return view('shop.chat.index');
+        $shop = generaleSetting('shop');
+
+        return view('shop.chat.index', compact('shop'));
     }
 
     // public function fetchMessages($userId)
