@@ -289,6 +289,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:root'])->group
 
     Route::get('generale-setting', [\App\Http\Controllers\Admin\GeneraleSettingController::class, 'index'])->name('generale-setting.index');
     Route::put('generale-setting', [\App\Http\Controllers\Admin\GeneraleSettingController::class, 'update'])->name('generale-setting.update');
+    Route::post('generale-setting/update-command', [\App\Http\Controllers\Admin\GeneraleSettingController::class, 'updateCommand'])->name('generale-setting.update.command');
 
     Route::get('ai-prompt', [\App\Http\Controllers\Admin\GeneraleSettingController::class, 'aiPromptIndex'])->name('aiPrompt.index');
     Route::post('ai-prompt', [\App\Http\Controllers\Admin\GeneraleSettingController::class, 'aiPromptUpdate'])->name('aiPrompt.update');
