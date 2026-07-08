@@ -13,7 +13,7 @@
         @include('admin.business-setup.header')
     </div>
 
-    <form action="{{ route('admin.business-setting.withdraw.update') }}" method="POST">
+    <form action="{{ route('admin.business-setting.withdraw-update') }}" method="POST">
         @csrf
 
         <!--######## withdraw Information ##########-->

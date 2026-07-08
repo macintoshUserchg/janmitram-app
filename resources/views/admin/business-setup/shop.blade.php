@@ -13,7 +13,7 @@
         @include('admin.business-setup.header')
     </div>
 
-    <form action="{{ route('admin.business-setting.shop.update') }}" method="POST" enctype="multipart/form-data">
+    <form action="{{ route('admin.business-setting.shop-update') }}" method="POST" enctype="multipart/form-data">
         @csrf
 
         <!--######## Basic Information ##########-->
@@ -117,7 +117,7 @@
                             </span>
                             <label class="switch mb-0" data-bs-toggle="tooltip" data-bs-placement="left"
                                 data-bs-title="Enable/Disable">
-                                <a href="{{ route('admin.business-setting.shop.toggle-pos') }}" class="confirm">
+                                <a href="{{ route('admin.business-setting.toggle-pos') }}" class="confirm">
                                     <input type="checkbox" {{ $generaleSetting?->shop_pos ? 'checked' : '' }}>
                                     <span class="slider round"></span>
                                 </a>
@@ -130,7 +130,7 @@
                         <span>{{ __('Shop Registration') }}</span>
                             <label class="switch mb-0" data-bs-toggle="tooltip" data-bs-placement="left"
                                 data-bs-title="Enable/Disable">
-                                <a href="{{ route('admin.business-setting.shop.toggle-register') }}" class="confirm">
+                                <a href="{{ route('admin.business-setting.toggle-register') }}" class="confirm">
                                     <input type="checkbox" {{ $generaleSetting?->shop_register ? 'checked' : '' }}>
                                     <span class="slider round"></span>
                                 </a>

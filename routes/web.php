@@ -217,6 +217,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:root'])->group
     Route::delete('employee/{user}', [\App\Http\Controllers\Admin\EmployeeManageController::class, 'destroy'])->name('employee.destroy');
     Route::get('employee/{user}/permission', [\App\Http\Controllers\Admin\EmployeeManageController::class, 'permission'])->name('employee.permission');
     Route::put('employee/{user}/permission', [\App\Http\Controllers\Admin\EmployeeManageController::class, 'updatePermission'])->name('employee.permission.update');
+    Route::post('employee/{user}/reset-password', [\App\Http\Controllers\Admin\EmployeeManageController::class, 'resetPassword'])->name('employee.reset-password');
 
     Route::get('currency', [\App\Http\Controllers\Admin\CurrencyController::class, 'index'])->name('currency.index');
     Route::get('currency/create', [\App\Http\Controllers\Admin\CurrencyController::class, 'create'])->name('currency.create');
@@ -389,6 +390,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:root'])->group
     Route::get('customer/{user}/edit', [\App\Http\Controllers\Admin\CustomerController::class, 'edit'])->name('customer.edit');
     Route::put('customer/{user}', [\App\Http\Controllers\Admin\CustomerController::class, 'update'])->name('customer.update');
     Route::delete('customer/{user}', [\App\Http\Controllers\Admin\CustomerController::class, 'destroy'])->name('customer.destroy');
+    Route::post('customer/{user}/reset-password', [\App\Http\Controllers\Admin\CustomerController::class, 'resetPassword'])->name('customer.reset-password');
 
     Route::get('customer-notification', [\App\Http\Controllers\Admin\CustomerNotificationController::class, 'index'])->name('customerNotification.index');
     Route::post('customer-notification/filter', [\App\Http\Controllers\Admin\CustomerNotificationController::class, 'filter'])->name('customerNotification.filter');
@@ -474,7 +476,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:root'])->group
     Route::post('footer/section-sort', [\App\Http\Controllers\Admin\FooterController::class, 'sectionSort'])->name('footer.sectionSort');
     Route::post('footer/add-new', [\App\Http\Controllers\Admin\FooterController::class, 'addedNew'])->name('footer.addedNew');
     Route::post('footer/item-sort', [\App\Http\Controllers\Admin\FooterController::class, 'itemSort'])->name('footer.itemSort');
-    Route::post('footer/{footerItem}/disable', [\App\Http\Controllers\Admin\FooterController::class, 'disabled'])->name('footer.disabled');
+        Route::post('footer/disable', [\App\Http\Controllers\Admin\FooterController::class, 'disabled'])->name('footer.disabled');
     Route::delete('footer/item/{footerItem}', [\App\Http\Controllers\Admin\FooterController::class, 'destroy'])->name('footer.destroy');
 
     Route::get('legal-page', [\App\Http\Controllers\Admin\LegalPageController::class, 'index'])->name('legalPage.index');

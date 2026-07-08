@@ -5,7 +5,7 @@
     <div class="container-fluid my-4 my-md-0">
         <div class="row d-flex align-items-center h-100vh">
             <div class="col-md-8 col-lg-7 m-auto">
-                <form action="{{ route('admin.profile.change-password.update') }}" method="POST">
+                <form action="{{ route('admin.profile.update-password') }}" method="POST">
                     @csrf
                     @method('PUT')
                     <div class="card shadow rounded-12 border-0">

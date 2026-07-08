@@ -21,9 +21,9 @@ class LegalPageController extends Controller
      */
     public function index()
     {
-        $pages = LegalPage::all();
+        $page = LegalPage::first();
 
-        return view('admin.legalPage.index', compact('pages'));
+        return view('admin.legalPage.index', compact('page'));
     }
 
     /**
