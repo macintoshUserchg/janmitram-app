@@ -18,65 +18,6 @@ use App\Http\Controllers\Gateway\PaymentGatewayController;
 |
 */
 
-/* ===================== Deploy webhook ===================== */
-Route::match(['get', 'post'], 'deploy-webhook', function () {
-    $secret = 'b9832604cf7639a22b602ac28ba4bf1a';
-
-    if (!request()->query('token') || request()->query('token') !== $secret) {
-        abort(403, 'Forbidden');
-    }
-
-    $app_path = base_path();
-    $log_file = $app_path . '/storage/logs/deploy.log';
-    $home_dir = getenv('HOME') ?: '/home/u939461333';
-
-    $log = function ($msg) use ($log_file) {
-        $dir = dirname($log_file);
-        if (!is_dir($dir)) mkdir($dir, 0755, true);
-        file_put_contents($log_file, '[' . date('Y-m-d H:i:s') . '] ' . $msg . "\n", FILE_APPEND);
-    };
-
-    $run = function ($cmd, &$output = '') {
-        $out = [];
-        $code = 0;
-        exec($cmd . ' 2>&1', $out, $code);
-        $output = implode("\n", $out);
-        return $code;
-    };
-
-    $log('=== Deploy started ===');
-
-    chdir($app_path);
-
-    $code = $run('git pull --no-rebase origin main', $output);
-    $log('git pull: ' . $output);
-    if ($code !== 0) {
-        $log('FAILED at git pull');
-        return response('Deploy failed at git pull', 500);
-    }
-
-    if (strpos($output, 'Already up to date') !== false) {
-        $log('Already up to date — skipping build');
-        return response('OK — no update needed');
-    }
-
-    $code = $run('HOME=' . escapeshellarg($home_dir) . ' /opt/alt/php82/usr/bin/php /usr/local/bin/composer install --no-dev --optimize-autoloader', $output);
-    $log('composer install: ' . $output);
-    if ($code !== 0) {
-        $log('FAILED at composer install');
-        return response('Deploy failed at composer install', 500);
-    }
-
-    $code = $run('/opt/alt/php82/usr/bin/php artisan migrate --force', $output);
-    $log('migrate: ' . $output);
-
-    $code = $run('/opt/alt/php82/usr/bin/php artisan optimize:clear', $output);
-    $log('optimize:clear: ' . $output);
-
-    $log('=== Deploy complete ===');
-    return response('Deployed successfully');
-})->name('deploy-webhook');
-
 /* ===================== Customer-facing Vue SPA ===================== */
 Route::get('/', function () {
     return view('app');
