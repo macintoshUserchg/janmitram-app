@@ -6,20 +6,6 @@
 @section('content')
     <div class="admin-dashboard">
 
-        <!-- Alert Box -->
-        @if (app()->environment('local'))
-            <div id="alertBox" class="alert alert-danger align-items-center gap-1 justify-content-between mb-3" role="alert"
-                style="display: flex">
-                <div class="d-flex align-items-center gap-2">
-                    <i class="fa-solid fa-bell"></i>
-                    <div>
-                        <strong>{{ __('Note') }}</strong> {{ __('Every 3 hours all data will be cleared') }}
-                    </div>
-                </div>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
-
     @php
         $text = 'Total ' . ($businessModel == 'single' ? 'Categories' : 'Shops');
     @endphp
