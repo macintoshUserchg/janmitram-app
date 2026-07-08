@@ -421,9 +421,17 @@ const routes = [
     },
 ];
 
+// Determine base path from the <meta name="base-url"> tag.
+// When served from a subdirectory (e.g. /janmitram-app/), Vue Router needs
+// the base path so it doesn't treat the subdirectory prefix as a route.
+const baseUrlMeta = document.querySelector('meta[name="base-url"]');
+const basePath = baseUrlMeta
+    ? new URL(baseUrlMeta.getAttribute('content')).pathname.replace(/\/?$/, '/')
+    : '/';
+
 // create router
 const router = createRouter({
-    history: createWebHistory(),
+    history: createWebHistory(basePath),
     routes,
 });
 

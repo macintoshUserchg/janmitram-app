@@ -7,7 +7,13 @@
 import axios from 'axios';
 window.axios = axios;
 
-window.axios.defaults.baseURL = '/api';
+// Dynamically determine the API base URL from the meta tag so it works
+// whether the app is at the root or in a subdirectory (e.g. /janmitram-app/).
+const baseUrlMeta = document.querySelector('meta[name="base-url"]');
+const basePath = baseUrlMeta
+    ? new URL(baseUrlMeta.getAttribute('content')).pathname.replace(/\/?$/, '/')
+    : '/';
+window.axios.defaults.baseURL = basePath + 'api';
 
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 window.axios.defaults.headers.common['Accept-Language'] = localStorage.getItem('locale') ?? 'en';

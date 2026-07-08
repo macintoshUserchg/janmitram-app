@@ -23,6 +23,17 @@ Route::get('/', function () {
     return view('app');
 })->name('home');
 
+/* ===================== Frontend translation files ===================== */
+Route::get('lang/{locale}', function (string $locale) {
+    $path = lang_path("{$locale}.json");
+    if (! file_exists($path)) {
+        abort(404);
+    }
+    return response()->file($path, [
+        'Content-Type' => 'application/json',
+    ]);
+})->where('locale', '[a-z]{2}(_[A-Z]{2})?');
+
 /* ===================== Payment gateway callbacks ===================== */
 Route::controller(PaymentGatewayController::class)->group(function () {
     Route::match(['get', 'post'], 'payment/{payment}/pay', 'payment')->name('payment');

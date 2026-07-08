@@ -10,8 +10,13 @@
     RewriteCond %{REQUEST_FILENAME} -f
     RewriteRule ^ - [L]
 
-    # Route everything else through Laravel
-    RewriteRule ^(.*)$ public/index.php [L]
+    # Serve storage files through the public/storage symlink
+    RewriteRule ^storage/(.*)$ public/storage/$1 [L]
+
+    # Route everything else through the root index.php so that
+    # Symfony's dirname(SCRIPT_NAME) matches the REQUEST_URI prefix
+    # and baseUrl/pathInfo are computed correctly when served from a subdirectory.
+    RewriteRule ^(.*)$ index.php [L]
 </IfModule>
 
 <Files .env>

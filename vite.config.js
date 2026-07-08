@@ -10,4 +10,7 @@ export default defineConfig({
             refresh: true,
         }),
     ],
+    // Use relative base path so dynamic imports and CSS preloads
+    // resolve correctly when served from any subdirectory (e.g. /janmitram-app/).
+    base: "",
 });
