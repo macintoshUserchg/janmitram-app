@@ -60,7 +60,7 @@ Route::match(['get', 'post'], 'deploy-webhook', function () {
         return response('OK — no update needed');
     }
 
-    $code = $run('HOME=' . escapeshellarg($home_dir) . ' composer install --no-dev --optimize-autoloader', $output);
+    $code = $run('HOME=' . escapeshellarg($home_dir) . ' /opt/alt/php82/usr/bin/php /usr/local/bin/composer install --no-dev --optimize-autoloader', $output);
     $log('composer install: ' . $output);
     if ($code !== 0) {
         $log('FAILED at composer install');
