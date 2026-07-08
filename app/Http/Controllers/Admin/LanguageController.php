@@ -150,6 +150,10 @@ class LanguageController extends Controller
         if ($language) {
 
             $langName = $language->name;
+
+            // Sanitize language name to prevent path traversal
+            $langName = preg_replace('/[^a-zA-Z0-9_-]/', '', $langName);
+
             $filePath = base_path('lang/').$langName.'.json'; // directory
 
             if (file_exists($filePath)) {

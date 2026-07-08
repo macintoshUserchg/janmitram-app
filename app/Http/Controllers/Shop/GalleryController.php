@@ -51,7 +51,21 @@ class GalleryController extends Controller
         $zip = new \ZipArchive;
         $res = $zip->open($zipFile->getRealPath());
         if ($res === true) {
-            $zip->extractTo(storage_path($extractPath));
+            $destPath = storage_path($extractPath);
+
+            for ($i = 0; $i < $zip->numEntries; $i++) {
+                $entry = $zip->getNameIndex($i);
+
+                // Zip Slip protection: block entries with path traversal
+                if (str_contains($entry, '..') || str_contains($entry, '../')) {
+                    $zip->close();
+                    File::deleteDirectory($destPath);
+
+                    return back()->with('error', __('Invalid zip file entry: ') . $entry);
+                }
+            }
+
+            $zip->extractTo($destPath);
             $zip->close();
         }
 

@@ -115,7 +115,7 @@ class ProductController extends Controller
                 $ratingValue = floatval($rating);
                 $upperBound = $ratingValue + 1;
 
-                return $query->havingRaw('average_rating >= ' . $rating . ' AND average_rating < ' . $upperBound);
+                return $query->havingRaw('average_rating >= ? AND average_rating < ?', [$ratingValue, $upperBound]);
             })->when($sortType == 'top_selling', function ($query) {
                 return $query->orderByDesc('orders_count');
             })->when($sortType == 'popular_product', function ($query) {
