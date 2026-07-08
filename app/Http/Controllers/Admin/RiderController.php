@@ -63,6 +63,10 @@ class RiderController extends Controller
     {
         $driver = $user->driver;
 
+        if (! $driver) {
+            return back()->withError(__('This user is not a rider.'));
+        }
+
         $totalDelivery = $driver->driverOrders()->where('is_completed', true)->count();
         $totalPending = $driver->driverOrders()->where('is_completed', false)->count();
 
