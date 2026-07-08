@@ -50,6 +50,8 @@ class DashboardController extends Controller
 
         $flashSale = FlashSaleRepository::getIncoming();
 
+        $allOrders = $totalOrder;
+
         // Per-order-status counts view accesses via ${Str::camel($status->value)}
         foreach (OrderStatus::cases() as $s) {
             $v = Str::camel($s->value);
@@ -63,6 +65,7 @@ class DashboardController extends Controller
             'totalWithdraw', 'totalPosSales', 'totalDeliveryCollected',
             'pendingWithdraw', 'alreadyWithdraw', 'deniedWithdraw', 'flashSale',
             'pending', 'confirm', 'processing', 'pickup', 'onTheWay', 'delivered', 'cancelled',
+            'allOrders',
         ));
     }
 
