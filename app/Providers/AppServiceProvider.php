@@ -44,8 +44,8 @@ class AppServiceProvider extends ServiceProvider
             // $seederRun — flag used by sidebar/layout template
             $view->with('seederRun', false);
 
-            // $storageLink — storage symlink flag used by layout
-            $view->with('storageLink', true);
+            // $storageLink — storage symlink flag used by layout; hide warning if symlink exists
+            $view->with('storageLink', ! is_link(public_path('storage')));
 
             // $languages — active languages for locale switcher
             try {
