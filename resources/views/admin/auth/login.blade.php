@@ -78,7 +78,7 @@
                 @if (app()->isLocal())
                     <div class="d-flex justify-content-between align-items-center gap-2">
                         <span class="powerBy">Powered by <a class="text-primary text-decoration-none fw-bold"
-                                href="https://razinsoft.com/" target="_blank">RazinSoft</a>
+                                href="https://janmitram.com/" target="_blank">Janmitram</a>
                             ©{{ date('Y') }}</span>
                         <span class="version fw-bold">v{{ config('app.version') }}</span>
                     </div>

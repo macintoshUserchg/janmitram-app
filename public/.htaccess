@@ -1,3 +1,6 @@
+<IfModule mod_dir.c>
+    DirectorySlash On
+</IfModule>
 
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>

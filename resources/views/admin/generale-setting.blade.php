@@ -13,6 +13,7 @@
     </div>
     <form action="{{ route('admin.generale-setting.update') }}" method="POST" enctype="multipart/form-data">
         @csrf
+        @method('PUT')
         <div class="card mt-3">
             <div class="card-body">
 
