@@ -41,6 +41,7 @@ class GeneraleSettingController extends Controller
     {
         $errors = [];
 
+        // Run pending DB migrations, then clear caches
         try {
             Artisan::call('migrate', ['--force' => true]);
         } catch (Exception $e) {
