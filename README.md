@@ -36,3 +36,4 @@ Copy `.env.example` to `.env` and configure:
 ```bash
 php artisan migrate
 ```
+Last update for deploy test: 2026-07-08T10:55:39
