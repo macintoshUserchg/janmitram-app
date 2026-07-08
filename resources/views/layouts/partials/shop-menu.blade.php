@@ -28,6 +28,13 @@
 @php
     use App\Enums\OrderStatus;
     $orderStatuses = OrderStatus::cases();
+    // Defaults for order-count badges — controllers that pass these
+    // explicitly can override these defaults.
+    $allOrders ??= 0;
+    foreach ($orderStatuses as $status) {
+        $var = \Illuminate\Support\Str::camel($status->value);
+        $$var ??= 0;
+    }
 @endphp
 @hasPermission('shop.order.index')
     <!--- Orders--->

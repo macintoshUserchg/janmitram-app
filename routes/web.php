@@ -149,7 +149,7 @@ Route::prefix('shop')->name('shop.')->middleware(['web'])->group(function () {
         Route::match(['get','post'],'pos/draft',[\App\Http\Controllers\Shop\POSController::class,'draft'])->name('pos.draft');
         Route::delete('pos/draft/{posCart}',[\App\Http\Controllers\Shop\POSController::class,'draftDelete'])->name('pos.draft.delete');
         Route::match(['get','post'],'pos/invoice',[\App\Http\Controllers\Shop\POSController::class,'invoice'])->name('pos.invoice');
-        Route::post('pos/store-order',[\App\Http\Controllers\Shop\POSController::class,'storeOrder'])->name('submit-order');
+        Route::post('pos/store-order',[\App\Http\Controllers\Shop\POSController::class,'storeOrder'])->name('pos.submitOrder');
         Route::post('pos/store-customer',[\App\Http\Controllers\Shop\POSController::class,'storeCustomer'])->name('pos.customerStore');
         Route::get('pos/product',[\App\Http\Controllers\Shop\POSController::class,'getProduct'])->name('pos.product');
         Route::post('pos/cart',[\App\Http\Controllers\Shop\POSController::class,'addToCart'])->name('pos.addToCart');
@@ -158,7 +158,7 @@ Route::prefix('shop')->name('shop.')->middleware(['web'])->group(function () {
         Route::delete('pos/cart',[\App\Http\Controllers\Shop\POSController::class,'removeCart'])->name('pos.removeCart');
         Route::post('pos/coupon',[\App\Http\Controllers\Shop\POSController::class,'applyCoupon'])->name('pos.applyCoupon');
         Route::delete('pos/coupon',[\App\Http\Controllers\Shop\POSController::class,'removeCoupon'])->name('pos.removeCoupon');
-        Route::get('pos/product-detail/{product}',[\App\Http\Controllers\Shop\POSController::class,'getProductDetail'])->name('pos.product.detail');
+        Route::post('pos/product-detail',[\App\Http\Controllers\Shop\POSController::class,'getProductDetail'])->name('pos.product.detail');
 
         Route::get('flash-sale',[\App\Http\Controllers\Shop\FlashSaleController::class,'index'])->name('flashSale.index');
         Route::get('flash-sale/{flashSale}',[\App\Http\Controllers\Shop\FlashSaleController::class,'show'])->name('flashSale.show');
