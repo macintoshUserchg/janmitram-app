@@ -501,4 +501,4 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:root'])->group
 });
 
 // pwaSetting — controller/model were server-withheld
-Route::match(["get","post"], "admin/pwa-setting", function () { return back()->with("warning", "PWA setting unavailable"); })->name("admin.pwaSetting.update");
+Route::match(["get","post"], "admin/pwa-setting", function () { return back()->with("warning", "PWA setting unavailable"); })->name("admin.pwaSetting.update")->middleware(['auth', 'role:root']);
