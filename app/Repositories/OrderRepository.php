@@ -2,24 +2,24 @@
 
 namespace App\Repositories;
 
-use App\Models\Shop;
-use App\Models\Order;
-use App\Models\Address;
-use App\Models\Payment;
-use App\Models\Customer;
-use App\Enums\OrderStatus;
 use App\Enums\DiscountType;
-use App\Models\AdminCoupon;
-use App\Models\OrderVatTax;
+use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use App\Events\OrderMailEvent;
-use App\Models\CartAccessToken;
-use App\Models\GeneraleSetting;
 use App\Http\Requests\OrderRequest;
-use Illuminate\Support\Facades\Auth;
+use App\Models\Address;
+use App\Models\AdminCoupon;
+use App\Models\CartAccessToken;
+use App\Models\Customer;
+use App\Models\GeneraleSetting;
+use App\Models\Order;
+use App\Models\OrderVatTax;
+use App\Models\Payment;
+use App\Models\Shop;
 use App\Services\NotificationServices;
 use App\Support\Repositories\Repository;
+use Illuminate\Support\Facades\Auth;
 
 class OrderRepository extends Repository
 {
@@ -119,7 +119,7 @@ class OrderRepository extends Repository
                     $order->productStockOuts()->create([
                         'order_id' => $order->id,
                         'product_id' => $product->id,
-                        'quantity' => $cart->quantity
+                        'quantity' => $cart->quantity,
                     ]);
                 }
 
@@ -164,7 +164,9 @@ class OrderRepository extends Repository
             }
 
             foreach ($getCartAmounts['allVatTaxes'] ?? [] as $vatTax) {
-                if (! $vatTax) continue;
+                if (! $vatTax) {
+                    continue;
+                }
 
                 OrderVatTax::create([
                     'order_id' => $order->id,
@@ -204,7 +206,7 @@ class OrderRepository extends Repository
 
         $tokens = cartAccessToken(request());
 
-        $address =Address::find($request->address_id);
+        $address = Address::find($request->address_id);
 
         $order = self::create([
             'shop_id' => $shop->id,
@@ -223,7 +225,7 @@ class OrderRepository extends Repository
             'address_id' => $request->address_id,
             'instruction' => $request->note,
             'payment_status' => PaymentStatus::PENDING->value,
-            'order_area' => $address->getArea->name ?? null
+            'order_area' => $address->getArea->name ?? null,
         ]);
 
         $generalSetting = generaleSetting('setting');
@@ -233,7 +235,7 @@ class OrderRepository extends Repository
 
             if ($subscription && $subscription->remaining_sales && $subscription->remaining_sales > 0) {
                 $subscription->update([
-                    'remaining_sales' => $subscription->remaining_sales - 1
+                    'remaining_sales' => $subscription->remaining_sales - 1,
                 ]);
             }
         }
@@ -243,10 +245,11 @@ class OrderRepository extends Repository
 
     private static function getDeliveryAmount()
     {
-        $address=Address::find(request()->address_id);
-        if (!$address) {
+        $address = Address::find(request()->address_id);
+        if (! $address) {
             return 0;
         }
+
         return $address->deliveryAmount();
     }
 
@@ -450,6 +453,7 @@ class OrderRepository extends Repository
     {
         $tokens = cartAccessToken(request());
         $customer = Customer::firstWhere('id', $tokens['customer_id']) ?? null;
+
         return $customer?->orders()?->where('coupon_id', $coupon->id)->get() ?? [];
     }
 
@@ -599,7 +603,7 @@ class OrderRepository extends Repository
             $wallet = $order->shop->user->wallet;
 
             if ($wallet == null) {
-                $wallet =WalletRepository::storeByRequest($order->shop->user);
+                $wallet = WalletRepository::storeByRequest($order->shop->user);
             }
 
             WalletRepository::updateByRequest($wallet, $order->total_amount, 'credit');

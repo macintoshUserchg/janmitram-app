@@ -28,7 +28,7 @@ class MenuSeeder extends Seeder
             ],
             [
                 'name' => 'Products',
-                'ar_name'=> 'المنتجات',
+                'ar_name' => 'المنتجات',
                 'url' => '/products',
                 'title' => 'Products',
                 'original_name' => 'Products',
@@ -39,7 +39,7 @@ class MenuSeeder extends Seeder
             ],
             [
                 'name' => 'Digital Products',
-                'ar_name'=> 'المنتجات الرقمية',
+                'ar_name' => 'المنتجات الرقمية',
                 'url' => '/digital-products',
                 'title' => 'Digital Products',
                 'original_name' => 'Digital Products',
@@ -50,7 +50,7 @@ class MenuSeeder extends Seeder
             ],
             [
                 'name' => 'Shops',
-                'ar_name'=> 'المتاجر',
+                'ar_name' => 'المتاجر',
                 'url' => '/shops',
                 'title' => 'Shops',
                 'original_name' => 'Shops',
@@ -61,7 +61,7 @@ class MenuSeeder extends Seeder
             ],
             [
                 'name' => 'Most Popular',
-                'ar_name'=> 'الاكثر شعبية',
+                'ar_name' => 'الاكثر شعبية',
                 'url' => '/most-popular',
                 'title' => 'Most Popular',
                 'original_name' => 'Most Popular',
@@ -72,7 +72,7 @@ class MenuSeeder extends Seeder
             ],
             [
                 'name' => 'Best Deal',
-                'ar_name'=> 'أفضل العروض',
+                'ar_name' => 'أفضل العروض',
                 'url' => '/best-deal',
                 'title' => 'Best Deal',
                 'original_name' => 'Best Deal',
@@ -83,7 +83,7 @@ class MenuSeeder extends Seeder
             ],
             [
                 'name' => 'Contact',
-                'ar_name'=> 'اتصل بنا',
+                'ar_name' => 'اتصل بنا',
                 'url' => '/contact-us',
                 'title' => 'Contact',
                 'original_name' => 'Contact',
@@ -94,7 +94,7 @@ class MenuSeeder extends Seeder
             ],
             [
                 'name' => 'Blogs',
-                'ar_name'=> 'المدونات',
+                'ar_name' => 'المدونات',
                 'url' => '/blogs',
                 'title' => 'Blogs',
                 'original_name' => 'Blogs',
@@ -106,7 +106,7 @@ class MenuSeeder extends Seeder
         ];
         foreach ($data as $item) {
             $exists = Menu::where('name', $item['name'])->first();
-            if (!$exists) {
+            if (! $exists) {
                 Menu::create($item);
             }
         }

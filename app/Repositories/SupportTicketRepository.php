@@ -2,12 +2,12 @@
 
 namespace App\Repositories;
 
-use App\Support\Repositories\Repository;
 use App\Events\SupportTicketEvent;
 use App\Http\Requests\SupportTicketRequest;
 use App\Http\Requests\TimeScheduleRequest;
 use App\Models\Notification;
 use App\Models\SupportTicket;
+use App\Support\Repositories\Repository;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;

@@ -22,7 +22,7 @@ class FlashSaleRepository extends Repository
     /**
      * get incoming flash sale
      *
-     * @return \App\Models\FlashSale | null
+     * @return FlashSale | null
      *
      * @throws \Exception
      */
@@ -35,7 +35,7 @@ class FlashSaleRepository extends Repository
     /**
      * Get the running flash sale.
      *
-     * @return \App\Models\FlashSale | null
+     * @return FlashSale | null
      */
     public static function getRunning()
     {

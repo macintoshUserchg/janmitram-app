@@ -15,7 +15,7 @@ class ContactUsController extends Controller
     {
         $contactUs = ContactUs::first();
 
-        if (!$contactUs) {
+        if (! $contactUs) {
             $contactUs = ContactUs::create();
         }
 

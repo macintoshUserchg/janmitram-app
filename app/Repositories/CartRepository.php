@@ -2,15 +2,15 @@
 
 namespace App\Repositories;
 
+use App\Http\Requests\CartRequest;
+use App\Http\Resources\ColorResource;
+use App\Http\Resources\SizeResource;
+use App\Models\Address;
 use App\Models\Area;
 use App\Models\Cart;
-use App\Models\Address;
 use App\Models\Product;
-use Illuminate\Support\Number;
-use App\Http\Requests\CartRequest;
-use App\Http\Resources\SizeResource;
-use App\Http\Resources\ColorResource;
 use App\Support\Repositories\Repository;
+use Illuminate\Support\Number;
 
 class CartRepository extends Repository
 {
@@ -35,6 +35,7 @@ class CartRepository extends Repository
                 if (! $product) {
                     $cart->delete();
                     $info = 'Some products are removed from cart due to unavailability';
+
                     continue;
                 }
 
@@ -176,7 +177,7 @@ class CartRepository extends Repository
             'size' => $size,
             'color' => $color,
             'unit' => $unit,
-            'access_token' => $tokens['access_token'] ?? ''
+            'access_token' => $tokens['access_token'] ?? '',
         ]);
     }
 

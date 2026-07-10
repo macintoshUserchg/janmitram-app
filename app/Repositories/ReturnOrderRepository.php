@@ -2,10 +2,9 @@
 
 namespace App\Repositories;
 
+use App\Enums\ReturnOderStatus;
 use App\Models\Order;
 use App\Models\ReturnOrder;
-use App\Models\OrderProduct;
-use App\Enums\ReturnOderStatus;
 use App\Support\Repositories\Repository;
 
 class ReturnOrderRepository extends Repository
@@ -14,7 +13,6 @@ class ReturnOrderRepository extends Repository
     {
         return ReturnOrder::class;
     }
-
 
     public static function storeByRequest($request)
     {
@@ -28,12 +26,12 @@ class ReturnOrderRepository extends Repository
             'return_address' => $request->return_address,
             'shop_id' => $order->shop_id,
             'customer_id' => auth()->user()->customer->id,
-            'status' => ReturnOderStatus::PENDING->value
+            'status' => ReturnOderStatus::PENDING->value,
         ]);
         foreach ($request->product_ids as $key => $productId) {
 
             $orderProduct = $order->products()->where('product_id', $productId)->first();
-            
+
             $returnOrder->returnProduct()->create([
                 'return_order_id' => $returnOrder->id,
                 'product_id' => $productId,
@@ -48,6 +46,7 @@ class ReturnOrderRepository extends Repository
         }
         $returnOrder->amount = $totalAmount;
         $returnOrder->save();
+
         return $returnOrder;
     }
 }

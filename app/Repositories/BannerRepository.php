@@ -2,9 +2,9 @@
 
 namespace App\Repositories;
 
-use App\Support\Repositories\Repository;
 use App\Http\Requests\BannerRequest;
 use App\Models\Banner;
+use App\Support\Repositories\Repository;
 use Illuminate\Support\Facades\Storage;
 
 class BannerRepository extends Repository

@@ -2,8 +2,8 @@
 
 namespace App\Repositories;
 
-use App\Support\Repositories\Repository;
 use App\Models\DeviceKey;
+use App\Support\Repositories\Repository;
 
 class DeviceKeyRepository extends Repository
 {

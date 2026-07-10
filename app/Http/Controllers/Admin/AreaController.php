@@ -2,13 +2,11 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Models\Area;
-use Illuminate\Http\Request;
-use App\Http\Requests\AreaRequest;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\AreaRequest;
+use App\Models\Area;
 use App\Repositories\AreaRepository;
 use Illuminate\Support\Facades\Cache;
-use Mpdf\Tag\B;
 
 class AreaController extends Controller
 {
@@ -17,7 +15,7 @@ class AreaController extends Controller
         $search = request('search');
 
         $areas = AreaRepository::query()->when($search, function ($query, $search) {
-            $query->where('name', 'like', '%' . $search . '%');
+            $query->where('name', 'like', '%'.$search.'%');
         })->orderBy('name', 'asc')->paginate(20)->withQueryString();
 
         return view('admin.area.index', compact('areas'));
@@ -41,7 +39,7 @@ class AreaController extends Controller
 
     public function destroy(Area $area)
     {
-        if (!$area->getAddresses->isEmpty()) {
+        if (! $area->getAddresses->isEmpty()) {
             return back()->withError(__('Area has addresses, cannot delete'));
         }
 
@@ -53,8 +51,9 @@ class AreaController extends Controller
 
     public function toggle(Area $area)
     {
-        $area->update(['is_active' => !$area->is_active]);
+        $area->update(['is_active' => ! $area->is_active]);
         $this->removeCache();
+
         return back()->withSuccess('Area status updated successfully');
     }
 

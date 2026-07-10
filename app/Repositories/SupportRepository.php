@@ -2,9 +2,9 @@
 
 namespace App\Repositories;
 
-use App\Support\Repositories\Repository;
 use App\Http\Requests\SupportRequest;
 use App\Models\Support;
+use App\Support\Repositories\Repository;
 
 class SupportRepository extends Repository
 {

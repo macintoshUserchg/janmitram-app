@@ -42,7 +42,7 @@ class ShopResource extends JsonResource
             'shop_status' => (string) $shopStatus,
             'total_reviews' => (string) Number::abbreviate($this->reviews->count(), maxPrecision: 2),
             'latitude' => $this->latitude ?? '',
-            'longitude' => $this->longitude ?? ''
+            'longitude' => $this->longitude ?? '',
         ];
     }
 }

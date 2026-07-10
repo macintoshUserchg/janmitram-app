@@ -18,7 +18,7 @@ class RiderOrderDetailsResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'order_code' => (string) '#' . $this->prefix . '' . $this->order_code,
+            'order_code' => (string) '#'.$this->prefix.''.$this->order_code,
             'amount' => (float) number_format($this->payable_amount, 2, '.', ''),
             'order_status' => $this->order_status->value,
             'payment_status' => $this->payment_status->value,
@@ -37,7 +37,7 @@ class RiderOrderDetailsResource extends JsonResource
                 'phone' => $this->shop->user->phone,
                 'address' => $this->shop->address,
                 'latitude' => $this->shop->latitude ?? '',
-                'longitude' => $this->shop->longitude ?? ''
+                'longitude' => $this->shop->longitude ?? '',
             ],
         ];
     }

@@ -2,9 +2,9 @@
 
 namespace App\Repositories;
 
-use App\Support\Repositories\Repository;
 use App\Http\Requests\WithdrawRequest;
 use App\Models\Withdraw;
+use App\Support\Repositories\Repository;
 use Illuminate\Http\Request;
 
 class WithdrawRepository extends Repository

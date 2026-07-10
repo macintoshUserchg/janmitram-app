@@ -2,8 +2,8 @@
 
 namespace App\Repositories;
 
-use App\Support\Repositories\Repository;
 use App\Models\Gallery;
+use App\Support\Repositories\Repository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;

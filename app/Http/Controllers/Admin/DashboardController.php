@@ -13,6 +13,7 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Withdraw;
 use App\Repositories\FlashSaleRepository;
+use Carbon\Carbon;
 use Illuminate\Support\Str;
 
 class DashboardController extends Controller
@@ -75,7 +76,7 @@ class DashboardController extends Controller
 
         // Per-order-status counts that the view accesses via dynamic variable names
         // i.e. ${Str::camel($status->value)} -> $pending, $confirm, $processing, ...
-        $orderQuery = Order::when($shop, fn($q) => $q->where('shop_id', $shop?->id));
+        $orderQuery = Order::when($shop, fn ($q) => $q->where('shop_id', $shop?->id));
         foreach (OrderStatus::cases() as $s) {
             $v = Str::camel($s->value);
             $$v = (clone $orderQuery)->where('order_status', $s->value)->count();
@@ -107,7 +108,7 @@ class DashboardController extends Controller
                 return $query->where('shop_id', $shop?->id);
             })->whereDate('created_at', $date)->count();
 
-            $labels = [\Carbon\Carbon::parse($date)->format('l')]; // e.g., "Monday"
+            $labels = [Carbon::parse($date)->format('l')]; // e.g., "Monday"
             $values = [$count];
 
             return $this->json('single day order statistics', [

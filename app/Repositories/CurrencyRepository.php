@@ -2,9 +2,9 @@
 
 namespace App\Repositories;
 
-use App\Support\Repositories\Repository;
 use App\Http\Requests\CurrencyRequest;
 use App\Models\Currency;
+use App\Support\Repositories\Repository;
 
 class CurrencyRepository extends Repository
 {

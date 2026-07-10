@@ -150,7 +150,7 @@ class PaymentGatewaySeeder extends Seeder
         ];
         foreach ($paymentMethods as $method) {
             $exists = PaymentGateway::where('name', $method['name'])->first();
-            if(!$exists) {
+            if (! $exists) {
                 PaymentGateway::create($method);
             }
         }

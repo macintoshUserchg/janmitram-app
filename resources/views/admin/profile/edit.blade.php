@@ -11,7 +11,6 @@
 
     <form action="{{ route('admin.profile.update') }}" method="POST" enctype="multipart/form-data">
         @csrf
-        @method('PUT')
         <div class="row">
             <div class="col-md-9 m-auto">
 

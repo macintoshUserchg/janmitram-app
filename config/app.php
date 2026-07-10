@@ -1,7 +1,16 @@
 <?php
 
+use App\Providers\AppServiceProvider;
+use App\Providers\AuthServiceProvider;
+use App\Providers\EventServiceProvider;
+use App\Providers\PermissionServiceProvider;
+use App\Providers\RouteServiceProvider;
+use App\Providers\SmsServiceProvider;
 use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\ServiceProvider;
+use Milon\Barcode\BarcodeServiceProvider;
+use Milon\Barcode\Facades\DNS1DFacade;
+use Milon\Barcode\Facades\DNS2DFacade;
 
 return [
 
@@ -170,18 +179,18 @@ return [
         /*
          * Package Service Providers...
          */
-        Milon\Barcode\BarcodeServiceProvider::class,
+        BarcodeServiceProvider::class,
 
         /*
          * Application Service Providers...
          */
-        App\Providers\AppServiceProvider::class,
-        App\Providers\AuthServiceProvider::class,
+        AppServiceProvider::class,
+        AuthServiceProvider::class,
         // App\Providers\BroadcastServiceProvider::class,
-        App\Providers\EventServiceProvider::class,
-        App\Providers\RouteServiceProvider::class,
-        App\Providers\SmsServiceProvider::class,
-        App\Providers\PermissionServiceProvider::class,
+        EventServiceProvider::class,
+        RouteServiceProvider::class,
+        SmsServiceProvider::class,
+        PermissionServiceProvider::class,
 
     ])->toArray(),
 
@@ -197,8 +206,8 @@ return [
     */
 
     'aliases' => Facade::defaultAliases()->merge([
-        'DNS1D' => Milon\Barcode\Facades\DNS1DFacade::class,
-        'DNS2D' => Milon\Barcode\Facades\DNS2DFacade::class,
+        'DNS1D' => DNS1DFacade::class,
+        'DNS2D' => DNS2DFacade::class,
     ])->toArray(),
 
 ];

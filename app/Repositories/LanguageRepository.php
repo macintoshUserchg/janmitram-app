@@ -2,9 +2,9 @@
 
 namespace App\Repositories;
 
-use App\Support\Repositories\Repository;
 use App\Http\Requests\LanguageRequest;
 use App\Models\Language;
+use App\Support\Repositories\Repository;
 
 class LanguageRepository extends Repository
 {

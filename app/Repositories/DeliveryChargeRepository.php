@@ -2,9 +2,9 @@
 
 namespace App\Repositories;
 
-use App\Support\Repositories\Repository;
 use App\Http\Requests\DeliveryChargeRequest;
 use App\Models\DeliveryCharge;
+use App\Support\Repositories\Repository;
 
 class DeliveryChargeRepository extends Repository
 {

@@ -2,8 +2,9 @@
 
 namespace App\Repositories;
 
-use App\Support\Repositories\Repository;
 use App\Models\GoogleReCaptcha;
+use App\Support\Repositories\Repository;
+use Illuminate\Http\Request;
 
 class GoogleReCaptchaRepository extends Repository
 {
@@ -20,8 +21,8 @@ class GoogleReCaptchaRepository extends Repository
     /**
      * Update the google reCaptcha by request.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\GoogleReCaptcha|null  $reCaptcha
+     * @param  Request  $request
+     * @param  GoogleReCaptcha|null  $reCaptcha
      */
     public static function updateByRequest($request, $reCaptcha): GoogleReCaptcha
     {

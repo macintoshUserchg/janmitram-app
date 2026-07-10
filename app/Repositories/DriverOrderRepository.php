@@ -2,11 +2,11 @@
 
 namespace App\Repositories;
 
-use App\Support\Repositories\Repository;
 use App\Enums\OrderStatus;
 use App\Models\Driver;
 use App\Models\DriverOrder;
 use App\Models\Order;
+use App\Support\Repositories\Repository;
 
 class DriverOrderRepository extends Repository
 {

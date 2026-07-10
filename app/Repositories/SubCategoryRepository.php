@@ -2,10 +2,10 @@
 
 namespace App\Repositories;
 
-use App\Support\Repositories\Repository;
 use App\Http\Requests\SubCategoryRequest;
 use App\Models\SubCategory;
 use App\Models\TranslateUtility;
+use App\Support\Repositories\Repository;
 use Illuminate\Support\Str;
 
 class SubCategoryRepository extends Repository

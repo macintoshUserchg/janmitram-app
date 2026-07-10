@@ -2,15 +2,15 @@
 
 namespace App\Repositories;
 
-use Carbon\Carbon;
-use App\Models\Shop;
-use App\Models\Coupon;
-use App\Models\Product;
-use App\Models\Customer;
 use App\Enums\DiscountType;
-use App\Models\AdminCoupon;
 use App\Http\Requests\CouponRequest;
+use App\Models\AdminCoupon;
+use App\Models\Coupon;
+use App\Models\Customer;
+use App\Models\Product;
+use App\Models\Shop;
 use App\Support\Repositories\Repository;
+use Carbon\Carbon;
 
 class CouponRepository extends Repository
 {
@@ -93,7 +93,7 @@ class CouponRepository extends Repository
     public static function getCollectedCoupons($shopId = null)
     {
         $tokens = cartAccessToken(request());
-        $userID =auth()->id() ?? Customer::firstWhere('id', $tokens['customer_id'])->user_id ?? null;
+        $userID = auth()->id() ?? Customer::firstWhere('id', $tokens['customer_id'])->user_id ?? null;
 
         $coupons = self::query()->whereHas('users', function ($query) use ($userID) {
             $query->where('user_id', $userID);

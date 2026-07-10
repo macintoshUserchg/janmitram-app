@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers\Admin;
 
-use Exception;
-use App\Models\Currency;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AiPromptRequest;
-use Illuminate\Support\Facades\Artisan;
 use App\Http\Requests\GeneraleSettingRequest;
+use App\Models\Currency;
 use App\Repositories\GeneraleSettingRepository;
+use Exception;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 
 class GeneraleSettingController extends Controller
 {
@@ -69,6 +69,7 @@ class GeneraleSettingController extends Controller
     public function aiPromptUpdate(AiPromptRequest $request)
     {
         GeneraleSettingRepository::updateByAiPromptRequest($request);
+
         return back()->withSuccess(__('AI Prompt updated successfully'));
     }
 
@@ -76,6 +77,7 @@ class GeneraleSettingController extends Controller
     {
         return view('admin.aiPrompt.configure');
     }
+
     public function aiPromptConfigureUpdate(Request $request)
     {
         $request->validate([

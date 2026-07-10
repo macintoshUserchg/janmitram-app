@@ -88,7 +88,7 @@ class ProductDetailsResource extends JsonResource
                 'rating' => (float) round($shop?->averageRating, 1),
                 'estimated_delivery_time' => (string) ($shop?->estimated_delivery_time ?? '2-4 days'),
                 'delivery_charge' => (float) getDeliveryCharge(1),
-                'last_online' => $lastOnline
+                'last_online' => $lastOnline,
             ],
             'flash_sale' => $flashSaleProduct ? FlashSaleResource::make($flashSale) : null,
             'meta_title' => $this->meta_title ?? $name,

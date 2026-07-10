@@ -61,7 +61,7 @@ class GalleryController extends Controller
                     $zip->close();
                     File::deleteDirectory($destPath);
 
-                    return back()->with('error', __('Invalid zip file entry: ') . $entry);
+                    return back()->with('error', __('Invalid zip file entry: ').$entry);
                 }
             }
 

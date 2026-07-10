@@ -6,7 +6,6 @@ use App\Enums\Roles;
 use App\Models\Shop;
 use App\Models\User;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 
 class CreateSuperAdmin extends Controller
 {

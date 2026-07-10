@@ -2,10 +2,10 @@
 
 namespace App\Repositories;
 
-use App\Support\Repositories\Repository;
 use App\Http\Requests\SupportTicketMessageRequest;
 use App\Models\SupportTicket;
 use App\Models\SupportTicketMessage;
+use App\Support\Repositories\Repository;
 
 class SupportTicketMessageRepository extends Repository
 {
@@ -23,7 +23,7 @@ class SupportTicketMessageRepository extends Repository
      * store new banner
      *
      * @param  $support_ticket_id
-     * @return supportTicket model
+     * @return SupportTicket model
      * */
     public static function storeByRequest(SupportTicketMessageRequest $request, SupportTicket $supportTicket): SupportTicketMessage
     {

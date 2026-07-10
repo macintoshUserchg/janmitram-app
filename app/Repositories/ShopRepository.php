@@ -2,9 +2,9 @@
 
 namespace App\Repositories;
 
-use App\Support\Repositories\Repository;
 use App\Http\Requests\ShopCreateRequest;
 use App\Models\Shop;
+use App\Support\Repositories\Repository;
 use Carbon\Carbon;
 
 class ShopRepository extends Repository

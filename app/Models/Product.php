@@ -2,19 +2,21 @@
 
 namespace App\Models;
 
-use Carbon\Carbon;
-use Illuminate\Support\Collection;
 use App\Models\Scopes\hasSubscription;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Casts\Attribute;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
+use Modules\Purchase\App\Models\ProductStockOut;
+use Modules\Purchase\App\Models\PurchaseProduct;
 
 #[ScopedBy([hasSubscription::class])]
 class Product extends Model
@@ -115,7 +117,7 @@ class Product extends Model
         }
 
         return new Attribute(
-            get: fn() => $video
+            get: fn () => $video
         );
     }
 
@@ -138,7 +140,7 @@ class Product extends Model
         }
 
         return new Attribute(
-            get: fn() => $thumbnail
+            get: fn () => $thumbnail
         );
     }
 
@@ -249,7 +251,7 @@ class Product extends Model
     /**
      * Retrieves the reviews associated with this object.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany The reviews associated with this object.
+     * @return HasMany The reviews associated with this object.
      */
     public function reviews(): HasMany
     {
@@ -266,7 +268,7 @@ class Product extends Model
         $avgRating = $this->reviews()->avg('rating');
 
         return new Attribute(
-            get: fn() => (float) number_format($avgRating > 0 ? $avgRating : 0, 1, '.', '')
+            get: fn () => (float) number_format($avgRating > 0 ? $avgRating : 0, 1, '.', '')
         );
     }
 
@@ -344,15 +346,18 @@ class Product extends Model
     public function purchaseProducts(): ?HasMany
     {
         if (function_exists('module_exists') && module_exists('Purchase')) {
-            return $this->hasMany(\Modules\Purchase\App\Models\PurchaseProduct::class);
+            return $this->hasMany(PurchaseProduct::class);
         }
+
         return null;
     }
+
     public function productStockOuts(): ?HasMany
     {
         if (function_exists('module_exists') && module_exists('Purchase')) {
-            return $this->hasMany(\Modules\Purchase\App\Models\ProductStockOut::class);
+            return $this->hasMany(ProductStockOut::class);
         }
+
         return null;
     }
 
@@ -364,7 +369,7 @@ class Product extends Model
     public function buyingPrice()
     {
         if (module_exists('Purchase')) {
-            $latestPurchase = \Modules\Purchase\App\Models\PurchaseProduct::where('product_id', $this->id)
+            $latestPurchase = PurchaseProduct::where('product_id', $this->id)
                 ->orderBy('created_at', 'desc')
                 ->first();
             if ($latestPurchase) {
@@ -373,6 +378,7 @@ class Product extends Model
                     : $this->buy_price;
             }
         }
+
         return $this->buy_price;
     }
 }

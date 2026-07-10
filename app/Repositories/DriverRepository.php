@@ -2,11 +2,11 @@
 
 namespace App\Repositories;
 
-use App\Support\Repositories\Repository;
 use App\Models\Driver;
 use App\Models\Order;
 use App\Models\User;
 use App\Services\NotificationServices;
+use App\Support\Repositories\Repository;
 
 class DriverRepository extends Repository
 {

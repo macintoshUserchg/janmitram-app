@@ -2,10 +2,10 @@
 
 namespace App\Repositories;
 
-use App\Support\Repositories\Repository;
 use App\Http\Requests\UnitRequest;
 use App\Models\TranslateUtility;
 use App\Models\Unit;
+use App\Support\Repositories\Repository;
 
 class UnitRepository extends Repository
 {

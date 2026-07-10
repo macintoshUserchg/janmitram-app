@@ -44,7 +44,7 @@ class ShopDetailsResource extends JsonResource
             'description' => $this->description,
             'banners' => BannerResource::collection($this->banners()->where('status', 1)->get()),
             'latitude' => $this->latitude ?? '',
-            'longitude' => $this->longitude ?? ''
+            'longitude' => $this->longitude ?? '',
         ];
     }
 }

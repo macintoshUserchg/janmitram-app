@@ -2,10 +2,10 @@
 
 namespace App\Repositories;
 
-use App\Support\Repositories\Repository;
 use App\Http\Requests\BrandRequest;
 use App\Models\Brand;
 use App\Models\TranslateUtility;
+use App\Support\Repositories\Repository;
 
 class BrandRepository extends Repository
 {

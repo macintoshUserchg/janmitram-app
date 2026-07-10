@@ -2,9 +2,9 @@
 
 namespace App\Repositories;
 
-use App\Support\Repositories\Repository;
 use App\Http\Requests\VatTaxRequest;
 use App\Models\VatTax;
+use App\Support\Repositories\Repository;
 
 class VatTaxRepository extends Repository
 {

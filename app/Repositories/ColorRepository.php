@@ -2,10 +2,10 @@
 
 namespace App\Repositories;
 
-use App\Support\Repositories\Repository;
 use App\Http\Requests\ColorRequest;
 use App\Models\Color;
 use App\Models\TranslateUtility;
+use App\Support\Repositories\Repository;
 
 class ColorRepository extends Repository
 {

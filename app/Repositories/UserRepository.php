@@ -2,17 +2,17 @@
 
 namespace App\Repositories;
 
-use Carbon\Carbon;
 use App\Enums\Roles;
-use App\Models\User;
-use App\Models\Media;
-use Illuminate\Support\Str;
-use Illuminate\Http\Request;
 use App\Models\DriverLocation;
+use App\Models\Media;
+use App\Models\User;
+use App\Support\Repositories\Repository;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
-use App\Support\Repositories\Repository;
+use Illuminate\Support\Str;
 
 class UserRepository extends Repository
 {
@@ -78,7 +78,7 @@ class UserRepository extends Repository
         // passes the https-only / private-IP / host-allowlist validation
         // below; otherwise skip the fetch and store a null avatar.
         if ($profileUrl && self::isAllowedAvatarUrl($profileUrl)) {
-            $filename = 'users/' . Str::random(10) . '.jpg';
+            $filename = 'users/'.Str::random(10).'.jpg';
 
             $response = Http::timeout(10)
                 ->withOptions(['allow_redirects' => false])
@@ -262,6 +262,7 @@ class UserRepository extends Repository
             'phone_code' => $request->phone_code,
             'is_active' => true,
         ]);
+
         return $user;
     }
 
@@ -317,7 +318,7 @@ class UserRepository extends Repository
 
         $hostAllowed = false;
         foreach ($allowedSuffixes as $suffix) {
-            if ($host === $suffix || str_ends_with($host, '.' . $suffix)) {
+            if ($host === $suffix || str_ends_with($host, '.'.$suffix)) {
                 $hostAllowed = true;
                 break;
             }

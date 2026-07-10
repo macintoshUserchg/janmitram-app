@@ -112,7 +112,7 @@ class EmployeeManageController extends Controller
             $allPermissionArray['admin'] = config('acl.permissions.admin');
         }
 
-        if (!module_exists('purchase')) {
+        if (! module_exists('purchase')) {
             unset(
                 $allPermissionArray['shop']['supplier'],
                 $allPermissionArray['shop']['purchase'],
@@ -121,7 +121,7 @@ class EmployeeManageController extends Controller
         }
         if (module_exists('Report')) {
             $reportShopPermissions = config('Modules.Report.acl.permissions.shop', []);
-            if (!empty($reportShopPermissions)) {
+            if (! empty($reportShopPermissions)) {
                 $allPermissionArray['shop'] = array_merge(
                     $allPermissionArray['shop'] ?? [],
                     $reportShopPermissions

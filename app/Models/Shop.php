@@ -3,15 +3,15 @@
 namespace App\Models;
 
 use App\Enums\SubscriptionStatus;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Casts\Attribute;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 
 class Shop extends Model
 {
@@ -83,7 +83,7 @@ class Shop extends Model
         }
 
         return Attribute::make(
-            get: fn() => $logo
+            get: fn () => $logo
         );
     }
 
@@ -98,7 +98,7 @@ class Shop extends Model
         }
 
         return Attribute::make(
-            get: fn() => $banner
+            get: fn () => $banner
         );
     }
 
@@ -219,7 +219,7 @@ class Shop extends Model
             ->first();
 
         return new Attribute(
-            get: fn() => $subscription,
+            get: fn () => $subscription,
         );
     }
 
@@ -233,7 +233,7 @@ class Shop extends Model
         $avgRating = $this->reviews()->avg('rating');
 
         return new Attribute(
-            get: fn() => (float) number_format($avgRating > 0 ? $avgRating : 5, 1, '.', ''),
+            get: fn () => (float) number_format($avgRating > 0 ? $avgRating : 5, 1, '.', ''),
         );
     }
 

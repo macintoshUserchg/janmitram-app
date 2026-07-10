@@ -2,9 +2,9 @@
 
 namespace App\Repositories;
 
-use App\Support\Repositories\Repository;
 use App\Models\Customer;
 use App\Models\User;
+use App\Support\Repositories\Repository;
 
 class CustomerRepository extends Repository
 {

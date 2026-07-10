@@ -1,43 +1,40 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\API\AddressController;
 // Customer storefront API controllers
 use App\Http\Controllers\API\Auth\AuthController;
 use App\Http\Controllers\API\Auth\ForgotPasswordController;
-use App\Http\Controllers\API\SocialAuthController;
-use App\Http\Controllers\API\MasterController;
-use App\Http\Controllers\API\HomeController;
-use App\Http\Controllers\API\CategoryController;
-use App\Http\Controllers\API\SubCategoryController;
-use App\Http\Controllers\API\ProductController;
-use App\Http\Controllers\API\ShopController;
-use App\Http\Controllers\API\ReviewController;
 use App\Http\Controllers\API\BannerController;
-use App\Http\Controllers\API\FlashSaleController;
 use App\Http\Controllers\API\BlogController;
-use App\Http\Controllers\API\LegalPageController;
+use App\Http\Controllers\API\CartController;
+use App\Http\Controllers\API\CategoryController;
+use App\Http\Controllers\API\ChatController;
 use App\Http\Controllers\API\CountryController;
 use App\Http\Controllers\API\CouponController;
-use App\Http\Controllers\API\SupportController;
-use App\Http\Controllers\API\CartController;
+use App\Http\Controllers\API\FlashSaleController;
+use App\Http\Controllers\API\HomeController;
+use App\Http\Controllers\API\LegalPageController;
+use App\Http\Controllers\API\MasterController;
 use App\Http\Controllers\API\OrderController;
-use App\Http\Controllers\API\AddressController;
-use App\Http\Controllers\API\UserController;
-use App\Http\Controllers\API\ChatController;
+use App\Http\Controllers\API\ProductController;
 use App\Http\Controllers\API\ReturnOrderController;
-
-// Seller (vendor) app controllers
-use App\Http\Controllers\API\Seller\LoginController as SellerLoginController;
-use App\Http\Controllers\API\Seller\UserController as SellerUserController;
-use App\Http\Controllers\API\Seller\DashboardController as SellerDashboardController;
-use App\Http\Controllers\API\Seller\OrderController as SellerOrderController;
-use App\Http\Controllers\API\Seller\ProductController as SellerProductController;
-
-// Rider app controllers
+use App\Http\Controllers\API\ReviewController;
 use App\Http\Controllers\API\Rider\LoginController as RiderLoginController;
-use App\Http\Controllers\API\Rider\UserController as RiderUserController;
 use App\Http\Controllers\API\Rider\OrderController as RiderOrderController;
+use App\Http\Controllers\API\Rider\UserController as RiderUserController;
+use App\Http\Controllers\API\Seller\DashboardController as SellerDashboardController;
+use App\Http\Controllers\API\Seller\LoginController as SellerLoginController;
+use App\Http\Controllers\API\Seller\OrderController as SellerOrderController;
+// Seller (vendor) app controllers
+use App\Http\Controllers\API\Seller\ProductController as SellerProductController;
+use App\Http\Controllers\API\Seller\UserController as SellerUserController;
+use App\Http\Controllers\API\ShopController;
+use App\Http\Controllers\API\SocialAuthController;
+use App\Http\Controllers\API\SubCategoryController;
+// Rider app controllers
+use App\Http\Controllers\API\SupportController;
+use App\Http\Controllers\API\UserController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------

@@ -2,10 +2,10 @@
 
 namespace App\Repositories;
 
-use App\Support\Repositories\Repository;
 use App\Http\Requests\SizeRequest;
 use App\Models\Size;
 use App\Models\TranslateUtility;
+use App\Support\Repositories\Repository;
 
 class SizeRepository extends Repository
 {
@@ -22,8 +22,8 @@ class SizeRepository extends Repository
     /**
      * store new size.
      *
-     * @param  \App\Http\Requests\SizeRequest  $request
-     *                                                   return \App\Models\Size
+     * @param  SizeRequest  $request
+     *                                return \App\Models\Size
      * */
     public static function storeByRequest(SizeRequest $request): Size
     {
@@ -53,8 +53,8 @@ class SizeRepository extends Repository
     /**
      * Update the size.
      *
-     * @param  \App\Http\Requests\SizeRequest  $request
-     *                                                   return \App\Models\Size
+     * @param  SizeRequest  $request
+     *                                return \App\Models\Size
      * */
     public static function updateByRequest(SizeRequest $request, Size $size): Size
     {

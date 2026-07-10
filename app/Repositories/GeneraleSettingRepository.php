@@ -2,11 +2,11 @@
 
 namespace App\Repositories;
 
-use App\Support\Repositories\Repository;
 use App\Http\Requests\GeneraleSettingRequest;
 use App\Models\Currency;
 use App\Models\GeneraleSetting;
 use App\Models\Media;
+use App\Support\Repositories\Repository;
 
 class GeneraleSettingRepository extends Repository
 {
@@ -68,6 +68,7 @@ class GeneraleSettingRepository extends Repository
             ]
         );
     }
+
     public static function updateByAiPromptRequest($request): void
     {
         $generaleSetting = GeneraleSetting::first();

@@ -6,6 +6,8 @@ use App\Enums\PaymentStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Payment;
 use App\Models\PaymentGateway;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class PaymentGatewayController extends Controller
@@ -13,7 +15,7 @@ class PaymentGatewayController extends Controller
     /**
      * Payment gateway
      *
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      *
      * @throws \Exception
      */
@@ -52,7 +54,7 @@ class PaymentGatewayController extends Controller
     /**
      * Payment success
      *
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function success(Request $request, $payment = null)
     {
@@ -73,7 +75,7 @@ class PaymentGatewayController extends Controller
     /**
      * Payment cancel
      *
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function cancel(Payment $payment)
     {
@@ -93,7 +95,7 @@ class PaymentGatewayController extends Controller
     /**
      * Payment cancel response show
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
     public function paymentCancel(Payment $payment, Request $request)
     {

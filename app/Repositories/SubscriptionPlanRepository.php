@@ -1,9 +1,10 @@
 <?php
+
 namespace App\Repositories;
 
-use App\Support\Repositories\Repository;
 use App\Http\Requests\SubscriptionPlanRequest;
 use App\Models\SubscriptionPlan;
+use App\Support\Repositories\Repository;
 
 class SubscriptionPlanRepository extends Repository
 {

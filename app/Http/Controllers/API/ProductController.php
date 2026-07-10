@@ -16,6 +16,7 @@ use App\Repositories\ProductRepository;
 use App\Repositories\ReviewRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Modules\Report\App\Repositories\ProductSearchLogRepository;
 
 class ProductController extends Controller
 {
@@ -89,9 +90,9 @@ class ProductController extends Controller
             })
             ->when($search, function ($query) use ($search) {
                 return $query->where(function ($query) use ($search) {
-                    $query->where('name', 'like', '%' . $search . '%')
-                        ->orWhere('short_description', 'like', '%' . $search . '%')
-                        ->orWhere('code', 'like', '%' . $search . '%');
+                    $query->where('name', 'like', '%'.$search.'%')
+                        ->orWhere('short_description', 'like', '%'.$search.'%')
+                        ->orWhere('code', 'like', '%'.$search.'%');
                 });
             })->when($brandID, function ($query) use ($brandID) {
                 return $query->where('brand_id', $brandID);
@@ -181,10 +182,10 @@ class ProductController extends Controller
 
     private function getSearchLog($search)
     {
-        if (!module_exists('report')) {
+        if (! module_exists('report')) {
             return true;
         }
-        \Modules\Report\App\Repositories\ProductSearchLogRepository::updateOrCreateByRequest($search);
+        ProductSearchLogRepository::updateOrCreateByRequest($search);
     }
 
     /**

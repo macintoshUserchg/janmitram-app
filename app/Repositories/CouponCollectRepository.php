@@ -2,9 +2,9 @@
 
 namespace App\Repositories;
 
-use App\Support\Repositories\Repository;
 use App\Http\Requests\VoucherRequest;
 use App\Models\CouponCollect;
+use App\Support\Repositories\Repository;
 
 class CouponCollectRepository extends Repository
 {

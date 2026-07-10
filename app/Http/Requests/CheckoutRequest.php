@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Repositories\ShopRepository;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class CheckoutRequest extends FormRequest
@@ -18,7 +19,7 @@ class CheckoutRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -50,6 +51,7 @@ class CheckoutRequest extends FormRequest
 
                 if (! $subscription) {
                     $validator->errors()->add('shop_ids', 'Some of the selected shops are not available.');
+
                     return;
                 }
             }

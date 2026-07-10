@@ -2,10 +2,10 @@
 
 namespace App\Repositories;
 
-use App\Support\Repositories\Repository;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
+use App\Support\Repositories\Repository;
 
 class TransactionRepository extends Repository
 {
@@ -75,7 +75,7 @@ class TransactionRepository extends Repository
         ]);
 
         $wallet->increment('balance', $amount);
-        ;
+
         if ($hasAdminUpdate) {
             self::adminWalletDeduct($amount);
         }
@@ -83,7 +83,7 @@ class TransactionRepository extends Repository
         return $transaction;
     }
 
-       public static function adminWalletDeduct($amount)
+    public static function adminWalletDeduct($amount)
     {
         $roles = ['admin', 'root'];
 

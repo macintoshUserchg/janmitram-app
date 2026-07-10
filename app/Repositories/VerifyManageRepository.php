@@ -2,8 +2,8 @@
 
 namespace App\Repositories;
 
-use App\Support\Repositories\Repository;
 use App\Models\VerifyManage;
+use App\Support\Repositories\Repository;
 
 class VerifyManageRepository extends Repository
 {

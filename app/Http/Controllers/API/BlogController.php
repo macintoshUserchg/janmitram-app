@@ -49,9 +49,9 @@ class BlogController extends Controller
         ]);
     }
 
-    public function show($slugOrId, Request $request)
+    public function show(Request $request)
     {
-        $blog = Blog::where('slug', $slugOrId)->orWhere('id', $slugOrId)->first();
+        $blog = Blog::where('slug', $request->slug)->orWhere('id', $request->id)->first();
 
         if (! $blog) {
             return $this->json('The selected blog id or slug is invalid', [], Response::HTTP_BAD_REQUEST);

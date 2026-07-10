@@ -7,7 +7,6 @@
 
                 <form action="{{ route('shop.profile.change-password.update') }}" method="POST">
                     @csrf
-                    @method('PUT')
                     <div class="card shadow rounded-12 border-0">
                         <div class="card-header py-3">
                             <h4 class="m-0">{{ __('Change Password') }}</h4>

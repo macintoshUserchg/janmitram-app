@@ -2,10 +2,10 @@
 
 namespace App\Repositories;
 
-use App\Support\Repositories\Repository;
 use App\Http\Requests\BlogRequest;
 use App\Models\Blog;
 use App\Models\Tag;
+use App\Support\Repositories\Repository;
 use Illuminate\Support\Str;
 use Mews\Purifier\Facades\Purifier;
 

@@ -2,8 +2,8 @@
 
 namespace App\Repositories;
 
-use App\Support\Repositories\Repository;
 use App\Models\VerifyOtp;
+use App\Support\Repositories\Repository;
 
 class VerificationCodeRepository extends Repository
 {

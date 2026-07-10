@@ -2,9 +2,9 @@
 
 namespace App\Repositories;
 
-use App\Support\Repositories\Repository;
 use App\Models\User;
 use App\Models\Wallet;
+use App\Support\Repositories\Repository;
 
 class WalletRepository extends Repository
 {

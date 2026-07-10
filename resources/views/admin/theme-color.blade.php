@@ -19,6 +19,7 @@
 
     <form action="{{ route('admin.themeColor.update') }}" method="POST">
         @csrf
+        @method('PUT')
         <div class="card mt-3 rounded-12">
             <div class="card-header py-3">
                 <h5 class="m-0 card-title fz-20">{{ __('Current Color') }}</h5>
@@ -45,7 +46,7 @@
                 <input type="hidden" name="primary_color" value="{{ $primary }}" id="primary_color" />
                 <input type="hidden" name="secondary_color" value="{{ $secondary }}" id="secondary_color" />
             </div>
-            @if (app()->environment('local'))
+            @if (! app()->environment('demo'))
                 @hasPermission('admin.themeColor.update')
                     <div class="card-footer d-flex justify-content-start">
                         <button type="submit" class="btn btn-primary py-2.5 px-3">

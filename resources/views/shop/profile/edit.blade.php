@@ -9,7 +9,6 @@
 
     <form action="{{ route('shop.profile.update') }}" method="POST" enctype="multipart/form-data">
         @csrf
-        @method('PUT')
         <div class="card mt-3">
             <div class="card-body">
 

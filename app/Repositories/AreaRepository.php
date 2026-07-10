@@ -1,8 +1,9 @@
 <?php
+
 namespace App\Repositories;
 
-use App\Support\Repositories\Repository;
 use App\Models\Area;
+use App\Support\Repositories\Repository;
 
 class AreaRepository extends Repository
 {
@@ -15,16 +16,16 @@ class AreaRepository extends Repository
     {
         return self::model()::create([
             'name' => $request->name,
-            'delivery_amount' => $request->delivery_amount
+            'delivery_amount' => $request->delivery_amount,
         ]);
     }
 
-    public static function updateByRequest($request,Area $area)
+    public static function updateByRequest($request, Area $area)
     {
         return $area->update([
             'name' => $request->name,
             'delivery_amount' => $request->delivery_amount,
-            'is_active' => $area->is_active
+            'is_active' => $area->is_active,
         ]);
     }
 

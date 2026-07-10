@@ -2,9 +2,9 @@
 
 namespace App\Repositories;
 
-use App\Support\Repositories\Repository;
 use App\Http\Requests\PaymentGatewayRequest;
 use App\Models\PaymentGateway;
+use App\Support\Repositories\Repository;
 
 class PaymentGatewayRepository extends Repository
 {

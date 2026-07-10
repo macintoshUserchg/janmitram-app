@@ -2,18 +2,18 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Enums\Roles;
-use App\Models\User;
-use App\Models\Order;
-use App\Models\Driver;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
-use Illuminate\Http\Request;
-use App\Http\Requests\RiderRequest;
+use App\Enums\Roles;
 use App\Http\Controllers\Controller;
-use App\Repositories\UserRepository;
-use App\Repositories\DriverRepository;
+use App\Http\Requests\RiderRequest;
 use App\Http\Resources\DriverLocationResource;
+use App\Models\Driver;
+use App\Models\Order;
+use App\Models\User;
+use App\Repositories\DriverRepository;
+use App\Repositories\UserRepository;
+use Illuminate\Http\Request;
 
 class RiderController extends Controller
 {
@@ -124,10 +124,10 @@ class RiderController extends Controller
         if (! $driver) {
             return back()->withError(__('Rider not found, please try again'));
         }
-        if (!$driver->driverLocation()->exists()) {
+        if (! $driver->driverLocation()->exists()) {
             return back()->withError(__('Rider location not found, please assign location first'));
         }
-        if($order->products()->where('is_digital', true)->exists()) {
+        if ($order->products()->where('is_digital', true)->exists()) {
             return back()->withError(__('Digital products can not be assigned to riders'));
         }
 
@@ -135,6 +135,7 @@ class RiderController extends Controller
 
         return back()->withSuccess(__('Rider assigned successfully'));
     }
+
     public function riderLocation($id)
     {
         $driver = Driver::find($id);
@@ -146,5 +147,4 @@ class RiderController extends Controller
             'location' => DriverLocationResource::make($driver->driverLocation),
         ]);
     }
-
 }

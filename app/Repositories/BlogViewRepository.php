@@ -2,8 +2,8 @@
 
 namespace App\Repositories;
 
-use App\Support\Repositories\Repository;
 use App\Models\BlogView;
+use App\Support\Repositories\Repository;
 
 class BlogViewRepository extends Repository
 {

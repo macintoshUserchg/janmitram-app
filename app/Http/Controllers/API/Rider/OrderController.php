@@ -2,18 +2,18 @@
 
 namespace App\Http\Controllers\API\Rider;
 
-use Carbon\Carbon;
 use App\Enums\OrderStatus;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\OrderIdRequest;
-use App\Repositories\OrderRepository;
-use App\Services\NotificationServices;
 use App\Http\Requests\StatusUpdateRequest;
+use App\Http\Resources\RiderOrderDetailsResource;
 use App\Http\Resources\RiderOrderResource;
 use App\Repositories\DriverOrderRepository;
 use App\Repositories\NotificationRepository;
-use App\Http\Resources\RiderOrderDetailsResource;
+use App\Repositories\OrderRepository;
+use App\Services\NotificationServices;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
@@ -47,10 +47,10 @@ class OrderController extends Controller
     {
         $driver = auth()->user()->driver;
         $driverOrder = DriverOrderRepository::query()->where('order_id', $request->order_id)->where('driver_id', $driver->id)->first();
-        if (!$driverOrder) {
+        if (! $driverOrder) {
             return response()->json([
                 'status' => false,
-                'message' => 'Order not found for this driver'
+                'message' => 'Order not found for this driver',
             ], 404);
         }
         $order = OrderRepository::find($request->order_id);
@@ -108,7 +108,7 @@ class OrderController extends Controller
         // OrderMailEvent::dispatch($order);
 
         $title = 'Order status updated';
-        $message = 'Your order status updated to ' . $request->status;
+        $message = 'Your order status updated to '.$request->status;
         $deviceKeys = $order->customer->user->devices->pluck('key')->toArray();
 
         try {
