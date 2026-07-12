@@ -34,6 +34,12 @@
     <!-- Bootstrap--Min-Css-Link -->
     <link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}">
 
+    <!-- Tailwind CSS (compiled via Vite) -->
+    @vite('resources/css/app.css')
+
+    <!-- ponytail: Bootstrap sidebar submenus use .collapse which Tailwind overrides -->
+    <style>.collapse{visibility:revert!important}</style>
+
     <!-- Select2 -->
     <link rel="stylesheet" href="{{ asset('assets/css/select2.min.css') }}">
 
