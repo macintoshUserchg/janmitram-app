@@ -34,33 +34,6 @@ class GeneraleSettingController extends Controller
         return back()->withSuccess(__('Generale settings updated successfully'));
     }
 
-    /**
-     * Run the latest update/migration script (the "Run Latest Update Script" button).
-     */
-    public function updateCommand(Request $request)
-    {
-        $errors = [];
-
-        // Run pending DB migrations, then clear all caches
-        try {
-            Artisan::call('migrate', ['--force' => true]);
-        } catch (Exception $e) {
-            $errors[] = $e->getMessage();
-        }
-
-        try {
-            Artisan::call('optimize:clear');
-        } catch (Exception $e) {
-            $errors[] = $e->getMessage();
-        }
-
-        if ($errors) {
-            return back()->with('runUpdateScriptError', $errors);
-        }
-
-        return back()->withSuccess(__('Update script ran successfully'));
-    }
-
     public function aiPromptIndex()
     {
         return view('admin.aiPrompt.index');

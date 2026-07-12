@@ -311,7 +311,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:root'])->group
 
     Route::get('generale-setting', [GeneraleSettingController::class, 'index'])->name('generale-setting.index');
     Route::put('generale-setting', [GeneraleSettingController::class, 'update'])->name('generale-setting.update');
-    Route::post('generale-setting/update-command', [GeneraleSettingController::class, 'updateCommand'])->name('generale-setting.update.command');
 
     Route::get('ai-prompt', [GeneraleSettingController::class, 'aiPromptIndex'])->name('aiPrompt.index');
     Route::post('ai-prompt', [GeneraleSettingController::class, 'aiPromptUpdate'])->name('aiPrompt.update');

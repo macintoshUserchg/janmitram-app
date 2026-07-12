@@ -6,9 +6,6 @@
     <div class="page-title">
         <div class="d-flex gap-2 align-items-center">
             <i class="bi bi-gear-fill"></i> {{ __('Admin Settings') }}
-            <button class="btn btn-primary btn-sm ms-3" id="runUpdateScript">
-                {{ __('Run Latest Update Script') }}
-            </button>
         </div>
     </div>
     <form action="{{ route('admin.generale-setting.update') }}" method="POST" enctype="multipart/form-data">
@@ -254,40 +251,4 @@
 
     </form>
 
-    <form action="{{ route('admin.generale-setting.update.command') }}" method="POST" id="scriptRunForm">
-        @csrf
-    </form>
-
-
-
 @endsection
-@push('scripts')
-    <script>
-        $('#runUpdateScript').click(function() {
-            Swal.fire({
-                title: "{{ __('Are you sure? want to run update script') }}",
-                text: "When you run this script, all data related to the latest version (v{{ config('app.version') }}) will be reset. Are you sure?",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "{{ __('Yes, Run!') }}",
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    document.getElementById("scriptRunForm").submit();
-                }
-            });
-        })
-    </script>
-    @if (session('runUpdateScriptError'))
-        <script>
-            Swal.fire({
-                icon: "error",
-                title: "Oops...",
-                html: `@foreach (session('runUpdateScriptError') as $error)
-                    {{ $error }} <br><br>
-                @endforeach`,
-            });
-        </script>
-    @endif
-@endpush
