@@ -16,7 +16,7 @@ trait Helpers
 
     protected function fakeImage(): string
     {
-        return __DIR__ . '/test-image.png';
+        return __DIR__.'/test-image.png';
     }
 
     protected function selectByValue(Browser $browser, string $selector, string|int $value): void

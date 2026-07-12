@@ -12,6 +12,7 @@ class AdminSubCategoryCrudTest extends DuskTestCase
     use Helpers;
 
     private static string $testName = 'Test SubCategory Dusk';
+
     private static string $updatedName = 'Updated SubCategory Dusk';
 
     public function test_create_sub_category(): void
