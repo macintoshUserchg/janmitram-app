@@ -16,6 +16,7 @@
 
     <form action="{{ route('admin.business-setting.update') }}" method="POST" enctype="multipart/form-data">
         @csrf
+        @method('PUT')
 
         <!--######## Basic Information ##########-->
         <div class="card mt-4">
