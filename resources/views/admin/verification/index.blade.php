@@ -13,6 +13,7 @@
         <div class="col-xl-9">
             <form action="{{ route('admin.verification.update') }}" method="POST">
                 @csrf
+                @method('PUT')
 
                 <!--######## Basic Information ##########-->
                 <div class="card mt-4">
