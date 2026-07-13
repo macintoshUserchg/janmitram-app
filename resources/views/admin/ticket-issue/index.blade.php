@@ -58,7 +58,7 @@
                                         </button>
                                         @endhasPermission
                                         @hasPermission('admin.ticketIssueType.delete')
-                                        <a href="{{ route('admin.ticketIssueType.delete', $issueType->id) }}" class="btn btn-outline-danger btn-sm deleteConfirmAlert circleIcon">
+                                        <a href="{{ route('admin.ticketIssueType.delete', $issueType->id) }}" class="btn btn-outline-danger btn-sm deleteConfirm circleIcon">
                                             <img src="{{ asset('assets/icons-admin/trash.svg') }}" alt="icon" loading="lazy" />
                                         </a>
                                         @endhasPermission
@@ -173,22 +173,5 @@
             $("#updateBrand").modal('show');
         }
 
-        $(".deleteConfirmAlert").on("click", function(e) {
-            e.preventDefault();
-            const url = $(this).attr("href");
-            Swal.fire({
-                title: "{{__('Are you sure?') }}",
-                text: "{{__('You will not be able to revert this!') }}",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "{{__('Yes, delete it!') }}",
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.href = url;
-                }
-            });
-        });
     </script>
 @endpush
