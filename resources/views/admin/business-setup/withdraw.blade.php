@@ -15,6 +15,7 @@
 
     <form action="{{ route('admin.business-setting.withdraw-update') }}" method="POST">
         @csrf
+        @method('PUT')
 
         <!--######## withdraw Information ##########-->
         <div class="card mt-4">
