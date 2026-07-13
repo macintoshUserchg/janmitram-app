@@ -574,11 +574,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:root'])->group
     Route::get('support-ticket/{supportTicket}/chat-toggle', [SupportTicketController::class, 'chatToggle'])->name('supportTicket.chatToggle');
     Route::get('support-ticket/message/{supportTicketMessage}/pin', [SupportTicketController::class, 'pinMessage'])->name('supportTicket.pinMessage');
 
-    Route::get('ticket-issue-type', [TicketIssueTypeController::class, 'index'])->name('ticketIssueType.index');
-    Route::post('ticket-issue-type', [TicketIssueTypeController::class, 'store'])->name('ticketIssueType.store');
-    Route::put('ticket-issue-type/{ticketIssueType}', [TicketIssueTypeController::class, 'update'])->name('ticketIssueType.update');
-    Route::get('ticket-issue-type/{ticketIssueType}/toggle', [TicketIssueTypeController::class, 'toggleStatus'])->name('ticketIssueType.toggle');
-    Route::delete('ticket-issue-type/{ticketIssueType}', [TicketIssueTypeController::class, 'destroy'])->name('ticketIssueType.delete');
+    Route::get('ticket-issue-types', [TicketIssueTypeController::class, 'index'])->name('ticketIssueType.index');
+    Route::post('ticket-issue-types', [TicketIssueTypeController::class, 'store'])->name('ticketIssueType.store');
+    Route::put('ticket-issue-types/{ticketIssueType}', [TicketIssueTypeController::class, 'update'])->name('ticketIssueType.update');
+    Route::get('ticket-issue-types/{ticketIssueType}/toggle', [TicketIssueTypeController::class, 'toggleStatus'])->name('ticketIssueType.toggle');
+    Route::delete('ticket-issue-types/{ticketIssueType}', [TicketIssueTypeController::class, 'destroy'])->name('ticketIssueType.delete');
 });
 
 // pwaSetting — controller/model were server-withheld

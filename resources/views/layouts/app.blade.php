@@ -919,8 +919,16 @@
                     cancelButtonColor: "#d33",
                     confirmButtonText: "{{ __('Yes, delete it!') }}",
                 }).then((result) => {
-                    if (result.isConfirmed) {
-                        window.location.href = url;
+                    if (result.isConfirmed && url) {
+                        const token = '{{ csrf_token() }}';
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = url;
+                        form.style.display = 'none';
+                        form.innerHTML = '<input type="hidden" name="_token" value="' + token + '">' +
+                            '<input type="hidden" name="_method" value="DELETE">';
+                        document.body.appendChild(form);
+                        form.submit();
                     }
                 });
             });
