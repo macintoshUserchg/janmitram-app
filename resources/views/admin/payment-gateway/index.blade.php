@@ -12,7 +12,7 @@
         <div class="row">
             @foreach ($paymentGateways as $paymentGateway)
                 @php
-                    $configs = json_decode($paymentGateway->config);
+                    $configs = json_decode($paymentGateway->config) ?? [];
                 @endphp
 
                 <div class="col-lg-6 mb-4">
