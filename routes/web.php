@@ -83,6 +83,9 @@ Route::get('/', function () {
     return view('app');
 })->name('home');
 
+/* ===================== Public product detail page ===================== */
+Route::get('products/{product}/details', [ProductController::class, 'show'])->name('product.details');
+
 /* ===================== Frontend translation files ===================== */
 Route::get('lang/{locale}', function (string $locale) {
     $path = lang_path("{$locale}.json");
