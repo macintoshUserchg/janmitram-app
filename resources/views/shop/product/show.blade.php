@@ -108,7 +108,7 @@
                         <span>{{ $product->quantity }}</span>
                     </div>
 
-                    <a href="/products/{{ $product->id }}/details" target="_blank" class="btn btn-outline-primary">
+                    <a href="{{ url('products/'.$product->id.'/details') }}" target="_blank" class="btn btn-outline-primary">
                         <i class="fa-solid fa-globe"></i> {{ __('View Live') }}
                     </a>
                 </div>

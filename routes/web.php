@@ -588,3 +588,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:root'])->group
 Route::match(['get', 'post'], 'admin/pwa-setting', function () {
     return back()->with('warning', 'PWA setting unavailable');
 })->name('admin.pwaSetting.update')->middleware(['auth', 'role:root']);
+
+/* ===================== SPA fallback — serve Vue Router shell ===================== */
+Route::get('/{any}', function () {
+    return view('app');
+})->where('any', '.*')->middleware(['web']);
