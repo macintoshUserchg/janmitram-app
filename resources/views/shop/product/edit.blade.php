@@ -286,7 +286,7 @@
                                                     <button type="button" class="copy-btn"
                                                         title="Copy">{{ __('Copy key') }}</button>
                                                     <a href="javascript::void(0)"
-                                                        onclick="deleteAction('{{ route('shop.product.remove.license', ['product' => $product->id, 'license' => $license->id]) }}')"
+                                                        onclick="deleteAction('{{ route('shop.product.remove.license', ['product' => $product->id, 'productLicense' => $license->id]) }}')"
                                                         class="remove-show-license-btn" title="Remove">X</a>
                                                 </div>
                                             </div>
