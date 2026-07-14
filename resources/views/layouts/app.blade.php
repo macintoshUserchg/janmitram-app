@@ -147,7 +147,7 @@
                         @php
                             $user = auth()->user();
                             $isShop = true;
-                            if (!$user->hasRole('root') && ($user->shop || $user->myShop)) {
+                            if ($user && !$user->hasRole('root') && ($user->shop || $user->myShop)) {
                                 $isShop = false;
                             }
                         @endphp
