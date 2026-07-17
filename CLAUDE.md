@@ -53,9 +53,9 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 - Be concise in your explanations - focus on what's important rather than explaining obvious details.
 
-## Multi-Database Setup
+## Database
 
-- The app connects to 4+ databases (`ready_ecommerce`, `u939461333_janmitra`, `aitradex_db`, `lifeskills_db`) configured in `.env`. Each serves a domain: ecommerce, janmitra, aitradex/MLM, lifeskills. Cross-schema queries use explicit database-prefixed table references.
+- The app uses a **single `mysql` connection** named in `.env` via `DB_DATABASE` — never hardcode a schema. Local dev = `ready_ecommerce` (MAMP `root/root`); production (Hostinger) = `u939461333_app_janmitram`. The local server also hosts `u939461333_janmitra`, `aitradex_db`, `lifeskills_db`, but those are **not referenced in the Laravel code** — models/migrations all target `DB_DATABASE`. Do not assume cross-schema queries work.
 
 ## Admin & SPA Hybrid
 

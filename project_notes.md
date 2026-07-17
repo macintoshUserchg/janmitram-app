@@ -1,12 +1,15 @@
 # Project Notes — Janmitram App
 
-Laravel 11 multi-tenant ecommerce SPA with a Vue 3 customer frontend, two Blade-based
-dashboards (admin & seller), and dedicated mobile apps (Flutter/Dart). Comprehensive
-payment gateway support, real-time chat, SMS/Firebase notifications, and multi-currency
-internationalization.
+Laravel 11 multi-vendor ecommerce platform with a Vue 3 customer SPA, two
+Blade-based dashboards (admin & seller), and dedicated mobile apps
+(Flutter/Dart). Comprehensive payment-gateway support, real-time chat,
+SMS/Firebase notifications, and multi-currency i18n.
 
-> **Style note**: All new code should follow the guidelines in § **Structural Guidelines**:
-> strict types, thin controllers, Form Requests, typed relationships, eager loading.
+> **Style note**: All new code should follow the guidelines in § **Structural
+> Guidelines**: strict types, thin controllers, Form Requests, typed
+> relationships, eager loading.
+
+_Last verified against the codebase: 2026-07-17._
 
 ---
 
@@ -15,21 +18,21 @@ internationalization.
 | Layer | Technology |
 |-------|------------|
 | **PHP** | 8.2 |
-| **Framework** | Laravel 11 (`laravel/framework` ^11.31 — classic 10-style structure, **not** streamlined) |
-| **Auth** | Laravel Sanctum ^4 (token-based API) + web session (admin) |
+| **Framework** | Laravel 11 (`laravel/framework` ^11.31 — classic 10-style structure retained: `app/Http/Kernel.php`, `app/Exceptions/Handler.php`, `app/Console/Kernel.php`; `bootstrap/app.php` exists and is used by `public/index.php`) |
+| **Auth** | Laravel Sanctum ^4 (token-based API) + web session (admin/seller) |
 | **RBAC** | spatie/laravel-permission ^6 |
 | **Modules** | nwidart/laravel-modules ^12 |
 | **Frontend (customer)** | Vue 3 + Vite + Tailwind CSS 3 + Pinia + vue-router + vue-i18n |
-| **Admin & seller UI** | Blade templates + Tailwind CSS |
+| **Admin & seller UI** | Blade templates styled with **Bootstrap 5 + Tailwind CSS** (both loaded) |
 | **Mobile apps** | Flutter/Dart (external — API surface in `routes/api.php`) |
-| **Payments** | Stripe, PayPal, Razorpay, PayStack, PayU, Bkash, AamarPay, CashFree, JazzCash, PayTabs, QiCard |
+| **Payments** | Razorpay, Stripe, PayPal, PayStack, PaySafeCard (SDK packages) + AamarPay, Bkash, CashFree, JazzCash, PayTabs, PayU, QiCard (HTTP/gateway-driven, no SDK) |
 | **Real-time** | Pusher (Echo configured in JS, server-side `pusher/pusher-php-server`) |
 | **SMS** | Twilio, Vonage (Nexmo), MessageBird, Telesign |
 | **Firebase** | Cloud Messaging (notifications) |
 | **AI** | OpenAI API (`openai-php/laravel`), Google API (`google/apiclient`) |
 | **Exports** | maatwebsite/excel, mpdf, milon/barcode, endroid/qr-code |
-| **DB** | MySQL (MAMP local: `ready_ecommerce`) |
-| **Testing** | PHPUnit ^11 |
+| **DB** | MySQL (MAMP local: `ready_ecommerce`) via a single `mysql` connection |
+| **Testing** | PHPUnit ^11 + Laravel Dusk ^8 (browser tests) |
 | **Code style** | Laravel Pint ^1 |
 
 ---
@@ -47,19 +50,19 @@ janmitram-app/
 │   ├── helpers.php                 Global functions (showCurrency, getDistance, userCart, …)
 │   ├── Http/
 │   │   ├── Controllers/
-│   │   │   ├── API/                Customer API (Auth, Cart, Order, Product, Chat, …)
+│   │   │   ├── API/                Customer API (Auth, Cart, Order, Product, Chat, …) — 40 controllers
 │   │   │   ├── API/Auth/           Login, register, forgot-password, OTP
 │   │   │   ├── API/Seller/         Seller mobile-app endpoints
 │   │   │   ├── API/Rider/          Rider/driver mobile-app endpoints
-│   │   │   ├── Admin/              ~45 web controllers (Dashboard, Order, Banner, Brand, …)
+│   │   │   ├── Admin/              ~53 web controllers (Dashboard, Order, Banner, Brand, …)
 │   │   │   ├── Shop/               Vendor/seller web dashboard controllers
 │   │   │   ├── Seller/             Seller mobile chat controller
 │   │   │   ├── Gateway/            Payment gateway router + per-gateway ProcessController
 │   │   │   └── Controller.php      Base controller
 │   │   ├── Kernel.php              Middleware groups, aliases, global stack
 │   │   ├── Middleware/             14 middleware classes (auth, permission, demo, …)
-│   │   ├── Requests/               ~80 Form Request classes
-│   │   └── Resources/              ~50 Eloquent API Resource classes
+│   │   ├── Requests/               ~70 Form Request classes
+│   │   └── Resources/              ~59 Eloquent API Resource classes
 │   ├── Listeners/                  Event listeners (OrderMail, SendOTP, TestMail)
 │   ├── Mail/                       Mailable classes (OrderMail, SendOTP, TestMail)
 │   ├── Models/
@@ -73,11 +76,11 @@ janmitram-app/
 │   │   ├── PermissionServiceProvider.php
 │   │   ├── RouteServiceProvider.php    Routes + rate limiting (60/min for API)
 │   │   └── SmsServiceProvider.php
-│   ├── Repositories/               ~55 repository classes (data-access abstraction)
+│   ├── Repositories/               ~53 repository classes (data-access abstraction)
 │   ├── Rules/                      4 custom rules (CaptchaValidate, EmailRule, EnumValue, …)
 │   ├── Services/                   Chat, SmsGatewayService, NotificationServices, …
 │   └── Support/Repositories/       Additional repository helpers
-├── bootstrap/app.php               Classic Laravel 10-style bootstrap
+├── bootstrap/app.php               Laravel 10-style bootstrap (used by public/index.php)
 ├── config/
 │   ├── acl.php                     Complete permission tree (admin, shop, shopMultiShop)
 │   ├── permission.php              spatie/laravel-permission config
@@ -98,11 +101,11 @@ janmitram-app/
 │   ├── views/                      Blade views (admin, shop, layouts, mail, PDF, …)
 │   └── css/                        Additional CSS
 ├── routes/
-│   ├── api.php                     ~90 API endpoints (customer, seller, rider)
-│   ├── web.php                     SPA entry, admin routes, payment callbacks, shop routes
+│   ├── api.php                     106 API endpoints (customer, seller, rider)
+│   ├── web.php                     396 routes — SPA entry, admin routes, payment callbacks, shop routes
 │   ├── channels.php                Broadcasting channels
 │   └── console.php                 Console commands
-├── tests/                          Feature + Unit (PHPUnit)
+├── tests/                          Feature + Unit (PHPUnit) + Browser (Dusk)
 ├── public/                         Vite build output + htaccess
 ├── .htaccess                       Root htaccess for MAMP subdirectory deployment
 └── assets/                         Compiled asset directories (build/, icons/, images/, …)
@@ -110,18 +113,32 @@ janmitram-app/
 
 ---
 
+## Database
+
+- The application uses a **single `mysql` connection**. No additional named connections are defined in `config/database.php`.
+- **Local (dev)**: `DB_DATABASE=ready_ecommerce` on MAMP (`127.0.0.1`, `root/root`).
+- **Production (Hostinger)**: `DB_DATABASE=u939461333_app_janmitram` on the Hostinger MySQL host. Set via the production `.env` — it is **not** stored in the repo.
+- The same local MySQL server also hosts `u939461333_janmitra`, `aitradex_db`, and `lifeskills_db`. These schemas **exist locally** but are **not referenced anywhere in the Laravel app code** — models, migrations, and queries all target the configured `DB_DATABASE` (`ready_ecommerce` locally, `u939461333_app_janmitram` in production). They appear to be legacy/parallel schemas (MLM `aitradex`, Janmitra membership, LifeSkills) not yet wired into this codebase.
+- **Migrations** live in `database/migrations/` and run against whatever `DB_DATABASE` is configured. Verify the target schema with the Boost `database-schema` tool before adding/changing columns.
+
+> **Environment caveat**: the local DB name (`ready_ecommerce`) differs from production (`u939461333_app_janmitram`). Never hardcode a schema name; always read it from `DB_DATABASE`. Do not assume cross-schema queries work — from the app's perspective there is one schema.
+
+---
+
 ## Frontends
 
-### 1. Customer SPA (Vue 3 + Vite)
+### 1. Customer SPA (Vue 3 + Vite + Tailwind)
 
-Single-page application at `/` served via `resources/views/app.blade.php`.
+Single-page application served from `resources/views/app.blade.php`, loaded via
+`@vite('resources/css/app.css')` / `@vite('resources/js/app.js')`. **Tailwind CSS
+only** (no Bootstrap) in this surface.
 
 | Layer | Mechanism |
 |-------|-----------|
 | **State** | Pinia stores: `AuthStore`, `BasketStore`, `ChatStore`, `GuestAddressStore`, `MasterStore` |
 | **Routing** | `vue-router` — lazy-loaded page components with layout meta |
 | **API** | Axios (`window.axios`) — base URL from `<meta name="base-url">`, auth via `Authorization: Bearer {token}` header |
-| **Localization** | `vue-i18n` + Laravel JSON translation files at `/lang/{locale}.json` |
+| **Localization** | `vue-i18n` + Laravel JSON translation files at `lang/{locale}.json` |
 | **Auth persistence** | `pinia-plugin-persistedstate` (localStorage) |
 | **Real-time** | Pusher (Echo commented out in `bootstrap.js` — ready to enable) |
 
@@ -131,9 +148,14 @@ Key stores:
 - **ChatStore**: messages, active shop
 - **MasterStore**: app settings, theme, currencies, languages (fetched once)
 
-### 2. Admin Panel (Blade + Tailwind)
+### 2. Admin Panel (Blade + Bootstrap 5 + Tailwind)
 
-Full CRUD management dashboard in `resources/views/admin/`. ~45 controllers handle:
+Full CRUD management dashboard in `resources/views/admin/`. The admin layout
+(`resources/views/layouts/app.blade.php`) loads **both** `assets/css/bootstrap.min.css`
+and the Vite Tailwind bundle (`resources/css/app.css`). This is deliberate: the
+sidebar relies on Bootstrap's `.collapse` behaviour, which Tailwind's preflight
+would otherwise break — see the inline `ponytail:` comment in the layout.
+~53 controllers handle:
 
 - **Orders**: listing, status changes, payment toggle, rider assignment
 - **Products**: approve/reject seller products, categories, brands, units, sizes, colors
@@ -143,9 +165,16 @@ Full CRUD management dashboard in `resources/views/admin/`. ~45 controllers hand
 - **AI features**: AI content generation for pages and blogs via `AiPromptController`
 - **Finance**: withdrawals, VAT/tax, subscription plans, transaction history
 
-### 3. Seller Dashboard (Blade + Tailwind)
+> **Toggle-link gotcha**: Status toggles are GET `<a>` links (e.g.
+> `route('admin.shop.status.toggle', $shop->id)`). The corresponding route MUST be
+> `Route::get(...)`, not `Route::put(...)` — a PUT-only route 404s on a link click.
+> Most toggles follow the `.../toggle` GET pattern; the shop toggle was restored to
+> that pattern after a 404 regression (see commit `d645921`).
 
-Vendor management panel in `resources/views/shop/`. Controllers under `app/Http/Controllers/Shop/`:
+### 3. Seller Dashboard (Blade + Bootstrap + Tailwind)
+
+Vendor management panel in `resources/views/shop/`. Controllers under
+`app/Http/Controllers/Shop/`:
 
 - Products, orders, flash sales, vouchers, POS, bulk import/export
 - Supplier management, purchase orders, purchase returns
@@ -155,9 +184,9 @@ Vendor management panel in `resources/views/shop/`. Controllers under `app/Http/
 
 ### 4. Mobile Apps (Flutter/Dart)
 
-The API surface at `routes/api.php` is documented for customer, seller, and rider mobile
-apps. Auth uses Sanctum personal access tokens. Guest users get a `X-Guest-Token` header
-for cart persistence across devices.
+The API surface at `routes/api.php` is documented for customer, seller, and rider
+mobile apps. Auth uses Sanctum personal access tokens. Guest users get a
+`X-Guest-Token` header for cart persistence across devices.
 
 ---
 
@@ -180,29 +209,32 @@ Separate login controller (`API/Rider/LoginController`):
 - Register, OTP, password creation, location updates
 - Status-specific order views
 
-### Admin (Web session — Blade)
-Standard Laravel session-based auth via `routes/web.php`. Middleware: `auth`, `checkPermission`.
+### Admin / Seller (Web session — Blade)
+Standard Laravel session-based auth via `routes/web.php`. Middleware: `auth`,
+`checkPermission` (admin), `authShop` + `checkPermission` (seller).
 
 ---
 
 ## Payment Gateway Architecture (Pluggable Strategy)
 
-Polymorphic per-gateway processor pattern under `app/Http/Controllers/Gateway/`:
+Polymorphic per-gateway processor pattern under `app/Http/Controllers/Gateway/`.
+Twelve per-gateway `ProcessController` classes are present:
 
 ```
 Gateway/
 ├── PaymentGatewayController.php    Router: resolves gateway → delegates to ProcessController
-├── Stripe/ProcessController.php
-├── PayPal/ProcessController.php
-├── Razorpay/ProcessController.php
-├── PayStack/ProcessController.php
-├── PayU/ProcessController.php
-├── Bkash/ProcessController.php
 ├── AamarPay/ProcessController.php
+├── Bkash/ProcessController.php
 ├── CashFree/ProcessController.php
 ├── JazzCash/ProcessController.php
+├── PayPal/ProcessController.php
+├── PayStack/ProcessController.php
 ├── PayTabs/ProcessController.php
-└── QiCard/ProcessController.php
+├── PayU/ProcessController.php
+├── QiCard/ProcessController.php
+├── Razorpay/ProcessController.php
+├── Stripe/ProcessController.php
+└── (PaySafeCard handled via config-driven gateway model)
 ```
 
 **Flow**:
@@ -210,6 +242,10 @@ Gateway/
 2. Calls `{Gateway}\ProcessController::process($gateway, $payment)` statically
 3. Gateway returns a redirect URL; success/cancel handlers update order state
 4. `config/acl.php` controls gateway enable/disable per permissions
+
+**SDK packages vendored** (composer): Razorpay, Stripe, PayPal, PayStack, PaySafeCard.
+The remaining gateways (AamarPay, Bkash, CashFree, JazzCash, PayTabs, PayU, QiCard)
+are driven through direct HTTP calls rather than an installed SDK.
 
 The `PaymentMethod` enum lists all supported methods plus `cash` and generic `online`.
 
@@ -234,12 +270,18 @@ Custom middleware layer:
 - `CheckPermission.php` — checks user roles against ACL config
 - `CheckSubscription.php` — verifies active subscription for shops (web group)
 - `CheckHasRootUser.php` — redirects to setup if root user missing
+- `DemoModeMiddleware.php` — blocks mutating actions (POST/PUT/DELETE) in demo env
+- `LocalizationManage.php` — sets app locale from session/header
+- `ShopAuthenticate.php` — seller dashboard auth
+
+`User` model uses `Spatie\Permission\Traits\HasRoles`. `PermissionServiceProvider`
+registers the permission gates.
 
 ---
 
 ## API Surface (`routes/api.php`)
 
-~90 endpoints organized by actor:
+106 endpoints organized by actor:
 
 ### Public (no auth required)
 - `GET /master` — app settings, theme, currencies, languages
@@ -297,7 +339,7 @@ Custom middleware layer:
 
 ## Repository Pattern
 
-55+ repository classes in `app/Repositories/` abstract data access. Controllers
+53+ repository classes in `app/Repositories/` abstract data access. Controllers
 inject repositories via the constructor. Repositories typically wrap Eloquent queries
 and return collections, paginated results, or single models.
 
@@ -327,6 +369,8 @@ Example: `ProductRepository`, `OrderRepository`, `CartRepository`, `ShopReposito
 
 ## Enums (`App\Enums`)
 
+10 backed enums:
+
 | Enum | Values | Used In |
 |------|--------|---------|
 | `DeductionType` | inclusive, exclusive | VAT/tax |
@@ -344,13 +388,15 @@ Example: `ProductRepository`, `OrderRepository`, `CartRepository`, `ShopReposito
 
 ## Web Routes (`routes/web.php`)
 
-Key groups:
+396 routes. Key groups:
 1. **/** — Vue SPA entry point (returns `app.blade.php`)
 2. **/lang/{locale}** — JSON translation files
 3. **/payment/*** — Payment gateway callbacks (success, cancel, process)
 4. **/admin/** — Admin dashboard (auth + checkPermission middleware)
 5. **/shop/** — Seller/vendor dashboard (authShop + checkPermission middleware)
 6. **/gateway/purchase/** — Module-based purchase gateway routes
+
+> Inspect with `php artisan route:list --name=...` or `--path=admin`.
 
 ---
 
@@ -398,7 +444,7 @@ All validation lives in `app/Http/Requests/`. Return typed validated data with
 ```php
 declare(strict_types=1);
 
-namespace App\Http\Requests;
+namespace App\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -463,6 +509,9 @@ public function orders(): HasMany
 - PSR-12 + Laravel Pint conventions.
 - After editing PHP, run `vendor/bin/pint --dirty --format agent` to auto-fix style.
 - Use PHPDoc blocks over inline comments; only comment non-obvious logic.
+- **Admin/seller Blade**: Bootstrap 5 for layout & components, Tailwind for utility
+  tweaks. Don't remove the Bootstrap stylesheet from the admin layout — the sidebar
+  depends on it.
 
 ---
 
@@ -484,14 +533,20 @@ php artisan migrate
 
 `.env`: `DB_DATABASE=ready_ecommerce`, `DB_USERNAME=root`, `DB_PASSWORD=root`.
 
-### Tests (PHPUnit)
+### Tests
 
 ```bash
-php artisan make:test --phpunit Feature/CheckoutTest   # new feature test
-php artisan test --compact                              # full suite
-php artisan test --compact --filter=testName            # single test
+php artisan make:test --phpunit Feature/CheckoutTest   # new PHPUnit feature test
+php artisan test --compact                              # full PHPUnit suite
+php artisan test --compact --filter=testName            # single PHPUnit test
+
+php artisan dusk --filter=AdminShopTest                 # single Dusk browser test
+php artisan dusk                                        # full Dusk suite (21 tests)
 ```
 
+- PHPUnit suite: 1 Feature + 1 Unit test (currently thin — coverage lives mostly in Dusk).
+- Dusk browser tests live in `tests/Browser/` (Helpers.php + Components/ patterns);
+  screenshots/source written alongside test files.
 - Use factories; do not hand-craft model data in tests.
 - Do not delete existing tests without approval.
 
@@ -574,9 +629,14 @@ php artisan tinker --execute 'User::count();'
 ## Tips & Gotchas
 
 - **MAMP subdirectory deployment**: root `.htaccess` routes everything through
-  `index.php` while preserving asset paths. Requires `DirectorySlash Off`.
+  `index.php` while preserving asset paths. Requires `DirectorySlash Off`. Vite uses
+  `base: ""` (relative paths) so assets resolve under `/janmitram-app/`.
 - **Vite manifest errors**: run `npm run build` if you see
   `Illuminate\Foundation\ViteException`.
+- **Admin UI is Bootstrap + Tailwind**: the admin layout intentionally loads both. If
+  you migrate admin to Tailwind-only, the sidebar `.collapse` must be preserved.
+- **Status-toggle routes must be GET**: anchor links can't issue PUT/POST — see the shop
+  toggle 404 regression (commit `d645921`).
 - **Guest token header**: all cart-related API calls from unauthenticated clients
   must include `X-Guest-Token`. The SPA manages this transparently via BasketStore.
 - **Cache**: `generaleSetting()` is cached for 30 days — clear with
@@ -588,4 +648,4 @@ php artisan tinker --execute 'User::count();'
 
 ---
 
-_Last updated: 2026-07-09. Generated for contributor onboarding._
+_Last updated: 2026-07-17. Generated for contributor onboarding._
