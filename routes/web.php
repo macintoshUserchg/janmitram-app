@@ -473,7 +473,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:root'])->group
     Route::get('shop/{shop}', [ShopController::class, 'show'])->name('shop.show');
     Route::get('shop/{shop}/edit', [ShopController::class, 'edit'])->name('shop.edit');
     Route::put('shop/{shop}', [ShopController::class, 'update'])->name('shop.update');
-    Route::put('shop/{shop}/status-toggle', [ShopController::class, 'statusToggle'])->name('shop.status.toggle');
+    Route::get('shop/{shop}/toggle', [ShopController::class, 'statusToggle'])->name('shop.status.toggle');
     Route::get('shop/{shop}/orders', [ShopController::class, 'orders'])->name('shop.orders');
     Route::get('shop/{shop}/products', [ShopController::class, 'products'])->name('shop.products');
     Route::get('shop/{shop}/reviews', [ShopController::class, 'reviews'])->name('shop.reviews');

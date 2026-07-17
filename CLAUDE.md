@@ -53,6 +53,31 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 - Be concise in your explanations - focus on what's important rather than explaining obvious details.
 
+## Multi-Database Setup
+
+- The app connects to 4+ databases (`ready_ecommerce`, `u939461333_janmitra`, `aitradex_db`, `lifeskills_db`) configured in `.env`. Each serves a domain: ecommerce, janmitra, aitradex/MLM, lifeskills. Cross-schema queries use explicit database-prefixed table references.
+
+## Admin & SPA Hybrid
+
+- Admin panel uses Blade + Bootstrap (views in `resources/views/admin/`). Customer shop is a Vue 3 SPA (in `resources/js/`) served via Vite. Vite uses `base: ""` (relative paths) for subdirectory deployment under `/janmitram-app/`.
+
+## Dusk Browser Testing
+
+- 28 Laravel Dusk tests live in `tests/Browser/` (Helpers.php + Components/ patterns). Run with `php artisan dusk --filter=testName`. Screenshots/source are written alongside test files. Follow existing test structure when adding coverage.
+
+## Modules (nwidart/laravel-modules)
+
+- Feature modules live in `Modules/` (`purchase`, `report`). Standard nwidart structure with their own controllers, views, routes, and namespace `Modules`.
+
+## Custom Middleware & Permissions
+
+- `app/Http/Middleware/CheckPermission.php` bridges Spatie Permission for admin routes. Also active: `CheckSubscription`, `CheckHasRootUser`, `ShopAuthenticate`, `DemoModeMiddleware`, `LocalizationManage`. `PermissionServiceProvider` registers permission gates.
+- `User` model uses `Spatie\Permission\Traits\HasRoles`. Admin roles/permissions use `spatie/laravel-permission` v6.
+
+## Payment Gateways
+
+- Multiple providers integrated: Razorpay, Stripe, PayPal, Paystack, PaySafeCard, plus a config-driven payment gateway model. `Gateway/PaymentGatewayController` is the main integration point.
+
 === boost rules ===
 
 # Laravel Boost
