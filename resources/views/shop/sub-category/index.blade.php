@@ -49,10 +49,8 @@
                                 <td>{{ $subCategory->name }}</td>
                                 <td>
                                     <label class="switch mb-0">
-                                        <a href="javascript:void(0);">
-                                            <input type="checkbox" {{ $subCategory->is_active ? 'checked' : '' }}>
-                                            <span class="slider round"></span>
-                                        </a>
+                                        <input type="checkbox" {{ $subCategory->is_active ? 'checked' : '' }} disabled>
+                                        <span class="slider round"></span>
                                     </label>
                                 </td>
                             </tr>
