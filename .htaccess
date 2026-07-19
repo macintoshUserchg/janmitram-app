@@ -2,9 +2,15 @@
     DirectorySlash Off
 </IfModule>
 
+CGIPassAuth On
+
 <IfModule mod_rewrite.c>
     Options +FollowSymLinks
     RewriteEngine On
+
+    # Pass the Authorization header to PHP
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
     # Explicitly serve existing files (including those in subdirectories)
     RewriteCond %{REQUEST_FILENAME} -f
