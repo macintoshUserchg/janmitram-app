@@ -9,6 +9,8 @@ use Tests\DuskTestCase;
 
 class AdminThemeColorTest extends DuskTestCase
 {
+    use Helpers;
+
     /**
      * Admin can log in and see the theme-color page.
      */

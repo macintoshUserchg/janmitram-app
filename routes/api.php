@@ -103,6 +103,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('profile', [UserController::class, 'index']);
     Route::post('update-profile', [UserController::class, 'update']);
     Route::post('change-password', [UserController::class, 'changePassword']);
+    Route::post('update-last-seen', [UserController::class, 'updateLastSeen']);
+    Route::get('recently-views', [HomeController::class, 'recentlyViews']);
 
     // Favourites & reviews
     Route::post('favorite-add-or-remove', [ProductController::class, 'addFavorite']);
@@ -120,7 +122,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('cart/store', [CartController::class, 'store']);
     Route::post('cart/increment', [CartController::class, 'increment']);
     Route::post('cart/decrement', [CartController::class, 'decrement']);
-    Route::get('cart/checkout', [CartController::class, 'checkout']);
+    Route::post('cart/checkout', [CartController::class, 'checkout']);
     Route::delete('cart', [CartController::class, 'destroy']);
 
     // Orders

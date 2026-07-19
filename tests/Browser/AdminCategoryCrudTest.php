@@ -9,6 +9,8 @@ use Tests\DuskTestCase;
 
 class AdminCategoryCrudTest extends DuskTestCase
 {
+    use Helpers;
+
     private static string $testName = 'Test Category Dusk';
 
     private static string $updatedName = 'Updated Category Dusk';
