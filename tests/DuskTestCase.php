@@ -44,8 +44,8 @@ abstract class DuskTestCase extends BaseTestCase
             ]);
         })->all());
 
-        // Use Google Chrome (auto-detected by ChromeDriver without explicit binary)
-        $chromePath = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+        // Use Google Chrome - configurable via DUSK_CHROME_BINARY env var
+        $chromePath = $_ENV['DUSK_CHROME_BINARY'] ?? env('DUSK_CHROME_BINARY') ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
         if (file_exists($chromePath)) {
             $options->setBinary($chromePath);
         }

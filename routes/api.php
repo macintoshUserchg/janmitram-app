@@ -103,6 +103,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('profile', [UserController::class, 'index']);
     Route::post('update-profile', [UserController::class, 'update']);
     Route::post('change-password', [UserController::class, 'changePassword']);
+    Route::post('update-last-seen', [UserController::class, 'updateLastSeen']);
+    Route::get('recently-views', [HomeController::class, 'recentlyViews']);
 
     // Favourites & reviews
     Route::post('favorite-add-or-remove', [ProductController::class, 'addFavorite']);

@@ -109,7 +109,7 @@ const fetchViewProducts = () => {
             isLoginRecentlyView.value = false;
         }).catch((error) => {
             isLoginRecentlyView.value = false;
-            if (error.response.status === 401) {
+            if (error.response?.status === 401) {
                 authStore.token = null;
                 authStore.user = null;
                 authStore.addresses = [];

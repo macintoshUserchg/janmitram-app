@@ -194,8 +194,8 @@ Route::prefix('shop')->name('shop.')->middleware(['web'])->group(function () {
 
         Route::get('order', [OrderController::class, 'index'])->name('order.index');
         Route::get('order/{order}', [OrderController::class, 'show'])->name('order.show');
-        Route::put('order/{order}/status', [OrderController::class, 'statusChange'])->name('order.status.change');
-        Route::put('order/{order}/payment-status-toggle', [OrderController::class, 'paymentStatusToggle'])->name('order.payment.status.toggle');
+        Route::match(['get', 'put'], 'order/{order}/status', [OrderController::class, 'statusChange'])->name('order.status.change');
+        Route::match(['get', 'put'], 'order/{order}/payment-status-toggle', [OrderController::class, 'paymentStatusToggle'])->name('order.payment.status.toggle');
         Route::get('order/{order}/invoice-download', [OrderController::class, 'downloadInvoice'])->name('download-invoice');
         Route::get('order/{order}/payment-slip', [OrderController::class, 'paymentSlip'])->name('payment-slip');
 
@@ -447,8 +447,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:root'])->group
 
     Route::get('order', [App\Http\Controllers\Admin\OrderController::class, 'index'])->name('order.index');
     Route::get('order/{order}', [App\Http\Controllers\Admin\OrderController::class, 'show'])->name('order.show');
-    Route::put('order/{order}/status', [App\Http\Controllers\Admin\OrderController::class, 'statusChange'])->name('order.status.change');
-    Route::put('order/{order}/payment-status-toggle', [App\Http\Controllers\Admin\OrderController::class, 'paymentStatusToggle'])->name('order.payment.status.toggle');
+    Route::match(['get', 'put'], 'order/{order}/status', [App\Http\Controllers\Admin\OrderController::class, 'statusChange'])->name('order.status.change');
+    Route::match(['get', 'put'], 'order/{order}/payment-status-toggle', [App\Http\Controllers\Admin\OrderController::class, 'paymentStatusToggle'])->name('order.payment.status.toggle');
 
     Route::get('return-order', [App\Http\Controllers\Admin\ReturnOrderController::class, 'index'])->name('returnOrder.index');
     Route::get('return-order/{returnOrder}', [App\Http\Controllers\Admin\ReturnOrderController::class, 'show'])->name('returnOrder.show');

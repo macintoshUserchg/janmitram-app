@@ -62,4 +62,14 @@ class UserController extends Controller
 
         return $this->json('Password changed successfully');
     }
+
+    /**
+     * Update the user's last-seen timestamp for chat presence.
+     */
+    public function updateLastSeen()
+    {
+        auth()->user()->update(['last_online' => now()]);
+
+        return $this->json('last seen updated');
+    }
 }
