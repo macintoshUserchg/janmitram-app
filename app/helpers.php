@@ -40,13 +40,17 @@ if (! function_exists('generaleSetting')) {
 
         if ($type == 'rootShop') {
             return Cache::remember('admin_shop', 60 * 24 * 7, function () {
-                return User::role('root')->whereHas('shop')->first()?->shop;
+                try {
+                    return User::role('root')->whereHas('shop')->first()?->shop;
+                } catch (\Spatie\Permission\Exceptions\RoleDoesNotExist) {
+                    return null;
+                }
             });
         }
 
         if ($type == 'shop') {
             if ($generaleSetting?->shop_type == 'single') {
-                $shop = User::role('root')->whereHas('shop')->first()?->shop;
+                $shop = selfGetRootShop();
             } else {
                 /** @var User */
                 $user = $authUser ?? auth()->user();
@@ -54,7 +58,7 @@ if (! function_exists('generaleSetting')) {
             }
 
             if (! $shop) {
-                $shop = User::role('root')->whereHas('shop')->first()?->shop;
+                $shop = selfGetRootShop();
             }
 
             return $shop;
@@ -69,6 +73,18 @@ if (! function_exists('generaleSetting')) {
         }
 
         return $generaleSetting;
+    }
+}
+
+/**
+ * Safely get the root user's shop, returning null if the role doesn't exist.
+ */
+function selfGetRootShop()
+{
+    try {
+        return User::role('root')->whereHas('shop')->first()?->shop;
+    } catch (\Spatie\Permission\Exceptions\RoleDoesNotExist) {
+        return null;
     }
 }
 

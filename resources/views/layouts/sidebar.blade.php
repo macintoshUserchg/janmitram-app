@@ -10,7 +10,7 @@
 
                 $shop = generaleSetting('shop');
                 $rootShop = generaleSetting('rootShop');
-                $isAdmin = $shop->id == $rootShop->id ? true : false;
+                $isAdmin = $shop && $rootShop && $shop->id == $rootShop->id ? true : false;
 
                 $url = $isAdmin ? route('admin.dashboard.index') : route('shop.dashboard.index');
             @endphp
