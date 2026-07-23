@@ -70,6 +70,7 @@
 
                     <form action="{{ route('admin.employee.permission.update', $user->id) }}" method="POST">
                         @csrf
+                        @method('PUT')
                         <input type="hidden" name="role_id" value="{{ $role->id }}">
                         <div class="mt-3 permission-container flex-grow-1">
                             <div

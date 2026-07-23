@@ -139,6 +139,7 @@
                                                         <form action="{{ route('admin.footer.update', $footer->id) }}"
                                                             method="POST">
                                                             @csrf
+                                                            @method('PUT')
                                                             <x-input name="title" label="Title" type="text" class="form-control-sm"
                                                                 value="{{ $footer->title }}" placeholder="Enter Title"
                                                                 required="true" />

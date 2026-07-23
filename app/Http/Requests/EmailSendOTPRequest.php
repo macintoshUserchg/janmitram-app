@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use App\Rules\EmailRule;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -25,7 +24,7 @@ class EmailSendOTPRequest extends FormRequest
     {
         $forgotPassword = $this->forgot_password;
 
-        $validate = $forgotPassword ? 'required|email|exists:users,email' : ['required', 'unique:users,email', new EmailRule];
+        $validate = $forgotPassword ? 'required|email|exists:users,email' : ['required', 'email', 'unique:users,email'];
 
         return [
             'email' => $validate,

@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use App\Rules\EmailRule;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -30,7 +29,7 @@ class UserRequest extends FormRequest
         return [
             'name' => 'required|string|max:255',
             'phone' => 'required|string|unique:users,phone,'.$userId,
-            'email' => ['nullable', 'email:rfc,dns', 'max:255', new EmailRule, 'unique:users,email,'.$userId],
+            'email' => ['nullable', 'email:rfc,dns', 'max:255', 'unique:users,email,'.$userId],
             'profile_photo' => 'nullable|image|max:2048|mimes:png,jpg,jpeg,gif',
             'password' => [$required, 'string', 'min:6', $confirmed],
             'password_confirmation' => [$required, 'min:6'],

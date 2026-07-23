@@ -20,7 +20,6 @@ use App\Repositories\PosCartRepository;
 use App\Repositories\ProductRepository;
 use App\Repositories\UserRepository;
 use App\Repositories\VatTaxRepository;
-use App\Rules\EmailRule;
 use Endroid\QrCode\QrCode as EndroidQrCode;
 use Endroid\QrCode\Writer\PngWriter;
 use Illuminate\Http\Request;
@@ -167,7 +166,7 @@ class POSController extends Controller
             'first_name' => 'required|string|max:200',
             'last_name' => 'nullable|string|max:200',
             'phone' => 'required|string|unique:users,phone|digits_between:6,25',
-            'email' => ['nullable', 'email', 'max:200', new EmailRule],
+            'email' => ['nullable', 'email', 'max:200'],
         ]);
 
         $request['is_active'] = 1;

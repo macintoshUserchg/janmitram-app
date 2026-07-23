@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use App\Rules\EmailRule;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -25,7 +24,7 @@ class ProfileUpdateRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255',
-            'email' => ['nullable', 'email', 'max:255', new EmailRule],
+            'email' => ['nullable', 'email', 'max:255'],
             'profile_photo' => 'nullable|image|max:2048|mimes:png,jpg,jpeg,gif,svg',
             'phone' => 'required|string|max:255',
             'gender' => 'required|string|max:255',

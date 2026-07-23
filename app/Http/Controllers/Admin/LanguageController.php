@@ -195,4 +195,12 @@ class LanguageController extends Controller
 
         return to_route('admin.language.index')->withSuccess(__('Language set successfully'));
     }
+
+    public function changeLanguage(Request $request)
+    {
+        $locale = $request->query('language', 'en');
+        session()->put('locale', $locale);
+
+        return back();
+    }
 }

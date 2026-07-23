@@ -177,6 +177,7 @@
                     </h4>
                     <form action="{{ route('admin.firebase.update') }}" method="POST" enctype="multipart/form-data">
                         @csrf
+                        @method('PUT')
 
                         <div class="drop-zone mx-auto">
                             <span class="drop-zone__prompt">

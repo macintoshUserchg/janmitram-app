@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use App\Rules\EmailRule;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -24,7 +23,7 @@ class CheckEmailPhoneRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'email', new EmailRule, 'unique:users,email'],
+            'email' => ['required', 'email', 'unique:users,email'],
             'phone' => ['required', 'unique:users,phone'],
         ];
     }

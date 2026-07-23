@@ -3,7 +3,6 @@
 namespace App\Http\Requests;
 
 use App\Models\VerifyManage;
-use App\Rules\EmailRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Cache;
 
@@ -59,7 +58,7 @@ class RiderRequest extends FormRequest
             'first_name' => 'required|string',
             'last_name' => 'nullable|string',
             'phone' => $phoneValidate,
-            'email' => [$emailRequired, new EmailRule, 'unique:users,email,'.$userId],
+            'email' => [$emailRequired, 'email', 'unique:users,email,'.$userId],
             'password' => "$required|min:6|confirmed",
             'profile_photo' => 'nullable|image|mimes:jpg,jpeg,png,svg|max:2048',
             'gender' => 'nullable|string',

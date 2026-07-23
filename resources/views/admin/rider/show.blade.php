@@ -233,6 +233,7 @@
     <!-- Withdraw Modal -->
     <form action="{{ route('admin.withdraw.update', $user->id) }}" method="POST">
         @csrf
+        @method('PUT')
         <div class="modal fade" id="withdrawModal" tabindex="-1">
             <div class="modal-dialog">
                 <div class="modal-content">

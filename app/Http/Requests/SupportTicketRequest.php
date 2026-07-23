@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use App\Rules\EmailRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class SupportTicketRequest extends FormRequest
@@ -24,7 +23,7 @@ class SupportTicketRequest extends FormRequest
             'issue_type' => 'required|string|max:255',
             'subject' => 'nullable|string|max:255',
             'message' => 'required|string',
-            'email' => ['required', 'string', 'max:255', new EmailRule],
+            'email' => ['required', 'string', 'email', 'max:255'],
             'phone' => 'nullable|numeric|digits_between:8,16',
             'order_number' => 'nullable|string|max:200',
             'attachments' => 'nullable|array',

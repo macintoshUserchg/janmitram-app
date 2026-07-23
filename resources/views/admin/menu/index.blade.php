@@ -122,6 +122,7 @@
                                                             <form method="POST"
                                                                 action="{{ route('admin.menu.update', $menu->id) }}">
                                                                 @csrf
+                                                                @method('PUT')
                                                                 <div class="row">
                                                                     <div class="col-xl-12">
                                                                         <div class="mb-3">

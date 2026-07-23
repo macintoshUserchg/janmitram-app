@@ -8,6 +8,7 @@
             <div class="col-xl-8 col-lg-9 m-auto">
                 <form action="{{ route('admin.googleReCaptcha.update') }}" method="POST">
                     @csrf
+                    @method('PUT')
                     <div class="card">
                         <div class="card-header py-3">
                             <h4 class="m-0">{{ __('Google ReCaptcha Configuration') }}</h4>

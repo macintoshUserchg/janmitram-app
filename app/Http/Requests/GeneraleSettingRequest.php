@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use App\Rules\EmailRule;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -26,7 +25,7 @@ class GeneraleSettingRequest extends FormRequest
         return [
             'name' => 'nullable|string|max:255',
             'title' => 'nullable|string|max:255',
-            'email' => ['nullable', 'email', 'max:255', new EmailRule],
+            'email' => ['nullable', 'email', 'max:255'],
             'mobile' => 'nullable|string',
             'address' => 'nullable|string|max:255',
             'google_playstore_url' => 'nullable|string|max:255',
@@ -37,7 +36,7 @@ class GeneraleSettingRequest extends FormRequest
             'favicon' => 'nullable|image|mimes:png,jpg,jpeg,png,svg,webp|max:2048',
             'logo' => 'nullable|image|mimes:png,jpg,jpeg,png,svg|max:2048',
             'footer_phone' => 'nullable|string|max:255',
-            'footer_email' => ['nullable', 'email', new EmailRule],
+            'footer_email' => ['nullable', 'email'],
             'footer_text' => 'nullable|string|max:255',
             'footer_description' => 'nullable|string|max:255',
             'footerqrcode' => 'nullable|image|mimes:png,jpg,jpeg,png,gif|max:2048',

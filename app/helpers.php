@@ -10,38 +10,8 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Number;
 use Laravel\Sanctum\PersonalAccessToken;
 use Nwidart\Modules\Facades\Module;
-
-if (! function_exists('getDistance')) {
-    /**
-     * Calculate the distance between two geographical coordinates.
-     *
-     * @param  array  $firstLatLng  The first [latitude, longitude] coordinates
-     * @param  array  $secondLatLng  The second [latitude, longitude] coordinates
-     * @return float The distance between the two coordinates in kilometers
-     */
-    function getDistance(array $firstLatLng, array $secondLatLng): float
-    {
-        if (empty($firstLatLng) || empty($secondLatLng)) {
-            return 0;
-        }
-
-        $theta = ($firstLatLng[1] - $secondLatLng[1]);
-        $dist = sin(deg2rad($firstLatLng[0])) *
-        sin(deg2rad($secondLatLng[0])) +
-        cos(deg2rad($firstLatLng[0])) *
-        cos(deg2rad($secondLatLng[0])) *
-        cos(deg2rad($theta));
-
-        $dist = acos($dist);
-        $dist = rad2deg($dist);
-        $miles = $dist * 60 * 1.1515;
-
-        return $miles * 1.609344;
-    }
-}
 
 if (! function_exists('generaleSetting')) {
     /**

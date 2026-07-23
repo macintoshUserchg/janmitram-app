@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use App\Rules\EmailRule;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -29,7 +28,7 @@ class ShopUserUpdateRequest extends FormRequest
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['nullable', 'string', 'max:255'],
             'phone' => ['required', 'string', 'max:255', 'unique:users,phone,'.$user?->id],
-            'email' => ['required', 'string', 'max:255', 'unique:users,email,'.$user?->id, new EmailRule],
+            'email' => ['required', 'string', 'max:255', 'email', 'unique:users,email,'.$user?->id],
             'gender' => ['nullable', 'string'],
             'profile_photo' => ['nullable', 'image', 'max:2048', 'mimes:jpg,jpeg,png,svg,webp,gif'],
             'date_of_birth' => ['nullable', 'date'],

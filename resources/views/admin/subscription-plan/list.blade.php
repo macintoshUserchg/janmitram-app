@@ -130,8 +130,15 @@
                 cancelButtonColor: "#d33",
                 confirmButtonText: "Yes, Approve it!",
             }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.href = url;
+                if (result.isConfirmed && url) {
+                    const token = '{{ csrf_token() }}';
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = url;
+                    form.style.display = 'none';
+                    form.innerHTML = '<input type="hidden" name="_token" value="' + token + '">';
+                    document.body.appendChild(form);
+                    form.submit();
                 }
             });
         });

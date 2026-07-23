@@ -37,6 +37,7 @@
                             @hasPermission('admin.socialAuth.update')
                                 <form action="{{ route('admin.socialAuth.update', $socialAuth->id) }}" method="POST">
                                     @csrf
+                                    @method('PUT')
                                 @endhasPermission
 
                                 @if ($socialAuth->provider == 'apple')

@@ -3,7 +3,6 @@
 namespace App\Http\Requests;
 
 use App\Models\VerifyManage;
-use App\Rules\EmailRule;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Cache;
@@ -46,7 +45,7 @@ class ShopProfileRequest extends FormRequest
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['nullable', 'string', 'max:255'],
             'phone' => ['required', 'unique:users,phone,'.$user?->id, 'min_digits:'.$min, 'max_digits:'.$max],
-            'email' => ['required', 'string', 'max:255', 'unique:users,email,'.$user?->id, new EmailRule],
+            'email' => ['required', 'string', 'max:255', 'email', 'unique:users,email,'.$user?->id],
             'gender' => ['nullable', 'string'],
             'password' => ['nullable', 'min:6', 'confirmed'],
             'address' => ['nullable', 'string'],

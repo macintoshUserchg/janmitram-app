@@ -117,8 +117,7 @@
                         <p class="text-muted">
                             Export your language files in JSON format with just one click!
                         </p>
-                        <form action="{{ route('admin.language.export', $language->id) }}" method="POST">
-                            @csrf
+                        <form action="{{ route('admin.language.export', $language->id) }}" method="GET">
                             <button type="submit" class="btn btn-primary btn-lg mt-4 export-btn py-2 px-4">
                                 {{ __('Export') }}
                                 <i class="fa-solid fa-cloud-arrow-down ml-2"></i>

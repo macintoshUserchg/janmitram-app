@@ -86,6 +86,7 @@
 
                             <form action="{{ route('admin.role.permission.update', $selectedRole->id) }}" method="POST">
                                 @csrf
+                                @method('PUT')
                                 <div class="d-flex flex-column gap-3 mt-3">
 
                                     @foreach ($allPermissionArray as $adminType => $allPermissions)

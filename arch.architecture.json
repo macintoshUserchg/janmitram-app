@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": { 
+    "title": "Janmitram App Runtime Architecture", 
+    "subtitle": "High-level components and request flow", 
+    "output": "architecture.html" 
+  },
+  "layout": { "mode": "grid", "cols": 5, "origin": [40, 100], "gapX": 40, "gapY": 80, "cellW": 160, "cellH": 60 },
+  "components": [
+    { "id": "admin_panel", "type": "frontend", "label": "Admin Panel", "sublabel": "Blade + Bootstrap", "row": 0, "col": 0 },
+    { "id": "customer_spa", "type": "frontend", "label": "Customer Shop", "sublabel": "Vue 3 SPA (Vite)", "row": 0, "col": 2 },
+    { "id": "api_consumers", "type": "external", "label": "Mobile / API", "sublabel": "REST Clients", "row": 0, "col": 4, "size": [140, 60] },
+
+    { "id": "router_middleware", "type": "security", "label": "Router & Middleware", "sublabel": "Auth, Sanctum, Spatie", "row": 1, "col": 2 },
+    
+    { "id": "feature_modules", "type": "backend", "label": "Feature Modules", "sublabel": "nwidart/laravel-modules", "row": 2, "col": 0 },
+    { "id": "app_controllers", "type": "backend", "label": "Controllers", "sublabel": "Admin / API / Shop", "row": 2, "col": 2 },
+    { "id": "payment_gateway", "type": "backend", "label": "Payment Gateway", "sublabel": "Stripe, PayPal, etc.", "row": 2, "col": 4, "size": [150, 60] },
+    
+    { "id": "services", "type": "backend", "label": "Notification Svc.", "sublabel": "SMS, Chat, Pusher", "row": 3, "col": 0, "size": [150, 60] },
+    { "id": "repositories", "type": "backend", "label": "Repositories", "sublabel": "DB Abstraction Layer", "row": 3, "col": 2 },
+    
+    { "id": "ext_notifications", "type": "external", "label": "External Notifications", "sublabel": "Firebase, Twilio", "row": 4, "col": 0, "size": [160, 60] },
+    { "id": "database", "type": "database", "label": "MySQL Database", "sublabel": "DB_DATABASE", "row": 4, "col": 2 },
+    { "id": "ext_payments", "type": "external", "label": "Payment Providers", "sublabel": "Stripe, PayPal", "row": 4, "col": 4, "size": [150, 60] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "Laravel Application Backend", "wraps": ["router_middleware", "feature_modules", "app_controllers", "payment_gateway", "services", "repositories", "database"] },
+    { "kind": "security-group", "label": "Trust Boundary", "wraps": ["router_middleware"] }
+  ],
+  "connections": [
+    { "from": "customer_spa", "to": "router_middleware", "label": "HTTPS API", "variant": "emphasis", "labelDy": 24 },
+    { "from": "admin_panel", "to": "router_middleware", "label": "HTTPS Web" },
+    { "from": "api_consumers", "to": "router_middleware", "label": "HTTPS API" },
+    
+    { "from": "router_middleware", "to": "app_controllers", "label": "Authorized", "variant": "emphasis", "labelDy": 24 },
+    
+    { "from": "app_controllers", "to": "feature_modules" },
+    { "from": "app_controllers", "to": "repositories", "label": "Data Access", "variant": "emphasis", "labelDy": 24 },
+    { "from": "app_controllers", "to": "payment_gateway", "labelDy": 24 },
+    { "from": "app_controllers", "to": "services", "labelDy": 24 },
+    
+    { "from": "feature_modules", "to": "repositories", "labelDy": 24 },
+    
+    { "from": "repositories", "to": "database", "label": "SQL Queries", "variant": "emphasis", "labelDy": 24 },
+    
+    { "from": "services", "to": "ext_notifications", "label": "API", "labelDy": 24 },
+    { "from": "payment_gateway", "to": "ext_payments", "label": "API", "labelDy": 24 }
+  ],
+  "cards": [
+    {
+      "title": "Authentication & Trust",
+      "dot": "rose",
+      "items": [
+        "Admin routes protected by CheckPermission / Spatie",
+        "SPA & Mobile clients use Laravel Sanctum tokens",
+        "Only authorized requests proceed to Controllers"
+      ]
+    },
+    {
+      "title": "Payment Integration",
+      "dot": "amber",
+      "items": [
+        "Multiple gateways managed via GatewayController",
+        "Stripe, PayPal, Razorpay, Paystack, Bkash supported"
+      ]
+    },
+    {
+      "title": "Database Architecture",
+      "dot": "emerald",
+      "items": [
+        "Single MySQL connection via DB_DATABASE",
+        "Repositories abstract Eloquent models and complex queries"
+      ]
+    }
+  ]
+}

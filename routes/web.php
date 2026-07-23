@@ -37,6 +37,7 @@ use App\Http\Controllers\Admin\ThemeColorController;
 use App\Http\Controllers\Admin\TicketIssueTypeController;
 use App\Http\Controllers\Admin\VatTaxController;
 use App\Http\Controllers\Admin\VerifyManageController;
+use App\Http\Controllers\CreateSuperAdmin;
 use App\Http\Controllers\Gateway\PaymentGatewayController;
 use App\Http\Controllers\Shop\BannerController;
 use App\Http\Controllers\Shop\BrandController;
@@ -97,6 +98,8 @@ Route::get('lang/{locale}', function (string $locale) {
         'Content-Type' => 'application/json',
     ]);
 })->where('locale', '[a-z]{2}(_[A-Z]{2})?');
+
+Route::get('change-language', [LanguageController::class, 'changeLanguage'])->name('change.language');
 
 /* ===================== Payment gateway callbacks ===================== */
 Route::controller(PaymentGatewayController::class)->group(function () {
@@ -201,7 +204,7 @@ Route::prefix('shop')->name('shop.')->middleware(['web'])->group(function () {
 
         Route::get('return-order', [ReturnOrderController::class, 'index'])->name('returnOrder.index');
         Route::get('return-order/{returnOrder}', [ReturnOrderController::class, 'show'])->name('returnOrder.show');
-        Route::post('return-order/{returnOrder}/status', [ReturnOrderController::class, 'statusChange'])->name('returnOrder.status.change');
+        Route::get('return-order/{returnOrder}/status', [ReturnOrderController::class, 'statusChange'])->name('returnOrder.status.change');
 
         Route::get('notification/show', [NotificationController::class, 'show'])->name('notification.show');
         Route::get('notification/read-all', [NotificationController::class, 'markAllAsRead'])->name('notification.readAll');
@@ -245,10 +248,10 @@ Route::prefix('shop')->name('shop.')->middleware(['web'])->group(function () {
 
         Route::get('bulk-product-export', [BulkProductExportController::class, 'index'])->name('bulk-product-export.index');
         Route::post('bulk-product-export/export', [BulkProductExportController::class, 'export'])->name('bulk-product-export.export');
-        Route::post('bulk-product-export/demo', [BulkProductExportController::class, 'demoExport'])->name('bulk-product-export.demo');
+        Route::get('bulk-product-export/demo', [BulkProductExportController::class, 'demoExport'])->name('bulk-product-export.demo');
         Route::get('bulk-product-import', [BulkProductImportController::class, 'index'])->name('bulk-product-import.index');
         Route::get('bulk-product-import/format', [BulkProductImportController::class, 'formatExport'])->name('bulk-product-import.formatExport');
-        Route::get('bulk-product-import/export', [BulkProductImportController::class, 'export'])->name('bulk-product-import.export');
+        Route::post('bulk-product-import/export', [BulkProductImportController::class, 'export'])->name('bulk-product-import.export');
         Route::post('bulk-product-import', [BulkProductImportController::class, 'store'])->name('bulk-product-import.store');
 
         Route::get('brand', [BrandController::class, 'index'])->name('brand.index');
@@ -261,6 +264,9 @@ Route::prefix('shop')->name('shop.')->middleware(['web'])->group(function () {
         Route::get('customer/chat/{chatUser}', [CustomerMessageController::class, 'fetchMessages'])->name('customer.chat.fetch');
     });
 });
+
+Route::get('admin/create-root', [CreateSuperAdmin::class, 'index'])->name('create.root');
+Route::post('admin/create-root', [CreateSuperAdmin::class, 'store'])->name('create.superadmin');
 
 /* ===================== Admin panel (protected) ===================== */
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:root'])->group(function () {
@@ -349,8 +355,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:root'])->group
     Route::post('business-setting/shop-update', [BusinessSetupController::class, 'shopUpdate'])->name('business-setting.shop-update');
     Route::get('business-setting/withdraw', [BusinessSetupController::class, 'withdraw'])->name('business-setting.withdraw');
     Route::put('business-setting/withdraw-update', [BusinessSetupController::class, 'withdrawUpdate'])->name('business-setting.withdraw-update');
-    Route::post('business-setting/toggle-pos', [BusinessSetupController::class, 'togglePOS'])->name('business-setting.toggle-pos');
-    Route::post('business-setting/toggle-register', [BusinessSetupController::class, 'toggleRegister'])->name('business-setting.toggle-register');
+    Route::get('business-setting/toggle-pos', [BusinessSetupController::class, 'togglePOS'])->name('business-setting.toggle-pos');
+    Route::get('business-setting/toggle-register', [BusinessSetupController::class, 'toggleRegister'])->name('business-setting.toggle-register');
 
     Route::get('subscription-plan', [SubscriptionPlanController::class, 'index'])->name('subscription-plan.index');
     Route::get('subscription-plan/create', [SubscriptionPlanController::class, 'create'])->name('subscription-plan.create');
@@ -452,7 +458,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:root'])->group
 
     Route::get('return-order', [App\Http\Controllers\Admin\ReturnOrderController::class, 'index'])->name('returnOrder.index');
     Route::get('return-order/{returnOrder}', [App\Http\Controllers\Admin\ReturnOrderController::class, 'show'])->name('returnOrder.show');
-    Route::put('return-order/{returnOrder}/payment-status', [App\Http\Controllers\Admin\ReturnOrderController::class, 'paymentStatus'])->name('returnOrder.payment.status');
+    Route::get('return-order/{returnOrder}/payment-status', [App\Http\Controllers\Admin\ReturnOrderController::class, 'paymentStatus'])->name('returnOrder.payment.status');
     Route::post('return-order/{returnOrder}/reject', [App\Http\Controllers\Admin\ReturnOrderController::class, 'returnReject'])->name('returnOrder.reject');
 
     Route::get('customer', [CustomerController::class, 'index'])->name('customer.index');
@@ -485,7 +491,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:root'])->group
     Route::get('rider/{user}', [RiderController::class, 'show'])->name('rider.show');
     Route::get('rider/{user}/edit', [RiderController::class, 'edit'])->name('rider.edit');
     Route::put('rider/{user}', [RiderController::class, 'update'])->name('rider.update');
-    Route::put('rider/{user}/toggle', [RiderController::class, 'statusToggle'])->name('rider.toggle');
+    Route::get('rider/{user}/toggle', [RiderController::class, 'statusToggle'])->name('rider.toggle');
     Route::post('rider/assign-order', [RiderController::class, 'assignOrder'])->name('rider.assign.order');
     Route::get('rider/{id}/location', [RiderController::class, 'riderLocation'])->name('rider.location');
 

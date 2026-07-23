@@ -15,6 +15,7 @@
 
         <form action="{{ route('admin.legalPage.update', $page?->slug) }}" method="POST" enctype="multipart/form-data">
             @csrf
+            @method('PUT')
             <div class="card border-0 rounded-12">
                 <div class="card-body">
                     <div>

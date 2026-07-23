@@ -2,7 +2,6 @@
 
 namespace App\Support\Repositories;
 
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -117,33 +116,5 @@ abstract class Repository
     public static function update(Model $model, array $data): bool
     {
         return $model->update($data);
-    }
-
-    // ----- additive conveniences (not in the original; unused by current repos) -----
-
-    /**
-     * All records (unordered).
-     */
-    public static function all(): Collection
-    {
-        return static::query()->get();
-    }
-
-    /**
-     * Paginate the records.
-     */
-    public static function paginate(int $perPage = 15): LengthAwarePaginator
-    {
-        return static::query()->paginate($perPage);
-    }
-
-    /**
-     * Alias of create().
-     *
-     * @param  array<string, mixed>  $data
-     */
-    public static function store(array $data): Model
-    {
-        return static::create($data);
     }
 }
