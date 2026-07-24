@@ -99,6 +99,19 @@ class ImportCI3Products extends Command
                     ]);
                 }
 
+                // Link category to Shop ID 1 (Root Shop) in shop_categories pivot
+                $hasShopCat = DB::table('shop_categories')
+                    ->where('shop_id', 1)
+                    ->where('category_id', $newCatId)
+                    ->exists();
+
+                if (! $hasShopCat) {
+                    DB::table('shop_categories')->insert([
+                        'shop_id' => 1,
+                        'category_id' => $newCatId,
+                    ]);
+                }
+
                 $categoryMap[$oldCat->Id] = $newCatId;
             }
 
