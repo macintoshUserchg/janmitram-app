@@ -117,14 +117,14 @@
                     @if (app()->isLocal())
                         <div class="credentials-section">
                             <small>
-                                This is a public demo environment for the ReadyEcommerce software. <br>
-                                The accounts below are demo accounts for testing purposes only and do not contain real user data.
+                                This is a local development environment for the Janmitram software. <br>
+                                The accounts below are default accounts for testing purposes only.
                             </small>
                             <div class="item">
                                 <div class="header">Demo Shop Credentials</div>
                                 <div class="content">
                                     <div class="credentials">
-                                        <span>Email: shop@readyecommerce.com</span>
+                                        <span>Email: shop@janmitram.com</span>
                                         <span>Password: secret</span>
                                     </div>
                                     <div class="copyBtn" onclick="loginShop()">
@@ -137,7 +137,7 @@
                                 <div class="header">Demo Admin Credentials</div>
                                 <div class="content">
                                     <div class="credentials">
-                                        <span>Email: root@readyecommerce.com</span>
+                                        <span>Email: root@janmitram.com</span>
                                         <span>Password: secret</span>
                                     </div>
                                     <div class="copyBtn" onclick="gotoAdminLogin()">
@@ -193,7 +193,7 @@
         }
 
         function loginShop() {
-            email.value = 'shop@readyecommerce.com';
+            email.value = 'shop@janmitram.com';
             password.value = 'secret';
 
             if (!sessionStorage.getItem('fromAdmin')) {
