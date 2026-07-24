@@ -1,3 +1,4 @@
+@props(['name', 'label' => null, 'required' => false, 'preview' => null])
 <div>
     @if (isset($label))
         <label for="{{ $name }}" class="form-label">
