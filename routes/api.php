@@ -67,6 +67,7 @@ Route::get('category-products', [ProductController::class, 'index']);  // VERIFY
 Route::get('product-details', [ProductController::class, 'show']);
 Route::get('shops', [ShopController::class, 'index']);
 Route::get('shop', [ShopController::class, 'show']);
+Route::get('shops/{shop}', [ShopController::class, 'show']);
 Route::get('shop-categories', [ShopController::class, 'shopCategory']);
 Route::get('top-shops', [ShopController::class, 'topShops']);
 Route::get('popular-products', [ShopController::class, 'popularProducts']);
