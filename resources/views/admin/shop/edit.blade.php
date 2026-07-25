@@ -11,6 +11,7 @@
 
     <form action="{{ route('admin.shop.update', $shop->id) }}" method="POST" enctype="multipart/form-data">
         @csrf
+        @method('PUT')
         <div class="card mt-3">
             <div class="card-body">
 
