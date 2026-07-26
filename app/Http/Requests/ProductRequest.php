@@ -57,6 +57,10 @@ class ProductRequest extends FormRequest
             'previousThumbnail' => 'nullable|array',
             'previousThumbnail.*.id' => 'nullable|exists:media,id',
             'previousThumbnail.*.file' => 'nullable|file|mimes:png,jpg,jpeg,webp|max:2048',
+
+            'is_stock_managed' => 'nullable|boolean',
+            'warehouse_id' => 'nullable|exists:warehouses,id',
+            'initial_warehouse_stock' => 'nullable|integer|min:0',
         ];
     }
 

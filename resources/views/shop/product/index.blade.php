@@ -9,10 +9,10 @@
         <div class="d-flex align-items-center gap-2 flex-wrap">
             <div class="mt-2 mt-lg-0 d-flex gap-2 justify-content-end">
                 <a href=" {{ route('shop.product.index', ['view_type' => 'grid']) }}"
-                    class="btn {{ request('view_type') == 'list' ? 'btn-secondary' : 'btn-primary' }}"><i
+                    class="btn {{ request('view_type', 'list') == 'grid' ? 'btn-primary' : 'btn-secondary' }}"><i
                         class="bi bi-grid"></i></a>
                 <a href=" {{ route('shop.product.index', ['view_type' => 'list']) }}"
-                    class="btn  {{ request('view_type') == 'list' ? 'btn-primary' : 'btn-secondary' }}"><i
+                    class="btn  {{ request('view_type', 'list') == 'list' ? 'btn-primary' : 'btn-secondary' }}"><i
                         class="bi bi-list-ul"></i></a>
             </div>
             @hasPermission('shop.product.create')
@@ -170,10 +170,10 @@
                     </div>
                 </form>
 
-                @if (request('view_type') == 'list')
-                    @include('shop.product.listView')
-                @else
+                @if (request('view_type', 'list') == 'grid')
                     @include('shop.product.gridView')
+                @else
+                    @include('shop.product.listView')
                 @endif
             </div>
         </div>

@@ -8,6 +8,7 @@
                 <th style="min-width: 100px">{{ __('Brand') }}</th>
                 <th class="text-center">{{ __('Price') }}</th>
                 <th class="text-center" style="min-width: 120px">{{ __('Discount Price') }}</th>
+                <th class="text-center" style="min-width: 120px">{{ __('Stock Source') }}</th>
                 @if (function_exists('module_exists') && module_exists('Purchase'))
                     <th class="text-center" style="min-width: 120px">{{ __('Current Stock') }}</th>
                 @endif
@@ -34,6 +35,14 @@
 
                 <td class="text-center">
                     {{ showCurrency($product->discount_price) }}
+                </td>
+
+                <td class="text-center">
+                    @if($product->is_digital)
+                        <span class="badge bg-info text-dark">{{ __('Digital') }}</span>
+                    @else
+                        <span class="badge bg-primary" data-bs-toggle="tooltip" data-bs-title="{{ __('Managed via Warehouse Stock') }}">{{ __('Physical Warehouse') }}</span>
+                    @endif
                 </td>
                 @if (function_exists('module_exists') && module_exists('Purchase'))
                     <td class="text-center">

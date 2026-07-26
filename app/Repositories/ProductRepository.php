@@ -8,6 +8,8 @@ use App\Models\Product;
 use App\Models\ProductTranslation;
 use App\Models\RecentView;
 use App\Models\User;
+use App\Models\Warehouse;
+use App\Services\WarehouseService;
 use App\Support\Repositories\Repository;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
@@ -112,7 +114,15 @@ class ProductRepository extends Repository
             'meta_title' => $request->meta_title,
             'meta_description' => $request->meta_description,
             'meta_keywords' => $keywords ? Str::limit($keywords, 200, '') : null,
+            'is_stock_managed' => ! $isDigital,
         ]);
+
+        if (! $isDigital && (int) $request->quantity > 0) {
+            $targetWarehouse = Warehouse::find($request->warehouse_id) ?? WarehouseRepository::getCentralWarehouse();
+            if ($targetWarehouse) {
+                WarehouseService::addStock($targetWarehouse, $product, (int) $request->quantity, null, null, 'initial_product_create', null, 'Initial stock set on product creation');
+            }
+        }
 
         foreach ($request->names ?? [] as $key => $value) {
             if (! $key || ! $value) {
@@ -235,6 +245,7 @@ class ProductRepository extends Repository
             'meta_title' => $request->meta_title,
             'meta_description' => $request->meta_description,
             'meta_keywords' => $keywords ? Str::limit($keywords, 200, '') : null,
+            'is_stock_managed' => ! $product->is_digital,
         ]);
 
         foreach ($request->names ?? [] as $key => $value) {

@@ -30,6 +30,7 @@ use App\Http\Controllers\Admin\ShopController;
 use App\Http\Controllers\Admin\SMSGatewaySetupController;
 use App\Http\Controllers\Admin\SocialAuthController;
 use App\Http\Controllers\Admin\SocialLinkController;
+use App\Http\Controllers\Admin\StockRequestController;
 use App\Http\Controllers\Admin\SubscriptionPlanController;
 use App\Http\Controllers\Admin\SupportController;
 use App\Http\Controllers\Admin\SupportTicketController;
@@ -37,6 +38,8 @@ use App\Http\Controllers\Admin\ThemeColorController;
 use App\Http\Controllers\Admin\TicketIssueTypeController;
 use App\Http\Controllers\Admin\VatTaxController;
 use App\Http\Controllers\Admin\VerifyManageController;
+use App\Http\Controllers\Admin\WarehouseController;
+use App\Http\Controllers\Admin\WarehouseTransferController;
 use App\Http\Controllers\CreateSuperAdmin;
 use App\Http\Controllers\Gateway\PaymentGatewayController;
 use App\Http\Controllers\Shop\BannerController;
@@ -170,6 +173,11 @@ Route::prefix('shop')->name('shop.')->middleware(['web'])->group(function () {
         Route::delete('product/{product}/attachment/{media}', [ProductController::class, 'attachmentDestroy'])->name('product.remove.attachment');
         Route::delete('product/{product}/license/{productLicense}', [ProductController::class, 'licenseDestroy'])->name('product.remove.license');
         Route::get('product/digital/create', [ProductController::class, 'digitalProductCreate'])->name('digital.product.create');
+
+        Route::get('stock-request', [App\Http\Controllers\Shop\StockRequestController::class, 'index'])->name('stock-request.index');
+        Route::get('stock-request/create', [App\Http\Controllers\Shop\StockRequestController::class, 'create'])->name('stock-request.create');
+        Route::post('stock-request', [App\Http\Controllers\Shop\StockRequestController::class, 'store'])->name('stock-request.store');
+        Route::get('stock-request/{stockRequest}', [App\Http\Controllers\Shop\StockRequestController::class, 'show'])->name('stock-request.show');
 
         Route::get('voucher', [VoucherController::class, 'index'])->name('voucher.index');
         Route::get('voucher/create', [VoucherController::class, 'create'])->name('voucher.create');
@@ -372,6 +380,21 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:root'])->group
     Route::get('product/{product}', [App\Http\Controllers\Admin\ProductController::class, 'show'])->name('product.show');
     Route::get('product/{product}/approve', [App\Http\Controllers\Admin\ProductController::class, 'approve'])->name('product.approve');
     Route::delete('product/{product}', [App\Http\Controllers\Admin\ProductController::class, 'destroy'])->name('product.destroy');
+
+    Route::resource('warehouse', WarehouseController::class);
+    Route::get('warehouse/{warehouse}/stock', [WarehouseController::class, 'stock'])->name('warehouse.stock');
+    Route::post('warehouse/{warehouse}/stock/add', [WarehouseController::class, 'addStock'])->name('warehouse.stock.add');
+    Route::delete('warehouse/{warehouse}/stock/clear', [WarehouseController::class, 'clearStock'])->name('warehouse.stock.clear');
+    Route::delete('warehouse-stock/{stock}', [WarehouseController::class, 'destroyStock'])->name('warehouse-stock.destroy');
+
+    Route::get('stock-request', [StockRequestController::class, 'index'])->name('stock-request.index');
+    Route::get('stock-request/{stockRequest}', [StockRequestController::class, 'show'])->name('stock-request.show');
+    Route::post('stock-request/{stockRequest}/approve', [StockRequestController::class, 'approve'])->name('stock-request.approve');
+    Route::post('stock-request/{stockRequest}/reject', [StockRequestController::class, 'reject'])->name('stock-request.reject');
+
+    Route::resource('warehouse-transfer', WarehouseTransferController::class)->names('warehouse-transfer');
+    Route::post('warehouse-transfer/{warehouseTransfer}/complete', [WarehouseTransferController::class, 'complete'])->name('warehouse-transfer.complete');
+    Route::post('warehouse-transfer/{warehouseTransfer}/cancel', [WarehouseTransferController::class, 'cancel'])->name('warehouse-transfer.cancel');
 
     Route::get('category', [App\Http\Controllers\Admin\CategoryController::class, 'index'])->name('category.index');
     Route::get('category/create', [App\Http\Controllers\Admin\CategoryController::class, 'create'])->name('category.create');

@@ -50,6 +50,7 @@ class DatabaseSeeder extends Seeder
         }
 
         $this->call(WalletSeeder::class);
+        $this->call(WarehouseSeeder::class);
         $this->command->info('Database seeded successfully');
 
         // clear cache

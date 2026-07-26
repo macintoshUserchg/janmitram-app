@@ -57,6 +57,7 @@
                                 <th style="min-width: 100px">{{ __('Shop') }}</th>
                                 <th class="text-center">{{ __('Price') }}</th>
                                 <th class="text-center" style="min-width: 120px">{{ __('Discount Price') }}</th>
+                                <th class="text-center" style="min-width: 120px">{{ __('Stock Source') }}</th>
                                 <th class="text-center">{{ __('Action') }}</th>
                             </tr>
                         </thead>
@@ -83,6 +84,14 @@
 
                                 <td class="text-center">
                                     {{ showCurrency($product->discount_price) }}
+                                </td>
+
+                                <td class="text-center">
+                                    @if($product->is_digital)
+                                        <span class="badge bg-info text-dark">{{ __('Digital') }}</span>
+                                    @else
+                                        <span class="badge bg-primary">{{ __('Physical Warehouse') }}</span>
+                                    @endif
                                 </td>
 
                                 <td class="text-center">

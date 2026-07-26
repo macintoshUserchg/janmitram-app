@@ -192,6 +192,12 @@
                         {{ __('Add Digital Product') }}
                     </a>
                 @endhasPermission
+                @hasPermission('shop.stock-request.index')
+                    <a href="{{ route('shop.stock-request.index') }}"
+                        class="subMenu hasCount {{ request()->routeIs('shop.stock-request.*') ? 'active' : '' }}">
+                        {{ __('Stock Requests') }}
+                    </a>
+                @endhasPermission
             </div>
         </div>
     </li>

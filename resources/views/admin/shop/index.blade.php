@@ -18,7 +18,7 @@
                         data-bs-title="{{__('Grid View')}}">
                             <i class="bi bi-grid-3x3-gap-fill"></i>
                         </button>
-                        <button class="gridBtn" id="listView" data-bs-toggle="tooltip" data-bs-placement="top"
+                        <button class="gridBtn active" id="listView" data-bs-toggle="tooltip" data-bs-placement="top"
                             data-bs-title="{{__('List View')}}">
                             <i class="fa-solid fa-list-ul"></i>
                         </button>
@@ -111,7 +111,7 @@
             @endforeach
         </div>
 
-        <div class="mb-4 d-none" id="listItem">
+        <div class="mb-4 d-block" id="listItem">
             <div class="table-responsive">
 
                 <table class="table shopTable table-striped table-responsive-lg">

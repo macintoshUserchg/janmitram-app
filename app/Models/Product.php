@@ -381,4 +381,31 @@ class Product extends Model
 
         return $this->buy_price;
     }
+
+    public function masterProduct(): BelongsTo
+    {
+        return $this->belongsTo(Product::class, 'master_product_id');
+    }
+
+    public function shopCopies(): HasMany
+    {
+        return $this->hasMany(Product::class, 'master_product_id');
+    }
+
+    public function warehouseStocks(): HasMany
+    {
+        return $this->hasMany(WarehouseStock::class);
+    }
+
+    public function isWarehouseManaged(): bool
+    {
+        return ! $this->is_digital;
+    }
+
+    protected static function booted(): void
+    {
+        static::deleting(function (Product $product) {
+            $product->warehouseStocks()->delete();
+        });
+    }
 }

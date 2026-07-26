@@ -6,12 +6,14 @@ use App\Models\Currency;
 use App\Models\DeliveryCharge;
 use App\Models\GeneraleSetting;
 use App\Models\User;
+use App\Models\Warehouse;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\PersonalAccessToken;
 use Nwidart\Modules\Facades\Module;
+use Spatie\Permission\Exceptions\RoleDoesNotExist;
 
 if (! function_exists('generaleSetting')) {
     /**
@@ -42,7 +44,7 @@ if (! function_exists('generaleSetting')) {
             return Cache::remember('admin_shop', 60 * 24 * 7, function () {
                 try {
                     return User::role('root')->whereHas('shop')->first()?->shop;
-                } catch (\Spatie\Permission\Exceptions\RoleDoesNotExist) {
+                } catch (RoleDoesNotExist) {
                     return null;
                 }
             });
@@ -83,7 +85,7 @@ function selfGetRootShop()
 {
     try {
         return User::role('root')->whereHas('shop')->first()?->shop;
-    } catch (\Spatie\Permission\Exceptions\RoleDoesNotExist) {
+    } catch (RoleDoesNotExist) {
         return null;
     }
 }
@@ -322,5 +324,19 @@ if (! function_exists('formatAmount')) {
     function formatAmount($amount)
     {
         return Number::abbreviate($amount ?? 0, 2);
+    }
+}
+
+if (! function_exists('warehouse')) {
+    function warehouse(?string $type = null)
+    {
+        if ($type === 'central') {
+            return Cache::remember('central_warehouse', 60 * 24 * 30, function () {
+                return Warehouse::where('is_default', true)->first();
+            });
+        }
+        $shop = generaleSetting('shop');
+
+        return $shop?->warehouse;
     }
 }

@@ -159,7 +159,7 @@
                                     </span>
                                 </label>
                                 <input type="text" id="barcode" name="code" placeholder="Ex: 134543"
-                                    class="form-control" value="{{ old('code') }}"
+                                    class="form-control" value="{{ old('code') }}" required
                                     oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1');" />
                                 @error('code')
                                     <p class="text text-danger m-0">{{ $message }}</p>
@@ -193,7 +193,7 @@
 
                             <div class="col-lg-4 col-md-6 mt-3">
                                 <x-input type="text" name="quantity" label="Current Stock Quantity"
-                                    placeholder="Current Stock Quantity" onlyNumber="true" />
+                                    placeholder="Current Stock Quantity" onlyNumber="true" required="true" />
                             </div>
 
                             {{-- <div class="col-lg-4 col-md-6 mt-3">
@@ -659,7 +659,7 @@
 
                 if (categoryId) {
                     $.ajax({
-                        url: '/api/sub-categories?category_id=' + categoryId,
+                        url: "{{ asset('/api/sub-categories') }}?category_id=" + categoryId,
                         type: "GET",
                         dataType: "json",
                         success: function(data) {

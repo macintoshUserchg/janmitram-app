@@ -56,6 +56,9 @@ return [
             'aiPrompt' => ['index', 'configure', 'configure.update', 'update'],
             'returnOrder' => ['index', 'show', 'payment.status', 'reject'],
             'conversation' => ['customer.chat.index', 'getUsers', 'getMessageAdmin', 'sendMessageAdmin'],
+            'warehouse' => ['index', 'create', 'edit', 'destroy', 'show', 'stock', 'stock.add'],
+            'stock-request' => ['index', 'show', 'approve', 'reject'],
+            'warehouse-transfer' => ['index', 'create', 'store', 'show', 'complete', 'cancel'],
         ],
         'shop' => [
             'order' => ['index', 'show', 'status.change'],
@@ -72,6 +75,7 @@ return [
             'supplier' => ['index', 'create', 'store', 'show', 'edit', 'update', 'destroy', 'toggle', 'statistic', 'payment'],
             'purchase' => ['index', 'create', 'store', 'show', 'edit', 'update', 'destroy', 'attach.product', 'products', 'makeReceived', 'product.delete.barcode', 'invoice.search', 'invoice.add', 'summary', 'purchaseInvoice', 'summary', 'allProduct.stockSummary'],
             'purchaseReturn' => ['index', 'create', 'store', 'show', 'invoice.search', 'Invoice', 'invoice.add'],
+            'stock-request' => ['index', 'create', 'store', 'show'],
         ],
         'shopMultiShop' => [
             'dashboard' => ['index', 'notification'],

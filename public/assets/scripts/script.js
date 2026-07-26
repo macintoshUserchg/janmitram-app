@@ -124,12 +124,13 @@ if (
             listItem.classList.add("d-block");
             listItem.classList.remove("d-none");
         } else {
-            gridView.classList.add("active");
-            listView.classList.remove("active");
+            gridView.classList.remove("active");
+            listView.classList.add("active");
 
-            gridItem.classList.add("d-flex");
-            gridItem.classList.remove("d-none");
-            listItem.classList.add("d-none");
+            gridItem.classList.add("d-none");
+            gridItem.classList.remove("d-flex");
+            listItem.classList.add("d-block");
+            listItem.classList.remove("d-none");
         }
     });
 }

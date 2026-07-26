@@ -241,4 +241,14 @@ class Shop extends Model
     {
         return $this->hasMany(ReturnOrder::class);
     }
+
+    public function warehouse(): BelongsTo
+    {
+        return $this->belongsTo(Warehouse::class, 'warehouse_id');
+    }
+
+    public function stockRequests(): HasMany
+    {
+        return $this->hasMany(StockRequest::class);
+    }
 }

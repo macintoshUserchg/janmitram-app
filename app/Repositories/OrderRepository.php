@@ -18,6 +18,7 @@ use App\Models\OrderVatTax;
 use App\Models\Payment;
 use App\Models\Shop;
 use App\Services\NotificationServices;
+use App\Services\WarehouseService;
 use App\Support\Repositories\Repository;
 use Illuminate\Support\Facades\Auth;
 
@@ -114,6 +115,26 @@ class OrderRepository extends Repository
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
+
+                // Sync warehouse stock for physical products
+                if (! $product->is_digital) {
+                    $shopWarehouse = $order->shop?->warehouse ?? WarehouseRepository::getCentralWarehouse();
+                    if ($shopWarehouse) {
+                        try {
+                            WarehouseService::deductStock(
+                                $shopWarehouse,
+                                $product,
+                                (int) $cart->quantity,
+                                $color?->id,
+                                $size?->id,
+                                'order_sale',
+                                $order->id,
+                                "Order #{$order->id} sale"
+                            );
+                        } catch (\Throwable $th) {
+                        }
+                    }
+                }
 
                 if (function_exists('module_exists') && module_exists('Purchase')) {
                     $order->productStockOuts()->create([

@@ -1085,7 +1085,7 @@
 
                 if (categoryId) {
                     $.ajax({
-                        url: '/api/sub-categories?category_id=' + categoryId,
+                        url: "{{ asset('/api/sub-categories') }}?category_id=" + categoryId,
                         type: "GET",
                         dataType: "json",
                         success: function(data) {

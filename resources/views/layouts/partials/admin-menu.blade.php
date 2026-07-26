@@ -180,6 +180,43 @@
     </li>
 @endhasPermission
 
+@hasPermission(['admin.warehouse.index', 'admin.stock-request.index', 'admin.warehouse-transfer.index'])
+    <!--- Warehouse Management --->
+    <li>
+        <a class="menu {{ request()->routeIs('admin.warehouse.*', 'admin.stock-request.*', 'admin.warehouse-transfer.*') ? 'active' : '' }}"
+            data-bs-toggle="collapse" href="#warehouseMenu">
+            <span>
+                <img class="menu-icon" src="{{ asset('assets/icons-admin/boxes.svg') }}" alt="icon" loading="lazy" />
+                {{ __('Warehouse Management') }}
+            </span>
+            <img src="{{ asset('assets/icons-admin/caret-down.svg') }}" alt="icon" class="downIcon">
+        </a>
+        <div class="collapse dropdownMenuCollapse {{ $request->routeIs('admin.warehouse.*', 'admin.stock-request.*', 'admin.warehouse-transfer.*') ? 'show' : '' }}"
+            id="warehouseMenu">
+            <div class="listBar">
+                @hasPermission('admin.warehouse.index')
+                    <a href="{{ route('admin.warehouse.index') }}"
+                        class="subMenu hasCount {{ request()->routeIs('admin.warehouse.*') ? 'active' : '' }}">
+                        {{ __('Warehouses List') }}
+                    </a>
+                @endhasPermission
+                @hasPermission('admin.stock-request.index')
+                    <a href="{{ route('admin.stock-request.index') }}"
+                        class="subMenu hasCount {{ request()->routeIs('admin.stock-request.*') ? 'active' : '' }}">
+                        {{ __('Stock Requests') }}
+                    </a>
+                @endhasPermission
+                @hasPermission('admin.warehouse-transfer.index')
+                    <a href="{{ route('admin.warehouse-transfer.index') }}"
+                        class="subMenu hasCount {{ request()->routeIs('admin.warehouse-transfer.*') ? 'active' : '' }}">
+                        {{ __('Stock Transfers') }}
+                    </a>
+                @endhasPermission
+            </div>
+        </div>
+    </li>
+@endhasPermission
+
 @hasPermission(['admin.brand.index', 'admin.color.index', 'admin.size.index', 'admin.unit.index'])
     <!--- Product Varient --->
     <li>
