@@ -120,6 +120,7 @@
                             <th>{{ __('SL') }}</th>
                             <th>{{ __('Logo') }}</th>
                             <th>{{ __('Name') }}</th>
+                            <th>{{ __('Linked Warehouse') }}</th>
                             @hasPermission('admin.shop.status.toggle')
                             <th>{{ __('Status') }}</th>
                             @endhasPermission
@@ -143,6 +144,11 @@
                                     </div>
                                 </td>
                                 <td>{{ $shop->name }}</td>
+                                <td>
+                                    <span class="badge bg-primary">
+                                        {{ $shop->warehouse?->name ?? __('Central Warehouse') }}
+                                    </span>
+                                </td>
                                 @hasPermission('admin.shop.status.toggle')
                                 <td>
                                     <label class="switch mb-0" data-bs-toggle="tooltip" data-bs-placement="top" title="{{__('Click here to change status')}}">

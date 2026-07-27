@@ -8,6 +8,7 @@ use App\Http\Requests\ShopPasswordResetRequest;
 use App\Models\Notification;
 use App\Models\Review;
 use App\Models\Shop;
+use App\Models\Warehouse;
 use App\Repositories\ShopRepository;
 use Illuminate\Support\Facades\Hash;
 
@@ -18,7 +19,7 @@ class ShopController extends Controller
      */
     public function index()
     {
-        $shops = Shop::paginate(20);
+        $shops = Shop::with('warehouse')->paginate(20);
 
         return view('admin.shop.index', compact('shops'));
     }
@@ -28,7 +29,9 @@ class ShopController extends Controller
      */
     public function create()
     {
-        return view('admin.shop.create');
+        $warehouses = Warehouse::all();
+
+        return view('admin.shop.create', compact('warehouses'));
     }
 
     /**
@@ -57,7 +60,9 @@ class ShopController extends Controller
      */
     public function edit(Shop $shop)
     {
-        return view('admin.shop.edit', compact('shop'));
+        $warehouses = Warehouse::all();
+
+        return view('admin.shop.edit', compact('shop', 'warehouses'));
     }
 
     /**

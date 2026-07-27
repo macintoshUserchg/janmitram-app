@@ -98,6 +98,17 @@
                             :value="$shop->address" />
                     </div>
 
+                    <div class="col-md-4 mt-3 mt-md-0">
+                        <x-select label="Linked Warehouse" name="warehouse_id">
+                            <option value="">{{ __('-- Central Warehouse (Default) --') }}</option>
+                            @foreach($warehouses as $wh)
+                                <option value="{{ $wh->id }}" {{ (old('warehouse_id', $shop->warehouse_id) == $wh->id) ? 'selected' : '' }}>
+                                    {{ $wh->name }} {{ $wh->is_default ? '('.__('Central Hub').')' : '' }}
+                                </option>
+                            @endforeach
+                        </x-select>
+                    </div>
+
                     <div class="col-md-6 mt-4">
                         <div class="d-flex align-items-center justify-content-center mb-2">
                             <div class="ratio1x1">

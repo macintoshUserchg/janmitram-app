@@ -54,6 +54,7 @@ class ShopRepository extends Repository
             'status' => true,
             'latitude' => $request->latitude,
             'longitude' => $request->longitude,
+            'warehouse_id' => $request->warehouse_id,
         ]);
     }
 
@@ -86,6 +87,7 @@ class ShopRepository extends Repository
             'estimated_delivery_time' => $request->estimated_delivery_time ?? $shop->estimated_delivery_time,
             'latitude' => $request->latitude ?? $shop->latitude,
             'longitude' => $request->longitude ?? $shop->longitude,
+            'warehouse_id' => $request->warehouse_id ?? $shop->warehouse_id,
         ]);
 
         return $shop;

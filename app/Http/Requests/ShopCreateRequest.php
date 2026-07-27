@@ -60,6 +60,7 @@ class ShopCreateRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:200'],
             'latitude' => ['required', 'numeric'],
             'longitude' => ['required', 'numeric'],
+            'warehouse_id' => ['nullable', 'exists:warehouses,id'],
         ];
     }
 
