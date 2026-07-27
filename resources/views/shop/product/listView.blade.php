@@ -9,7 +9,6 @@
                 <th class="text-center">{{ __('Price') }}</th>
                 <th class="text-center" style="min-width: 120px">{{ __('Discount Price') }}</th>
                 <th class="text-center" style="min-width: 120px">{{ __('Stock Source') }}</th>
-                <th class="text-center" style="min-width: 120px">{{ __('Stock Quantity') }}</th>
                 <th class="text-center">{{ __('Status') }}</th>
                 <th class="text-center">{{ __('Action') }}</th>
             </tr>
@@ -40,16 +39,6 @@
                         <span class="badge bg-info text-dark">{{ __('Digital') }}</span>
                     @else
                         <span class="badge bg-primary" data-bs-toggle="tooltip" data-bs-title="{{ __('Managed via Warehouse Stock') }}">{{ __('Physical Warehouse') }}</span>
-                    @endif
-                </td>
-
-                <td class="text-center">
-                    @if ($product->quantity > 10)
-                        <span class="badge bg-success fs-6">{{ $product->quantity }} {{ __('units') }}</span>
-                    @elseif ($product->quantity > 0)
-                        <span class="badge bg-warning text-dark fs-6">{{ $product->quantity }} {{ __('units') }}</span>
-                    @else
-                        <span class="badge bg-danger fs-6">{{ __('Stock Out') }}</span>
                     @endif
                 </td>
                 <td class="text-center">
