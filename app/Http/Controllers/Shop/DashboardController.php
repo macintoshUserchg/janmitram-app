@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Shop;
 use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\StockRequest;
 use App\Repositories\FlashSaleRepository;
 use Illuminate\Support\Str;
 
@@ -18,12 +19,11 @@ class DashboardController extends Controller
         $shop = generaleSetting('shop');
 
         $totalOrder = $shop->orders()->count();
-        $totalProduct = $shop->products()->count();
-        $totalCategories = $shop->categories->count();
-        $totalBrand = $shop->brands->count();
-        $totalColor = $shop->colors->count();
-        $totalSize = $shop->sizes->count();
-        $totalUnit = $shop->units->count();
+        $totalProduct = $shop->products()->where('is_digital', false)->count();
+
+        $totalStockRequests = StockRequest::where('shop_id', $shop->id)->count();
+        $pendingStockRequests = StockRequest::where('shop_id', $shop->id)->where('status', 'pending')->count();
+        $completedStockRequests = StockRequest::where('shop_id', $shop->id)->where('status', 'completed')->count();
 
         $orderStatuses = OrderStatus::cases();
 
@@ -61,7 +61,7 @@ class DashboardController extends Controller
         return view('shop.dashboard', compact(
             'totalOrder', 'totalProduct', 'orderStatuses',
             'topSellingProducts', 'topReviewProducts', 'latestOrders', 'topFavorites',
-            'totalCategories', 'totalBrand', 'totalColor', 'totalSize', 'totalUnit',
+            'totalStockRequests', 'pendingStockRequests', 'completedStockRequests',
             'totalWithdraw', 'totalPosSales', 'totalDeliveryCollected',
             'pendingWithdraw', 'alreadyWithdraw', 'deniedWithdraw', 'flashSale',
             'pending', 'confirm', 'processing', 'pickup', 'onTheWay', 'delivered', 'cancelled',

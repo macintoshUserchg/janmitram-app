@@ -49,47 +49,52 @@
         <div class="card-body">
             <div class="row g-3">
                 <div class="col-md-6 col-lg-4 col-xl-3">
-                    <div class="dashboard-box item-1">
-                        <h2 class="count">{{ $totalProduct }}</h2>
-                        <h3 class="title">{{ __('Total Products') }}</h3>
-                        <div class="icon">
-                            <img src="{{ asset('assets/icons-admin/dashboard-product.svg') }}" alt="icon"
-                                loading="lazy" />
+                    <a href="{{ route('shop.order.index') }}" class="text-decoration-none">
+                        <div class="dashboard-box item-2">
+                            <h2 class="count">{{ $totalOrder }}</h2>
+                            <h3 class="title">{{ __('Total Orders') }}</h3>
+                            <div class="icon">
+                                <img src="{{ asset('assets/icons-admin/dashboard-order.svg') }}" alt="icon" loading="lazy" />
+                            </div>
                         </div>
-                    </div>
+                    </a>
                 </div>
 
                 <div class="col-md-6 col-lg-4 col-xl-3">
-                    <div class="dashboard-box item-2">
-                        <h2 class="count">{{ $totalOrder }}</h2>
-                        <h3 class="title">{{ __('Total Orders') }}</h3>
-                        <div class="icon">
-                            <img src="{{ asset('assets/icons-admin/dashboard-order.svg') }}" alt="icon"
-                                loading="lazy" />
+                    <a href="{{ route('shop.shop-inventory.index') }}" class="text-decoration-none">
+                        <div class="dashboard-box item-1">
+                            <h2 class="count">{{ $totalProduct }}</h2>
+                            <h3 class="title">{{ __('Shop Allocated Inventory') }}</h3>
+                            <div class="icon">
+                                <img src="{{ asset('assets/icons-admin/dashboard-product.svg') }}" alt="icon" loading="lazy" />
+                            </div>
                         </div>
-                    </div>
+                    </a>
                 </div>
 
                 <div class="col-md-6 col-lg-4 col-xl-3">
-                    <div class="dashboard-box item-3">
-                        <h2 class="count">{{ $totalCategories }}</h2>
-                        <h3 class="title">{{ __('Total Categories') }}</h3>
-                        <div class="icon svg-bg">
-                            <img src="{{ asset('assets/icons-admin/category.svg') }}" alt="icon" loading="lazy" />
+                    <a href="{{ route('shop.stock-request.index', ['status' => 'pending']) }}" class="text-decoration-none">
+                        <div class="dashboard-box item-3">
+                            <h2 class="count">{{ $pendingStockRequests }}</h2>
+                            <h3 class="title">{{ __('Pending Stock Requests') }}</h3>
+                            <div class="icon svg-bg">
+                                <img src="{{ asset('assets/icons-admin/boxes.svg') }}" alt="icon" loading="lazy" />
+                            </div>
                         </div>
-                    </div>
+                    </a>
                 </div>
 
                 <div class="col-md-6 col-lg-4 col-xl-3">
-                    <div class="dashboard-box item-4">
-                        <h2 class="count">{{ $totalBrand }}</h2>
-                        <h3 class="title">{{ __('Total Brands') }}</h3>
-                        <div class="icon svg-bg">
-                            <img src="{{ asset('assets/icons-admin/brand.svg') }}" alt="icon" loading="lazy" />
+                    <a href="{{ route('shop.pos.sales') }}" class="text-decoration-none">
+                        <div class="dashboard-box item-4">
+                            <h2 class="count">{{ showCurrency($totalPosSales) }}</h2>
+                            <h3 class="title">{{ __('Total POS Sales') }}</h3>
+                            <div class="icon svg-bg">
+                                <img src="{{ asset('assets/icons-admin/pos-sale.svg') }}" alt="icon" loading="lazy" />
+                            </div>
                         </div>
-                    </div>
+                    </a>
                 </div>
-
             </div>
         </div>
     </div>
@@ -135,6 +140,26 @@
             </div>
         </div>
     @endhasPermission
+
+    <!-- Warehouse Stock Quick Actions -->
+    <div class="card mt-3 border-0 bg-primary text-white shadow-sm overflow-hidden position-relative">
+        <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 position-relative z-1">
+                <div>
+                    <h4 class="fw-bold mb-1 text-white"><i class="fa-solid fa-warehouse me-2"></i>{{ __('Central Warehouse Inventory Dispatch') }}</h4>
+                    <p class="mb-0 text-white-50 small">{{ __('Request physical stock dispatches from the Central Warehouse to fulfill customer orders and POS sales.') }}</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{{ route('shop.shop-inventory.index') }}" class="btn btn-light text-primary fw-bold">
+                        <i class="fas fa-boxes me-1"></i> {{ __('View Shop Stock') }}
+                    </a>
+                    <a href="{{ route('shop.stock-request.create') }}" class="btn btn-warning text-dark fw-bold">
+                        <i class="fas fa-plus-circle me-1"></i> {{ __('Request Warehouse Stock') }}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
 
     @php
         $user = auth()->user();
