@@ -186,39 +186,6 @@
     @include('report::layouts.sidebar')
 @endif
 
-@hasPermission(['shop.employee.index'])
-    <!--- employee--->
-    <li>
-        <a class="menu {{ request()->routeIs('shop.employee.*') ? 'active' : '' }}" data-bs-toggle="collapse"
-            href="#employeeMenu">
-            <span>
-                <img class="menu-icon" src="{{ asset('assets/icons-admin/employee.svg') }}" alt="icon"
-                    loading="lazy" />
-                {{ __('Employee Management') }}
-            </span>
-            <img src="{{ asset('assets/icons-admin/caret-down.svg') }}" alt="" class="downIcon"
-                loading="lazy" />
-        </a>
-        <div class="collapse dropdownMenuCollapse {{ $request->routeIs('shop.employee.*') ? 'show' : '' }}"
-            id="employeeMenu">
-            <div class="listBar">
-                @hasPermission('shop.employee.index')
-                    <a href="{{ route('shop.employee.index') }}"
-                        class="subMenu hasCount {{ request()->routeIs('shop.employee.index') ? 'active' : '' }}">
-                        {{ __('Employees') }}
-                    </a>
-                @endhasPermission
-                @hasPermission('shop.employee.create')
-                    <a href="{{ route('shop.employee.create') }}"
-                        class="subMenu hasCount {{ request()->routeIs('shop.employee.create') ? 'active' : '' }}">
-                        {{ __('Add Employee') }}
-                    </a>
-                @endhasPermission
-            </div>
-        </div>
-    </li>
-@endhasPermission
-
 @if (module_exists('purchase') )
     @include('purchase::layouts.supplierSidebar')
 @endif
