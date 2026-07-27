@@ -105,6 +105,12 @@
                                 <img src="{{ asset('assets/icons-admin/eye.svg') }}" alt="view" loading="lazy" />
                             </a>
                             @endhasPermission
+                            @hasPermission('admin.shop.destroy')
+                            <a class="icons btn-outline-danger deleteConfirm" href="{{ route('admin.shop.destroy', $shop->id) }}" data-bs-toggle="tooltip"
+                                data-bs-placement="top" data-bs-title="Delete">
+                                <img src="{{ asset('assets/icons-admin/trash.svg') }}" alt="delete" loading="lazy" />
+                            </a>
+                            @endhasPermission
                         </div>
                     </div>
                 </div>
@@ -189,6 +195,13 @@
                                         class="btn-outline-info circleIcon" data-bs-toggle="tooltip"
                                         data-bs-placement="top" title="Edit">
                                         <img src="{{ asset('assets/icons-admin/edit.svg') }}" alt="edit" loading="lazy" />
+                                    </a>
+                                    @endhasPermission
+                                    @hasPermission('admin.shop.destroy')
+                                    <a href="{{ route('admin.shop.destroy', $shop->id) }}"
+                                        class="btn-outline-danger circleIcon deleteConfirm" data-bs-toggle="tooltip"
+                                        data-bs-placement="top" title="Delete">
+                                        <img src="{{ asset('assets/icons-admin/trash.svg') }}" alt="delete" loading="lazy" />
                                     </a>
                                     @endhasPermission
                                 </td>

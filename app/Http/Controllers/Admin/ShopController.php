@@ -168,4 +168,22 @@ class ShopController extends Controller
 
         return back()->withSuccess($message);
     }
+
+    /**
+     * Delete specified shop.
+     */
+    public function destroy(Shop $shop)
+    {
+        if ($shop->user?->hasRole('root')) {
+            return back()->with('error', __('Root shop cannot be deleted.'));
+        }
+
+        if ($shop->user) {
+            $shop->user->delete();
+        }
+
+        $shop->delete();
+
+        return redirect()->route('admin.shop.index')->withSuccess(__('Shop deleted successfully.'));
+    }
 }

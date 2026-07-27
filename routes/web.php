@@ -508,6 +508,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:root'])->group
     Route::get('shop/{shop}/products', [ShopController::class, 'products'])->name('shop.products');
     Route::get('shop/{shop}/reviews', [ShopController::class, 'reviews'])->name('shop.reviews');
     Route::post('shop/{shop}/reset-password', [ShopController::class, 'resetPassword'])->name('shop.reset.password');
+    Route::delete('shop/{shop}', [ShopController::class, 'destroy'])->name('shop.destroy');
 
     Route::get('rider', [RiderController::class, 'index'])->name('rider.index');
     Route::get('rider/create', [RiderController::class, 'create'])->name('rider.create');
