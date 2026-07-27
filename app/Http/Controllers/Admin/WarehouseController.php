@@ -73,7 +73,19 @@ class WarehouseController extends Controller
 
     public function stock(Warehouse $warehouse)
     {
-        $products = Product::where('is_digital', false)->get();
+        $warehouseStocks = WarehouseStock::where('warehouse_id', $warehouse->id)
+            ->get()
+            ->keyBy('product_id');
+
+        $products = Product::where('is_digital', false)
+            ->whereNull('master_product_id')
+            ->get()
+            ->map(function ($product) use ($warehouseStocks) {
+                $product->current_wh_qty = $warehouseStocks->get($product->id)?->quantity ?? 0;
+
+                return $product;
+            });
+
         $colors = Color::all();
         $sizes = Size::all();
 
