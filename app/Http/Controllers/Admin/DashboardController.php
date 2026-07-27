@@ -9,8 +9,10 @@ use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Shop;
+use App\Models\StockRequest;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Models\Warehouse;
 use App\Models\Withdraw;
 use App\Repositories\FlashSaleRepository;
 use Carbon\Carbon;
@@ -26,21 +28,23 @@ class DashboardController extends Controller
         $generaleSetting = generaleSetting('setting');
 
         $totalCustomer = Customer::count();
-
         $totalRider = User::role('driver')->count();
+        $totalWarehouses = Warehouse::count();
+        $pendingStockRequests = StockRequest::where('status', 'pending')->count();
+        $fulfilledStockRequests = StockRequest::where('status', 'completed')->count();
 
         $shop = null;
 
         if (! $generaleSetting || $generaleSetting?->shop_type != 'single') {
             $totalShop = Shop::count();
             $totalOrder = Order::count();
-            $totalProduct = Product::count();
+            $totalProduct = Product::whereNull('master_product_id')->count();
             $totalCategories = Category::count();
         } else {
             $shop = generaleSetting('shop');
             $totalShop = 0;
             $totalOrder = Order::where('shop_id', $shop?->id)->count();
-            $totalProduct = Product::where('shop_id', $shop?->id)->count();
+            $totalProduct = Product::where('shop_id', $shop?->id)->whereNull('master_product_id')->count();
             $totalCategories = Category::whereHas('shops', function ($query) use ($shop) {
                 $query->where('id', $shop?->id);
             })->count();
@@ -84,6 +88,7 @@ class DashboardController extends Controller
 
         return view('admin.dashboard', compact(
             'totalShop', 'totalOrder', 'totalCustomer', 'totalProduct',
+            'totalWarehouses', 'pendingStockRequests', 'fulfilledStockRequests',
             'orderStatuses', 'topCustomers', 'topSellingProducts',
             'topReviewProducts', 'topShops', 'latestOrders', 'topFavorites',
             'pendingWithdraw', 'alreadyWithdraw', 'deniedWithdraw',

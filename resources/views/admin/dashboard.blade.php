@@ -54,46 +54,51 @@
         <div class="card-body">
             <div class="row g-3">
                 <div class="col-md-6 col-lg-4 col-xl-3">
-                    <div class="dashboard-box item-1">
-                        <h2 class="count">{{ $businessModel == 'single' ? $totalCategories : $totalShop }}</h2>
-                        <h3 class="title">{{ __($text) }}</h3>
-                        <div class="icon">
-                            <img src="{{ asset('assets/icons-admin/dashboard-shop.svg') }}" alt="icon" loading="lazy" />
+                    <a href="{{ route('admin.shop.index') }}" class="text-decoration-none">
+                        <div class="dashboard-box item-1">
+                            <h2 class="count">{{ $businessModel == 'single' ? $totalCategories : $totalShop }}</h2>
+                            <h3 class="title">{{ __($text) }}</h3>
+                            <div class="icon">
+                                <img src="{{ asset('assets/icons-admin/dashboard-shop.svg') }}" alt="icon" loading="lazy" />
+                            </div>
                         </div>
-                    </div>
+                    </a>
                 </div>
 
                 <div class="col-md-6 col-lg-4 col-xl-3">
-                    <div class="dashboard-box item-2">
-                        <h2 class="count">{{ $totalProduct }}</h2>
-                        <h3 class="title">{{ __('Total Products') }}</h3>
-                        <div class="icon">
-                            <img src="{{ asset('assets/icons-admin/dashboard-product.svg') }}" alt="icon"
-                                loading="lazy" />
+                    <a href="{{ route('admin.product.index') }}" class="text-decoration-none">
+                        <div class="dashboard-box item-2">
+                            <h2 class="count">{{ $totalProduct }}</h2>
+                            <h3 class="title">{{ __('Master Catalog Products') }}</h3>
+                            <div class="icon">
+                                <img src="{{ asset('assets/icons-admin/dashboard-product.svg') }}" alt="icon" loading="lazy" />
+                            </div>
                         </div>
-                    </div>
+                    </a>
                 </div>
 
                 <div class="col-md-6 col-lg-4 col-xl-3">
-                    <div class="dashboard-box item-3">
-                        <h2 class="count">{{ $totalOrder }}</h2>
-                        <h3 class="title">{{ __('Total Orders') }}</h3>
-                        <div class="icon">
-                            <img src="{{ asset('assets/icons-admin/dashboard-order.svg') }}" alt="icon"
-                                loading="lazy" />
+                    <a href="{{ route('admin.order.index') }}" class="text-decoration-none">
+                        <div class="dashboard-box item-3">
+                            <h2 class="count">{{ $totalOrder }}</h2>
+                            <h3 class="title">{{ __('Total Orders') }}</h3>
+                            <div class="icon">
+                                <img src="{{ asset('assets/icons-admin/dashboard-order.svg') }}" alt="icon" loading="lazy" />
+                            </div>
                         </div>
-                    </div>
+                    </a>
                 </div>
 
                 <div class="col-md-6 col-lg-4 col-xl-3">
-                    <div class="dashboard-box item-4">
-                        <h2 class="count">{{ $totalCustomer }}</h2>
-                        <h3 class="title">{{ __('Total Customers') }}</h3>
-                        <div class="icon">
-                            <img src="{{ asset('assets/icons-admin/dashboard-customer.svg') }}" alt="icon"
-                                loading="lazy" />
+                    <a href="{{ route('admin.warehouse.index') }}" class="text-decoration-none">
+                        <div class="dashboard-box item-4">
+                            <h2 class="count">{{ $totalWarehouses }}</h2>
+                            <h3 class="title">{{ __('Warehouses & Hubs') }}</h3>
+                            <div class="icon svg-bg">
+                                <img src="{{ asset('assets/icons-admin/boxes.svg') }}" alt="icon" loading="lazy" />
+                            </div>
                         </div>
-                    </div>
+                    </a>
                 </div>
             </div>
         </div>
@@ -142,6 +147,31 @@
             </div>
         </div>
     @endhasPermission
+
+    <!-- Central Logistics & Stock Request Banner -->
+    <div class="card mt-3 border-0 bg-primary text-white shadow-sm overflow-hidden position-relative">
+        <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 position-relative z-1">
+                <div>
+                    <h4 class="fw-bold mb-1 text-white"><i class="fa-solid fa-warehouse me-2"></i>{{ __('Central Warehouse & Stock Dispatch Control') }}</h4>
+                    <p class="mb-0 text-white-50 small">{{ __('Review pending shop stock requests, fulfill dispatches, and manage central logistics hubs.') }}</p>
+                </div>
+                <div class="d-flex gap-2 align-items-center">
+                    @if($pendingStockRequests > 0)
+                        <span class="badge bg-warning text-dark px-3 py-2 fs-6 fw-bold">
+                            <i class="fas fa-exclamation-circle me-1"></i> {{ $pendingStockRequests }} {{ __('Pending Requests') }}
+                        </span>
+                    @endif
+                    <a href="{{ route('admin.stock-request.index') }}" class="btn btn-light text-primary fw-bold">
+                        <i class="fas fa-inbox me-1"></i> {{ __('Review Stock Requests') }}
+                    </a>
+                    <a href="{{ route('admin.warehouse.index') }}" class="btn btn-warning text-dark fw-bold">
+                        <i class="fas fa-warehouse me-1"></i> {{ __('Manage Warehouses') }}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!---- Shop Wallet -->
     <div class="card mt-4">
