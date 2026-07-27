@@ -56,15 +56,23 @@ class StockRequestController extends Controller
             return redirect()->route('shop.stock-request.index')->with('error', __('No linked warehouse found for your shop.'));
         }
 
+        // Get warehouse stock for products available in the shop's linked warehouse
         $warehouseStocks = WarehouseStock::where('warehouse_id', $warehouse->id)
             ->with(['product', 'color', 'size'])
-            ->get();
+            ->get()
+            ->keyBy('product_id');
 
         $masterProducts = Product::where('is_digital', false)
             ->whereNull('master_product_id')
-            ->get();
+            ->get()
+            ->map(function ($product) use ($warehouseStocks) {
+                $stockInWh = $warehouseStocks->get($product->id)?->quantity ?? 0;
+                $product->warehouse_qty = $stockInWh;
 
-        return view('shop.stock-request.create', compact('warehouse', 'warehouseStocks', 'masterProducts'));
+                return $product;
+            });
+
+        return view('shop.stock-request.create', compact('warehouse', 'masterProducts', 'shop'));
     }
 
     public function store(StockRequestRequest $request)
@@ -73,12 +81,12 @@ class StockRequestController extends Controller
         $warehouse = $shop?->warehouse ?? WarehouseRepository::getCentralWarehouse();
 
         if (! $warehouse) {
-            return back()->with('error', __('No linked warehouse available.'));
+            return back()->with('error', __('No linked warehouse available for your shop.'));
         }
 
         $stockRequest = StockRequest::create([
             'shop_id' => $shop->id,
-            'warehouse_id' => $warehouse->id,
+            'warehouse_id' => $warehouse->id, // Strictly locked to shop's linked warehouse
             'status' => 'pending',
             'notes' => $request->notes,
         ]);

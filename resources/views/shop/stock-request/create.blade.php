@@ -31,7 +31,7 @@
                                 <option value="">{{ __('-- Select Master Product --') }}</option>
                                 @foreach($masterProducts as $mp)
                                     <option value="{{ $mp->id }}" {{ request('product_id') == $mp->id ? 'selected' : '' }}>
-                                        {{ $mp->name }} (ID: #{{ $mp->id }})
+                                        {{ $mp->name }} — {{ __('Available in') }} {{ $warehouse->name }}: {{ $mp->warehouse_qty }} {{ __('units') }}
                                     </option>
                                 @endforeach
                             </select>
@@ -71,7 +71,7 @@
 @push('scripts')
 <script>
     let itemIndex = 1;
-    const masterOptions = `@foreach($masterProducts as $mp)<option value="{{ $mp->id }}">{{ addslashes($mp->name) }} (ID: #{{ $mp->id }})</option>@endforeach`;
+    const masterOptions = `@foreach($masterProducts as $mp)<option value="{{ $mp->id }}">{{ addslashes($mp->name) }} — {{ __('Available in') }} {{ addslashes($warehouse->name) }}: {{ $mp->warehouse_qty }} {{ __('units') }}</option>@endforeach`;
 
     document.getElementById('addItemBtn').addEventListener('click', function() {
         const container = document.getElementById('itemsContainer');
