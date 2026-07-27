@@ -8,8 +8,6 @@ use App\Models\Product;
 use App\Models\ProductTranslation;
 use App\Models\RecentView;
 use App\Models\User;
-use App\Models\Warehouse;
-use App\Services\WarehouseService;
 use App\Support\Repositories\Repository;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
@@ -116,13 +114,6 @@ class ProductRepository extends Repository
             'meta_keywords' => $keywords ? Str::limit($keywords, 200, '') : null,
             'is_stock_managed' => ! $isDigital,
         ]);
-
-        if (! $isDigital && (int) $request->quantity > 0) {
-            $targetWarehouse = Warehouse::find($request->warehouse_id) ?? WarehouseRepository::getCentralWarehouse();
-            if ($targetWarehouse) {
-                WarehouseService::addStock($targetWarehouse, $product, (int) $request->quantity, null, null, 'initial_product_create', null, 'Initial stock set on product creation');
-            }
-        }
 
         foreach ($request->names ?? [] as $key => $value) {
             if (! $key || ! $value) {
@@ -233,7 +224,7 @@ class ProductRepository extends Repository
             'unit_id' => $request->unit ?? null,
             'price' => $request->price,
             'discount_price' => $request->discount_price,
-            'quantity' => $product->is_digital ? ($request->quantity > 1 ? $request->quantity : 999999) : $request->quantity ?? 0,
+            'quantity' => $product->is_digital ? ($request->quantity > 1 ? $request->quantity : 999999) : $product->quantity,
             'min_order_quantity' => $request->min_order_quantity ?? 1,
             'media_id' => $thumbnail ? $thumbnail->id : null,
             'code' => $request->code,

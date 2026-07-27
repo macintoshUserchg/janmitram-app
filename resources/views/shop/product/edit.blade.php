@@ -351,10 +351,10 @@
                                 <x-input type="text" name="discount_price" label="Discount Price"
                                     placeholder="Discount Price" onlyNumber="true" :value="$product->discount_price" />
                             </div>
-                            <div class="col-lg-4 col-md-6 mt-3 {{ $product->is_digital ? 'd-none' : 'd-block' }}">
+                            <div class="col-lg-4 col-md-6 mt-3 {{ $product->is_digital ? 'd-block' : 'd-none' }}">
                                 <input type="hidden"  value="{{$product->is_digital}}" id="is_digital_product">
                                 <x-input id="licenseQtyCount" type="text" name="quantity"
-                                    label="Central Warehouse Stock Quantity" placeholder="Central Warehouse Stock Quantity" onlyNumber="true"
+                                    label="Digital License Quantity" placeholder="Digital License Quantity" onlyNumber="true"
                                     :value="$product->quantity"/>
                             </div>
 

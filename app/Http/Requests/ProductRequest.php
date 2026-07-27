@@ -46,7 +46,7 @@ class ProductRequest extends FormRequest
             'buy_price' => 'nullable|numeric|min:0',
             'price' => 'required|numeric|min:0',
             'discount_price' => 'nullable|numeric|min:0|max:'.$this->price,
-            'quantity' => 'required|integer|min:0',
+            'quantity' => 'nullable|integer|min:0',
             'min_order_quantity' => 'nullable|integer|min:0',
             'meta_title' => 'nullable|string|max:191',
             'meta_description' => 'nullable|string|max:200',

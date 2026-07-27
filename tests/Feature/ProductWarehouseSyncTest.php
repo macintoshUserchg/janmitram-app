@@ -54,6 +54,10 @@ class ProductWarehouseSyncTest extends TestCase
         $product = ProductRepository::storeByRequest($request);
 
         $this->assertTrue((bool) $product->is_stock_managed);
+        $this->assertEquals(0, $product->fresh()->quantity);
+
+        // Add stock later via warehouse refill interface
+        WarehouseService::addStock($warehouse, $product, 25);
 
         $this->assertDatabaseHas('warehouse_stock', [
             'warehouse_id' => $warehouse->id,

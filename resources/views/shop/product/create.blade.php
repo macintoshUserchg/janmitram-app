@@ -191,11 +191,6 @@
                                     placeholder="Discount Price" onlyNumber="true" value="0" />
                             </div>
 
-                            <div class="col-lg-4 col-md-6 mt-3">
-                                <x-input type="text" name="quantity" label="Central Warehouse Stock Quantity"
-                                    placeholder="Central Warehouse Stock Quantity" onlyNumber="true" value="0" />
-                            </div>
-
                             {{-- <div class="col-lg-4 col-md-6 mt-3">
                                 <x-input type="text" onlyNumber="true" name="min_order_quantity"
                                     label="Minimum Order Quantity" placeholder="Minimum Order Quantity" value="1" />
