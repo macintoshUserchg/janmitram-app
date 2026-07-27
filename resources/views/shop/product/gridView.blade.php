@@ -62,10 +62,14 @@
                             </p>
 
                             <div class="d-flex align-items-center gap-1">
-                                <i class="fa fa-star text-warning"></i>
-                                ({{ number_format($product->reviews->avg('rating'), 1) }})
+                                @if ($product->quantity > 10)
+                                    <span class="badge bg-success rounded-pill">{{ $product->quantity }} {{ __('units') }}</span>
+                                @elseif ($product->quantity > 0)
+                                    <span class="badge bg-warning text-dark rounded-pill">{{ $product->quantity }} {{ __('units') }}</span>
+                                @else
+                                    <span class="badge bg-danger rounded-pill">{{ __('Out of Stock') }}</span>
+                                @endif
                             </div>
-
                         </div>
                     </div>
                 </div>

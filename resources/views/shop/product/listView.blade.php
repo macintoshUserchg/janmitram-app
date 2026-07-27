@@ -9,9 +9,7 @@
                 <th class="text-center">{{ __('Price') }}</th>
                 <th class="text-center" style="min-width: 120px">{{ __('Discount Price') }}</th>
                 <th class="text-center" style="min-width: 120px">{{ __('Stock Source') }}</th>
-                @if (function_exists('module_exists') && module_exists('Purchase'))
-                    <th class="text-center" style="min-width: 120px">{{ __('Current Stock') }}</th>
-                @endif
+                <th class="text-center" style="min-width: 120px">{{ __('Stock Quantity') }}</th>
                 <th class="text-center">{{ __('Status') }}</th>
                 <th class="text-center">{{ __('Action') }}</th>
             </tr>
@@ -44,15 +42,16 @@
                         <span class="badge bg-primary" data-bs-toggle="tooltip" data-bs-title="{{ __('Managed via Warehouse Stock') }}">{{ __('Physical Warehouse') }}</span>
                     @endif
                 </td>
-                @if (function_exists('module_exists') && module_exists('Purchase'))
-                    <td class="text-center">
-                        @if ($product->quantity > 0)
-                            {{ $product->quantity }}
-                        @else
-                            <span class="badge bg-danger">Stock Out</span>
-                        @endif
-                    </td>
-                @endif
+
+                <td class="text-center">
+                    @if ($product->quantity > 10)
+                        <span class="badge bg-success fs-6">{{ $product->quantity }} {{ __('units') }}</span>
+                    @elseif ($product->quantity > 0)
+                        <span class="badge bg-warning text-dark fs-6">{{ $product->quantity }} {{ __('units') }}</span>
+                    @else
+                        <span class="badge bg-danger fs-6">{{ __('Stock Out') }}</span>
+                    @endif
+                </td>
                 <td class="text-center">
                     <label class="switch mb-0" data-bs-toggle="tooltip" data-bs-placement="left"
                         data-bs-title="{{ __('Update product status') }}">
