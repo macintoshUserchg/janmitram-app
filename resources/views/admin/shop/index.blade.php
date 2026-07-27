@@ -106,10 +106,16 @@
                             </a>
                             @endhasPermission
                             @hasPermission('admin.shop.destroy')
-                            <a class="icons btn-outline-danger deleteConfirm" href="{{ route('admin.shop.destroy', $shop->id) }}" data-bs-toggle="tooltip"
-                                data-bs-placement="top" data-bs-title="Delete">
-                                <img src="{{ asset('assets/icons-admin/trash.svg') }}" alt="delete" loading="lazy" />
-                            </a>
+                                @if(!($shop->user?->hasRole('root') || $shop->id == 1))
+                                <a class="icons btn-outline-danger deleteConfirm" href="{{ route('admin.shop.destroy', $shop->id) }}" data-bs-toggle="tooltip"
+                                    data-bs-placement="top" data-bs-title="Delete">
+                                    <img src="{{ asset('assets/icons-admin/trash.svg') }}" alt="delete" loading="lazy" />
+                                </a>
+                                @else
+                                <span class="icons text-muted opacity-50 cursor-not-allowed" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="{{ __('Default system shop cannot be deleted') }}">
+                                    <img src="{{ asset('assets/icons-admin/trash.svg') }}" alt="delete" loading="lazy" style="filter: grayscale(100%);" />
+                                </span>
+                                @endif
                             @endhasPermission
                         </div>
                     </div>
@@ -198,11 +204,18 @@
                                     </a>
                                     @endhasPermission
                                     @hasPermission('admin.shop.destroy')
-                                    <a href="{{ route('admin.shop.destroy', $shop->id) }}"
-                                        class="btn-outline-danger circleIcon deleteConfirm" data-bs-toggle="tooltip"
-                                        data-bs-placement="top" title="Delete">
-                                        <img src="{{ asset('assets/icons-admin/trash.svg') }}" alt="delete" loading="lazy" />
-                                    </a>
+                                        @if(!($shop->user?->hasRole('root') || $shop->id == 1))
+                                        <a href="{{ route('admin.shop.destroy', $shop->id) }}"
+                                            class="btn-outline-danger circleIcon deleteConfirm" data-bs-toggle="tooltip"
+                                            data-bs-placement="top" title="Delete">
+                                            <img src="{{ asset('assets/icons-admin/trash.svg') }}" alt="delete" loading="lazy" />
+                                        </a>
+                                        @else
+                                        <span class="btn-outline-secondary circleIcon opacity-50 cursor-not-allowed" data-bs-toggle="tooltip"
+                                            data-bs-placement="top" title="{{ __('Default system shop cannot be deleted') }}">
+                                            <img src="{{ asset('assets/icons-admin/trash.svg') }}" alt="delete" loading="lazy" style="filter: grayscale(100%);" />
+                                        </span>
+                                        @endif
                                     @endhasPermission
                                 </td>
                             </tr>

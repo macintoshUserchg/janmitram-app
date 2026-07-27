@@ -174,8 +174,10 @@ class ShopController extends Controller
      */
     public function destroy(Shop $shop)
     {
-        if ($shop->user?->hasRole('root')) {
-            return back()->with('error', __('Root shop cannot be deleted.'));
+        $defaultShop = generaleSetting('shop');
+
+        if ($shop->user?->hasRole('root') || ($defaultShop && $defaultShop->id == $shop->id) || $shop->id == 1) {
+            return back()->with('error', __('The default system shop cannot be deleted.'));
         }
 
         if ($shop->user) {
