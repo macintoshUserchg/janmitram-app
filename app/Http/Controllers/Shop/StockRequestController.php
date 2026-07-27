@@ -16,13 +16,35 @@ class StockRequestController extends Controller
     public function index()
     {
         $shop = generaleSetting('shop');
+        $status = request('status');
 
-        $requests = StockRequest::where('shop_id', $shop?->id)
-            ->with(['warehouse', 'items.product'])
+        $query = StockRequest::where('shop_id', $shop?->id)
+            ->with(['warehouse', 'items.product']);
+
+        if ($status && in_array($status, ['pending', 'completed', 'rejected'])) {
+            $query->where('status', $status);
+        }
+
+        $requests = $query->latest()->paginate(15)->withQueryString();
+
+        $totalRequests = StockRequest::where('shop_id', $shop?->id)->count();
+        $pendingRequests = StockRequest::where('shop_id', $shop?->id)->where('status', 'pending')->count();
+        $completedRequests = StockRequest::where('shop_id', $shop?->id)->where('status', 'completed')->count();
+
+        return view('shop.stock-request.index', compact('requests', 'totalRequests', 'pendingRequests', 'completedRequests'));
+    }
+
+    public function inventory()
+    {
+        $shop = generaleSetting('shop');
+
+        $products = Product::where('shop_id', $shop?->id)
+            ->where('is_digital', false)
+            ->with(['masterProduct', 'brand', 'categories'])
             ->latest()
             ->paginate(15);
 
-        return view('shop.stock-request.index', compact('requests'));
+        return view('shop.stock-request.inventory', compact('products'));
     }
 
     public function create()

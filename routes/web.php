@@ -178,6 +178,7 @@ Route::prefix('shop')->name('shop.')->middleware(['web'])->group(function () {
         Route::get('stock-request/create', [App\Http\Controllers\Shop\StockRequestController::class, 'create'])->name('stock-request.create');
         Route::post('stock-request', [App\Http\Controllers\Shop\StockRequestController::class, 'store'])->name('stock-request.store');
         Route::get('stock-request/{stockRequest}', [App\Http\Controllers\Shop\StockRequestController::class, 'show'])->name('stock-request.show');
+        Route::get('shop-inventory', [App\Http\Controllers\Shop\StockRequestController::class, 'inventory'])->name('shop-inventory.index');
 
         Route::get('voucher', [VoucherController::class, 'index'])->name('voucher.index');
         Route::get('voucher/create', [VoucherController::class, 'create'])->name('voucher.create');
