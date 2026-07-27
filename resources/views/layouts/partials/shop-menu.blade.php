@@ -126,125 +126,16 @@
     </a>
 </li>
 
-@hasPermission(['shop.category.index', 'shop.subcategory.index'])
-    <!--- categories--->
+@hasPermission('shop.stock-request.index')
+    <!--- Stock Requests --->
     <li>
-        <a class="menu {{ request()->routeIs('shop.category.*', 'shop.subcategory.*') ? 'active' : '' }}"
-            data-bs-toggle="collapse" href="#categoryMenu">
+        <a class="menu {{ request()->routeIs('shop.stock-request.*') ? 'active' : '' }}"
+            href="{{ route('shop.stock-request.index') }}">
             <span>
-                <img class="menu-icon" src="{{ asset('assets/icons-admin/category.svg') }}" alt="icon"
-                    loading="lazy" />
-                {{ __('Category Management') }}
+                <img class="menu-icon" src="{{ asset('assets/icons-admin/boxes.svg') }}" alt="icon" loading="lazy" />
+                {{ __('Stock Requests') }}
             </span>
-            <img src="{{ asset('assets/icons-admin/caret-down.svg') }}" alt="" class="downIcon" loading="lazy" />
         </a>
-        <div class="collapse dropdownMenuCollapse {{ $request->routeIs('shop.category.*', 'shop.subcategory.*') ? 'show' : '' }}"
-            id="categoryMenu">
-            <div class="listBar">
-                <!---  categories--->
-                @hasPermission('shop.category.index')
-                    <a href="{{ route('shop.category.index') }}"
-                        class="subMenu hasCount {{ request()->routeIs('shop.category.index') ? 'active' : '' }}">
-                        {{ __('Category') }}
-                    </a>
-                @endhasPermission
-                <!--- sub categories--->
-                @hasPermission('shop.subcategory.index')
-                    <a href="{{ route('shop.subcategory.index') }}"
-                        class="subMenu hasCount {{ request()->routeIs('shop.subcategory.index') ? 'active' : '' }}">
-                        {{ __('Sub Category') }}
-                    </a>
-                @endhasPermission
-            </div>
-        </div>
-    </li>
-@endhasPermission
-
-@hasPermission(['shop.product.index'])
-    <!--- Products--->
-    <li>
-        <a class="menu {{ request()->routeIs('shop.product.*','shop.digital.product.*') ? 'active' : '' }}" data-bs-toggle="collapse"
-            href="#productMenu">
-            <span>
-                <img class="menu-icon" src="{{ asset('assets/icons-admin/product.svg') }}" alt="icon" loading="lazy" />
-                {{ __('Product Management') }}
-            </span>
-            <img src="{{ asset('assets/icons-admin/caret-down.svg') }}" alt="" class="downIcon" loading="lazy" />
-        </a>
-        <div class="collapse dropdownMenuCollapse {{ $request->routeIs('shop.product.*','shop.digital.product.*') ? 'show' : '' }}"
-            id="productMenu">
-            <div class="listBar">
-                @hasPermission('shop.product.index')
-                    <a href="{{ route('shop.product.index') }}"
-                        class="subMenu hasCount {{ request()->routeIs('shop.product.index') ? 'active' : '' }}">
-                        {{ __('All Product') }}
-                    </a>
-                @endhasPermission
-                @hasPermission('shop.product.create')
-                    <a href="{{ route('shop.product.create') }}"
-                        class="subMenu hasCount {{ request()->routeIs('shop.product.create') ? 'active' : '' }}">
-                        {{ __('Add Product') }}
-                    </a>
-                @endhasPermission
-                @hasPermission('shop.product.create')
-                    <a href="{{ route('shop.digital.product.create') }}"
-                        class="subMenu hasCount {{ request()->routeIs('shop.digital.product.create') ? 'active' : '' }}">
-                        {{ __('Add Digital Product') }}
-                    </a>
-                @endhasPermission
-                @hasPermission('shop.stock-request.index')
-                    <a href="{{ route('shop.stock-request.index') }}"
-                        class="subMenu hasCount {{ request()->routeIs('shop.stock-request.*') ? 'active' : '' }}">
-                        {{ __('Stock Requests') }}
-                    </a>
-                @endhasPermission
-            </div>
-        </div>
-    </li>
-@endhasPermission
-
-
-@hasPermission(['shop.brand.index', 'shop.color.index', 'shop.size.index', 'shop.unit.index'])
-    <!--- Product Varient --->
-    <li>
-        <a class="menu {{ request()->routeIs('shop.brand.*', 'shop.color.*', 'shop.size.*', 'shop.unit.*') ? 'active' : '' }}"
-            data-bs-toggle="collapse" href="#productVarientMenu">
-            <span>
-                <img class="menu-icon" src="{{ asset('assets/icons-admin/boxes.svg') }}" alt="icon"
-                    loading="lazy" />
-                {{ __('Product Variant Management') }}
-            </span>
-            <img src="{{ asset('assets/icons-admin/caret-down.svg') }}" alt="icon" class="downIcon">
-        </a>
-        <div class="collapse dropdownMenuCollapse {{ $request->routeIs('shop.brand.*', 'shop.color.*', 'shop.size.*', 'shop.unit.*') ? 'show' : '' }}"
-            id="productVarientMenu">
-            <div class="listBar">
-                @hasPermission('shop.brand.index')
-                    <a href="{{ route('shop.brand.index') }}"
-                        class="subMenu hasCount {{ request()->routeIs('shop.brand.index') ? 'active' : '' }}">
-                        {{ __('Brand') }}
-                    </a>
-                @endhasPermission
-                @hasPermission('shop.color.index')
-                    <a href="{{ route('shop.color.index') }}"
-                        class="subMenu hasCount {{ request()->routeIs('shop.color.index') ? 'active' : '' }}">
-                        {{ __('Color') }}
-                    </a>
-                @endhasPermission
-                @hasPermission('shop.size.index')
-                    <a href="{{ route('shop.size.index') }}"
-                        class="subMenu hasCount {{ request()->routeIs('shop.size.index') ? 'active' : '' }}">
-                        {{ __('Size') }}
-                    </a>
-                @endhasPermission
-                @hasPermission('shop.unit.index')
-                    <a href="{{ route('shop.unit.index') }}"
-                        class="subMenu hasCount {{ request()->routeIs('shop.unit.index') ? 'active' : '' }}">
-                        {{ __('Unit') }}
-                    </a>
-                @endhasPermission
-            </div>
-        </div>
     </li>
 @endhasPermission
 
