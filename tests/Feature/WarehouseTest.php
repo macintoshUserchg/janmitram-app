@@ -140,4 +140,35 @@ class WarehouseTest extends TestCase
             'product_id' => $product->id,
         ]);
     }
+
+    public function test_product_creation_does_not_double_count_stock_quantity(): void
+    {
+        $shop = Shop::factory()->create();
+        $brand = Brand::create(['name' => 'Brand']);
+        $media = Media::factory()->create();
+
+        $warehouse = Warehouse::create([
+            'shop_id' => $shop->id,
+            'name' => 'Central Warehouse',
+            'is_default' => true,
+        ]);
+
+        $product = Product::create([
+            'shop_id' => $shop->id,
+            'brand_id' => $brand->id,
+            'media_id' => $media->id,
+            'name' => 'Single Addition Item',
+            'price' => 50.00,
+            'quantity' => 0,
+            'is_stock_managed' => true,
+        ]);
+
+        WarehouseService::addStock($warehouse, $product, 100, null, null, 'initial_product_create');
+
+        $this->assertEquals(100, $product->fresh()->quantity);
+        $this->assertDatabaseHas('warehouse_stock', [
+            'product_id' => $product->id,
+            'quantity' => 100,
+        ]);
+    }
 }

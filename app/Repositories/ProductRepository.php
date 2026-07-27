@@ -101,7 +101,7 @@ class ProductRepository extends Repository
             'unit_id' => $request->unit,
             'price' => $request->price,
             'discount_price' => $request->discount_price,
-            'quantity' => $isDigital ? ($request->quantity > 1 ? $request->quantity : 999999) : $request->quantity,
+            'quantity' => $isDigital ? ($request->quantity > 1 ? $request->quantity : 999999) : 0,
             'min_order_quantity' => $request->min_order_quantity ?? 1,
             'media_id' => $thumbnail->id,
             'code' => $request->code,
