@@ -192,8 +192,8 @@
                             </div>
 
                             <div class="col-lg-4 col-md-6 mt-3">
-                                <x-input type="text" name="quantity" label="Current Stock Quantity"
-                                    placeholder="Current Stock Quantity" onlyNumber="true" required="true" />
+                                <x-input type="text" name="quantity" label="Central Warehouse Stock Quantity"
+                                    placeholder="Central Warehouse Stock Quantity" onlyNumber="true" value="0" />
                             </div>
 
                             {{-- <div class="col-lg-4 col-md-6 mt-3">
