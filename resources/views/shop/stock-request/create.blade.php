@@ -12,7 +12,7 @@
                     <i class="fas fa-arrow-left me-1"></i> {{ __('Back to Stock Requests') }}
                 </a>
                 <h1 class="h3 mb-1 text-white fw-bold">{{ __('Request Warehouse Stock') }}</h1>
-                <p class="text-white-50 small mb-0">{{ __('Select master catalog products to request physical stock dispatches from your assigned Central Warehouse.') }}</p>
+                <p class="text-white-50 small mb-0">{{ __('Select master products from your assigned Central Warehouse catalog and specify requested quantities.') }}</p>
             </div>
         </div>
 
@@ -30,120 +30,232 @@
     </div>
 </div>
 
-<div class="card border-0 shadow-sm rounded-12 bg-white">
-    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-        <h5 class="card-title mb-0 fw-bold"><i class="fas fa-cart-flatbed me-2 text-primary"></i>{{ __('Request Inventory Items') }}</h5>
-        <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill"><i class="fas fa-link me-1"></i>{{ __('Linked Hub Locked') }}</span>
-    </div>
-    <div class="card-body p-4">
-        <form action="{{ route('shop.stock-request.store') }}" method="POST">
-            @csrf
+@if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show mb-4">{{ session('error') }}</div>
+@endif
 
-            <p class="text-muted small mb-4">
-                {{ __('Select products from the central warehouse catalog and enter the requested quantity to add to your shop sellable inventory upon admin approval.') }}
-            </p>
+<form action="{{ route('shop.stock-request.store') }}" method="POST" id="stockRequestForm">
+    @csrf
 
-            <div id="itemsContainer">
-                <div class="card bg-light border-0 mb-3 item-row p-3 rounded-12">
-                    <div class="row g-3 align-items-end">
-                        <div class="col-md-8 col-lg-8">
-                            <label class="form-label fw-bold small required">{{ __('Select Product') }}</label>
-                            <select name="items[0][product_id]" class="form-select" required>
-                                <option value="">{{ __('-- Select Master Product --') }}</option>
-                                @foreach($masterProducts as $mp)
-                                    <option value="{{ $mp->id }}" {{ request('product_id') == $mp->id ? 'selected' : '' }}>
-                                        {{ $mp->name }} — {{ __('Available in') }} {{ $warehouse->name }}: {{ $mp->warehouse_qty }} {{ __('units') }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-3 col-lg-3">
-                            <label class="form-label fw-bold small required">{{ __('Quantity') }}</label>
-                            <input type="number" name="items[0][quantity]" class="form-control" min="1" value="1" required>
-                        </div>
-                        <div class="col-md-1 col-lg-1 text-center">
-                            <button type="button" class="btn btn-outline-danger btn-sm remove-item-btn d-none">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
+    <!-- Product Search Bar -->
+    <div class="card border-0 shadow-sm rounded-12 mb-4 bg-white">
+        <div class="card-body p-3">
+            <div class="row g-2 align-items-center">
+                <div class="col-md-8">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0"><i class="fas fa-search text-muted"></i></span>
+                        <input type="text" id="catalogSearchInput" class="form-control border-start-0" placeholder="{{ __('Search catalog by product name, brand, or SKU code...') }}">
                     </div>
                 </div>
+                <div class="col-md-4 text-end">
+                    <span class="badge bg-primary-subtle text-primary fs-6 px-3 py-2 rounded-pill" id="selectedItemsBadge">
+                        <i class="fas fa-shopping-basket me-1"></i> <span id="selectedCount">0</span> {{ __('Items Selected') }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Master Catalog Items Table -->
+    <div class="card border-0 shadow-sm rounded-12 bg-white mb-4">
+        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0 fw-bold"><i class="fas fa-boxes-stacked me-2 text-primary"></i>{{ __('Central Warehouse Product Catalog') }}</h5>
+            <span class="badge bg-secondary-subtle text-secondary px-3 py-2 rounded-pill">{{ $masterProducts->count() }} {{ __('Products Available') }}</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="catalogTable">
+                    <thead class="table-light text-uppercase small text-muted">
+                        <tr>
+                            <th style="width: 50px;" class="text-center">
+                                <input type="checkbox" class="form-check-input" id="selectAllCheckbox" title="{{ __('Select All Products') }}">
+                            </th>
+                            <th>{{ __('Product & SKU') }}</th>
+                            <th>{{ __('Brand / Category') }}</th>
+                            <th class="text-center">{{ __('Unit Price') }}</th>
+                            <th class="text-center">{{ __('Central Stock') }}</th>
+                            <th class="text-center" style="width: 180px;">{{ __('Requested Quantity') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($masterProducts as $index => $mp)
+                            <tr class="product-row" data-name="{{ strtolower($mp->name) }}" data-code="{{ strtolower($mp->code ?? '') }}" data-brand="{{ strtolower($mp->brand?->name ?? '') }}">
+                                <td class="text-center">
+                                    <input type="checkbox" class="form-check-input product-checkbox" id="check_{{ $mp->id }}" data-target="qty_input_{{ $mp->id }}">
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <img src="{{ $mp->thumbnail }}" width="50" height="50" class="rounded border object-fit-cover">
+                                        <div>
+                                            <label for="check_{{ $mp->id }}" class="fw-bold text-dark mb-0 cursor-pointer text-decoration-underline-hover">{{ $mp->name }}</label>
+                                            <div class="small text-muted font-monospace">
+                                                <span>{{ __('SKU:') }} {{ $mp->code ?? 'N/A' }}</span>
+                                                <span class="ms-2 badge bg-light text-dark border">{{ __('Master #') }}{{ $mp->id }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div>
+                                        <span class="fw-semibold text-dark">{{ $mp->brand?->name ?? '—' }}</span>
+                                        @if($mp->categories->isNotEmpty())
+                                            <div class="small text-muted">{{ $mp->categories->pluck('name')->implode(', ') }}</div>
+                                        @endif
+                                    </div>
+                                </td>
+                                <td class="text-center fw-bold">{{ showCurrency($mp->price) }}</td>
+                                <td class="text-center">
+                                    @if($mp->warehouse_qty > 10)
+                                        <span class="badge bg-success-subtle text-success fs-6 px-3 py-2">
+                                            <i class="fas fa-check-circle me-1"></i> {{ $mp->warehouse_qty }} {{ __('units') }}
+                                        </span>
+                                    @elseif($mp->warehouse_qty > 0)
+                                        <span class="badge bg-warning-subtle text-dark fs-6 px-3 py-2">
+                                            <i class="fas fa-exclamation-triangle me-1"></i> {{ $mp->warehouse_qty }} {{ __('units left') }}
+                                        </span>
+                                    @else
+                                        <span class="badge bg-danger-subtle text-danger fs-6 px-3 py-2">
+                                            <i class="fas fa-times-circle me-1"></i> {{ __('Out of Stock') }}
+                                        </span>
+                                    @endif
+                                </td>
+                                <td class="text-center">
+                                    <input type="hidden" name="items[{{ $index }}][product_id]" value="{{ $mp->id }}" class="product-id-field" disabled>
+                                    <div class="input-group input-group-sm quantity-group">
+                                        <button type="button" class="btn btn-outline-secondary btn-minus" disabled>-</button>
+                                        <input type="number" name="items[{{ $index }}][quantity]" id="qty_input_{{ $mp->id }}" class="form-control text-center qty-input" min="1" max="{{ max(1, $mp->warehouse_qty) }}" value="1" disabled>
+                                        <button type="button" class="btn btn-outline-secondary btn-plus" disabled>+</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="text-center py-5 text-muted">
+                                    <div class="mb-2"><i class="fas fa-boxes fs-1 text-muted"></i></div>
+                                    <h5>{{ __('No Master Products Available in Central Warehouse') }}</h5>
+                                    <p class="small mb-0">{{ __('Stock must be added to the central warehouse before shops can request dispatches.') }}</p>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notes & Submission Footer Card -->
+    <div class="card border-0 shadow-sm rounded-12 bg-white mb-4">
+        <div class="card-body p-4">
+            <div class="mb-3">
+                <label class="form-label fw-bold small text-dark"><i class="fas fa-comment-dots me-1 text-primary"></i> {{ __('Request Notes / Special Instructions') }}</label>
+                <textarea name="notes" class="form-control" rows="3" placeholder="{{ __('e.g. Urgent stock needed for weekend sale. Please dispatch as early as possible.') }}"></textarea>
             </div>
 
-            <div class="mb-4">
-                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-bold" id="addItemBtn">
-                    <i class="fas fa-plus me-1"></i> {{ __('Add Another Product') }}
+            <div class="d-flex justify-content-between align-items-center pt-3 border-top flex-wrap gap-2">
+                <a href="{{ route('shop.stock-request.index') }}" class="btn btn-light rounded-pill px-4">{{ __('Cancel') }}</a>
+                <button type="submit" class="btn btn-primary rounded-pill px-4 py-2 fw-bold fs-6" id="submitBtn" disabled>
+                    <i class="fas fa-paper-plane me-1"></i> {{ __('Submit Stock Request') }} (<span id="submitCount">0</span> {{ __('Items') }})
                 </button>
             </div>
-
-            <div class="mb-4">
-                <label class="form-label fw-bold small">{{ __('Notes / Special Instructions') }}</label>
-                <textarea name="notes" class="form-control" rows="3" placeholder="{{ __('e.g. Urgent stock needed for weekend promotion') }}"></textarea>
-            </div>
-
-            <div class="d-flex justify-content-end gap-2 border-top pt-3">
-                <a href="{{ route('shop.stock-request.index') }}" class="btn btn-light rounded-pill px-4">{{ __('Cancel') }}</a>
-                <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">{{ __('Submit Stock Request') }}</button>
-            </div>
-        </form>
+        </div>
     </div>
-</div>
+</form>
 
 @push('scripts')
 <script>
-    let itemIndex = 1;
-    const masterOptions = `@foreach($masterProducts as $mp)<option value="{{ $mp->id }}">{{ addslashes($mp->name) }} — {{ __('Available in') }} {{ addslashes($warehouse->name) }}: {{ $mp->warehouse_qty }} {{ __('units') }}</option>@endforeach`;
+    document.addEventListener("DOMContentLoaded", function () {
+        const checkboxes = document.querySelectorAll('.product-checkbox');
+        const selectAll = document.getElementById('selectAllCheckbox');
+        const searchInput = document.getElementById('catalogSearchInput');
+        const submitBtn = document.getElementById('submitBtn');
+        const selectedCount = document.getElementById('selectedCount');
+        const submitCount = document.getElementById('submitCount');
 
-    document.getElementById('addItemBtn').addEventListener('click', function() {
-        const container = document.getElementById('itemsContainer');
-        const row = document.createElement('div');
-        row.className = 'card bg-light border-0 mb-3 item-row p-3 rounded-12';
-        row.innerHTML = `
-            <div class="row g-3 align-items-end">
-                <div class="col-md-8 col-lg-8">
-                    <label class="form-label fw-bold small required">{{ __('Select Product') }}</label>
-                    <select name="items[${itemIndex}][product_id]" class="form-select" required>
-                        <option value="">{{ __('-- Select Master Product --') }}</option>
-                        ${masterOptions}
-                    </select>
-                </div>
-                <div class="col-md-3 col-lg-3">
-                    <label class="form-label fw-bold small required">{{ __('Quantity') }}</label>
-                    <input type="number" name="items[${itemIndex}][quantity]" class="form-control" min="1" value="1" required>
-                </div>
-                <div class="col-md-1 col-lg-1 text-center">
-                    <button type="button" class="btn btn-outline-danger btn-sm remove-item-btn">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </div>
-        `;
-        container.appendChild(row);
-        itemIndex++;
-        updateRemoveButtons();
-    });
+        function updateTotals() {
+            let count = 0;
+            checkboxes.forEach(cb => {
+                const row = cb.closest('tr');
+                const productIdField = row.querySelector('.product-id-field');
+                const qtyInput = row.querySelector('.qty-input');
+                const btnMinus = row.querySelector('.btn-minus');
+                const btnPlus = row.querySelector('.btn-plus');
 
-    document.getElementById('itemsContainer').addEventListener('click', function(e) {
-        if (e.target.closest('.remove-item-btn')) {
-            const row = e.target.closest('.item-row');
-            if (document.querySelectorAll('.item-row').length > 1) {
-                row.remove();
-                updateRemoveButtons();
-            }
+                if (cb.checked) {
+                    count++;
+                    productIdField.disabled = false;
+                    qtyInput.disabled = false;
+                    btnMinus.disabled = false;
+                    btnPlus.disabled = false;
+                    row.classList.add('table-primary-subtle');
+                } else {
+                    productIdField.disabled = true;
+                    qtyInput.disabled = true;
+                    btnMinus.disabled = true;
+                    btnPlus.disabled = true;
+                    row.classList.remove('table-primary-subtle');
+                }
+            });
+
+            selectedCount.textContent = count;
+            submitCount.textContent = count;
+            submitBtn.disabled = (count === 0);
         }
-    });
 
-    function updateRemoveButtons() {
-        const rows = document.querySelectorAll('.item-row');
-        rows.forEach((row) => {
-            const btn = row.querySelector('.remove-item-btn');
-            if (rows.length > 1) {
-                btn.classList.remove('d-none');
-            } else {
-                btn.classList.add('d-none');
-            }
+        checkboxes.forEach(cb => {
+            cb.addEventListener('change', updateTotals);
         });
-    }
+
+        if (selectAll) {
+            selectAll.addEventListener('change', function () {
+                const visibleCheckboxes = document.querySelectorAll('#catalogTable tbody tr:not([style*="display: none"]) .product-checkbox');
+                visibleCheckboxes.forEach(cb => {
+                    cb.checked = selectAll.checked;
+                });
+                updateTotals();
+            });
+        }
+
+        // Stepper Quantity buttons (+ / -)
+        document.querySelectorAll('.btn-minus').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const input = this.closest('.quantity-group').querySelector('.qty-input');
+                let val = parseInt(input.value) || 1;
+                if (val > 1) {
+                    input.value = val - 1;
+                }
+            });
+        });
+
+        document.querySelectorAll('.btn-plus').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const input = this.closest('.quantity-group').querySelector('.qty-input');
+                let val = parseInt(input.value) || 1;
+                let max = parseInt(input.getAttribute('max')) || 999999;
+                if (val < max) {
+                    input.value = val + 1;
+                }
+            });
+        });
+
+        // Dynamic Client-side Search Filter
+        if (searchInput) {
+            searchInput.addEventListener('input', function () {
+                const term = this.value.toLowerCase().trim();
+                document.querySelectorAll('#catalogTable tbody tr.product-row').forEach(row => {
+                    const name = row.getAttribute('data-name') || '';
+                    const code = row.getAttribute('data-code') || '';
+                    const brand = row.getAttribute('data-brand') || '';
+                    if (name.includes(term) || code.includes(term) || brand.includes(term)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        updateTotals();
+    });
 </script>
 @endpush
 @endsection

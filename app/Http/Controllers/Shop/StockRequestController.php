@@ -93,21 +93,30 @@ class StockRequestController extends Controller
             return redirect()->route('shop.stock-request.index')->with('error', __('No linked warehouse found for your shop.'));
         }
 
+        $search = request('search');
+
         // Get warehouse stock for products available in the shop's linked warehouse
         $warehouseStocks = WarehouseStock::where('warehouse_id', $warehouse->id)
-            ->with(['product', 'color', 'size'])
             ->get()
             ->keyBy('product_id');
 
-        $masterProducts = Product::where('is_digital', false)
+        $query = Product::where('is_digital', false)
             ->whereNull('master_product_id')
-            ->get()
-            ->map(function ($product) use ($warehouseStocks) {
-                $stockInWh = $warehouseStocks->get($product->id)?->quantity ?? 0;
-                $product->warehouse_qty = $stockInWh;
+            ->with(['brand', 'categories']);
 
-                return $product;
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('code', 'like', "%{$search}%");
             });
+        }
+
+        $masterProducts = $query->latest()->get()->map(function ($product) use ($warehouseStocks) {
+            $stockInWh = $warehouseStocks->get($product->id)?->quantity ?? 0;
+            $product->warehouse_qty = $stockInWh;
+
+            return $product;
+        });
 
         return view('shop.stock-request.create', compact('warehouse', 'masterProducts', 'shop'));
     }
@@ -121,6 +130,15 @@ class StockRequestController extends Controller
             return back()->with('error', __('No linked warehouse available for your shop.'));
         }
 
+        // Filter valid requested items with quantity > 0
+        $items = collect($request->items)->filter(function ($item) {
+            return isset($item['product_id']) && isset($item['quantity']) && (int) $item['quantity'] > 0;
+        });
+
+        if ($items->isEmpty()) {
+            return back()->with('error', __('Please select at least one product with quantity greater than 0.'));
+        }
+
         $stockRequest = StockRequest::create([
             'shop_id' => $shop->id,
             'warehouse_id' => $warehouse->id, // Strictly locked to shop's linked warehouse
@@ -128,12 +146,12 @@ class StockRequestController extends Controller
             'notes' => $request->notes,
         ]);
 
-        foreach ($request->items as $item) {
+        foreach ($items as $item) {
             $stockRequest->items()->create([
                 'product_id' => $item['product_id'],
                 'color_id' => $item['color_id'] ?? null,
                 'size_id' => $item['size_id'] ?? null,
-                'quantity' => $item['quantity'],
+                'quantity' => (int) $item['quantity'],
             ]);
         }
 
