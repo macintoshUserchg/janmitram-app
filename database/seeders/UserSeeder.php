@@ -30,7 +30,7 @@ class UserSeeder extends Seeder
     {
         $rootUser = User::factory()->create([
             'name' => 'Super Admin',
-            'email' => 'root@readyecommerce.com',
+            'email' => 'root@janmitram.com',
             'phone' => '01000000001',
             'is_active' => true,
         ]);

@@ -64,7 +64,7 @@ class DatabaseSeeder extends Seeder
         // info for root user in command line
         $this->command->line('');
         $this->command->info('Root user created:');
-        $this->command->warn('- Email: root@readyecommerce.com');
+        $this->command->warn('- Email: root@janmitram.com');
         $this->command->warn('- Password: secret');
         $this->command->info('');
 
