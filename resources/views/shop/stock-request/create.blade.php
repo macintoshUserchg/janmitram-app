@@ -30,7 +30,7 @@
     </div>
 </div>
 
-<div class="card border-0 shadow-sm rounded-12 bg-white col-lg-10 mx-auto">
+<div class="card border-0 shadow-sm rounded-12 bg-white">
     <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
         <h5 class="card-title mb-0 fw-bold"><i class="fas fa-cart-flatbed me-2 text-primary"></i>{{ __('Request Inventory Items') }}</h5>
         <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill"><i class="fas fa-link me-1"></i>{{ __('Linked Hub Locked') }}</span>
@@ -46,7 +46,7 @@
             <div id="itemsContainer">
                 <div class="card bg-light border-0 mb-3 item-row p-3 rounded-12">
                     <div class="row g-3 align-items-end">
-                        <div class="col-md-8">
+                        <div class="col-md-8 col-lg-8">
                             <label class="form-label fw-bold small required">{{ __('Select Product') }}</label>
                             <select name="items[0][product_id]" class="form-select" required>
                                 <option value="">{{ __('-- Select Master Product --') }}</option>
@@ -57,11 +57,11 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-3 col-lg-3">
                             <label class="form-label fw-bold small required">{{ __('Quantity') }}</label>
                             <input type="number" name="items[0][quantity]" class="form-control" min="1" value="1" required>
                         </div>
-                        <div class="col-md-1 text-center">
+                        <div class="col-md-1 col-lg-1 text-center">
                             <button type="button" class="btn btn-outline-danger btn-sm remove-item-btn d-none">
                                 <i class="fas fa-trash"></i>
                             </button>
@@ -100,18 +100,18 @@
         row.className = 'card bg-light border-0 mb-3 item-row p-3 rounded-12';
         row.innerHTML = `
             <div class="row g-3 align-items-end">
-                <div class="col-md-8">
+                <div class="col-md-8 col-lg-8">
                     <label class="form-label fw-bold small required">{{ __('Select Product') }}</label>
                     <select name="items[${itemIndex}][product_id]" class="form-select" required>
                         <option value="">{{ __('-- Select Master Product --') }}</option>
                         ${masterOptions}
                     </select>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-3 col-lg-3">
                     <label class="form-label fw-bold small required">{{ __('Quantity') }}</label>
                     <input type="number" name="items[${itemIndex}][quantity]" class="form-control" min="1" value="1" required>
                 </div>
-                <div class="col-md-1 text-center">
+                <div class="col-md-1 col-lg-1 text-center">
                     <button type="button" class="btn btn-outline-danger btn-sm remove-item-btn">
                         <i class="fas fa-trash"></i>
                     </button>
