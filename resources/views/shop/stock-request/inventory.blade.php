@@ -73,7 +73,7 @@
                         <th>{{ __('Category / Brand') }}</th>
                         <th class="text-center">{{ __('Unit Price') }}</th>
                         <th class="text-center">{{ __('Inventory Value') }}</th>
-                        <th class="text-center">{{ __('Sellable Stock') }}</th>
+                        <th class="text-center">{{ __('Quantity') }}</th>
                         <th class="text-center">{{ __('Status') }}</th>
                         <th class="text-center">{{ __('Action') }}</th>
                     </tr>
