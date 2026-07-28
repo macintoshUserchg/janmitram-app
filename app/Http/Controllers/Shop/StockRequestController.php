@@ -44,14 +44,43 @@ class StockRequestController extends Controller
     public function inventory()
     {
         $shop = $this->getShop();
+        $warehouse = $shop?->warehouse ?? WarehouseRepository::getCentralWarehouse();
 
-        $products = Product::where('shop_id', $shop?->id)
+        $status = request('status');
+        $search = request('search');
+
+        $query = Product::where('shop_id', $shop?->id)
             ->where('is_digital', false)
-            ->with(['masterProduct', 'brand', 'categories'])
-            ->latest()
-            ->paginate(15);
+            ->with(['masterProduct', 'brand', 'categories']);
 
-        return view('shop.stock-request.inventory', compact('products'));
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('code', 'like', "%{$search}%");
+            });
+        }
+
+        if ($status === 'low_stock') {
+            $query->where('quantity', '>', 0)->where('quantity', '<=', 10);
+        } elseif ($status === 'out_of_stock') {
+            $query->where('quantity', 0);
+        } elseif ($status === 'in_stock') {
+            $query->where('quantity', '>', 10);
+        }
+
+        $products = $query->latest()->paginate(15)->withQueryString();
+
+        // Calculate shop inventory summary metrics
+        $allShopProducts = Product::where('shop_id', $shop?->id)->where('is_digital', false)->get();
+        $totalSkuLines = $allShopProducts->count();
+        $totalStockUnits = $allShopProducts->sum('quantity');
+        $totalInventoryValue = $allShopProducts->sum(fn ($p) => $p->quantity * $p->price);
+        $lowStockCount = $allShopProducts->filter(fn ($p) => $p->quantity <= 10)->count();
+
+        return view('shop.stock-request.inventory', compact(
+            'products', 'warehouse', 'shop', 'totalSkuLines',
+            'totalStockUnits', 'totalInventoryValue', 'lowStockCount'
+        ));
     }
 
     public function create()
