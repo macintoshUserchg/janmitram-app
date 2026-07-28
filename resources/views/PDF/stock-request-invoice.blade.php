@@ -17,25 +17,22 @@
             line-height: 1.5;
             margin: 0;
             padding: 20px;
-            background-color: #ffffff;
+            background-color: #F8FAFC;
         }
 
         .invoice-box {
             max-width: 800px;
             margin: auto;
-            padding: 10px;
+            padding: 25px;
+            background-color: #ffffff;
+            border: 2px solid #1E3A8A;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
         .table-full {
             width: 100%;
             border-collapse: collapse;
-        }
-
-        .header-bg {
-            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
-            color: #ffffff;
-            padding: 20px;
-            border-radius: 8px;
         }
 
         .header-title {
@@ -52,11 +49,12 @@
             font-size: 11px;
             font-weight: bold;
             display: inline-block;
+            border: 1px solid #059669;
         }
 
         .section-box {
             background-color: #F8FAFC;
-            border: 1px solid #E2E8F0;
+            border: 1px solid #CBD5E0;
             border-radius: 8px;
             padding: 15px;
             margin-top: 15px;
@@ -65,22 +63,23 @@
         .table-items {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
+            margin-top: 20px;
+            border: 1px solid #CBD5E0;
         }
 
         .table-items th {
             background-color: #EDF2F7;
-            color: #4A5568;
+            color: #2D3748;
             font-size: 11px;
             text-transform: uppercase;
             padding: 10px;
-            border-bottom: 2px solid #CBD5E0;
+            border: 1px solid #CBD5E0;
             text-align: left;
         }
 
         .table-items td {
             padding: 10px;
-            border-bottom: 1px solid #E2E8F0;
+            border: 1px solid #E2E8F0;
         }
 
         .text-right {
@@ -100,15 +99,22 @@
         }
 
         .footer-signatures {
-            margin-top: 50px;
+            margin-top: 40px;
             width: 100%;
+            border-collapse: collapse;
+        }
+
+        .signature-box {
+            border: 1px solid #CBD5E0;
+            border-radius: 8px;
+            padding: 15px;
+            background-color: #F8FAFC;
         }
 
         .signature-line {
             border-top: 1px dashed #A0AEC0;
             width: 80%;
-            margin-top: 40px;
-            padding-top: 5px;
+            margin: 30px auto 5px auto;
             font-weight: bold;
             color: #4A5568;
         }
@@ -119,21 +125,26 @@
             }
             body {
                 padding: 0;
+                background-color: #ffffff;
+            }
+            .invoice-box {
+                border: 2px solid #000000;
+                box-shadow: none;
             }
         }
     </style>
 </head>
 
 <body>
-    <div class="no-print" style="margin-bottom: 20px; text-align: right;">
+    <div class="no-print" style="margin-bottom: 20px; text-align: right; max-width: 800px; margin-left: auto; margin-right: auto;">
         <button onclick="window.print()" style="background-color: #2563EB; color: white; border: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; cursor: pointer;">
             🖨️ Print Dispatch Note
         </button>
     </div>
 
     <div class="invoice-box">
-        <!-- Header Banner -->
-        <table class="table-full">
+        <!-- Header Banner with Border Bottom -->
+        <table class="table-full" style="border-bottom: 2px solid #1E3A8A; padding-bottom: 15px; margin-bottom: 15px;">
             <tr>
                 <td style="width: 60%;">
                     <h1 class="header-title" style="color: #1E3A8A;">INVOICE / GOODS DISPATCH NOTE</h1>
@@ -150,37 +161,38 @@
             </tr>
         </table>
 
-        <!-- Sender & Recipient Information -->
-        <table class="table-full" style="margin-top: 15px;">
+        <!-- Sender & Recipient Information Cards -->
+        <table class="table-full">
             <tr>
                 <td style="width: 48%; vertical-align: top;">
                     <div class="section-box">
-                        <div class="fw-bold" style="color: #1E3A8A; font-size: 13px; margin-bottom: 6px; border-bottom: 1px solid #E2E8F0; padding-bottom: 4px;">
+                        <div class="fw-bold" style="color: #1E3A8A; font-size: 13px; margin-bottom: 6px; border-bottom: 1px solid #CBD5E0; padding-bottom: 4px;">
                             🏢 DISPATCHING WAREHOUSE (FROM)
                         </div>
                         <div><strong>{{ $stockRequest->warehouse?->name ?? 'Central Warehouse' }}</strong></div>
                         @if($stockRequest->warehouse?->address)
                             <div class="text-muted">{{ $stockRequest->warehouse->address }}</div>
                         @endif
-                        <div class="text-muted">Type: Central Fulfillment Logistics Hub</div>
-                    </td>
+                        <div class="text-muted" style="font-size: 11px; margin-top: 4px;">Type: Central Fulfillment Logistics Hub</div>
+                    </div>
+                </td>
                 <td style="width: 4%;"></td>
                 <td style="width: 48%; vertical-align: top;">
                     <div class="section-box">
-                        <div class="fw-bold" style="color: #1E3A8A; font-size: 13px; margin-bottom: 6px; border-bottom: 1px solid #E2E8F0; padding-bottom: 4px;">
+                        <div class="fw-bold" style="color: #1E3A8A; font-size: 13px; margin-bottom: 6px; border-bottom: 1px solid #CBD5E0; padding-bottom: 4px;">
                             🏪 RECEIVING SHOP (TO)
                         </div>
                         <div><strong>{{ $stockRequest->shop?->name ?? 'Recipient Shop' }}</strong></div>
                         @if($stockRequest->shop?->address)
                             <div class="text-muted">{{ $stockRequest->shop->address }}</div>
                         @endif
-                        <div class="text-muted">Shop ID: #{{ $stockRequest->shop_id }}</div>
+                        <div class="text-muted" style="font-size: 11px; margin-top: 4px;">Shop ID: #{{ $stockRequest->shop_id }}</div>
                     </div>
                 </td>
             </tr>
         </table>
 
-        <!-- Itemized Products Table -->
+        <!-- Itemized Products Table with Full Cell Borders -->
         <table class="table-items">
             <thead>
                 <tr>
@@ -226,19 +238,19 @@
             </tbody>
         </table>
 
-        <!-- Financial & Quantity Summary -->
+        <!-- Financial & Quantity Summary Box -->
         <table class="table-full" style="margin-top: 15px;">
             <tr>
                 <td style="width: 55%; vertical-align: top;">
                     @if($stockRequest->notes)
                         <div class="section-box">
-                            <div class="fw-bold" style="font-size: 11px; text-transform: uppercase; color: #718096;">Dispatch Notes:</div>
-                            <div style="font-style: italic; margin-top: 4px;">{{ $stockRequest->notes }}</div>
+                            <div class="fw-bold" style="font-size: 11px; text-transform: uppercase; color: #718096; border-bottom: 1px solid #CBD5E0; padding-bottom: 4px;">Dispatch Notes:</div>
+                            <div style="font-style: italic; margin-top: 6px;">{{ $stockRequest->notes }}</div>
                         </div>
                     @endif
                 </td>
                 <td style="width: 45%; vertical-align: top;">
-                    <div class="section-box" style="background-color: #EFF6FF; border-color: #BFDBFE;">
+                    <div class="section-box" style="background-color: #EFF6FF; border: 1.5px solid #93C5FD;">
                         <table class="table-full" style="font-size: 13px;">
                             <tr>
                                 <td>Total SKU Lines:</td>
@@ -248,9 +260,9 @@
                                 <td>Total Dispatched Units:</td>
                                 <td class="text-right fw-bold">{{ $totalQty }} Physical Units</td>
                             </tr>
-                            <tr style="border-top: 1px solid #93C5FD; font-size: 15px; font-weight: bold; color: #1E3A8A;">
-                                <td style="padding-top: 6px;">Total Dispatch Value:</td>
-                                <td class="text-right" style="padding-top: 6px;">{{ showCurrency($totalValuation) }}</td>
+                            <tr style="border-top: 1.5px solid #3B82F6; font-size: 15px; font-weight: bold; color: #1E3A8A;">
+                                <td style="padding-top: 8px;">Total Dispatch Value:</td>
+                                <td class="text-right" style="padding-top: 8px;">{{ showCurrency($totalValuation) }}</td>
                             </tr>
                         </table>
                     </div>
@@ -261,13 +273,18 @@
         <!-- Signatures Footer -->
         <table class="footer-signatures">
             <tr>
-                <td class="text-center" style="width: 50%;">
-                    <div class="signature-line">Authorized Warehouse Issuer</div>
-                    <div class="text-muted" style="font-size: 10px; margin-top: 2px;">{{ $stockRequest->warehouse?->name ?? 'Central Logistics Hub' }}</div>
+                <td style="width: 48%; vertical-align: top;">
+                    <div class="signature-box text-center">
+                        <div class="signature-line">Authorized Warehouse Issuer</div>
+                        <div class="text-muted" style="font-size: 10px;">{{ $stockRequest->warehouse?->name ?? 'Central Logistics Hub' }}</div>
+                    </div>
                 </td>
-                <td class="text-center" style="width: 50%;">
-                    <div class="signature-line">Receiving Shop Representative</div>
-                    <div class="text-muted" style="font-size: 10px; margin-top: 2px;">{{ $stockRequest->shop?->name ?? 'Shop Manager' }}</div>
+                <td style="width: 4%;"></td>
+                <td style="width: 48%; vertical-align: top;">
+                    <div class="signature-box text-center">
+                        <div class="signature-line">Receiving Shop Representative</div>
+                        <div class="text-muted" style="font-size: 10px;">{{ $stockRequest->shop?->name ?? 'Shop Manager' }}</div>
+                    </div>
                 </td>
             </tr>
         </table>
