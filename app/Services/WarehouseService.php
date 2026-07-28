@@ -215,6 +215,15 @@ class WarehouseService
 
             $stockFrom->decrement('quantity', $qty);
 
+            if ($from->shop) {
+                $fromShopProduct = Product::where('master_product_id', $product->id)
+                    ->where('shop_id', $from->shop_id)
+                    ->first();
+                if ($fromShopProduct && $fromShopProduct->quantity > 0) {
+                    $fromShopProduct->decrement('quantity', min($qty, $fromShopProduct->quantity));
+                }
+            }
+
             $targetColorId = $colorId ?? $stockFrom->color_id;
             $targetSizeId = $sizeId ?? $stockFrom->size_id;
 
@@ -246,6 +255,11 @@ class WarehouseService
                     'size_id' => $targetSizeId,
                     'quantity' => $qty,
                 ]);
+            }
+
+            if ($to->shop) {
+                $shopProduct = self::cloneMasterToShop($product, $to->shop);
+                $shopProduct->increment('quantity', $qty);
             }
 
             // Ledger entry
