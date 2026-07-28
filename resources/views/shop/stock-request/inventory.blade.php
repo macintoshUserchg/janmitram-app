@@ -21,17 +21,10 @@
 <!-- Linked Warehouse Hub Card -->
 @if($warehouse)
 <div class="card border-0 shadow-sm rounded-12 mb-4 bg-gradient bg-primary text-white">
-    <div class="card-body p-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
-        <div>
-            <span class="badge bg-light text-primary fw-bold mb-2">{{ __('Linked Logistics Fulfillment Hub') }}</span>
-            <h4 class="mb-1 text-white fw-bold"><i class="fas fa-warehouse me-2"></i>{{ $warehouse->name }}</h4>
-            <p class="mb-0 text-white-50 small">{{ $warehouse->address ?? __('Primary Central Fulfillment Warehouse') }}</p>
-        </div>
-        <div class="text-end">
-            <a href="{{ route('shop.stock-request.create') }}" class="btn btn-warning text-dark fw-bold">
-                <i class="fas fa-dolly me-1"></i> {{ __('Submit Stock Request') }}
-            </a>
-        </div>
+    <div class="card-body p-4">
+        <span class="badge bg-light text-primary fw-bold mb-2">{{ __('Linked Logistics Fulfillment Hub') }}</span>
+        <h4 class="mb-1 text-white fw-bold"><i class="fas fa-warehouse me-2"></i>{{ $warehouse->name }}</h4>
+        <p class="mb-0 text-white-50 small">{{ $warehouse->address ?? __('Primary Central Fulfillment Warehouse') }}</p>
     </div>
 </div>
 @endif
