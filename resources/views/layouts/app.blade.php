@@ -88,68 +88,11 @@
             object-fit: cover;
             border: 1px solid #eee;
         }
-
-        /* Prevent icon shifting on collapsed sidebar toggle */
-        .closed-sidebar .app-sidebar .app-sidebar-inner ul li a {
-            overflow: hidden !important;
-            white-space: nowrap !important;
-        }
-
-        .closed-sidebar .app-sidebar .app-sidebar-inner ul li a .menu-icon {
-            text-indent: 0 !important;
-            display: inline-block !important;
-            flex-shrink: 0 !important;
-        }
-
-        /* Prevent sidebar auto-expanding width on mouse hover when collapsed */
-        .closed-sidebar .app-sidebar:hover,
-        .closed-sidebar:not(.sidebar-mobile-open) .app-sidebar:hover .scrollbar-sidebar {
-            width: 65px !important;
-            min-width: 65px !important;
-            max-width: 65px !important;
-            flex: 0 0 65px !important;
-        }
-
-        /* Disable all inner element hover effects when collapsed */
-        .closed-sidebar .app-sidebar:hover .app-sidebar-heading {
-            text-indent: -999em !important;
-            display: none !important;
-        }
-
-        .closed-sidebar .app-sidebar:hover ul li a {
-            text-indent: 0 !important;
-            overflow: hidden !important;
-            white-space: nowrap !important;
-        }
-
-        .closed-sidebar .app-sidebar:hover .downIcon,
-        .closed-sidebar .app-sidebar:hover .metismenu-state-icon,
-        .closed-sidebar .app-sidebar:hover .count,
-        .closed-sidebar .app-sidebar:hover #unread-message-badge {
-            display: none !important;
-            visibility: hidden !important;
-            opacity: 0 !important;
-        }
-
-        .closed-sidebar .app-sidebar:hover .dropdownMenuCollapse,
-        .closed-sidebar .app-sidebar:hover .dropdownMenuCollapse.show,
-        .closed-sidebar .app-sidebar:hover .mm-collapse,
-        .closed-sidebar .app-sidebar:hover .mm-collapse.mm-show {
-            display: none !important;
-            visibility: hidden !important;
-            height: 0 !important;
-            opacity: 0 !important;
-        }
     </style>
 </head>
 
 <body class="loading">
     <div class="app-container body-tabs-shadow fixed-sidebar fixed-header" id="appContent">
-        <script>
-            if (localStorage.getItem('sidebar_closed') === 'true') {
-                document.getElementById('appContent').classList.add('closed-sidebar');
-            }
-        </script>
         <div class="app-header">
             <div class="app-header-logo"></div>
             <div class="app-header-mobile-menu">
@@ -1171,33 +1114,6 @@
                 }
             });
         }
-    </script>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            var appContent = document.getElementById('appContent');
-            var isClosed = localStorage.getItem('sidebar_closed') === 'true';
-
-            if (isClosed && appContent) {
-                appContent.classList.add('closed-sidebar');
-                var hamburgerBtn = document.querySelector('.close-sidebar-btn');
-                if (hamburgerBtn) {
-                    hamburgerBtn.classList.add('is-active');
-                }
-            }
-
-            document.addEventListener('click', function(e) {
-                var toggleBtn = e.target.closest('.close-sidebar-btn, [data-class="closed-sidebar"]');
-                if (toggleBtn) {
-                    setTimeout(function() {
-                        if (appContent) {
-                            var closedNow = appContent.classList.contains('closed-sidebar');
-                            localStorage.setItem('sidebar_closed', closedNow ? 'true' : 'false');
-                        }
-                    }, 100);
-                }
-            });
-        });
     </script>
 
 </body>
