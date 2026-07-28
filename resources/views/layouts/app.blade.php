@@ -89,9 +89,14 @@
             border: 1px solid #eee;
         }
 
-        /* Disable sidebar auto-toggle/expand on hover when closed */
+        /* ========================================================= */
+        /* PERFECT COLLAPSED SIDEBAR ICON & LAYOUT STYLING           */
+        /* ========================================================= */
+        .closed-sidebar .app-sidebar,
         .closed-sidebar .app-sidebar:hover,
+        .closed-sidebar:not(.sidebar-mobile-open) .app-sidebar .scrollbar-sidebar,
         .closed-sidebar:not(.sidebar-mobile-open) .app-sidebar:hover .scrollbar-sidebar,
+        .closed-sidebar.closed-sidebar-mobile .app-sidebar,
         .closed-sidebar.closed-sidebar-mobile .app-sidebar:hover {
             flex: 0 0 65px !important;
             width: 65px !important;
@@ -100,55 +105,95 @@
             position: relative !important;
         }
 
-        .closed-sidebar .app-sidebar:hover .app-sidebar-inner ul li a {
-            text-indent: -99rem !important;
+        /* Center vertical nav menu items in collapsed mode */
+        .closed-sidebar .app-sidebar .vertical-nav-menu {
+            padding: 0 !important;
+            margin: 0 !important;
         }
 
-        .closed-sidebar .app-sidebar:hover .app-sidebar-inner .metismenu-state-icon,
-        .closed-sidebar .app-sidebar:hover .downIcon {
-            visibility: hidden !important;
-            display: none !important;
-        }
-
-        .closed-sidebar .app-sidebar:hover .dropdownMenuCollapse,
-        .closed-sidebar .app-sidebar:hover .dropdownMenuCollapse.show {
-            display: none !important;
-        }
-
-        /* Lock icon sizing, dimensions, and centering in collapsed sidebar */
-        .closed-sidebar .app-sidebar .vertical-nav-menu li a,
-        .closed-sidebar .app-sidebar:hover .vertical-nav-menu li a {
-            padding: 12px 0 !important;
-            text-align: center !important;
+        .closed-sidebar .app-sidebar .vertical-nav-menu li {
+            position: relative;
+            display: flex !important;
             justify-content: center !important;
+            align-items: center !important;
+            width: 100% !important;
+            margin: 4px 0 !important;
+        }
+
+        .closed-sidebar .app-sidebar .vertical-nav-menu li a.menu,
+        .closed-sidebar .app-sidebar:hover .vertical-nav-menu li a.menu {
             display: flex !important;
             align-items: center !important;
-            width: 65px !important;
+            justify-content: center !important;
+            width: 44px !important;
+            height: 44px !important;
+            min-width: 44px !important;
+            max-width: 44px !important;
+            padding: 0 !important;
             margin: 0 auto !important;
+            border-radius: 10px !important;
+            text-indent: 0 !important;
+            transition: background-color 0.2s ease, transform 0.15s ease !important;
         }
 
-        .closed-sidebar .app-sidebar .vertical-nav-menu li a span,
-        .closed-sidebar .app-sidebar:hover .vertical-nav-menu li a span {
+        /* Hide text nodes, caret icons, badges & dropdowns in collapsed sidebar */
+        .closed-sidebar .app-sidebar .vertical-nav-menu li a > span,
+        .closed-sidebar .app-sidebar:hover .vertical-nav-menu li a > span {
+            font-size: 0 !important;
+            color: transparent !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
             width: 100% !important;
-            margin: 0 !important;
+            height: 100% !important;
             padding: 0 !important;
+            margin: 0 !important;
+            text-indent: 0 !important;
+            overflow: hidden !important;
         }
 
-        .closed-sidebar .app-sidebar .vertical-nav-menu li a .menu-icon,
-        .closed-sidebar .app-sidebar:hover .vertical-nav-menu li a .menu-icon {
+        /* Lock icon sizing completely - fixed 22px x 22px on default, active, & hover */
+        .closed-sidebar .app-sidebar .menu-icon,
+        .closed-sidebar .app-sidebar:hover .menu-icon,
+        .closed-sidebar .app-sidebar .vertical-nav-menu li a.menu .menu-icon,
+        .closed-sidebar .app-sidebar:hover .vertical-nav-menu li a.menu .menu-icon {
             width: 22px !important;
             height: 22px !important;
             min-width: 22px !important;
-            min-height: 22px !important;
             max-width: 22px !important;
+            min-height: 22px !important;
             max-height: 22px !important;
-            margin: 0 auto !important;
+            margin: 0 !important;
+            padding: 0 !important;
             object-fit: contain !important;
-            transition: none !important;
+            display: inline-block !important;
+            flex-shrink: 0 !important;
+            text-indent: 0 !important;
             transform: none !important;
+        }
+
+        /* Hide non-icon items in collapsed mode */
+        .closed-sidebar .app-sidebar .downIcon,
+        .closed-sidebar .app-sidebar:hover .downIcon,
+        .closed-sidebar .app-sidebar .dropdownMenuCollapse,
+        .closed-sidebar .app-sidebar:hover .dropdownMenuCollapse,
+        .closed-sidebar .app-sidebar .dropdownMenuCollapse.show,
+        .closed-sidebar .app-sidebar:hover .dropdownMenuCollapse.show,
+        .closed-sidebar .app-sidebar .count,
+        .closed-sidebar .app-sidebar #unread-message-badge,
+        .closed-sidebar .app-sidebar .metismenu-state-icon {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+        }
+
+        /* Hover effect on collapsed icon container without resizing icon */
+        .closed-sidebar .app-sidebar .vertical-nav-menu li a.menu:hover {
+            background-color: var(--theme-hover-bg, #fee5e8) !important;
+        }
+
+        .closed-sidebar .app-sidebar .vertical-nav-menu li a.menu.active {
+            background-color: var(--theme-hover-bg, #fee5e8) !important;
         }
     </style>
 </head>
