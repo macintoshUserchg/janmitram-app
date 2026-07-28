@@ -110,10 +110,35 @@
             flex: 0 0 65px !important;
         }
 
-        .closed-sidebar .app-sidebar:hover .app-sidebar-inner .metismenu-state-icon,
-        .closed-sidebar .app-sidebar:hover .downIcon {
+        /* Disable all inner element hover effects when collapsed */
+        .closed-sidebar .app-sidebar:hover .app-sidebar-heading {
+            text-indent: -999em !important;
+            display: none !important;
+        }
+
+        .closed-sidebar .app-sidebar:hover ul li a {
+            text-indent: 0 !important;
+            overflow: hidden !important;
+            white-space: nowrap !important;
+        }
+
+        .closed-sidebar .app-sidebar:hover .downIcon,
+        .closed-sidebar .app-sidebar:hover .metismenu-state-icon,
+        .closed-sidebar .app-sidebar:hover .count,
+        .closed-sidebar .app-sidebar:hover #unread-message-badge {
             display: none !important;
             visibility: hidden !important;
+            opacity: 0 !important;
+        }
+
+        .closed-sidebar .app-sidebar:hover .dropdownMenuCollapse,
+        .closed-sidebar .app-sidebar:hover .dropdownMenuCollapse.show,
+        .closed-sidebar .app-sidebar:hover .mm-collapse,
+        .closed-sidebar .app-sidebar:hover .mm-collapse.mm-show {
+            display: none !important;
+            visibility: hidden !important;
+            height: 0 !important;
+            opacity: 0 !important;
         }
     </style>
 </head>
