@@ -72,8 +72,9 @@
                         <th>{{ __('Item & SKU') }}</th>
                         <th>{{ __('Category / Brand') }}</th>
                         <th class="text-center">{{ __('Unit Price') }}</th>
-                        <th class="text-center">{{ __('Inventory Value') }}</th>
-                        <th class="text-center">{{ __('Quantity') }}</th>
+                        <th class="text-center">{{ __('Total Requested') }}</th>
+                        <th class="text-center">{{ __('Sold via Orders') }}</th>
+                        <th class="text-center">{{ __('Current Available') }}</th>
                         <th class="text-center">{{ __('Status') }}</th>
                         <th class="text-center">{{ __('Action') }}</th>
                     </tr>
@@ -105,7 +106,16 @@
                                 </div>
                             </td>
                             <td class="text-center fw-bold">{{ showCurrency($product->price) }}</td>
-                            <td class="text-center fw-bold text-primary">{{ showCurrency($product->quantity * $product->price) }}</td>
+                            <td class="text-center">
+                                <span class="badge bg-primary-subtle text-primary fs-6 px-3 py-2">
+                                    <i class="fas fa-warehouse me-1"></i> {{ $product->total_requested_qty ?? $product->quantity }} {{ __('units') }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-secondary-subtle text-secondary fs-6 px-3 py-2">
+                                    <i class="fas fa-shopping-bag me-1"></i> {{ $product->sold_qty ?? 0 }} {{ __('sold') }}
+                                </span>
+                            </td>
                             <td class="text-center">
                                 @if ($product->quantity > 10)
                                     <span class="badge bg-success fs-6 px-3 py-2">{{ $product->quantity }} {{ __('units') }}</span>

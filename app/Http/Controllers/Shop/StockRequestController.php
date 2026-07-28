@@ -71,6 +71,24 @@ class StockRequestController extends Controller
 
         $products = $query->latest()->paginate(15)->withQueryString();
 
+        // Calculate total completed warehouse requested quantity per product for this shop
+        $completedRequestedQuantities = StockRequestItem::whereHas('stockRequest', function ($q) use ($shop) {
+            $q->where('shop_id', $shop?->id)->where('status', 'completed');
+        })->selectRaw('product_id, SUM(quantity) as total_requested')
+            ->groupBy('product_id')
+            ->pluck('total_requested', 'product_id');
+
+        $products->getCollection()->transform(function ($product) use ($completedRequestedQuantities) {
+            $masterId = $product->master_product_id ?? $product->id;
+            $approvedQty = (int) ($completedRequestedQuantities->get($masterId) ?? $completedRequestedQuantities->get($product->id) ?? 0);
+
+            // Total requested stock is approved quantity from warehouse (or current quantity if direct shop product)
+            $product->total_requested_qty = max($approvedQty, $product->quantity);
+            $product->sold_qty = max(0, $product->total_requested_qty - $product->quantity);
+
+            return $product;
+        });
+
         // Calculate shop inventory summary metrics
         $allShopProducts = Product::where('shop_id', $shop?->id)->where('is_digital', false)->get();
         $totalSkuLines = $allShopProducts->count();
