@@ -17,6 +17,25 @@
     <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm mb-4">{{ session('success') }}</div>
 @endif
 
+@if($stockRequest->status === 'completed')
+    <div class="card border-0 shadow-sm rounded-12 mb-4 bg-light border-start border-success border-4">
+        <div class="card-body p-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h6 class="fw-bold text-success mb-1"><i class="fas fa-file-invoice-dollar me-2"></i>{{ __('Stock Dispatch Invoice Available') }}</h6>
+                <p class="small text-muted mb-0">{{ __('An official dispatch invoice note #INV-SR-') }}{{ str_pad((string)$stockRequest->id, 5, '0', STR_PAD_LEFT) }}{{ __(' is available for printing or PDF download.') }}</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ route('admin.stock-request.invoice', [$stockRequest->id, 'download' => 'pdf']) }}" target="_blank" class="btn btn-sm btn-danger fw-bold">
+                    <i class="fas fa-file-pdf me-1"></i> {{ __('Download PDF Invoice') }}
+                </a>
+                <a href="{{ route('admin.stock-request.invoice', $stockRequest->id) }}" target="_blank" class="btn btn-sm btn-outline-primary fw-bold">
+                    <i class="fas fa-print me-1"></i> {{ __('Print Dispatch Note') }}
+                </a>
+            </div>
+        </div>
+    </div>
+@endif
+
 <!-- Overview Card -->
 <div class="card border-0 shadow-sm rounded-12 mb-4 bg-white">
     <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">

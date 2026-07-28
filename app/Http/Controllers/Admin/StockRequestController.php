@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Models\StockRequest;
 use App\Models\WarehouseStock;
 use App\Services\WarehouseService;
+use Mpdf\Mpdf;
 
 class StockRequestController extends Controller
 {
@@ -85,5 +86,28 @@ class StockRequestController extends Controller
         $stockRequest->update(['status' => 'rejected']);
 
         return redirect()->route('admin.stock-request.index')->with('success', __('Stock request rejected.'));
+    }
+
+    public function invoice(StockRequest $stockRequest)
+    {
+        if ($stockRequest->status !== 'completed') {
+            return back()->with('error', __('Invoice is only available for completed stock requests.'));
+        }
+
+        $stockRequest->load(['shop', 'warehouse', 'items.product.brand', 'items.color', 'items.size']);
+
+        if (request('download') === 'pdf' && class_exists('\Mpdf\Mpdf')) {
+            $mPdf = new Mpdf([
+                'mode' => 'utf-8',
+                'format' => 'A4',
+                'tempDir' => storage_path('app/public/mpdf_tmp'),
+            ]);
+            $view = view('PDF.stock-request-invoice', compact('stockRequest'))->render();
+            $mPdf->WriteHTML($view);
+
+            return $mPdf->Output('invoice-stock-request-'.$stockRequest->id.'.pdf', 'I');
+        }
+
+        return view('PDF.stock-request-invoice', compact('stockRequest'));
     }
 }

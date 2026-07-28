@@ -178,6 +178,7 @@ Route::prefix('shop')->name('shop.')->middleware(['web'])->group(function () {
         Route::get('stock-request/create', [App\Http\Controllers\Shop\StockRequestController::class, 'create'])->name('stock-request.create');
         Route::post('stock-request', [App\Http\Controllers\Shop\StockRequestController::class, 'store'])->name('stock-request.store');
         Route::get('stock-request/{stockRequest}', [App\Http\Controllers\Shop\StockRequestController::class, 'show'])->name('stock-request.show');
+        Route::get('stock-request/{stockRequest}/invoice', [App\Http\Controllers\Shop\StockRequestController::class, 'invoice'])->name('stock-request.invoice');
         Route::get('shop-inventory', [App\Http\Controllers\Shop\StockRequestController::class, 'inventory'])->name('shop-inventory.index');
 
         Route::get('voucher', [VoucherController::class, 'index'])->name('voucher.index');
@@ -390,6 +391,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:root'])->group
 
     Route::get('stock-request', [StockRequestController::class, 'index'])->name('stock-request.index');
     Route::get('stock-request/{stockRequest}', [StockRequestController::class, 'show'])->name('stock-request.show');
+    Route::get('stock-request/{stockRequest}/invoice', [StockRequestController::class, 'invoice'])->name('stock-request.invoice');
     Route::post('stock-request/{stockRequest}/approve', [StockRequestController::class, 'approve'])->name('stock-request.approve');
     Route::post('stock-request/{stockRequest}/reject', [StockRequestController::class, 'reject'])->name('stock-request.reject');
 

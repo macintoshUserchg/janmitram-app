@@ -12,6 +12,8 @@ use App\Models\User;
 use App\Models\Warehouse;
 use App\Services\WarehouseService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
@@ -240,5 +242,62 @@ class WarehouseTest extends TestCase
         $this->assertEquals(25, $item->total_requested_qty);
         $this->assertEquals(5, $item->sold_qty);
         $this->assertEquals(20, $item->quantity);
+    }
+
+    public function test_can_generate_and_download_stock_request_invoice_when_completed(): void
+    {
+        $shop = Shop::factory()->create();
+        $brand = Brand::create(['name' => 'Brand']);
+        $media = Media::factory()->create();
+
+        $warehouse = Warehouse::create([
+            'shop_id' => $shop->id,
+            'name' => 'Central Warehouse',
+            'is_default' => true,
+        ]);
+
+        $masterProduct = Product::create([
+            'shop_id' => $shop->id,
+            'brand_id' => $brand->id,
+            'media_id' => $media->id,
+            'name' => 'Invoice Test Item',
+            'price' => 150.00,
+            'quantity' => 0,
+            'is_stock_managed' => true,
+        ]);
+
+        WarehouseService::addStock($warehouse, $masterProduct, 50);
+
+        $user = User::factory()->create();
+        $requestShop = Shop::factory()->create([
+            'user_id' => $user->id,
+            'warehouse_id' => $warehouse->id,
+        ]);
+        $user->update(['shop_id' => $requestShop->id]);
+
+        $stockRequest = StockRequest::create([
+            'shop_id' => $requestShop->id,
+            'warehouse_id' => $warehouse->id,
+            'status' => 'pending',
+        ]);
+
+        $stockRequest->items()->create([
+            'product_id' => $masterProduct->id,
+            'quantity' => 10,
+        ]);
+
+        // Non-completed request returns redirect/error
+        auth()->login($user);
+        $shopController = new StockRequestController;
+        $response = $shopController->invoice($stockRequest);
+        $this->assertInstanceOf(RedirectResponse::class, $response);
+
+        // Complete request
+        WarehouseService::fulfillStockRequest($stockRequest);
+
+        // Completed request returns invoice view
+        $viewResponse = $shopController->invoice($stockRequest);
+        $this->assertInstanceOf(View::class, $viewResponse);
+        $this->assertEquals('PDF.stock-request-invoice', $viewResponse->name());
     }
 }
