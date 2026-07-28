@@ -357,15 +357,24 @@ class WarehouseService
                         ->first();
                 }
 
-                if (! $stock || $stock->quantity < $item->quantity) {
-                    throw new InsufficientStockException("Insufficient stock in warehouse for product {$item->product->name}.");
+                // Deduct warehouse stock if available
+                if ($stock) {
+                    $deductQty = min($item->quantity, max(0, $stock->quantity));
+                    if ($deductQty > 0) {
+                        $stock->decrement('quantity', $deductQty);
+                    }
+                } else {
+                    WarehouseStock::create([
+                        'warehouse_id' => $request->warehouse_id,
+                        'product_id' => $item->product_id,
+                        'color_id' => $item->color_id,
+                        'size_id' => $item->size_id,
+                        'quantity' => 0,
+                    ]);
                 }
 
-                // Deduct warehouse stock
-                $stock->decrement('quantity', $item->quantity);
-
                 // Sync master product table quantity (stock leaves central hub)
-                if ($item->product) {
+                if ($item->product && $item->product->quantity > 0) {
                     $item->product->decrement('quantity', min($item->quantity, $item->product->quantity));
                 }
 

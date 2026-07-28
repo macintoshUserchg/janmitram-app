@@ -167,15 +167,19 @@
 
                 <form action="{{ route('admin.stock-request.approve', $stockRequest->id) }}" method="POST" onsubmit="return confirm('{{ __('Approve and dispatch physical stock to shop now?') }}')">
                     @csrf
-                    <button type="submit" class="btn btn-success px-4" {{ $hasShortfall ? 'disabled' : '' }}>
+                    <button type="submit" class="btn btn-success px-4">
                         <i class="fas fa-check me-1"></i> {{ __('Approve & Fulfill Dispatch') }}
                     </button>
                 </form>
             </div>
         </div>
         @if($hasShortfall)
-            <div class="alert alert-warning border-0 mt-3 mb-0">
-                <i class="fas fa-exclamation-triangle me-1"></i> {{ __('Cannot approve request due to inventory shortfall. Please restock Central Warehouse stock first.') }}
+            <div class="alert alert-info border-0 mt-3 mb-0 d-flex align-items-center gap-2">
+                <i class="fas fa-info-circle fs-5 text-info me-1"></i>
+                <div>
+                    <strong>{{ __('Stock Shortfall Information Notice:') }}</strong> 
+                    <span>{{ __('Central Warehouse currently has an inventory shortfall for some requested items, but you can proceed to approve and dispatch this request. Central Warehouse stock will be updated accordingly.') }}</span>
+                </div>
             </div>
         @endif
     </div>
