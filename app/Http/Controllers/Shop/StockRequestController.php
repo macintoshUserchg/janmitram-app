@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StockRequestRequest;
 use App\Models\Product;
 use App\Models\StockRequest;
+use App\Models\StockRequestItem;
 use App\Models\WarehouseStock;
 use App\Repositories\WarehouseRepository;
 
