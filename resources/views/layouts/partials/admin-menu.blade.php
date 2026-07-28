@@ -217,6 +217,18 @@
     </li>
 @endhasPermission
 
+@hasPermission(['admin.stock-request.index', 'admin.warehouse.index'])
+    <!--- Invoice Management --->
+    <li>
+        <a class="menu {{ request()->routeIs('admin.invoice.*') ? 'active' : '' }}" href="{{ route('admin.invoice.index') }}">
+            <span>
+                <img class="menu-icon" src="{{ asset('assets/icons-admin/orders.svg') }}" alt="icon" loading="lazy" />
+                {{ __('Invoice Management') }}
+            </span>
+        </a>
+    </li>
+@endhasPermission
+
 @hasPermission(['admin.brand.index', 'admin.color.index', 'admin.size.index', 'admin.unit.index'])
     <!--- Product Varient --->
     <li>

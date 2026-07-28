@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\FirebaseController;
 use App\Http\Controllers\Admin\FooterController;
 use App\Http\Controllers\Admin\GeneraleSettingController;
 use App\Http\Controllers\Admin\GoogleReCaptchaController;
+use App\Http\Controllers\Admin\InvoiceController;
 use App\Http\Controllers\Admin\LanguageController;
 use App\Http\Controllers\Admin\LegalPageController;
 use App\Http\Controllers\Admin\MailConfigurationController;
@@ -394,6 +395,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:root'])->group
     Route::get('stock-request/{stockRequest}/invoice', [StockRequestController::class, 'invoice'])->name('stock-request.invoice');
     Route::post('stock-request/{stockRequest}/approve', [StockRequestController::class, 'approve'])->name('stock-request.approve');
     Route::post('stock-request/{stockRequest}/reject', [StockRequestController::class, 'reject'])->name('stock-request.reject');
+
+    Route::get('invoices', [InvoiceController::class, 'index'])->name('invoice.index');
 
     Route::resource('warehouse-transfer', WarehouseTransferController::class)->names('warehouse-transfer');
     Route::post('warehouse-transfer/{warehouseTransfer}/complete', [WarehouseTransferController::class, 'complete'])->name('warehouse-transfer.complete');

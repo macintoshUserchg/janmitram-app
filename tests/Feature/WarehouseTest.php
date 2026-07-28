@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\Admin\InvoiceController;
 use App\Http\Controllers\Shop\StockRequestController;
 use App\Models\Brand;
 use App\Models\Media;
@@ -13,6 +14,7 @@ use App\Models\Warehouse;
 use App\Services\WarehouseService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
@@ -299,5 +301,19 @@ class WarehouseTest extends TestCase
         $viewResponse = $shopController->invoice($stockRequest);
         $this->assertInstanceOf(View::class, $viewResponse);
         $this->assertEquals('PDF.stock-request-invoice', $viewResponse->name());
+    }
+
+    public function test_admin_can_access_invoice_management_page(): void
+    {
+        $admin = User::factory()->create();
+
+        $adminController = new InvoiceController;
+        auth()->login($admin);
+
+        $request = Request::create(route('admin.invoice.index'), 'GET');
+        $viewResponse = $adminController->index($request);
+
+        $this->assertInstanceOf(View::class, $viewResponse);
+        $this->assertEquals('admin.invoice.index', $viewResponse->name());
     }
 }
