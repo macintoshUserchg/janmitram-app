@@ -93,6 +93,11 @@
 
 <body class="loading">
     <div class="app-container body-tabs-shadow fixed-sidebar fixed-header" id="appContent">
+        <script>
+            if (localStorage.getItem('sidebar_closed') === 'true') {
+                document.getElementById('appContent').classList.add('closed-sidebar');
+            }
+        </script>
         <div class="app-header">
             <div class="app-header-logo"></div>
             <div class="app-header-mobile-menu">
@@ -1114,6 +1119,33 @@
                 }
             });
         }
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var appContent = document.getElementById('appContent');
+            var isClosed = localStorage.getItem('sidebar_closed') === 'true';
+
+            if (isClosed && appContent) {
+                appContent.classList.add('closed-sidebar');
+                var hamburgerBtn = document.querySelector('.close-sidebar-btn');
+                if (hamburgerBtn) {
+                    hamburgerBtn.classList.add('is-active');
+                }
+            }
+
+            document.addEventListener('click', function(e) {
+                var toggleBtn = e.target.closest('.close-sidebar-btn, [data-class="closed-sidebar"]');
+                if (toggleBtn) {
+                    setTimeout(function() {
+                        if (appContent) {
+                            var closedNow = appContent.classList.contains('closed-sidebar');
+                            localStorage.setItem('sidebar_closed', closedNow ? 'true' : 'false');
+                        }
+                    }, 100);
+                }
+            });
+        });
     </script>
 
 </body>
