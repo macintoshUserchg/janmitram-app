@@ -1,15 +1,15 @@
 # Project Notes — Janmitram App
 
 Laravel 11 multi-vendor ecommerce platform with a Vue 3 customer SPA, two
-Blade-based dashboards (admin & seller), and dedicated mobile apps
-(Flutter/Dart). Comprehensive payment-gateway support, real-time chat,
-SMS/Firebase notifications, and multi-currency i18n.
+Blade-based dashboards (admin & seller), dedicated mobile apps
+(Flutter/Dart), and an integrated **Option A: Strict Warehouse-Only Stock Management System**.
+Comprehensive payment-gateway support, real-time chat, SMS/Firebase notifications, and multi-currency i18n.
 
 > **Style note**: All new code should follow the guidelines in § **Structural
 > Guidelines**: strict types, thin controllers, Form Requests, typed
 > relationships, eager loading.
 
-_Last verified against the codebase: 2026-07-17._
+_Last verified against the codebase: 2026-07-29._
 
 ---
 
@@ -22,17 +22,18 @@ _Last verified against the codebase: 2026-07-17._
 | **Auth** | Laravel Sanctum ^4 (token-based API) + web session (admin/seller) |
 | **RBAC** | spatie/laravel-permission ^6 |
 | **Modules** | nwidart/laravel-modules ^12 |
+| **Warehouse Architecture** | Option A Strict Warehouse Architecture (central master catalog, warehouse stocks, shop-linked logistics hubs, immutable stock ledger auditing) |
 | **Frontend (customer)** | Vue 3 + Vite + Tailwind CSS 3 + Pinia + vue-router + vue-i18n |
-| **Admin & seller UI** | Blade templates styled with **Bootstrap 5 + Tailwind CSS** (both loaded) |
+| **Admin & seller UI** | Blade templates styled with **Bootstrap 5 + Tailwind CSS** (both loaded; persistent collapsed sidebar) |
 | **Mobile apps** | Flutter/Dart (external — API surface in `routes/api.php`) |
 | **Payments** | Razorpay, Stripe, PayPal, PayStack, PaySafeCard (SDK packages) + AamarPay, Bkash, CashFree, JazzCash, PayTabs, PayU, QiCard (HTTP/gateway-driven, no SDK) |
 | **Real-time** | Pusher (Echo configured in JS, server-side `pusher/pusher-php-server`) |
 | **SMS** | Twilio, Vonage (Nexmo), MessageBird, Telesign |
-| **Firebase** | Cloud Messaging (notifications) |
+| **Firebase** | Cloud Messaging (push notifications) |
 | **AI** | OpenAI API (`openai-php/laravel`), Google API (`google/apiclient`) |
-| **Exports** | maatwebsite/excel, mpdf, milon/barcode, endroid/qr-code |
+| **Exports & Invoices** | maatwebsite/excel, mpdf (invoice PDF generation), milon/barcode, endroid/qr-code |
 | **DB** | MySQL (MAMP local: `ready_ecommerce`) via a single `mysql` connection |
-| **Testing** | PHPUnit ^11 + Laravel Dusk ^8 (browser tests) |
+| **Testing** | PHPUnit ^11 (14 automated feature/unit tests) + Laravel Dusk ^8 (21 browser tests) |
 | **Code style** | Laravel Pint ^1 |
 
 ---
@@ -41,11 +42,12 @@ _Last verified against the codebase: 2026-07-17._
 
 ```
 janmitram-app/
+├── WORKFLOW_PROJECT.md             End-to-End Architecture & Option A Warehouse Workflow Docs
 ├── app/
-│   ├── Console/Commands/           Artisan commands (LetsFix, orderProductUpdate)
+│   ├── Console/Commands/           Artisan commands (LetsFix, TruncateData, orderProductUpdate)
 │   ├── Enums/                      10 backed enums (OrderStatus, PaymentMethod, Roles, …)
 │   ├── Events/                     AdminProductRequest, SendMessageToUser, RiderLocationUpdated, …
-│   ├── Exceptions/Handler.php      Custom 413 handler; register/report stubs
+│   ├── Exceptions/                 Handler.php (Custom 413 handler), InsufficientStockException.php
 │   ├── Exports/                    Excel export definitions
 │   ├── helpers.php                 Global functions (showCurrency, getDistance, userCart, …)
 │   ├── Http/
@@ -54,8 +56,8 @@ janmitram-app/
 │   │   │   ├── API/Auth/           Login, register, forgot-password, OTP
 │   │   │   ├── API/Seller/         Seller mobile-app endpoints
 │   │   │   ├── API/Rider/          Rider/driver mobile-app endpoints
-│   │   │   ├── Admin/              ~53 web controllers (Dashboard, Order, Banner, Brand, …)
-│   │   │   ├── Shop/               Vendor/seller web dashboard controllers
+│   │   │   ├── Admin/              Admin controllers (Dashboard, Warehouse, StockRequest, Invoice, Order, Banner, Brand, …)
+│   │   │   ├── Shop/               Vendor/seller dashboard controllers (StockRequest, Inventory, POS, Order, …)
 │   │   │   ├── Seller/             Seller mobile chat controller
 │   │   │   ├── Gateway/            Payment gateway router + per-gateway ProcessController
 │   │   │   └── Controller.php      Base controller
@@ -67,7 +69,7 @@ janmitram-app/
 │   ├── Mail/                       Mailable classes (OrderMail, SendOTP, TestMail)
 │   ├── Models/
 │   │   ├── Scopes/                 3 global scopes (ActiveScope, hasSubscription, PosOrderFalse)
-│   │   └── 80+ Eloquent models (Product, Order, Shop, User, Cart, …)
+│   │   └── 94 Eloquent models (Product, Order, Shop, Warehouse, WarehouseStock, StockRequest, StockLedger, …)
 │   ├── Providers/
 │   │   ├── AppServiceProvider.php
 │   │   ├── AuthServiceProvider.php
@@ -78,7 +80,7 @@ janmitram-app/
 │   │   └── SmsServiceProvider.php
 │   ├── Repositories/               ~53 repository classes (data-access abstraction)
 │   ├── Rules/                      4 custom rules (CaptchaValidate, EmailRule, EnumValue, …)
-│   ├── Services/                   Chat, SmsGatewayService, NotificationServices, …
+│   ├── Services/                   WarehouseService, Chat, SmsGatewayService, NotificationServices, …
 │   └── Support/Repositories/       Additional repository helpers
 ├── bootstrap/app.php               Laravel 10-style bootstrap (used by public/index.php)
 ├── config/
@@ -87,7 +89,7 @@ janmitram-app/
 │   ├── modules.php                 nwidart/laravel-modules config
 │   ├── sanctum.php, services.php, …
 │   └── themeColors.php             Theme colour palette config
-├── database/                       Migrations, seeders, factories
+├── database/                       Migrations, seeders (DatabaseSeeder, RootAdminShopSeeder), factories
 ├── Modules/                        nwidart modules (purchase, report)
 ├── resources/
 │   ├── js/
@@ -98,17 +100,17 @@ janmitram-app/
 │   │   ├── layouts/                4 layouts (default, auth, blank, blog)
 │   │   ├── components/            ~90 Vue components
 │   │   └── pages/                  ~40 Vue page views
-│   ├── views/                      Blade views (admin, shop, layouts, mail, PDF, …)
+│   ├── views/                      Blade views (admin, shop, layouts, mail, PDF invoices, …)
 │   └── css/                        Additional CSS
 ├── routes/
 │   ├── api.php                     106 API endpoints (customer, seller, rider)
 │   ├── web.php                     396 routes — SPA entry, admin routes, payment callbacks, shop routes
 │   ├── channels.php                Broadcasting channels
 │   └── console.php                 Console commands
-├── tests/                          Feature + Unit (PHPUnit) + Browser (Dusk)
+├── tests/                          Feature (WarehouseTest, ProductWarehouseSyncTest, TruncateDataTest) + Unit + Browser (Dusk)
 ├── public/                         Vite build output + htaccess
-├── .htaccess                       Root htaccess for MAMP subdirectory deployment
-└── assets/                         Compiled asset directories (build/, icons/, images/, …)
+├── .htaccess                       Root htaccess for MAMP subdirectory deployment (Authorization header pass-through)
+└── assets/                         Compiled asset directories (build/, icons/, images/, branding logos)
 ```
 
 ---
@@ -118,10 +120,46 @@ janmitram-app/
 - The application uses a **single `mysql` connection**. No additional named connections are defined in `config/database.php`.
 - **Local (dev)**: `DB_DATABASE=ready_ecommerce` on MAMP (`127.0.0.1`, `root/root`).
 - **Production (Hostinger)**: `DB_DATABASE=u939461333_app_janmitram` on the Hostinger MySQL host. Set via the production `.env` — it is **not** stored in the repo.
-- The same local MySQL server also hosts `u939461333_janmitra`, `aitradex_db`, and `lifeskills_db`. These schemas **exist locally** but are **not referenced anywhere in the Laravel app code** — models, migrations, and queries all target the configured `DB_DATABASE` (`ready_ecommerce` locally, `u939461333_app_janmitram` in production). They appear to be legacy/parallel schemas (MLM `aitradex`, Janmitra membership, LifeSkills) not yet wired into this codebase.
+- **Migration & Data Utilities**:
+  - `php artisan db:truncate-data` resets tables safely during setup or testing.
+- The same local MySQL server also hosts `u939461333_janmitra`, `aitradex_db`, and `lifeskills_db`. These schemas **exist locally** but are **not referenced anywhere in the Laravel app code** — models, migrations, and queries all target the configured `DB_DATABASE` (`ready_ecommerce` locally, `u939461333_app_janmitram` in production).
 - **Migrations** live in `database/migrations/` and run against whatever `DB_DATABASE` is configured. Verify the target schema with the Boost `database-schema` tool before adding/changing columns.
 
 > **Environment caveat**: the local DB name (`ready_ecommerce`) differs from production (`u939461333_app_janmitram`). Never hardcode a schema name; always read it from `DB_DATABASE`. Do not assume cross-schema queries work — from the app's perspective there is one schema.
+
+---
+
+## Option A: Multi-Warehouse & Stock Management Architecture
+
+Janmitram operates on **Option A: Strict Warehouse-Only Architecture**, which centralizes physical product inventory control within warehouses and dispatches stock to vendor shops via formal requests.
+
+### Core Principles
+
+1. **Centralized Master Catalog**:
+   - Master Products are created centrally by Admin (`master_product_id = null`, `is_digital = false`).
+   - Physical stock quantity is deposited directly into Central or Regional Warehouses (`WarehouseStock`) rather than arbitrary vendor shop inventories.
+2. **Shop-Linked Logistics Hubs**:
+   - Every Vendor Shop (`Shop`) is bound to a specific **Linked Warehouse** (`warehouse_id`).
+   - Shops request physical stock dispatches strictly from their linked warehouse.
+3. **Master-Copy Cloning Pattern (`WarehouseService::cloneMasterToShop`)**:
+   - Vendor shops do not create physical inventory from scratch.
+   - When Admin fulfills a shop's stock request, `WarehouseService` automatically clones or updates a **Shop Copy Product** (`master_product_id = masterProduct->id`, `shop_id = shop->id`) with full categories, subcategories, variants, colors, sizes, media, and translations.
+   - Physical sellable stock `$shopProduct->quantity` is incremented upon dispatch approval.
+4. **Immutable Audit Trail (`StockLedger`)**:
+   - Every physical stock movement (initial product create, warehouse transfer, shop request dispatch, online customer order sale, POS sale) is logged immutably in `StockLedger`.
+5. **Stock Dispatch Invoices**:
+   - Admin and Shop dashboards feature printable & PDF stock dispatch invoices for completed stock requests, featuring Janmitram brand headers, borders, itemized tables, and signatures.
+
+### Warehouse Data Models (`app/Models/`)
+
+| Model | Purpose | Key Attributes |
+| :--- | :--- | :--- |
+| `Warehouse` | Physical bulk inventory hub | `id`, `name`, `code`, `is_default`, `status` |
+| `WarehouseStock` | Physical stock levels inside a warehouse | `id`, `warehouse_id`, `product_id`, `color_id`, `size_id`, `quantity` |
+| `StockRequest` | Stock dispatch request from shop to warehouse | `id`, `shop_id`, `warehouse_id`, `status` (`pending`, `completed`, `rejected`), `notes` |
+| `StockRequestItem` | Line items in a stock request | `id`, `stock_request_id`, `product_id`, `color_id`, `size_id`, `quantity` |
+| `WarehouseTransfer` | Inter-warehouse stock transfers | `id`, `from_warehouse_id`, `to_warehouse_id`, `status` |
+| `StockLedger` | Immutable audit log of all physical stock movements | `id`, `from_warehouse_id`, `to_warehouse_id`, `product_id`, `quantity`, `reference_type` |
 
 ---
 
@@ -142,45 +180,32 @@ only** (no Bootstrap) in this surface.
 | **Auth persistence** | `pinia-plugin-persistedstate` (localStorage) |
 | **Real-time** | Pusher (Echo commented out in `bootstrap.js` — ready to enable) |
 
-Key stores:
-- **AuthStore**: token, user, addresses, favorites, login/logout/register modals
-- **BasketStore**: cart items, address, guest token, checkout
-- **ChatStore**: messages, active shop
-- **MasterStore**: app settings, theme, currencies, languages (fetched once)
-
 ### 2. Admin Panel (Blade + Bootstrap 5 + Tailwind)
 
 Full CRUD management dashboard in `resources/views/admin/`. The admin layout
 (`resources/views/layouts/app.blade.php`) loads **both** `assets/css/bootstrap.min.css`
-and the Vite Tailwind bundle (`resources/css/app.css`). This is deliberate: the
-sidebar relies on Bootstrap's `.collapse` behaviour, which Tailwind's preflight
-would otherwise break — see the inline `ponytail:` comment in the layout.
-~53 controllers handle:
+and the Vite Tailwind bundle (`resources/css/app.css`).
 
-- **Orders**: listing, status changes, payment toggle, rider assignment
-- **Products**: approve/reject seller products, categories, brands, units, sizes, colors
-- **Users**: customers, employees, riders, roles & permissions
-- **Settings**: general, business, payment gateways, SMS, mail, Firebase, Pusher, reCAPTCHA
-- **Content**: banners, blogs, pages, menus, social links, coupons, flash sales
-- **AI features**: AI content generation for pages and blogs via `AiPromptController`
-- **Finance**: withdrawals, VAT/tax, subscription plans, transaction history
-
-> **Toggle-link gotcha**: Status toggles are GET `<a>` links (e.g.
-> `route('admin.shop.status.toggle', $shop->id)`). The corresponding route MUST be
-> `Route::get(...)`, not `Route::put(...)` — a PUT-only route 404s on a link click.
-> Most toggles follow the `.../toggle` GET pattern; the shop toggle was restored to
-> that pattern after a 404 regression (see commit `d645921`).
+Key features:
+- **Admin Dashboard**: Recreated to feature Central Logistics metrics, total Warehouses count, Master Catalog filtering, and quick navigation.
+- **Warehouse Management**: Central warehouse creation, stock deposits, stock clear actions, inter-warehouse transfers.
+- **Stock Request Fulfillments**: Fulfill multi-item shop requests, check shortfall stock, generate dispatches.
+- **Stock Dispatch Invoice Hub**: Admin Invoice Registry and printable PDF generation for all dispatched requests.
+- **Orders & Products**: Master product catalog management, order state updates, payment toggles, rider assignment.
+- **Shop Binding**: Assign Linked Warehouses to vendor shops.
+- **Settings & AI**: Payment gateways, SMS, mail, Firebase, Pusher, AI content generation via `AiPromptController`.
 
 ### 3. Seller Dashboard (Blade + Bootstrap + Tailwind)
 
-Vendor management panel in `resources/views/shop/`. Controllers under
-`app/Http/Controllers/Shop/`:
+Vendor management panel in `resources/views/shop/`. Streamlined specifically for Option A Strict Warehouse Architecture:
 
-- Products, orders, flash sales, vouchers, POS, bulk import/export
-- Supplier management, purchase orders, purchase returns
-- Employee management with granular permissions
-- Gallery management
-- Returns processing
+- **Stock Management Dropdown**: Grouped **Stock Requests**, **Request New Stock**, and **Shop Inventory** into a unified sidebar menu.
+- **Request New Stock**: Rich catalog view displaying vendor's Linked Warehouse live stock, search filter, quantity steppers, and multi-item batch requests.
+- **Shop Inventory**: Clear breakdown of *Total Requested*, *Sold via Orders*, and *Current Available* sellable units.
+- **POS & Orders**: Point-of-Sale checkout, order listing, status tracking.
+- **Withdrawals & Settings**: Earnings withdrawal requests, shop profile configuration.
+
+> **Sidebar Navigation Note**: Product Creation, Category/Variant management, and Employee management have been removed from the seller sidebar as product creation and master definitions are managed strictly by Central Admin. Sidebar collapsed state persists in `localStorage`.
 
 ### 4. Mobile Apps (Flutter/Dart)
 
@@ -211,7 +236,7 @@ Separate login controller (`API/Rider/LoginController`):
 
 ### Admin / Seller (Web session — Blade)
 Standard Laravel session-based auth via `routes/web.php`. Middleware: `auth`,
-`checkPermission` (admin), `authShop` + `checkPermission` (seller).
+`checkPermission` (admin), `authShop` + `checkPermission` (seller). Default root email is `root@janmitram.com`.
 
 ---
 
@@ -237,18 +262,6 @@ Gateway/
 └── (PaySafeCard handled via config-driven gateway model)
 ```
 
-**Flow**:
-1. `PaymentGatewayController::payment()` looks up gateway by name → gets alias → builds FQCN
-2. Calls `{Gateway}\ProcessController::process($gateway, $payment)` statically
-3. Gateway returns a redirect URL; success/cancel handlers update order state
-4. `config/acl.php` controls gateway enable/disable per permissions
-
-**SDK packages vendored** (composer): Razorpay, Stripe, PayPal, PayStack, PaySafeCard.
-The remaining gateways (AamarPay, Bkash, CashFree, JazzCash, PayTabs, PayU, QiCard)
-are driven through direct HTTP calls rather than an installed SDK.
-
-The `PaymentMethod` enum lists all supported methods plus `cash` and generic `online`.
-
 ---
 
 ## Roles & Permissions (spatie/laravel-permission)
@@ -257,25 +270,14 @@ Defined in `config/acl.php` — structured permission tree:
 
 | Role | Scope | Key permissions |
 |------|-------|-----------------|
-| **root** | Super-admin | Everything |
-| **admin** | Admin panel | ~45 resource groups (order, product, banner, blog, rider, …) |
+| **root** | Super-admin | Everything (default root user `root@janmitram.com`) |
+| **admin** | Admin panel | ~45 resource groups (order, product, warehouse, stock-request, banner, rider, …) |
 | **adminMultiShop** | Multi-shop admin | shop management, subscription plans, withdraw approvals |
-| **shop** | Vendor | order/product management, POS, employees, gallery |
+| **shop** | Vendor | stock requests, inventory, POS, orders, withdraws |
 | **shopMultiShop** | Multi-shop vendor | subscription, withdraw, dashboard |
 | **customer** | API consumer | Own profile, addresses, orders, cart |
 | **driver/rider** | Delivery | Assigned orders, location updates |
 | **visitor** | Unauthenticated | Public read endpoints |
-
-Custom middleware layer:
-- `CheckPermission.php` — checks user roles against ACL config
-- `CheckSubscription.php` — verifies active subscription for shops (web group)
-- `CheckHasRootUser.php` — redirects to setup if root user missing
-- `DemoModeMiddleware.php` — blocks mutating actions (POST/PUT/DELETE) in demo env
-- `LocalizationManage.php` — sets app locale from session/header
-- `ShopAuthenticate.php` — seller dashboard auth
-
-`User` model uses `Spatie\Permission\Traits\HasRoles`. `PermissionServiceProvider`
-registers the permission gates.
 
 ---
 
@@ -287,7 +289,7 @@ registers the permission gates.
 - `GET /master` — app settings, theme, currencies, languages
 - `GET /home` — homepage data (featured products, banners, categories)
 - `GET /categories`, `/sub-categories`, `/products`, `/product-details`
-- `GET /shops`, `/shop`, `/shop-categories`, `/top-shops`, `/popular-products`
+- `GET /shops`, `/shop`, `/shops/{shop}`, `/shop-categories`, `/top-shops`, `/popular-products`
 - `GET /reviews`, `/banners`, `/flash-sales`, `/blogs`, `/legal-pages/{slug}`
 - `GET /countries`, `/areas`, `/get-vouchers`
 - `POST /support`, `/contact-us`
@@ -303,101 +305,6 @@ registers the permission gates.
 - **Chat**: send/receive messages, unread count, shops list
 - **Returns**: create, history, details
 
-### Seller prefix (`/seller/*`)
-- Auth (register, OTP, forgot password)
-- Dashboard stats, profile, shop settings
-- Orders, products
-
-### Rider prefix (`/rider/*`)
-- Auth (register, OTP, password creation)
-- Profile, location updates
-- Orders with status-based filtering
-
----
-
-## Eloquent Models — Key Relationships
-
-80+ models. Notable patterns:
-
-| Model | Key Traits | Notable Relations |
-|-------|-----------|-------------------|
-| **User** | `HasRoles` (Spatie), `HasApiTokens` (Sanctum) | `customer`, `shop`, `addresses` |
-| **Shop** | — | `products`, `orders`, `categories`, `user` |
-| **Product** | — | `categories`, `shop`, `reviews`, `variants` (color/size) |
-| **Order** | — | `products`, `payment`, `customer`, `shop` |
-| **Cart** | — | `products`, `customer` (or `access_token` for guest) |
-| **Customer** | — | `user`, `addresses`, `orders`, `cart` |
-| **GeneraleSetting** | Singleton | App-wide configuration model |
-| **PaymentGateway** | — | `name`, `alias`, `is_active` — drives gateway routing |
-
-### Global Scopes (`app/Models/Scopes/`)
-- **ActiveScope**: filters active records
-- **hasSubscription**: limits to shops with active subscription
-- **PosOrderFalse**: excludes POS orders from main order queries
-
----
-
-## Repository Pattern
-
-53+ repository classes in `app/Repositories/` abstract data access. Controllers
-inject repositories via the constructor. Repositories typically wrap Eloquent queries
-and return collections, paginated results, or single models.
-
-Example: `ProductRepository`, `OrderRepository`, `CartRepository`, `ShopRepository`.
-
----
-
-## Globalization & Localization
-
-- **Languages**: managed via `Language` model + `Language` controller (CRUD + import/export)
-- **Translation files**: JSON files in `lang/{locale}.json`
-- **Frontend**: `vue-i18n` reads from `/lang/{locale}` route
-- **Middleware**: `LocalizationManage` sets app locale from session/header
-- **Currencies**: `Currency` model with default flag, position (prefix/suffix), and `showCurrency()` helper
-- **Theme colors**: `ThemeColor` model with primary and variant shades
-
----
-
-## Guest Cart Flow
-
-1. Unauthenticated users hit API with `X-Guest-Token` header
-2. `helpers.php:cartAccessToken()` resolves guest token → `CartAccessToken` → `customer_id`
-3. `userCart()` scopes `Cart` queries by token (or customer ID if authenticated)
-4. On login, guest cart merges into authenticated user's cart
-
----
-
-## Enums (`App\Enums`)
-
-10 backed enums:
-
-| Enum | Values | Used In |
-|------|--------|---------|
-| `DeductionType` | inclusive, exclusive | VAT/tax |
-| `DeliveryChargeType` | Per Order, Per Product | Delivery config |
-| `DiscountType` | Amount, Percentage | Coupons, flash sales |
-| `LegalPages` | Privacy Policy, Terms, Refund, Shipping, About Us | Legal pages |
-| `OrderStatus` | Pending → Confirm → Processing → Pickup → On The Way → Delivered → Cancelled | Order lifecycle |
-| `PaymentMethod` | Cash, Online, Stripe, PayPal, Razorpay, PayStack, … | Payment processing |
-| `PaymentStatus` | Pending, Paid | Order payments |
-| `ReturnOrderStatus` | Pending, Approved, Damaged, Mismatch | Returns |
-| `Roles` | root, admin, shop, customer, visitor, driver, supplier | RBAC |
-| `SubscriptionStatus` | pending, active, cancelled, expired | Shop subscriptions |
-
----
-
-## Web Routes (`routes/web.php`)
-
-396 routes. Key groups:
-1. **/** — Vue SPA entry point (returns `app.blade.php`)
-2. **/lang/{locale}** — JSON translation files
-3. **/payment/*** — Payment gateway callbacks (success, cancel, process)
-4. **/admin/** — Admin dashboard (auth + checkPermission middleware)
-5. **/shop/** — Seller/vendor dashboard (authShop + checkPermission middleware)
-6. **/gateway/purchase/** — Module-based purchase gateway routes
-
-> Inspect with `php artisan route:list --name=...` or `--path=admin`.
-
 ---
 
 ## Structural Guidelines
@@ -405,66 +312,14 @@ Example: `ProductRepository`, `OrderRepository`, `CartRepository`, `ShopReposito
 ### 1. Controllers stay thin
 
 Controllers should orchestrate, not compute. Push logic down:
+- **Warehouse & Inventory operations** → `App\Services\WarehouseService`.
 - **Complex queries** → Eloquent scopes (`app/Models/Scopes/`) or `Repository` classes.
 - **Business logic** → `app/Services/` (e.g. `SmsGatewayService`, `NotificationServices`).
 - **Output shaping** → Eloquent API Resources in `app/Http/Resources/`.
 
-```php
-declare(strict_types=1);
-
-namespace App\Http\Controllers\API;
-
-use App\Http\Requests\CheckoutRequest;
-use App\Http\Resources\OrderResource;
-use App\Repositories\OrderRepository;
-
-class OrderController extends Controller
-{
-    public function __construct(
-        private readonly OrderRepository $orders,
-    ) {}
-
-    public function store(CheckoutRequest $request): OrderResource
-    {
-        $order = $this->orders->place(
-            $request->user(),
-            $request->validated(),
-        );
-
-        return new OrderResource($order);
-    }
-}
-```
-
 ### 2. Validation via Form Requests
 
-All validation lives in `app/Http/Requests/`. Return typed validated data with
-`$request->validated()`.
-
-```php
-declare(strict_types=1);
-
-namespace App\Requests;
-
-use Illuminate\Foundation\Http\FormRequest;
-
-class CheckoutRequest extends FormRequest
-{
-    public function authorize(): bool
-    {
-        return $this->user() !== null;
-    }
-
-    /** @return array<string, mixed> */
-    public function rules(): array
-    {
-        return [
-            'cart_id' => ['required', 'integer', 'exists:carts,id'],
-            'address_id' => ['required', 'integer', 'exists:addresses,id'],
-        ];
-    }
-}
-```
+All validation lives in `app/Http/Requests/`. Return typed validated data with `$request->validated()`.
 
 ### 3. Strict types & typing
 
@@ -472,52 +327,19 @@ class CheckoutRequest extends FormRequest
 - Explicit return types and argument type-hints on all methods.
 - Constructor property promotion for dependencies.
 
-```php
-declare(strict_types=1);
-
-use App\Models\User;
-
-public function register(User $user, string $token): bool
-{
-    // …
-}
-```
-
 ### 4. Database & Eloquent
 
 - **CamelCase** for model properties, **snake_case** for DB columns.
-- Always define explicit relationship return types:
-
-```php
-use Illuminate\Database\Eloquent\Relations\HasMany;
-
-public function orders(): HasMany
-{
-    return $this->hasMany(Order::class);
-}
-```
-
-- **Prevent N+1**: eager load relationships with `with()` in queries, especially in
-  controllers and API Resources.
-- Use Eloquent scopes for reusable query constraints (see `app/Models/Scopes/`).
-- Keep migrations complete: when modifying a column, re-declare all attributes or they
-  will be dropped.
+- Always define explicit relationship return types (`HasMany`, `BelongsTo`, `BelongsToMany`).
+- **Prevent N+1**: eager load relationships with `with()` in queries.
+- Use Eloquent scopes for reusable query constraints.
 - Prefer a `casts()` method on models (Laravel 11 style) over the `$casts` property.
-
-### 5. Styling & standards
-
-- PSR-12 + Laravel Pint conventions.
-- After editing PHP, run `vendor/bin/pint --dirty --format agent` to auto-fix style.
-- Use PHPDoc blocks over inline comments; only comment non-obvious logic.
-- **Admin/seller Blade**: Bootstrap 5 for layout & components, Tailwind for utility
-  tweaks. Don't remove the Bootstrap stylesheet from the admin layout — the sidebar
-  depends on it.
 
 ---
 
-## Common Workflows
+## Common Workflows & Artisan Commands
 
-### Frontend not updating?
+### Frontend Build
 
 ```bash
 npm run dev        # hot reload on changes
@@ -525,127 +347,43 @@ npm run build      # production bundle
 composer run dev   # artisan + vite together
 ```
 
-### Database (MAMP)
+### Database & Seeders
 
 ```bash
-php artisan migrate
+php artisan migrate                                     # run migrations
+php artisan db:truncate-data                            # truncate tables for reseeding
+php artisan db:seed --class=DatabaseSeeder              # seed default root admin & settings
 ```
 
-`.env`: `DB_DATABASE=ready_ecommerce`, `DB_USERNAME=root`, `DB_PASSWORD=root`.
-
-### Tests
+### Automated Testing
 
 ```bash
-php artisan make:test --phpunit Feature/CheckoutTest   # new PHPUnit feature test
-php artisan test --compact                              # full PHPUnit suite
-php artisan test --compact --filter=testName            # single PHPUnit test
+php artisan test --compact                              # full PHPUnit suite (14 tests passed)
+php artisan test --compact --filter=WarehouseTest       # warehouse & stock fulfillment tests
+php artisan test --compact --filter=ProductWarehouseSyncTest # stock sync tests
 
-php artisan dusk --filter=AdminShopTest                 # single Dusk browser test
-php artisan dusk                                        # full Dusk suite (21 tests)
+php artisan dusk                                        # full Dusk browser suite (21 tests)
 ```
 
-- PHPUnit suite: 1 Feature + 1 Unit test (currently thin — coverage lives mostly in Dusk).
-- Dusk browser tests live in `tests/Browser/` (Helpers.php + Components/ patterns);
-  screenshots/source written alongside test files.
-- Use factories; do not hand-craft model data in tests.
-- Do not delete existing tests without approval.
-
-### Administration
+### Code Style & Administration
 
 ```bash
-vendor/bin/pint --dirty --format agent   # auto-fix code style
-php artisan route:list                   # inspect all routes
-php artisan route:list --path=api        # filter API routes
-php artisan config:show app.name         # read config value
+vendor/bin/pint --dirty --format agent                  # auto-fix PHP code style
+php artisan route:list                                  # inspect all routes
+php artisan config:show app.name                        # read config value
 php artisan tinker --execute 'User::count();'
 ```
 
 ---
 
-## Development Conventions
+## Security Notes & Branding
 
-- **New API endpoints**: add to existing controller or create one → write Form Request
-  → add API Resource → register in `routes/api.php` under correct auth group.
-- **New payment gateway**: add enum case → create `ProcessController` in
-  `app/Http/Controllers/Gateway/{Name}/` → register in `PaymentGateway` model via admin.
-- **New admin feature**: controller in `app/Http/Controllers/Admin/` → permissions in
-  `config/acl.php` → views in `resources/views/admin/` → routes in `routes/web.php`
-  admin group.
-- **Role/permission changes**: update `config/acl.php`, run seeder, then assign via
-  admin panel.
-- **Scheduled tasks**: define in `app/Console/Kernel.php::schedule()` — currently empty.
-- **Module features**: use `php artisan module:make` for nwidart modules under
-  `Modules/` directory.
-- **PHP code style**: always run `vendor/bin/pint --dirty --format agent` before
-  committing PHP changes.
+- **Janmitram Branding**: Official Janmitram logos (`logo.png`, `logoWhite.png`, `favicon.png`), clean card borders, and platform footer integrated into all invoice PDFs and web interfaces.
+- **Spatie permissions**: Gates all admin/shop actions via `CheckPermission` middleware, backed by `config/acl.php`.
+- **Demo mode**: `DemoModeMiddleware` blocks mutating actions (POST/PUT/DELETE) in demo environments.
+- **MAMP FastCGI Pass-through**: Root `.htaccess` configured to pass `Authorization` header through to PHP for Sanctum bearer tokens.
+- **CSRF & Sanitization**: `VerifyCsrfToken` protects web routes; `mews/purifier` sanitizes HTML content.
 
 ---
 
-## Notable Integrations
-
-| Integration | Package | Usage |
-|-------------|---------|-------|
-| **Pusher** | `pusher/pusher-php-server`, `pusher-js` | Real-time notifications & chat (server wired, JS ready but commented) |
-| **Firebase** | `kreait/laravel-firebase` | Push notifications to mobile devices |
-| **Firebase FCM** | `kreait/laravel-firebase` | Admin panel config → sends to `DeviceKey` tokens |
-| **OpenAI** | `openai-php/laravel` | AI content generation for pages and blogs |
-| **Google APIs** | `google/apiclient` | Social login, Google Maps, reCAPTCHA |
-| **Twilio** | `twilio/sdk` | SMS OTP & notifications |
-| **Vonage** | `vonage/client` | SMS via `NexmoService` |
-| **MessageBird** | `messagebird/php-rest-api` | SMS via `MessageBirdService` |
-| **Telesign** | `telesign/telesign` | SMS via `TelesignService` |
-| **HTML Purifier** | `mews/purifier` | Sanitized rich text content |
-| **QR Code** | `endroid/qr-code` | Order/product QR generation |
-| **Barcode** | `milon/barcode` | Product barcode generation |
-| **HTML→PDF** | `mpdf/mpdf` | Invoice PDF generation |
-| **Excel** | `maatwebsite/excel` | Bulk product import/export |
-| **LightGallery** | `lightgallery` | Product image gallery (frontend) |
-| **Swiper** | `swiper` | Product carousels (frontend) |
-| **vue-toastification** | `vue-toastification` | Frontend toast notifications |
-| **vue-select** | `vue-select` | Frontend select components |
-| **vue3-star-ratings** | `vue3-star-ratings` | Product ratings display |
-| **vue3-google-map** | `vue3-google-map` | Map display on frontend |
-
----
-
-## Security Notes
-
-- **Recent fixes resolved**: SQL injection vectors, Zip Slip vulnerability (file upload
-  path traversal), general path traversal — keep user input validated and parameterized;
-  never build file paths from raw request data.
-- **Spatie permissions** gate all admin/shop actions via `CheckPermission` middleware,
-  backed by `config/acl.php` permission tree.
-- **Demo mode**: `DemoModeMiddleware` blocks mutating actions (POST/PUT/DELETE) in
-  demo environments.
-- **CSRF**: `VerifyCsrfToken` protects web routes; API uses Sanctum tokens.
-- **HTTPS**: `TrustProxies` middleware handles reverse-proxy SSL termination.
-- **.env / composer.json**: blocked from direct access via root `.htaccess`.
-- **HTML Purifier**: `mews/purifier` sanitizes rich content before storage.
-- **File uploads**: always validate MIME types, use Storage facade, never trust
-  extension alone.
-
----
-
-## Tips & Gotchas
-
-- **MAMP subdirectory deployment**: root `.htaccess` routes everything through
-  `index.php` while preserving asset paths. Requires `DirectorySlash Off`. Vite uses
-  `base: ""` (relative paths) so assets resolve under `/janmitram-app/`.
-- **Vite manifest errors**: run `npm run build` if you see
-  `Illuminate\Foundation\ViteException`.
-- **Admin UI is Bootstrap + Tailwind**: the admin layout intentionally loads both. If
-  you migrate admin to Tailwind-only, the sidebar `.collapse` must be preserved.
-- **Status-toggle routes must be GET**: anchor links can't issue PUT/POST — see the shop
-  toggle 404 regression (commit `d645921`).
-- **Guest token header**: all cart-related API calls from unauthenticated clients
-  must include `X-Guest-Token`. The SPA manages this transparently via BasketStore.
-- **Cache**: `generaleSetting()` is cached for 30 days — clear with
-  `Cache::forget('generale_setting')` after changes.
-- **Admin user setup**: first run needs a root user — hit
-  `/admin/create-root` or the dedicated artisan command.
-- **Payment gateway errors**: gateways that aren't configured return a JSON
-  `{error: "…"}` response, not a redirect.
-
----
-
-_Last updated: 2026-07-17. Generated for contributor onboarding._
+_Last updated: 2026-07-29. Generated for contributor onboarding._

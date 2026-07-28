@@ -148,30 +148,6 @@
         </div>
     @endhasPermission
 
-    <!-- Central Logistics & Stock Request Banner -->
-    <div class="card mt-3 border-0 bg-primary text-white shadow-sm overflow-hidden position-relative">
-        <div class="card-body p-4">
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 position-relative z-1">
-                <div>
-                    <h4 class="fw-bold mb-1 text-white"><i class="fa-solid fa-warehouse me-2"></i>{{ __('Central Warehouse & Stock Dispatch Control') }}</h4>
-                    <p class="mb-0 text-white-50 small">{{ __('Review pending shop stock requests, fulfill dispatches, and manage central logistics hubs.') }}</p>
-                </div>
-                <div class="d-flex gap-2 align-items-center">
-                    @if($pendingStockRequests > 0)
-                        <span class="badge bg-warning text-dark px-3 py-2 fs-6 fw-bold">
-                            <i class="fas fa-exclamation-circle me-1"></i> {{ $pendingStockRequests }} {{ __('Pending Requests') }}
-                        </span>
-                    @endif
-                    <a href="{{ route('admin.stock-request.index') }}" class="btn btn-light text-primary fw-bold">
-                        <i class="fas fa-inbox me-1"></i> {{ __('Review Stock Requests') }}
-                    </a>
-                    <a href="{{ route('admin.warehouse.index') }}" class="btn btn-warning text-dark fw-bold">
-                        <i class="fas fa-warehouse me-1"></i> {{ __('Manage Warehouses') }}
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!---- Shop Wallet -->
     <div class="card mt-4">

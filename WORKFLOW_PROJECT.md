@@ -8,10 +8,11 @@
 The **Janmitram E-Commerce System** operates on **Option A: Strict Warehouse-Only Architecture**. 
 
 Under this architecture:
-- **Centralized Master Catalog**: All physical products (`is_digital = false`) are managed centrally by Admin as Master Products (`master_product_id = null`).
-- **Warehouse Centralized Stocking**: Physical stock is added directly to Central/Regional Warehouses (`WarehouseStock`) rather than individual vendor shops.
-- **Master-Copy Cloning Pattern**: Vendor Shops do not create direct physical inventory from scratch. Instead, shops request stock dispatches from their **Linked Warehouse**. Upon Admin approval, physical inventory is dispatched and cloned/updated into a **Shop Copy Product** (`master_product_id = masterProduct->id`, `shop_id = shop->id`) with full category, brand, variant, media, and translation attributes.
-- **Strict Ledger Auditing**: Every stock transaction (initial creation, warehouse dispatch, customer order sale, POS sale) is logged immutably in `StockLedger`.
+- **Centralized Master Catalog**: All physical products (`is_digital = false`) are created and managed centrally by Admin as Master Products (`master_product_id = null`).
+- **Warehouse Centralized Stocking**: Physical inventory is deposited directly into Central or Regional Logistics Hubs (`WarehouseStock`) rather than individual vendor shops.
+- **Master-Copy Cloning Pattern (`cloneMasterToShop`)**: Vendor shops do not create physical inventory from scratch. Instead, shops request stock dispatches from their **Linked Warehouse** (`warehouse_id`). Upon Admin fulfillment, physical stock is dispatched and cloned/updated into a **Shop Copy Product** (`master_product_id = masterProduct->id`, `shop_id = shop->id`) carrying full category, subcategory, brand, variant (colors/sizes), media, and translation attributes.
+- **Strict Ledger Auditing**: Every stock movement (initial addition, warehouse transfer, shop request dispatch, customer order sale, POS sale) is immutably logged in `StockLedger`.
+- **Stock Dispatch & Invoice Registry**: Official Janmitram PDF and printable invoices are generated for all completed stock requests and orders.
 
 ---
 
@@ -19,15 +20,15 @@ Under this architecture:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────────────┐
-│ PHASE 1: MASTER PRODUCT CREATION & WAREHOUSE SEEDING                                   │
-│ Admin creates Physical Master Product (master_product_id = null, is_stock_managed=true). │
-│ → Initial stock quantity is allocated directly into Central Warehouse (WarehouseStock)  │
-│ → StockLedger entry created ('initial_product_create').                                 │
+│ PHASE 1: MASTER PRODUCT CREATION & BULK WAREHOUSE SEEDING                               │
+│ Admin creates Master Product (master_product_id = null, is_stock_managed = true).       │
+│ → Initial stock quantity is allocated directly into Central/Regional Warehouse.         │
+│ → StockLedger entry created (reference_type = 'admin_addition' / 'initial_create').    │
 └─────────────────────────────────────────────────────────────────────────────────────────┘
                                            │
                                            ▼
 ┌─────────────────────────────────────────────────────────────────────────────────────────┐
-│ PHASE 2: ADMIN SHOP & LINKED WAREHOUSE BINDING                                         │
+│ PHASE 2: ADMIN SHOP & LINKED LOGISTICS HUB BINDING                                      │
 │ Admin creates or edits a Vendor Shop (admin/shops).                                     │
 │ → Admin binds the shop to a specific Linked Warehouse (warehouse_id).                   │
 └─────────────────────────────────────────────────────────────────────────────────────────┘
@@ -35,30 +36,40 @@ Under this architecture:
                                            ▼
 ┌─────────────────────────────────────────────────────────────────────────────────────────┐
 │ PHASE 3: VENDOR SHOP STOCK REQUEST                                                     │
-│ Shop Vendor opens Shop Panel → Stock Requests (shop/stock-request/create).             │
-│ → System restricts selection strictly to vendor's Linked Warehouse stock.              │
-│ → Displays live available warehouse stock levels in option dropdowns.                  │
-│ → Vendor submits multi-item batch request. Status: 'pending'.                          │
+│ Shop Vendor opens Shop Panel → Stock Management → Request New Stock.                     │
+│ → Selection strictly restricted to vendor's Linked Warehouse stock.                    │
+│ → Displays live available warehouse stock levels in option dropdowns & card steppers.  │
+│ → Vendor submits multi-item batch request (StockRequest status: 'pending').            │
 └─────────────────────────────────────────────────────────────────────────────────────────┘
                                            │
                                            ▼
 ┌─────────────────────────────────────────────────────────────────────────────────────────┐
-│ PHASE 4: ADMIN APPROVAL & STOCK DISPATCH                                               │
+│ PHASE 4: ADMIN APPROVAL, STOCK DISPATCH & INVOICE GENERATION                            │
 │ Admin reviews request in Admin Panel (admin/stock-request/{id}).                       │
-│ → Admin clicks "Approve & Fulfill Request".                                            │
+│ → Admin clicks "Approve & Fulfill Request". (Informs admin on inventory shortfall).    │
 │ → WarehouseService::fulfillStockRequest() executes in a DB Transaction:               │
-│    a) Decrements Central WarehouseStock quantity.                                       │
-│    b) Decrements Central Master Product quantity.                                       │
-│    c) Clones/Updates Shop Copy Product (cloneMasterToShop) for shop_id.                 │
+│    a) Decrements Linked WarehouseStock quantity.                                        │
+│    b) Decrements Central Master Product quantity ($masterProduct->quantity).           │
+│    c) Clones/Updates Shop Copy Product (cloneMasterToShop) for target shop_id.         │
 │    d) Increments Shop Copy Product sellable quantity ($shopProduct->quantity).          │
 │    e) Logs StockLedger entry with reference_type = 'shop_request'.                     │
+│    f) Generates official Janmitram Stock Dispatch Invoice.                              │
 └─────────────────────────────────────────────────────────────────────────────────────────┘
                                            │
                                            ▼
 ┌─────────────────────────────────────────────────────────────────────────────────────────┐
-│ PHASE 5: CUSTOMER ORDER & POS SALES FULFILLMENT                                        │
+│ PHASE 5: INTER-WAREHOUSE STOCK TRANSFERS (REGIONAL LOGISTICS)                           │
+│ Admin transfers inventory between warehouses (admin/warehouse-transfer).               │
+│ → Deducts source warehouse stock and increments target warehouse stock.                  │
+│ → Smart variant fallback handles missing color/size stock entries gracefully.          │
+│ → Logs StockLedger entry with reference_type = 'warehouse_transfer'.                    │
+└─────────────────────────────────────────────────────────────────────────────────────────┘
+                                           │
+                                           ▼
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│ PHASE 6: CUSTOMER ONLINE ORDER & POS SALES FULFILLMENT                                  │
 │ Customer places online order OR Vendor processes POS sale at Shop.                      │
-│ → System processes sale against Shop Copy Product ($shopProduct->id).                   │
+│ → Sale processes against local Shop Copy Product ($shopProduct->id).                   │
 │ → OrderRepository / PosCartRepository decrements $shopProduct->quantity.               │
 │ → WarehouseService::deductStock() logs ledger entries ('order_sale' / 'pos_sale').    │
 └─────────────────────────────────────────────────────────────────────────────────────────┘
@@ -70,70 +81,82 @@ Under this architecture:
 
 | Model / Table | Key Attributes | Purpose & Architectural Role |
 | :--- | :--- | :--- |
-| `Product` (`products`) | `id`, `name`, `shop_id`, `master_product_id`, `is_digital`, `is_stock_managed`, `quantity`, `price` | **Master Products** (`master_product_id = null`): Central catalog item.<br>**Shop Copy Products** (`master_product_id = X`, `shop_id = Y`): Local shop sellable stock item. |
-| `Warehouse` (`warehouses`) | `id`, `name`, `code`, `is_default`, `status` | Physical Central or Regional Warehouse hub storing bulk stock. |
+| `Product` (`products`) | `id`, `name`, `shop_id`, `master_product_id`, `is_digital`, `is_stock_managed`, `quantity`, `price` | **Master Products** (`master_product_id = null`): Central catalog items.<br>**Shop Copy Products** (`master_product_id = X`, `shop_id = Y`): Local shop sellable stock items. |
+| `Warehouse` (`warehouses`) | `id`, `name`, `code`, `is_default`, `status` | Physical Central or Regional Warehouse hubs storing bulk stock. |
 | `WarehouseStock` (`warehouse_stocks`) | `id`, `warehouse_id`, `product_id`, `color_id`, `size_id`, `quantity` | Tracks exact physical stock quantities of products inside a specific warehouse. |
 | `StockRequest` (`stock_requests`) | `id`, `shop_id`, `warehouse_id`, `status` (`pending`, `completed`, `rejected`), `notes` | Order request submitted by vendor shop to receive physical inventory from warehouse. |
-| `StockRequestItem` (`stock_request_items`) | `id`, `stock_request_id`, `product_id`, `quantity` | Individual line items attached to a StockRequest. |
-| `StockLedger` (`stock_ledgers`) | `id`, `warehouse_id`, `shop_id`, `product_id`, `type` (`in`/`out`), `quantity`, `reference_type` | Immutable audit trail for stock movements (`initial_product_create`, `shop_request`, `order_sale`, `pos_sale`). |
+| `StockRequestItem` (`stock_request_items`) | `id`, `stock_request_id`, `product_id`, `color_id`, `size_id`, `quantity` | Line items attached to a StockRequest. |
+| `WarehouseTransfer` (`warehouse_transfers`) | `id`, `transfer_no`, `from_warehouse_id`, `to_warehouse_id`, `status`, `notes` | Tracks inventory transfers between two central/regional warehouses. |
+| `WarehouseTransferItem` (`warehouse_transfer_items`) | `id`, `warehouse_transfer_id`, `product_id`, `color_id`, `size_id`, `quantity` | Line items attached to an inter-warehouse transfer. |
+| `StockLedger` (`stock_ledgers`) | `id`, `from_warehouse_id`, `to_warehouse_id`, `product_id`, `quantity`, `reference_type` | Immutable audit log (`admin_addition`, `warehouse_transfer`, `shop_request`, `order_sale`, `pos_sale`). |
 | `Shop` (`shops`) | `id`, `name`, `user_id`, `warehouse_id` | Vendor shop profile bound to a specific Linked Warehouse. |
 
 ---
 
 ### 4. Comprehensive Operational Workflows
 
-#### Phase 1: Creating Physical Master Products & Central Stock
+#### Phase 1: Creating Master Products & Central Stock Deposit
 1. Admin opens **Admin Panel** → **Product Management** → **Create Product**.
-2. Setting `is_digital = false` automatically forces `is_stock_managed = true`.
-3. Initial stock quantity is entered into the **Initial Warehouse Stock Quantity** field.
+2. Setting `is_digital = false` automatically marks the product as stock-managed (`is_stock_managed = true`).
+3. Initial stock quantity is entered into the **Central Warehouse Stock Quantity** field.
 4. Upon saving, `ProductRepository` stores the master product (`master_product_id = null`) and calls `WarehouseService::addStock()`.
-5. Physical stock is deposited into Central Warehouse (`warehouse_id = 1`) and logged in `StockLedger`.
+5. Stock is deposited into the selected Central Warehouse (`WarehouseStock`) and logged in `StockLedger` with `reference_type = 'admin_addition'`.
 
-#### Phase 2: Admin Linking Shop to Warehouse
+#### Phase 2: Admin Linking Vendor Shop to Warehouse
 1. Admin opens **Admin Panel** → **Shop Management** → **Add / Edit Shop**.
 2. Under *Shop Information*, Admin selects the **Linked Warehouse** from the dropdown menu.
-3. If no specific sub-warehouse is selected, the shop defaults to the **Central Warehouse**.
+3. The shop's `warehouse_id` foreign key is updated in the database. All future stock requests from this shop will default strictly to this warehouse hub.
 
 #### Phase 3: Vendor Shop Submitting Stock Requests
-1. Vendor logs into **Shop Panel** (`/shop/login`) → Navigates to **Stock Requests** (`/shop/stock-request`).
-2. Vendor clicks **"+ New Stock Request"** (`/shop/stock-request/create`).
-3. The interface displays the vendor's **Linked Warehouse** banner.
-4. Product dropdown options display live available warehouse stock:
-   > `[Product Name] — Available in Central Warehouse: 100 units`
-5. Vendor selects products, specifies quantities, optionally adds notes, and clicks **Submit Stock Request**.
-6. A `StockRequest` is saved with status `pending`.
+1. Vendor logs into **Shop Panel** (`/shop/login`) → Navigates to **Stock Management** → **Request New Stock** (`/shop/stock-request/create`).
+2. The interface displays the vendor's **Linked Warehouse** banner card.
+3. The Product Catalog grid displays live available warehouse stock levels, quantity steppers, and checkboxes.
+4. Vendor selects products, specifies quantities for each item, and clicks **Submit Stock Request**.
+5. A `StockRequest` is saved with status `pending` alongside its `StockRequestItem` entries.
 
-#### Phase 4: Admin Fulfilling Stock Requests
+#### Phase 4: Admin Fulfilling Stock Requests & Invoicing
 1. Admin opens **Admin Panel** → **Stock Requests** (`/admin/stock-request`).
-2. Admin reviews request details, requested items, and target shop.
-3. Admin clicks **Approve & Fulfill**.
-4. `WarehouseService::fulfillStockRequest()` runs inside a database transaction:
-   - Validates available warehouse stock for each requested item.
-   - Decrements stock in `WarehouseStock` and `Product` (Master).
-   - Calls `cloneMasterToShop()`, creating or updating the shop's local copy (`master_product_id = master->id`, `shop_id = shop->id`).
-   - Increments local shop stock `$shopProduct->quantity`.
-   - Creates an entry in `StockLedger` with `type = 'out'` and `reference_type = 'shop_request'`.
+2. Admin reviews request details, target shop, requested items, and available warehouse inventory.
+3. If warehouse inventory is insufficient for any item, an **Inventory Shortfall Warning** is displayed to the admin.
+4. Admin clicks **Approve & Fulfill Request**.
+5. `WarehouseService::fulfillStockRequest()` runs inside a database transaction:
+   - Decrements stock in `WarehouseStock` and `$masterProduct->quantity`.
+   - Executes `cloneMasterToShop()`, creating or updating the shop's local copy (`master_product_id = master->id`, `shop_id = shop->id`).
+   - Increments local sellable stock `$shopProduct->quantity`.
+   - Logs an entry in `StockLedger` (`reference_type = 'shop_request'`).
    - Updates `StockRequest` status to `completed`.
+6. Admin or Shop can view and print the official **Janmitram Stock Dispatch Invoice** (`/admin/stock-request/{id}/invoice`).
 
-#### Phase 5: Sales & Order Stock Deductions
+#### Phase 5: Inter-Warehouse Stock Transfers
+1. Admin opens **Admin Panel** → **Warehouse Transfers** (`/admin/warehouse-transfer`).
+2. Admin selects *Source Warehouse*, *Target Warehouse*, items, and quantities.
+3. Upon approval (`WarehouseTransferController@complete`), `WarehouseService::transfer()` executes:
+   - Decrements stock from source warehouse (`WarehouseStock`).
+   - Increments stock in target warehouse (`WarehouseStock`).
+   - Applies smart variant fallback logic if specific color/size entries are absent.
+   - Logs entry in `StockLedger` (`reference_type = 'warehouse_transfer'`).
+
+#### Phase 6: Customer Online Orders & Vendor POS Sales
 1. **Online Customer Order**:
-   - Customer orders product from Shop.
+   - Customer orders product from Shop via Vue SPA or Mobile App.
    - `OrderRepository` decrements `$shopProduct->quantity`.
-   - `WarehouseService::deductStock()` logs `StockLedger` entry (`reference_type = 'order_sale'`).
-2. **In-Person POS Sale**:
+   - `WarehouseService::deductStock()` records `StockLedger` entry (`reference_type = 'order_sale'`).
+2. **In-Person Vendor POS Sale**:
    - Vendor processes POS transaction in Shop Panel (`/shop/pos`).
    - `PosCartRepository` decrements `$shopProduct->quantity`.
-   - `WarehouseService::deductStock()` logs `StockLedger` entry (`reference_type = 'pos_sale'`).
+   - `WarehouseService::deductStock()` records `StockLedger` entry (`reference_type = 'pos_sale'`).
 
 ---
 
 ### 5. Shop Panel Navigation & Sidebar Structure
 
-The **Shop Vendor Sidebar** (`resources/views/layouts/partials/shop-menu.blade.php`) has been streamlined for Strict Warehouse Operation:
+The **Shop Vendor Sidebar** (`resources/views/layouts/partials/shop-menu.blade.php`) is streamlined for Option A Strict Warehouse Operation:
 
 - 📊 **Dashboard** (`/shop/dashboard`)
-- 📦 **Stock Requests** (`/shop/stock-request`)
-- 🏬 **My Shop Inventory** (`/shop/shop-inventory`)
+- 📦 **Stock Management** (Dropdown)
+  - 📋 **Stock Requests** (`/shop/stock-request`)
+  - ➕ **Request New Stock** (`/shop/stock-request/create`)
+  - 🏬 **My Shop Inventory** (`/shop/shop-inventory`)
 - 🛒 **Order Management** (`/shop/orders`)
 - 💳 **POS Management** (`/shop/pos`)
 - 💰 **Withdrawals / Earnings** (`/shop/withdraws`)
@@ -142,23 +165,28 @@ The **Shop Vendor Sidebar** (`resources/views/layouts/partials/shop-menu.blade.p
 - ⚙️ **Shop Settings** (`/shop/profile`)
 
 > [!NOTE]
-> Category Management, Product Creation/Variant Management, and Employee Management have been removed from the Shop Sidebar as product creation and master definitions are strictly managed by Central Admin.
+> Category Management, Product Creation/Variant Management, and Employee Management have been removed from the Shop Sidebar as product creation and master definitions are strictly managed by Central Admin. The sidebar's collapsed/expanded state persists across reloads via `localStorage`.
 
 ---
 
-### 6. Key API & Web Routes Reference
+### 6. Complete API & Web Routes Reference
 
 | Section | Method | URI Path | Route Name | Action / Controller |
 | :--- | :--- | :--- | :--- | :--- |
 | **Admin Warehouse** | `GET` | `/admin/warehouse` | `admin.warehouse.index` | `WarehouseController@index` |
 | **Admin Warehouse** | `GET` | `/admin/warehouse/{id}` | `admin.warehouse.show` | `WarehouseController@show` |
-| **Admin Warehouse** | `POST` | `/admin/warehouse/{id}/clear-stock` | `admin.warehouse.stock.clear` | `WarehouseController@clearStock` |
-| **Admin Warehouse** | `DELETE` | `/admin/warehouse-stock/{id}` | `admin.warehouse-stock.destroy` | `WarehouseController@destroyStock` |
+| **Admin Warehouse Stock** | `POST` | `/admin/warehouse/{id}/stock/add` | `admin.warehouse.stock.add` | `WarehouseController@addStock` |
+| **Admin Warehouse Stock** | `DELETE` | `/admin/warehouse/{id}/stock/clear` | `admin.warehouse.stock.clear` | `WarehouseController@clearStock` |
+| **Admin Warehouse Transfer** | `GET` | `/admin/warehouse-transfer` | `admin.warehouse-transfer.index` | `WarehouseTransferController@index` |
+| **Admin Warehouse Transfer** | `POST` | `/admin/warehouse-transfer/{id}/complete` | `admin.warehouse-transfer.complete` | `WarehouseTransferController@complete` |
 | **Admin Stock Request** | `GET` | `/admin/stock-request` | `admin.stock-request.index` | `StockRequestController@index` |
-| **Admin Stock Request** | `POST` | `/admin/stock-request/{id}/fulfill` | `admin.stock-request.fulfill` | `StockRequestController@fulfill` |
+| **Admin Stock Request** | `POST` | `/admin/stock-request/{id}/approve` | `admin.stock-request.approve` | `StockRequestController@approve` |
+| **Admin Invoices** | `GET` | `/admin/invoices` | `admin.invoice.index` | `InvoiceController@index` |
+| **Admin Invoice Download** | `GET` | `/admin/stock-request/{id}/invoice` | `admin.stock-request.invoice` | `StockRequestController@invoice` |
 | **Shop Stock Request** | `GET` | `/shop/stock-request` | `shop.stock-request.index` | `Shop\StockRequestController@index` |
 | **Shop Stock Request** | `GET` | `/shop/stock-request/create` | `shop.stock-request.create` | `Shop\StockRequestController@create` |
 | **Shop Stock Request** | `POST` | `/shop/stock-request` | `shop.stock-request.store` | `Shop\StockRequestController@store` |
+| **Shop Invoice View** | `GET` | `/shop/stock-request/{id}/invoice` | `shop.stock-request.invoice` | `Shop\StockRequestController@invoice` |
 | **Shop Inventory** | `GET` | `/shop/shop-inventory` | `shop.shop-inventory.index` | `Shop\StockRequestController@inventory` |
 | **Shop Dashboard** | `GET` | `/shop/dashboard` | `shop.dashboard` | `Shop\DashboardController@index` |
 
@@ -166,15 +194,23 @@ The **Shop Vendor Sidebar** (`resources/views/layouts/partials/shop-menu.blade.p
 
 ### 7. Automated Testing & Code Verification
 
-To ensure system integrity across all warehouse transactions and stock calculations, run the test suites:
+To ensure system integrity across all warehouse transactions, stock request fulfillments, and stock calculations, run the test suites:
 
 ```bash
-# Run all automated tests compact
+# Run all automated feature/unit tests compact (14 tests passed)
 php artisan test --compact
 
-# Filter specific warehouse tests
+# Filter specific warehouse & inventory tests
 php artisan test --compact --filter=WarehouseTest
+php artisan test --compact --filter=ProductWarehouseSyncTest
+
+# Run Laravel Dusk browser automation tests (21 tests)
+php artisan dusk
 
 # Apply Laravel Pint code style formatting
 vendor/bin/pint --dirty --format agent
 ```
+
+---
+
+_Last updated: 2026-07-29. Maintained for developer & administrative reference._
