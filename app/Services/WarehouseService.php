@@ -91,22 +91,43 @@ class WarehouseService
         ?string $notes = null
     ): void {
         DB::transaction(function () use ($warehouse, $product, $qty, $colorId, $sizeId, $referenceType, $referenceId, $notes) {
-            $query = WarehouseStock::where('warehouse_id', $warehouse->id)
-                ->where('product_id', $product->id);
+            $stock = null;
 
-            if ($colorId) {
-                $query->where('color_id', $colorId);
-            } else {
-                $query->whereNull('color_id');
+            if ($colorId !== null || $sizeId !== null) {
+                $query = WarehouseStock::where('warehouse_id', $warehouse->id)
+                    ->where('product_id', $product->id);
+
+                if ($colorId !== null) {
+                    $query->where('color_id', $colorId);
+                } else {
+                    $query->whereNull('color_id');
+                }
+
+                if ($sizeId !== null) {
+                    $query->where('size_id', $sizeId);
+                } else {
+                    $query->whereNull('size_id');
+                }
+
+                $stock = $query->lockForUpdate()->first();
             }
 
-            if ($sizeId) {
-                $query->where('size_id', $sizeId);
-            } else {
-                $query->whereNull('size_id');
+            if (! $stock) {
+                $stock = WarehouseStock::where('warehouse_id', $warehouse->id)
+                    ->where('product_id', $product->id)
+                    ->where('quantity', '>=', $qty)
+                    ->orderBy('quantity', 'desc')
+                    ->lockForUpdate()
+                    ->first();
             }
 
-            $stock = $query->lockForUpdate()->first();
+            if (! $stock) {
+                $stock = WarehouseStock::where('warehouse_id', $warehouse->id)
+                    ->where('product_id', $product->id)
+                    ->orderBy('quantity', 'desc')
+                    ->lockForUpdate()
+                    ->first();
+            }
 
             if (! $stock || $stock->quantity < $qty) {
                 throw new InsufficientStockException("Insufficient stock in warehouse {$warehouse->name} for product {$product->name}.");
@@ -148,22 +169,45 @@ class WarehouseService
     ): void {
         DB::transaction(function () use ($from, $to, $product, $qty, $colorId, $sizeId, $transferId, $notes) {
             // Deduct from source warehouse
-            $queryFrom = WarehouseStock::where('warehouse_id', $from->id)
-                ->where('product_id', $product->id);
+            $stockFrom = null;
 
-            if ($colorId) {
-                $queryFrom->where('color_id', $colorId);
-            } else {
-                $queryFrom->whereNull('color_id');
+            if ($colorId !== null || $sizeId !== null) {
+                $queryFrom = WarehouseStock::where('warehouse_id', $from->id)
+                    ->where('product_id', $product->id);
+
+                if ($colorId !== null) {
+                    $queryFrom->where('color_id', $colorId);
+                } else {
+                    $queryFrom->whereNull('color_id');
+                }
+
+                if ($sizeId !== null) {
+                    $queryFrom->where('size_id', $sizeId);
+                } else {
+                    $queryFrom->whereNull('size_id');
+                }
+
+                $stockFrom = $queryFrom->lockForUpdate()->first();
             }
 
-            if ($sizeId) {
-                $queryFrom->where('size_id', $sizeId);
-            } else {
-                $queryFrom->whereNull('size_id');
+            if (! $stockFrom) {
+                // Fallback: Find any stock record in source warehouse for this product with sufficient stock
+                $stockFrom = WarehouseStock::where('warehouse_id', $from->id)
+                    ->where('product_id', $product->id)
+                    ->where('quantity', '>=', $qty)
+                    ->orderBy('quantity', 'desc')
+                    ->lockForUpdate()
+                    ->first();
             }
 
-            $stockFrom = $queryFrom->lockForUpdate()->first();
+            if (! $stockFrom) {
+                // Second fallback: Grab record with largest quantity for error reporting
+                $stockFrom = WarehouseStock::where('warehouse_id', $from->id)
+                    ->where('product_id', $product->id)
+                    ->orderBy('quantity', 'desc')
+                    ->lockForUpdate()
+                    ->first();
+            }
 
             if (! $stockFrom || $stockFrom->quantity < $qty) {
                 throw new InsufficientStockException("Insufficient stock in source warehouse {$from->name} for product {$product->name}.");
@@ -171,18 +215,21 @@ class WarehouseService
 
             $stockFrom->decrement('quantity', $qty);
 
+            $targetColorId = $colorId ?? $stockFrom->color_id;
+            $targetSizeId = $sizeId ?? $stockFrom->size_id;
+
             // Add to target warehouse
             $queryTo = WarehouseStock::where('warehouse_id', $to->id)
                 ->where('product_id', $product->id);
 
-            if ($colorId) {
-                $queryTo->where('color_id', $colorId);
+            if ($targetColorId) {
+                $queryTo->where('color_id', $targetColorId);
             } else {
                 $queryTo->whereNull('color_id');
             }
 
-            if ($sizeId) {
-                $queryTo->where('size_id', $sizeId);
+            if ($targetSizeId) {
+                $queryTo->where('size_id', $targetSizeId);
             } else {
                 $queryTo->whereNull('size_id');
             }
@@ -195,8 +242,8 @@ class WarehouseService
                 WarehouseStock::create([
                     'warehouse_id' => $to->id,
                     'product_id' => $product->id,
-                    'color_id' => $colorId,
-                    'size_id' => $sizeId,
+                    'color_id' => $targetColorId,
+                    'size_id' => $targetSizeId,
                     'quantity' => $qty,
                 ]);
             }
@@ -206,8 +253,8 @@ class WarehouseService
                 'from_warehouse_id' => $from->id,
                 'to_warehouse_id' => $to->id,
                 'product_id' => $product->id,
-                'color_id' => $colorId,
-                'size_id' => $sizeId,
+                'color_id' => $targetColorId,
+                'size_id' => $targetSizeId,
                 'quantity' => $qty,
                 'reference_type' => 'warehouse_transfer',
                 'reference_id' => $transferId,
@@ -272,22 +319,43 @@ class WarehouseService
             $request->load('items.product');
 
             foreach ($request->items as $item) {
-                $query = WarehouseStock::where('warehouse_id', $request->warehouse_id)
-                    ->where('product_id', $item->product_id);
+                $stock = null;
 
-                if ($item->color_id) {
-                    $query->where('color_id', $item->color_id);
-                } else {
-                    $query->whereNull('color_id');
+                if ($item->color_id !== null || $item->size_id !== null) {
+                    $query = WarehouseStock::where('warehouse_id', $request->warehouse_id)
+                        ->where('product_id', $item->product_id);
+
+                    if ($item->color_id !== null) {
+                        $query->where('color_id', $item->color_id);
+                    } else {
+                        $query->whereNull('color_id');
+                    }
+
+                    if ($item->size_id !== null) {
+                        $query->where('size_id', $item->size_id);
+                    } else {
+                        $query->whereNull('size_id');
+                    }
+
+                    $stock = $query->lockForUpdate()->first();
                 }
 
-                if ($item->size_id) {
-                    $query->where('size_id', $item->size_id);
-                } else {
-                    $query->whereNull('size_id');
+                if (! $stock) {
+                    $stock = WarehouseStock::where('warehouse_id', $request->warehouse_id)
+                        ->where('product_id', $item->product_id)
+                        ->where('quantity', '>=', $item->quantity)
+                        ->orderBy('quantity', 'desc')
+                        ->lockForUpdate()
+                        ->first();
                 }
 
-                $stock = $query->lockForUpdate()->first();
+                if (! $stock) {
+                    $stock = WarehouseStock::where('warehouse_id', $request->warehouse_id)
+                        ->where('product_id', $item->product_id)
+                        ->orderBy('quantity', 'desc')
+                        ->lockForUpdate()
+                        ->first();
+                }
 
                 if (! $stock || $stock->quantity < $item->quantity) {
                     throw new InsufficientStockException("Insufficient stock in warehouse for product {$item->product->name}.");
