@@ -112,7 +112,7 @@
                                 @elseif ($product->quantity > 0)
                                     <span class="badge bg-warning text-dark fs-6 px-3 py-2">{{ $product->quantity }} {{ __('units') }}</span>
                                 @else
-                                    <span class="badge bg-danger fs-6 px-3 py-2">{{ __('Stock Out') }}</span>
+                                    <span class="badge bg-danger fs-6 px-3 py-2">0 {{ __('units') }}</span>
                                 @endif
                             </td>
                             <td class="text-center">
