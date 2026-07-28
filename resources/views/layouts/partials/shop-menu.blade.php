@@ -126,10 +126,10 @@
     </a>
 </li>
 
-@hasPermission(['shop.stock-request.index', 'shop.product.index'])
+@hasPermission('shop.stock-request.index')
     <!--- Stock Management --->
     <li>
-        <a class="menu {{ request()->routeIs('shop.stock-request.*', 'shop.shop-inventory.*', 'shop.product.*') ? 'active' : '' }}"
+        <a class="menu {{ request()->routeIs('shop.stock-request.*', 'shop.shop-inventory.*') ? 'active' : '' }}"
             data-bs-toggle="collapse" href="#stockManagementMenu">
             <span>
                 <img class="menu-icon" src="{{ asset('assets/icons-admin/boxes.svg') }}" alt="icon" loading="lazy" />
@@ -137,7 +137,7 @@
             </span>
             <img src="{{ asset('assets/icons-admin/caret-down.svg') }}" alt="icon" class="downIcon">
         </a>
-        <div class="collapse dropdownMenuCollapse {{ request()->routeIs('shop.stock-request.*', 'shop.shop-inventory.*', 'shop.product.*') ? 'show' : '' }}"
+        <div class="collapse dropdownMenuCollapse {{ request()->routeIs('shop.stock-request.*', 'shop.shop-inventory.*') ? 'show' : '' }}"
             id="stockManagementMenu">
             <div class="listBar">
                 @hasPermission('shop.stock-request.index')
@@ -154,12 +154,6 @@
                     class="subMenu hasCount {{ request()->routeIs('shop.shop-inventory.*') ? 'active' : '' }}">
                     {{ __('Shop Inventory') }}
                 </a>
-                @hasPermission('shop.product.index')
-                    <a href="{{ route('shop.product.index') }}"
-                        class="subMenu hasCount {{ request()->routeIs('shop.product.*') ? 'active' : '' }}">
-                        {{ __('Product Catalog') }}
-                    </a>
-                @endhasPermission
             </div>
         </div>
     </li>
