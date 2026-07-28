@@ -23,6 +23,7 @@ class StockRequestController extends Controller
     public function index()
     {
         $shop = $this->getShop();
+        $warehouse = $shop?->warehouse ?? WarehouseRepository::getCentralWarehouse();
         $status = request('status');
 
         $query = StockRequest::where('shop_id', $shop?->id)
@@ -38,7 +39,7 @@ class StockRequestController extends Controller
         $pendingRequests = StockRequest::where('shop_id', $shop?->id)->where('status', 'pending')->count();
         $completedRequests = StockRequest::where('shop_id', $shop?->id)->where('status', 'completed')->count();
 
-        return view('shop.stock-request.index', compact('requests', 'totalRequests', 'pendingRequests', 'completedRequests'));
+        return view('shop.stock-request.index', compact('requests', 'totalRequests', 'pendingRequests', 'completedRequests', 'warehouse', 'shop'));
     }
 
     public function inventory()
