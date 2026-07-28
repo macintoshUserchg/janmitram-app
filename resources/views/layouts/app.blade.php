@@ -114,6 +114,42 @@
         .closed-sidebar .app-sidebar:hover .dropdownMenuCollapse.show {
             display: none !important;
         }
+
+        /* Lock icon sizing, dimensions, and centering in collapsed sidebar */
+        .closed-sidebar .app-sidebar .vertical-nav-menu li a,
+        .closed-sidebar .app-sidebar:hover .vertical-nav-menu li a {
+            padding: 12px 0 !important;
+            text-align: center !important;
+            justify-content: center !important;
+            display: flex !important;
+            align-items: center !important;
+            width: 65px !important;
+            margin: 0 auto !important;
+        }
+
+        .closed-sidebar .app-sidebar .vertical-nav-menu li a span,
+        .closed-sidebar .app-sidebar:hover .vertical-nav-menu li a span {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .closed-sidebar .app-sidebar .vertical-nav-menu li a .menu-icon,
+        .closed-sidebar .app-sidebar:hover .vertical-nav-menu li a .menu-icon {
+            width: 22px !important;
+            height: 22px !important;
+            min-width: 22px !important;
+            min-height: 22px !important;
+            max-width: 22px !important;
+            max-height: 22px !important;
+            margin: 0 auto !important;
+            object-fit: contain !important;
+            transition: none !important;
+            transform: none !important;
+        }
     </style>
 </head>
 
