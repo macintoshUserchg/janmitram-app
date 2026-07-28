@@ -11,12 +11,10 @@ use Illuminate\Support\Str;
 
 class DashboardController extends Controller
 {
-    /**
-     * Show the application dashboard.
-     */
     public function index()
     {
-        $shop = generaleSetting('shop');
+        $user = auth()->user();
+        $shop = $user?->shop ?? $user?->myShop ?? generaleSetting('shop');
 
         $totalOrder = $shop->orders()->count();
         $totalProduct = $shop->products()->where('is_digital', false)->count();

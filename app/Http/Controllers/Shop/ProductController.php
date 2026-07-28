@@ -31,10 +31,16 @@ class ProductController extends Controller
         $search = $request->search;
 
         $rootShop = generaleSetting('rootShop');
-        $shop = generaleSetting('shop');
+        $user = auth()->user();
+        $shop = $user?->shop ?? $user?->myShop ?? generaleSetting('shop');
+
+        $query = Product::where(function ($q) use ($shop) {
+            $q->where('shop_id', $shop?->id)
+                ->orWhereNull('master_product_id');
+        });
 
         // filter products based on category, brand, color and search
-        $products = $shop?->products()->when($brand, function ($query) use ($brand) {
+        $products = $query->when($brand, function ($query) use ($brand) {
             return $query->where('brand_id', $brand);
         })->when($category, function ($query) use ($category) {
             return $query->whereHas('categories', function ($query) use ($category) {

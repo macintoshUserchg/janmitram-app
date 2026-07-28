@@ -13,9 +13,16 @@ use App\Repositories\WarehouseRepository;
 
 class StockRequestController extends Controller
 {
+    private function getShop()
+    {
+        $user = auth()->user();
+
+        return $user?->shop ?? $user?->myShop ?? generaleSetting('shop');
+    }
+
     public function index()
     {
-        $shop = generaleSetting('shop');
+        $shop = $this->getShop();
         $status = request('status');
 
         $query = StockRequest::where('shop_id', $shop?->id)
@@ -36,7 +43,7 @@ class StockRequestController extends Controller
 
     public function inventory()
     {
-        $shop = generaleSetting('shop');
+        $shop = $this->getShop();
 
         $products = Product::where('shop_id', $shop?->id)
             ->where('is_digital', false)
@@ -49,7 +56,7 @@ class StockRequestController extends Controller
 
     public function create()
     {
-        $shop = generaleSetting('shop');
+        $shop = $this->getShop();
         $warehouse = $shop?->warehouse ?? WarehouseRepository::getCentralWarehouse();
 
         if (! $warehouse) {
@@ -77,7 +84,7 @@ class StockRequestController extends Controller
 
     public function store(StockRequestRequest $request)
     {
-        $shop = generaleSetting('shop');
+        $shop = $this->getShop();
         $warehouse = $shop?->warehouse ?? WarehouseRepository::getCentralWarehouse();
 
         if (! $warehouse) {
@@ -105,7 +112,7 @@ class StockRequestController extends Controller
 
     public function show(StockRequest $stockRequest)
     {
-        $shop = generaleSetting('shop');
+        $shop = $this->getShop();
 
         if ($stockRequest->shop_id !== $shop?->id) {
             abort(403);
