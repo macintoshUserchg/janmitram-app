@@ -88,6 +88,18 @@
             object-fit: cover;
             border: 1px solid #eee;
         }
+
+        /* Prevent icon shifting on collapsed sidebar toggle */
+        .closed-sidebar .app-sidebar .app-sidebar-inner ul li a {
+            overflow: hidden !important;
+            white-space: nowrap !important;
+        }
+
+        .closed-sidebar .app-sidebar .app-sidebar-inner ul li a .menu-icon {
+            text-indent: 0 !important;
+            display: inline-block !important;
+            flex-shrink: 0 !important;
+        }
     </style>
 </head>
 
