@@ -35,64 +35,7 @@
     </div>
 </div>
 
-<!-- Summary Metric Cards -->
-<div class="row g-3 mb-4">
-    <div class="col-md-6 col-lg-3">
-        <div class="card border-0 shadow-sm rounded-12 p-3 bg-white h-100">
-            <div class="d-flex align-items-center justify-content-between">
-                <div>
-                    <span class="text-muted small text-uppercase fw-semibold d-block">{{ __('Allocated SKU Lines') }}</span>
-                    <h3 class="fw-bold mb-0 text-dark">{{ number_format($totalSkuLines) }}</h3>
-                </div>
-                <div class="bg-primary-subtle text-primary p-3 rounded-circle fs-4">
-                    <i class="fas fa-cubes"></i>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <div class="col-md-6 col-lg-3">
-        <div class="card border-0 shadow-sm rounded-12 p-3 bg-white h-100">
-            <div class="d-flex align-items-center justify-content-between">
-                <div>
-                    <span class="text-muted small text-uppercase fw-semibold d-block">{{ __('Total Available Units') }}</span>
-                    <h3 class="fw-bold mb-0 text-success">{{ number_format($totalStockUnits) }} {{ __('units') }}</h3>
-                </div>
-                <div class="bg-success-subtle text-success p-3 rounded-circle fs-4">
-                    <i class="fas fa-boxes"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-6 col-lg-3">
-        <div class="card border-0 shadow-sm rounded-12 p-3 bg-white h-100">
-            <div class="d-flex align-items-center justify-content-between">
-                <div>
-                    <span class="text-muted small text-uppercase fw-semibold d-block">{{ __('Total Inventory Value') }}</span>
-                    <h3 class="fw-bold mb-0 text-info">{{ showCurrency($totalInventoryValue) }}</h3>
-                </div>
-                <div class="bg-info-subtle text-info p-3 rounded-circle fs-4">
-                    <i class="fas fa-file-invoice-dollar"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-6 col-lg-3">
-        <div class="card border-0 shadow-sm rounded-12 p-3 bg-white h-100">
-            <div class="d-flex align-items-center justify-content-between">
-                <div>
-                    <span class="text-muted small text-uppercase fw-semibold d-block">{{ __('Low / Out of Stock') }}</span>
-                    <h3 class="fw-bold mb-0 {{ $lowStockCount > 0 ? 'text-danger' : 'text-secondary' }}">{{ number_format($lowStockCount) }} {{ __('SKUs') }}</h3>
-                </div>
-                <div class="bg-warning-subtle text-warning p-3 rounded-circle fs-4">
-                    <i class="fas fa-exclamation-triangle"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
 <!-- Filters and Search Toolbar -->
 <div class="card border-0 shadow-sm rounded-12 mb-4 bg-white">
