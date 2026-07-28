@@ -27,12 +27,13 @@ class CategorySeeder extends Seeder
 
         $shop = User::role('root')->whereHas('shop')->first()?->shop;
 
-        foreach ($categories as $category) {
-            $category = Category::factory()->create([
-                'name' => $category,
+        foreach ($categories as $catName) {
+            $category = Category::create([
+                'name' => $catName,
+                'status' => true,
             ]);
 
-            $shop->categories()->attach($category);
+            $shop?->categories()->attach($category);
         }
     }
 }
