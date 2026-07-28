@@ -88,6 +88,32 @@
             object-fit: cover;
             border: 1px solid #eee;
         }
+
+        /* Disable sidebar auto-toggle/expand on hover when closed */
+        .closed-sidebar .app-sidebar:hover,
+        .closed-sidebar:not(.sidebar-mobile-open) .app-sidebar:hover .scrollbar-sidebar,
+        .closed-sidebar.closed-sidebar-mobile .app-sidebar:hover {
+            flex: 0 0 65px !important;
+            width: 65px !important;
+            min-width: 65px !important;
+            max-width: 65px !important;
+            position: relative !important;
+        }
+
+        .closed-sidebar .app-sidebar:hover .app-sidebar-inner ul li a {
+            text-indent: -99rem !important;
+        }
+
+        .closed-sidebar .app-sidebar:hover .app-sidebar-inner .metismenu-state-icon,
+        .closed-sidebar .app-sidebar:hover .downIcon {
+            visibility: hidden !important;
+            display: none !important;
+        }
+
+        .closed-sidebar .app-sidebar:hover .dropdownMenuCollapse,
+        .closed-sidebar .app-sidebar:hover .dropdownMenuCollapse.show {
+            display: none !important;
+        }
     </style>
 </head>
 
