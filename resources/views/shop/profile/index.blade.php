@@ -3,11 +3,20 @@
 @section('header-title', __('Profile Details'))
 
 @section('content')
-    <div>
-        <h4>
-            {{ __('Profile Details') }}
-        </h4>
+<!-- Integrated 2-Line Compact Header Banner Card -->
+<div class="card border-0 shadow-sm rounded-12 mb-4 bg-gradient bg-primary text-white">
+    <div class="card-body p-3">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+            <h1 class="h4 mb-0 text-white fw-bold"><i class="fas fa-store me-2 text-warning"></i>{{ __('My Shop Profile') }}</h1>
+            <a href="{{ route('shop.profile.edit', $shop->id) }}" class="btn btn-sm btn-light text-primary fw-bold">
+                <i class="fas fa-edit me-1"></i> {{ __('Edit Profile') }}
+            </a>
+        </div>
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 text-white-50 small">
+            <span>{{ __('Manage shop settings, business information, and location details.') }}</span>
+        </div>
     </div>
+</div>
 
     <div class="row mb-3">
         <div class="col-lg-8 mt-3">

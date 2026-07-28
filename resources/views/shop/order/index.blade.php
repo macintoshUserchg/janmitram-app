@@ -3,15 +3,18 @@
 @section('header-title', __('Orders'))
 
 @section('content')
-    <div class="app-page-title">
-        <div class="page-title-wrapper">
-            <div class="page-title-heading">
-                <div>
-                    {{ __('Orders') }}
-                </div>
-            </div>
+<!-- Integrated 2-Line Compact Header Banner Card -->
+<div class="card border-0 shadow-sm rounded-12 mb-4 bg-gradient bg-primary text-white">
+    <div class="card-body p-3">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+            <h1 class="h4 mb-0 text-white fw-bold"><i class="fas fa-shopping-bag me-2 text-warning"></i>{{ __('All Orders') }}</h1>
+            <span class="badge bg-light text-primary fw-bold">{{ __('Shop Order Management') }}</span>
+        </div>
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 text-white-50 small">
+            <span>{{ __('View and process customer orders placed across your shop storefront.') }}</span>
         </div>
     </div>
+</div>
 
     <div class="card">
         <div class="card-body">

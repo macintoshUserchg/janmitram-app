@@ -3,15 +3,20 @@
 @section('header-title', __('POS Sales'))
 
 @section('content')
-    <div class="app-page-title">
-        <div class="page-title-wrapper">
-            <div class="page-title-heading">
-                <div>
-                    {{ __('POS Sales') }}
-                </div>
-            </div>
+<!-- Integrated 2-Line Compact Header Banner Card -->
+<div class="card border-0 shadow-sm rounded-12 mb-4 bg-gradient bg-primary text-white">
+    <div class="card-body p-3">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+            <h1 class="h4 mb-0 text-white fw-bold"><i class="fas fa-receipt me-2 text-warning"></i>{{ __('POS Sales History') }}</h1>
+            <a href="{{ route('shop.pos.index') }}" class="btn btn-sm btn-warning text-dark fw-bold">
+                <i class="fas fa-cash-register me-1"></i> {{ __('Open POS Counter') }}
+            </a>
+        </div>
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 text-white-50 small">
+            <span>{{ __('Audit offline POS counter sales and completed in-store transaction records.') }}</span>
         </div>
     </div>
+</div>
 
     <div class="card">
         <div class="card-body">

@@ -1,21 +1,20 @@
 @extends('layouts.app')
 @section('header-title', __('Bulk Product Imports'))
 @section('content')
-    <div class="d-flex align-items-center flex-wrap gap-3 justify-content-between px-3">
-        <h4>
-            {{ __('Bulk Product Imports') }}
-            <h2 class="accordion-header">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="modal"
-                    data-bs-target="#showInstraction" aria-expanded="false" aria-controls="showInstraction">
-                    {{ __('Get instructions') }}
-                    <span class="info ms-2" data-bs-toggle="tooltip" data-bs-placement="top"
-                        data-bs-title="{{ __('Get instructions for bulk import') }}">
-                        <i class="bi bi-info"></i>
-                    </span>
-                </button>
-            </h2>
-        </h4>
+<!-- Integrated 2-Line Compact Header Banner Card -->
+<div class="card border-0 shadow-sm rounded-12 mb-4 bg-gradient bg-primary text-white">
+    <div class="card-body p-3">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+            <h1 class="h4 mb-0 text-white fw-bold"><i class="fas fa-file-import me-2 text-warning"></i>{{ __('Product Bulk Import') }}</h1>
+            <button type="button" class="btn btn-sm btn-light text-primary fw-bold" data-bs-toggle="modal" data-bs-target="#showInstraction">
+                <i class="fas fa-info-circle me-1"></i> {{ __('Get Instructions') }}
+            </button>
+        </div>
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 text-white-50 small">
+            <span>{{ __('Import products and update inventory using Excel/CSV spreadsheets.') }}</span>
+        </div>
     </div>
+</div>
 
     <!-- Modal -->
     <div class="modal fade" id="showInstraction" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">

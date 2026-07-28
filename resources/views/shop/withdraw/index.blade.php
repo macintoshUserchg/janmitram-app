@@ -2,17 +2,20 @@
 @section('header-title', __('Withdraws'))
 
 @section('content')
-    <div class="d-flex align-items-center flex-wrap gap-3 justify-content-between px-3">
-        <h4>
-            {{ __('Withdraws') }}
-        </h4>
-
-        <button type="button" data-bs-toggle="modal" data-bs-target="#withdrawModal" class="btn py-2 btn-primary">
-            <i class="fa fa-plus-circle"></i>
-            {{__('Add Withdraw')}}
-        </button>
-
+<!-- Integrated 2-Line Compact Header Banner Card -->
+<div class="card border-0 shadow-sm rounded-12 mb-4 bg-gradient bg-primary text-white">
+    <div class="card-body p-3">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+            <h1 class="h4 mb-0 text-white fw-bold"><i class="fas fa-wallet me-2 text-warning"></i>{{ __('Shop Withdrawals') }}</h1>
+            <button type="button" data-bs-toggle="modal" data-bs-target="#withdrawModal" class="btn btn-sm btn-warning text-dark fw-bold">
+                <i class="fa fa-plus-circle me-1"></i> {{ __('Request Withdrawal') }}
+            </button>
+        </div>
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 text-white-50 small">
+            <span>{{ __('Request and track wallet payout disbursements for your shop.') }}</span>
+        </div>
     </div>
+</div>
 
     <div class="container-fluid mt-3">
 
