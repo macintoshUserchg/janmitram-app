@@ -517,47 +517,6 @@
 @endif
 
 @if ($businessModel == 'multi')
-    <!--- admin Shop products --->
-    @hasPermission(['admin.product.index'])
-        <li>
-            <a class="menu {{ request()->routeIs('admin.product.index') ? 'active' : '' }}" data-bs-toggle="collapse"
-                href="#shopProducts">
-                <span>
-                    <img class="menu-icon" src="{{ asset('assets/icons-admin/shop-product.svg') }}" alt="icon"
-                        loading="lazy" />
-                    {{ __('Shop Product Management') }}
-                </span>
-                <img src="{{ asset('assets/icons-admin/caret-down.svg') }}" alt="" class="downIcon">
-            </a>
-            <div class="collapse dropdownMenuCollapse {{ $request->routeIs('admin.product.index') ? 'show' : '' }}"
-                id="shopProducts">
-                <div class="listBar">
-                    @if ($generaleSetting?->new_product_approval)
-                        <a href="{{ route('admin.product.index', 'status=0') }}"
-                            class="subMenu {{ request()->filled('status') && request()->status == 0 ? 'active' : '' }}"
-                            title="{{ __('Pending Product') }}">
-                            {{ __('Pending Product') }}
-                        </a>
-                    @endif
-
-                    @if ($generaleSetting?->update_product_approval)
-                        <a href="{{ route('admin.product.index', 'status=1') }}"
-                            class="subMenu {{ request()->filled('status') && request()->status == 1 ? 'active' : '' }}"
-                            title="{{ __('Update Request Product') }}">
-                            {{ __('Update Product Request') }}
-                        </a>
-                    @endif
-
-                    <a href="{{ route('admin.product.index', 'approve=true') }}"
-                        class="subMenu {{ request()->filled('approve') && request()->approve == 'true' ? 'active' : '' }}"
-                        title="{{ __('Accepted Item') }}">
-                        {{ __('Accepted Product') }}
-                    </a>
-                </div>
-            </div>
-        </li>
-    @endhasPermission
-
     @hasPermission([
         'admin.subscription-plan.index',
         'admin.subscription-plan.create',
