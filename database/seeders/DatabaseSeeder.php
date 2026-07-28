@@ -46,7 +46,6 @@ class DatabaseSeeder extends Seeder
             $this->call(ReviewSeeder::class);
             $this->call(FavoriteSeeder::class);
             $this->call(BlogSeeder::class);
-            $this->call(RootAdminShopSeeder::class);
         }
 
         $this->call(WalletSeeder::class);
