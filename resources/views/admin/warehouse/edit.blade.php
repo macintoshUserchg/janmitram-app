@@ -25,14 +25,13 @@
             </div>
 
             <div class="mb-3">
-                <label class="form-label">{{ __('Linked Shop (Owner)') }}</label>
-                <select name="shop_id" class="form-select @error('shop_id') is-invalid @enderror">
-                    <option value="">{{ __('-- Central / Admin Owned --') }}</option>
-                    @foreach($shops as $shop)
-                        <option value="{{ $shop->id }}" {{ old('shop_id', $warehouse->shop_id) == $shop->id ? 'selected' : '' }}>{{ $shop->name }}</option>
-                    @endforeach
-                </select>
-                @error('shop_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                <label class="form-label font-weight-bold">{{ __('Parent Logistics Hub') }}</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light"><i class="fas fa-warehouse text-primary"></i></span>
+                    <input type="text" class="form-control bg-light" value="{{ $centralWarehouse?->name ?? __('Central Warehouse') }} ({{ __('Central Hub') }})" readonly>
+                </div>
+                <input type="hidden" name="shop_id" value="{{ $warehouse->shop_id ?? $centralWarehouse?->shop_id ?? $shops->first()?->id }}">
+                <div class="form-text text-muted small">{{ __('Sub-warehouse operating under Central Warehouse.') }}</div>
             </div>
 
             <div class="mb-3">
