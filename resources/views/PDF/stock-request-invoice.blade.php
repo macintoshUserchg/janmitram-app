@@ -1,5 +1,6 @@
 @php
     $directory = app()->getLocale() == 'ar' ? 'rtl' : 'ltr';
+    $setting = generaleSetting();
 @endphp
 <!DOCTYPE html>
 <html lang="{{ app()->getLocale() }}" dir="{{ $directory }}">
@@ -8,7 +9,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stock Dispatch Invoice #INV-SR-{{ str_pad((string)$stockRequest->id, 5, '0', STR_PAD_LEFT) }}</title>
+    <title>Janmitram Stock Dispatch Invoice #INV-SR-{{ str_pad((string)$stockRequest->id, 5, '0', STR_PAD_LEFT) }}</title>
     <style>
         body {
             font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -36,7 +37,7 @@
         }
 
         .header-title {
-            font-size: 22px;
+            font-size: 20px;
             font-weight: bold;
             margin: 0;
         }
@@ -44,7 +45,7 @@
         .badge-completed {
             background-color: #10B981;
             color: #ffffff;
-            padding: 4px 12px;
+            padding: 3px 10px;
             border-radius: 12px;
             font-size: 11px;
             font-weight: bold;
@@ -99,7 +100,7 @@
         }
 
         .footer-signatures {
-            margin-top: 40px;
+            margin-top: 35px;
             width: 100%;
             border-collapse: collapse;
         }
@@ -143,19 +144,30 @@
     </div>
 
     <div class="invoice-box">
-        <!-- Header Banner with Border Bottom -->
-        <table class="table-full" style="border-bottom: 2px solid #1E3A8A; padding-bottom: 15px; margin-bottom: 15px;">
+        <!-- Janmitram Brand Header Banner -->
+        <table class="table-full" style="border-bottom: 2px solid #1E3A8A; padding-bottom: 12px; margin-bottom: 15px;">
             <tr>
-                <td style="width: 60%;">
-                    <h1 class="header-title" style="color: #1E3A8A;">INVOICE / GOODS DISPATCH NOTE</h1>
-                    <div style="font-size: 14px; font-weight: bold; color: #4B5563; margin-top: 4px;">
-                        Invoice #: <span style="color: #2563EB;">INV-SR-{{ str_pad((string)$stockRequest->id, 5, '0', STR_PAD_LEFT) }}</span>
+                <td style="width: 50%; vertical-align: middle;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        @if($setting?->logo)
+                            <img src="{{ $setting->logo }}" alt="Janmitram Logo" style="max-height: 50px; width: auto; object-fit: contain;">
+                        @endif
+                        <div>
+                            <h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #1E3A8A; letter-spacing: 0.5px;">{{ strtoupper($setting?->name ?? 'JANMITRAM') }}</h2>
+                            <div style="font-size: 11px; color: #4B5563; font-weight: 600;">Central Logistics & Retail Fulfillment Network</div>
+                        </div>
                     </div>
                 </td>
-                <td class="text-right" style="width: 40%;">
-                    <span class="badge-completed">APPROVED & DISPATCHED</span>
-                    <div style="margin-top: 6px; font-size: 12px;" class="text-muted">
-                        <strong>Date:</strong> {{ $stockRequest->updated_at ? $stockRequest->updated_at->format('d M, Y h:i A') : now()->format('d M, Y') }}
+                <td class="text-right" style="width: 50%; vertical-align: middle;">
+                    <h1 class="header-title" style="color: #1E3A8A; font-size: 18px; margin-bottom: 4px;">INVOICE / GOODS DISPATCH NOTE</h1>
+                    <div style="font-size: 13px; font-weight: bold; color: #4B5563;">
+                        Invoice #: <span style="color: #2563EB;">INV-SR-{{ str_pad((string)$stockRequest->id, 5, '0', STR_PAD_LEFT) }}</span>
+                    </div>
+                    <div style="margin-top: 4px;">
+                        <span class="badge-completed">APPROVED & DISPATCHED</span>
+                        <span style="font-size: 11px; margin-left: 8px;" class="text-muted">
+                            {{ $stockRequest->updated_at ? $stockRequest->updated_at->format('d M, Y h:i A') : now()->format('d M, Y') }}
+                        </span>
                     </div>
                 </td>
             </tr>
@@ -288,6 +300,11 @@
                 </td>
             </tr>
         </table>
+
+        <!-- Janmitram Platform Footer Branding -->
+        <div style="margin-top: 25px; padding-top: 10px; border-top: 1px solid #E2E8F0; text-align: center; font-size: 10px; color: #718096;">
+            <strong>JANMITRAM</strong> • Official Stock Transfer & Logistics Fulfillment Document • Generated on {{ now()->format('d M, Y h:i A') }}
+        </div>
     </div>
 </body>
 
