@@ -100,6 +100,21 @@
             display: inline-block !important;
             flex-shrink: 0 !important;
         }
+
+        /* Prevent sidebar auto-expanding width on mouse hover when collapsed */
+        .closed-sidebar .app-sidebar:hover,
+        .closed-sidebar:not(.sidebar-mobile-open) .app-sidebar:hover .scrollbar-sidebar {
+            width: 65px !important;
+            min-width: 65px !important;
+            max-width: 65px !important;
+            flex: 0 0 65px !important;
+        }
+
+        .closed-sidebar .app-sidebar:hover .app-sidebar-inner .metismenu-state-icon,
+        .closed-sidebar .app-sidebar:hover .downIcon {
+            display: none !important;
+            visibility: hidden !important;
+        }
     </style>
 </head>
 
