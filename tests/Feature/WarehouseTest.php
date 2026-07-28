@@ -2,14 +2,17 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\Shop\StockRequestController;
 use App\Models\Brand;
 use App\Models\Media;
 use App\Models\Product;
 use App\Models\Shop;
 use App\Models\StockRequest;
+use App\Models\User;
 use App\Models\Warehouse;
 use App\Services\WarehouseService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 class WarehouseTest extends TestCase
@@ -170,5 +173,72 @@ class WarehouseTest extends TestCase
             'product_id' => $product->id,
             'quantity' => 100,
         ]);
+    }
+
+    public function test_shop_inventory_calculates_approved_requested_stock_and_sold_units(): void
+    {
+        $shop = Shop::factory()->create();
+        $brand = Brand::create(['name' => 'Brand']);
+        $media = Media::factory()->create();
+
+        $warehouse = Warehouse::create([
+            'shop_id' => $shop->id,
+            'name' => 'Central Warehouse',
+            'is_default' => true,
+        ]);
+
+        $masterProduct = Product::create([
+            'shop_id' => $shop->id,
+            'brand_id' => $brand->id,
+            'media_id' => $media->id,
+            'name' => 'Catalog Item',
+            'price' => 50.00,
+            'quantity' => 0,
+            'is_stock_managed' => true,
+        ]);
+
+        WarehouseService::addStock($warehouse, $masterProduct, 100);
+
+        $user = User::factory()->create();
+        $permission = Permission::firstOrCreate(['name' => 'shop.stock-request.index']);
+        $user->givePermissionTo($permission);
+
+        $requestShop = Shop::factory()->create([
+            'user_id' => $user->id,
+            'warehouse_id' => $warehouse->id,
+        ]);
+        $user->update(['shop_id' => $requestShop->id]);
+
+        $stockRequest = StockRequest::create([
+            'shop_id' => $requestShop->id,
+            'warehouse_id' => $warehouse->id,
+            'status' => 'pending',
+        ]);
+
+        $stockRequest->items()->create([
+            'product_id' => $masterProduct->id,
+            'quantity' => 25,
+        ]);
+
+        // Fulfill request (Approved 25 units for requestShop)
+        WarehouseService::fulfillStockRequest($stockRequest);
+
+        // Shop receives 25 units in local product record
+        $shopProduct = Product::where('shop_id', $requestShop->id)->where('master_product_id', $masterProduct->id)->first();
+        $this->assertEquals(25, $shopProduct->quantity);
+
+        // Simulate customer order / POS sale of 5 units (shop stock decrements to 20)
+        $shopProduct->update(['quantity' => 20]);
+
+        auth()->login($user);
+        $controller = new StockRequestController;
+        $view = $controller->inventory();
+
+        $products = $view->getData()['products'];
+        $item = $products->first();
+
+        $this->assertEquals(25, $item->total_requested_qty);
+        $this->assertEquals(5, $item->sold_qty);
+        $this->assertEquals(20, $item->quantity);
     }
 }
