@@ -3,39 +3,34 @@
 @section('title', __('Stock Request Detail'))
 
 @section('content')
-<!-- Integrated Header & Linked Logistics Hub Banner Card -->
+<!-- Integrated 2-Line Compact Header Banner Card -->
 <div class="card border-0 shadow-sm rounded-12 mb-4 bg-gradient bg-primary text-white">
-    <div class="card-body p-4">
-        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-3">
-            <div>
-                <a href="{{ route('shop.stock-request.index') }}" class="btn btn-sm btn-light text-primary fw-bold mb-2">
+    <div class="card-body p-3">
+        <!-- Line 1: Title + Status Badge & Back Button -->
+        <div class="d-flex justify-content-between align-items-center mb-1">
+            <h1 class="h4 mb-0 text-white fw-bold"><i class="fas fa-file-invoice me-2 text-warning"></i>{{ __('Stock Request Detail') }} #{{ $stockRequest->id }}</h1>
+            <div class="d-flex align-items-center gap-2">
+                @if($stockRequest->status === 'pending')
+                    <span class="badge bg-warning text-dark fs-6 px-3 py-1 fw-bold"><i class="fas fa-clock me-1"></i>{{ __('Pending Approval') }}</span>
+                @elseif($stockRequest->status === 'completed')
+                    <span class="badge bg-success fs-6 px-3 py-1 fw-bold"><i class="fas fa-check-circle me-1"></i>{{ __('Approved & Stocked') }}</span>
+                @else
+                    <span class="badge bg-danger fs-6 px-3 py-1 fw-bold"><i class="fas fa-times-circle me-1"></i>{{ __('Rejected') }}</span>
+                @endif
+                <a href="{{ route('shop.stock-request.index') }}" class="btn btn-sm btn-light text-primary fw-bold">
                     <i class="fas fa-arrow-left me-1"></i> {{ __('Back to Stock Requests') }}
                 </a>
-                <h1 class="h3 mb-1 text-white fw-bold">{{ __('Stock Request Detail') }} #{{ $stockRequest->id }}</h1>
-                <p class="text-white-50 small mb-0">{{ __('Audit details for stock request submitted to your assigned Central Warehouse.') }}</p>
-            </div>
-            <div>
-                @if($stockRequest->status === 'pending')
-                    <span class="badge bg-warning text-dark fs-6 px-3 py-2 fw-bold"><i class="fas fa-clock me-1"></i>{{ __('Pending Approval') }}</span>
-                @elseif($stockRequest->status === 'completed')
-                    <span class="badge bg-success fs-6 px-3 py-2 fw-bold"><i class="fas fa-check-circle me-1"></i>{{ __('Approved & Stocked') }}</span>
-                @else
-                    <span class="badge bg-danger fs-6 px-3 py-2 fw-bold"><i class="fas fa-times-circle me-1"></i>{{ __('Rejected') }}</span>
-                @endif
             </div>
         </div>
-
-        @if($stockRequest->warehouse)
-            <div class="pt-3 border-top border-white-20 d-flex align-items-center justify-content-between flex-wrap gap-2">
-                <div class="d-flex align-items-center gap-2">
-                    <span class="badge bg-light text-primary fw-bold">{{ __('Linked Logistics Fulfillment Hub') }}</span>
-                    <span class="fw-bold text-white fs-5"><i class="fas fa-warehouse me-1 text-warning"></i> {{ $stockRequest->warehouse->name }}</span>
-                    @if($stockRequest->warehouse->address)
-                        <span class="text-white-50 small">({{ $stockRequest->warehouse->address }})</span>
-                    @endif
-                </div>
-            </div>
-        @endif
+        <!-- Line 2: Subtitle & Linked Hub Badge inline -->
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 text-white-50 small">
+            <span>{{ __('Audit details for stock request submitted to your assigned Central Warehouse.') }}</span>
+            @if($stockRequest->warehouse)
+                <span class="badge bg-light text-primary fw-bold">
+                    <i class="fas fa-warehouse me-1 text-warning"></i>{{ __('Linked Hub:') }} {{ $stockRequest->warehouse->name }} @if($stockRequest->warehouse->address)({{ $stockRequest->warehouse->address }})@endif
+                </span>
+            @endif
+        </div>
     </div>
 </div>
 

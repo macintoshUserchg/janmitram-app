@@ -3,30 +3,25 @@
 @section('title', __('New Stock Request'))
 
 @section('content')
-<!-- Integrated Header & Linked Logistics Hub Banner Card -->
+<!-- Integrated 2-Line Compact Header Banner Card -->
 <div class="card border-0 shadow-sm rounded-12 mb-4 bg-gradient bg-primary text-white">
-    <div class="card-body p-4">
-        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-3">
-            <div>
-                <a href="{{ route('shop.stock-request.index') }}" class="btn btn-sm btn-light text-primary fw-bold mb-2">
-                    <i class="fas fa-arrow-left me-1"></i> {{ __('Back to Stock Requests') }}
-                </a>
-                <h1 class="h3 mb-1 text-white fw-bold">{{ __('Request Warehouse Stock') }}</h1>
-                <p class="text-white-50 small mb-0">{{ __('Select master products from your assigned Central Warehouse catalog and specify requested quantities.') }}</p>
-            </div>
+    <div class="card-body p-3">
+        <!-- Line 1: Title + Back Button -->
+        <div class="d-flex justify-content-between align-items-center mb-1">
+            <h1 class="h4 mb-0 text-white fw-bold"><i class="fas fa-cart-flatbed me-2 text-warning"></i>{{ __('Request Warehouse Stock') }}</h1>
+            <a href="{{ route('shop.stock-request.index') }}" class="btn btn-sm btn-light text-primary fw-bold">
+                <i class="fas fa-arrow-left me-1"></i> {{ __('Back to Stock Requests') }}
+            </a>
         </div>
-
-        @if($warehouse)
-            <div class="pt-3 border-top border-white-20 d-flex align-items-center justify-content-between flex-wrap gap-2">
-                <div class="d-flex align-items-center gap-2">
-                    <span class="badge bg-light text-primary fw-bold">{{ __('Linked Logistics Fulfillment Hub') }}</span>
-                    <span class="fw-bold text-white fs-5"><i class="fas fa-warehouse me-1 text-warning"></i> {{ $warehouse->name }}</span>
-                    @if($warehouse->address)
-                        <span class="text-white-50 small">({{ $warehouse->address }})</span>
-                    @endif
-                </div>
-            </div>
-        @endif
+        <!-- Line 2: Subtitle & Linked Hub Badge inline -->
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 text-white-50 small">
+            <span>{{ __('Select master products from your assigned Central Warehouse catalog and specify requested quantities.') }}</span>
+            @if($warehouse)
+                <span class="badge bg-light text-primary fw-bold">
+                    <i class="fas fa-warehouse me-1 text-warning"></i>{{ __('Linked Hub:') }} {{ $warehouse->name }} @if($warehouse->address)({{ $warehouse->address }})@endif
+                </span>
+            @endif
+        </div>
     </div>
 </div>
 
