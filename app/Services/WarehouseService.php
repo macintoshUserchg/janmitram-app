@@ -19,15 +19,15 @@ class WarehouseService
      * Resolve the shop_id for a new warehouse.
      * Falls back to the central warehouse's shop_id if none provided.
      */
-    public static function resolveWarehouseShopId(?int $providedShopId): ?int
+    public static function resolveWarehouseShopId(int|string|null $providedShopId): ?int
     {
-        if ($providedShopId !== null) {
-            return $providedShopId;
+        if ($providedShopId !== null && $providedShopId !== '') {
+            return (int) $providedShopId;
         }
 
         $centralWarehouse = Warehouse::where('is_default', true)->first() ?? Warehouse::first();
 
-        return $centralWarehouse?->shop_id;
+        return $centralWarehouse?->shop_id ? (int) $centralWarehouse->shop_id : null;
     }
 
     /**

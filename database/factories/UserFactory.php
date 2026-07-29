@@ -30,7 +30,7 @@ class UserFactory extends Factory
             'gender' => $this->faker->randomElement(['male', 'female']),
             'date_of_birth' => $this->faker->date(),
             'is_active' => $this->faker->boolean(),
-            'media_id' => Media::factory()->create(),
+            'media_id' => null,
             'email_verified_at' => now(),
             'phone_verified_at' => now(),
         ];
