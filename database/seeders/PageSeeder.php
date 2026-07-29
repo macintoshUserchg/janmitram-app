@@ -16,7 +16,7 @@ class PageSeeder extends Seeder
         Page::truncate();
 
         $faker = class_exists('\Faker\Factory') ? Factory::create() : null;
-        $getHtml = fn() => $faker ? $faker->randomHtml(4, rand(4, 10)) : '<p>Default description content.</p>';
+        $getHtml = fn () => $faker ? $faker->randomHtml(4, rand(4, 10)) : '<p>Default description content.</p>';
 
         // Pages
         $pages = [

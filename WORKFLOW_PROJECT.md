@@ -48,12 +48,13 @@ Under this architecture:
 │ Admin reviews request in Admin Panel (admin/stock-request/{id}).                       │
 │ → Admin clicks "Approve & Fulfill Request". (Informs admin on inventory shortfall).    │
 │ → WarehouseService::fulfillStockRequest() executes in a DB Transaction:               │
-│    a) Decrements Linked WarehouseStock quantity.                                        │
-│    b) Decrements Central Master Product quantity ($masterProduct->quantity).           │
-│    c) Clones/Updates Shop Copy Product (cloneMasterToShop) for target shop_id.         │
-│    d) Increments Shop Copy Product sellable quantity ($shopProduct->quantity).          │
-│    e) Logs StockLedger entry with reference_type = 'shop_request'.                     │
-│    f) Generates official Janmitram Stock Dispatch Invoice.                              │
+│    a) Finds matching WarehouseStock via findStock() (smart color/size fallback).       │
+│    b) Deducts available warehouse stock (deductQty = min(requested, available)).        │
+│    c) Decrements Central Master Product quantity ($masterProduct->quantity).           │
+│    d) Clones/Updates Shop Copy Product (cloneMasterToShop) for target shop_id.         │
+│    e) Increments Shop Copy Product by actual dispatched qty ($deductQty).              │
+│    f) Logs StockLedger entry with reference_type = 'shop_request' (actual qty).        │
+│ → On shortfall: only available stock is dispatched; ledger & shop increment match.
 └─────────────────────────────────────────────────────────────────────────────────────────┘
                                            │
                                            ▼
@@ -120,12 +121,16 @@ Under this architecture:
 3. If warehouse inventory is insufficient for any item, an **Inventory Shortfall Warning** is displayed to the admin.
 4. Admin clicks **Approve & Fulfill Request**.
 5. `WarehouseService::fulfillStockRequest()` runs inside a database transaction:
-   - Decrements stock in `WarehouseStock` and `$masterProduct->quantity`.
+   - Finds matching `WarehouseStock` via `findStock()` with smart color/size fallback.
+   - Deducts available stock: `deductQty = min(requested, available)`.
+   - Decrements `WarehouseStock` and `$masterProduct->quantity` by `$deductQty`.
    - Executes `cloneMasterToShop()`, creating or updating the shop's local copy (`master_product_id = master->id`, `shop_id = shop->id`).
-   - Increments local sellable stock `$shopProduct->quantity`.
-   - Logs an entry in `StockLedger` (`reference_type = 'shop_request'`).
+   - Increments local sellable stock `$shopProduct->quantity` by `$deductQty` (actual dispatched qty).
+   - Logs an entry in `StockLedger` (`reference_type = 'shop_request'`) with actual dispatched quantity.
    - Updates `StockRequest` status to `completed`.
 6. Admin or Shop can view and print the official **Janmitram Stock Dispatch Invoice** (`/admin/stock-request/{id}/invoice`).
+
+> **Shortfall Behavior**: If warehouse stock < requested qty, only available stock is dispatched. The shop receives `$deductQty`, the ledger records `$deductQty`, and the admin sees the shortfall warning. No phantom stock is created.
 
 #### Phase 5: Inter-Warehouse Stock Transfers
 1. Admin opens **Admin Panel** → **Warehouse Transfers** (`/admin/warehouse-transfer`).

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Admin;
 
-use App\Exceptions\InsufficientStockException;
 use App\Http\Controllers\Controller;
 use App\Models\StockRequest;
 use App\Models\WarehouseStock;
@@ -68,13 +67,9 @@ class StockRequestController extends Controller
             return back()->with('error', __('Stock request is already processed.'));
         }
 
-        try {
-            WarehouseService::fulfillStockRequest($stockRequest);
+        WarehouseService::fulfillStockRequest($stockRequest);
 
-            return redirect()->route('admin.stock-request.index')->with('success', __('Stock request approved and fulfilled successfully.'));
-        } catch (InsufficientStockException $e) {
-            return back()->with('error', $e->getMessage());
-        }
+        return redirect()->route('admin.stock-request.index')->with('success', __('Stock request approved and fulfilled successfully.'));
     }
 
     public function reject(StockRequest $stockRequest)

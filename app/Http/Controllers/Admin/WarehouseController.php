@@ -16,6 +16,11 @@ use App\Services\WarehouseService;
 
 class WarehouseController extends Controller
 {
+    private static function getCentralWarehouse(): ?Warehouse
+    {
+        return Warehouse::where('is_default', true)->first() ?? Warehouse::first();
+    }
+
     public function index()
     {
         $warehouses = Warehouse::with(['shop', 'stocks'])->latest()->paginate(15);
@@ -25,21 +30,16 @@ class WarehouseController extends Controller
 
     public function create()
     {
-        $centralWarehouse = Warehouse::where('is_default', true)->first() ?? Warehouse::first();
-        $shops = Shop::all();
+        $centralWarehouse = self::getCentralWarehouse();
 
-        return view('admin.warehouse.create', compact('centralWarehouse', 'shops'));
+        return view('admin.warehouse.create', compact('centralWarehouse'));
     }
 
     public function store(WarehouseRequest $request)
     {
-        $centralWarehouse = Warehouse::where('is_default', true)->first() ?? Warehouse::first();
         $data = $request->validated();
-        if (empty($data['shop_id'])) {
-            $data['shop_id'] = $centralWarehouse?->shop_id;
-        }
 
-        Warehouse::create($data);
+        WarehouseService::createWarehouse($data);
 
         return redirect()->route('admin.warehouse.index')->with('success', __('Sub-warehouse created successfully under Central Warehouse.'));
     }
@@ -55,10 +55,9 @@ class WarehouseController extends Controller
 
     public function edit(Warehouse $warehouse)
     {
-        $centralWarehouse = Warehouse::where('is_default', true)->first() ?? Warehouse::first();
-        $shops = Shop::all();
+        $centralWarehouse = self::getCentralWarehouse();
 
-        return view('admin.warehouse.edit', compact('warehouse', 'centralWarehouse', 'shops'));
+        return view('admin.warehouse.edit', compact('warehouse', 'centralWarehouse'));
     }
 
     public function update(WarehouseRequest $request, Warehouse $warehouse)

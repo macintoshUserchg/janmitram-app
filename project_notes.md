@@ -9,7 +9,7 @@ Comprehensive payment-gateway support, real-time chat, SMS/Firebase notification
 > Guidelines**: strict types, thin controllers, Form Requests, typed
 > relationships, eager loading.
 
-_Last verified against the codebase: 2026-07-29._
+_Last verified against the codebase: 2026-07-29. Refactored: WarehouseService helpers (findStock, resolveWarehouseShopId, createWarehouse); phantom-stock bug fixed._
 
 ---
 
@@ -313,6 +313,8 @@ Defined in `config/acl.php` — structured permission tree:
 
 Controllers should orchestrate, not compute. Push logic down:
 - **Warehouse & Inventory operations** → `App\Services\WarehouseService`.
+  - New helper methods: `findStock()` (smart color/size fallback), `resolveWarehouseShopId()`, `createWarehouse()`.
+  - `fulfillStockRequest()` now uses `findStock()` and caps shop increment to actual dispatched quantity (no phantom stock on shortfall).
 - **Complex queries** → Eloquent scopes (`app/Models/Scopes/`) or `Repository` classes.
 - **Business logic** → `app/Services/` (e.g. `SmsGatewayService`, `NotificationServices`).
 - **Output shaping** → Eloquent API Resources in `app/Http/Resources/`.
