@@ -20,7 +20,6 @@ class WarehouseRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:191'],
             'address' => ['nullable', 'string'],
-            'shop_id' => ['nullable', 'exists:shops,id'],
         ];
     }
 }

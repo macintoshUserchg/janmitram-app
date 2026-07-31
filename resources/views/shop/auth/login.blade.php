@@ -17,7 +17,7 @@
     <link rel="shortcut icon" type="image/png" href="{{ $generaleSetting?->favicon ?? asset('assets/favicon.png') }}" />
 
     <!-- App title -->
-    <title>{{ $generaleSetting?->title ?? config('app.name', 'ReadyEcommerce') }} Shop Login</title>
+    <title>{{ $generaleSetting?->title ?? config('app.name', 'Janmitram') }} Shop Login</title>
     <meta name="viewport"
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no" />
     <meta name="description"

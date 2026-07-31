@@ -32,7 +32,6 @@ class WarehouseSeeder extends Seeder
         $centralWarehouse = Warehouse::firstOrCreate(
             ['is_default' => true],
             [
-                'shop_id' => $rootShop?->id,
                 'name' => 'Central Warehouse',
                 'address' => 'Main Logistics Hub',
                 'is_default' => true,

@@ -23,7 +23,7 @@
 | **Guest visits `/`** | SPA loads, "Login" button in header, "Buy Now" on product cards |
 | **Guest clicks "Buy Now"** | Alert toast: "Please login first!" + **Login Modal opens** |
 | **Login Modal fields** | "Email / Phone Number" (textbox), "Password" (textbox), "Log in" button |
-| **Seeded credentials** | `user@readyecommerce.com` / `secret` (customer role) |
+| **Seeded credentials** | `user@janmitram.com` / `secret` (customer role) |
 | **After login** | Modal closes, "Buy Now" likely navigates to checkout or SPA product detail |
 
 **No server routes**: `/login`, `/register`, `/password/reset` — customer auth is 100% SPA + API (`POST /api/login`, `POST /api/register`).
@@ -86,34 +86,34 @@
 
 ### Checkout Page (SPA route `/checkout`)
 - **Address form**: fields or existing addresses
-- **Payment methods**: Razorpay, Stripe, PayPal, etc.
-- **Place Order**: button
-
-### Dashboard (SPA route `/dashboard`, requires auth)
-- **Tabs**: My Orders, Wishlist, Addresses, Profile, Change Password
-- **Orders**: list with status badges
-- **Wishlist**: heart icons, "Move to Cart"
-
----
-
-## Seeded Test Data
-
-| Entity | Credentials / Notes |
-|---|---|
-| **Customer (seeded)** | `user@readyecommerce.com` / `secret` — has `customer` role, linked `Customer` record |
-| **Admin (seeded)** | `root@readyecommerce.com` / `secret` — has `root` role |
-| **Product #1** | Exists, active, approved — "et" (Nike), ₹65.61, quantity 79 |
-| **Shops** | "Demo Shop", "My Shop" — seeded |
+- **Default creds button**: "Use default credentials Email: user@janmitram.com Password: secret"
+- **Submit login**: `POST /api/login` payload `{phone: "user@janmitram.com", password: "secret"}`
+- **Response**: `{access: {token: "..."}, user: {...}}`
+- **Pinia state set**: `authStore.token = "Bearer ..."` + `authStore.user = {...}`
+- **Toast**: "Login Successful"
+- **Header updates**: Login button disappears, user avatar/menu appears
 
 ---
 
-## Dusk Test Patterns (Corrected)
+## 4. Test User Credentials
 
-### ❌ Don't do this (what agent generated)
+| Actor | Credentials & State |
+| :--- | :--- |
+| **Customer (seeded)** | `user@janmitram.com` / `secret` — has `customer` role, linked `Customer` record |
+| **Admin (seeded)** | `root@janmitram.com` / `secret` — has `root` role |
+| **Guest** | No creds — uses `X-Guest-Token` header for guest cart |
+
+---
+
+## 5. End-to-End Test Automation (Dusk Example)
+
 ```php
-$browser->visit("/products/{$product->id}/details")
-    ->waitForText('Add to Cart')
-    ->press('Add to Cart');
+// Standard pattern for testing customer auth in Dusk
+$browser->visit('/janmitram-app/')
+    ->waitForText('Buy Now', 10)
+    ->click('@buy-now-btn')
+    ->waitForText('Please login first!', 5)
+    ->type('input[name="email"]', 'user@janmitram.com');
 ```
 
 ### ✅ Do this instead (real SPA flow)

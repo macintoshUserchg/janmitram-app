@@ -8,7 +8,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\WarehouseRequest;
 use App\Models\Color;
 use App\Models\Product;
-use App\Models\Shop;
 use App\Models\Size;
 use App\Models\Warehouse;
 use App\Models\WarehouseStock;
@@ -23,7 +22,7 @@ class WarehouseController extends Controller
 
     public function index()
     {
-        $warehouses = Warehouse::with(['shop', 'stocks'])->latest()->paginate(15);
+        $warehouses = Warehouse::with('stocks')->latest()->paginate(15);
 
         return view('admin.warehouse.index', compact('warehouses'));
     }

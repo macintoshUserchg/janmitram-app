@@ -1,7 +1,7 @@
 @php
     $generaleSetting = App\Models\GeneraleSetting::first();
 
-    $title = $generaleSetting?->title ?? config('app.name', 'ReadyEcommerce');
+    $title = $generaleSetting?->title ?? config('app.name', 'Janmitram');
     $favicon = $generaleSetting?->favicon ?? asset('assets/favicon.png');
 @endphp
 <!DOCTYPE html>

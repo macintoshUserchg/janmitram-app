@@ -16,21 +16,6 @@ use Illuminate\Support\Facades\DB;
 class WarehouseService
 {
     /**
-     * Resolve the shop_id for a new warehouse.
-     * Falls back to the central warehouse's shop_id if none provided.
-     */
-    public static function resolveWarehouseShopId(int|string|null $providedShopId): ?int
-    {
-        if ($providedShopId !== null && $providedShopId !== '') {
-            return (int) $providedShopId;
-        }
-
-        $centralWarehouse = Warehouse::where('is_default', true)->first() ?? Warehouse::first();
-
-        return $centralWarehouse?->shop_id ? (int) $centralWarehouse->shop_id : null;
-    }
-
-    /**
      * Find a WarehouseStock record using smart fallback:
      * 1. Exact color/size match (if specified)
      * 2. Any stock with sufficient quantity
@@ -87,12 +72,10 @@ class WarehouseService
     }
 
     /**
-     * Create a new warehouse with proper shop_id resolution.
+     * Create a new warehouse.
      */
     public static function createWarehouse(array $data): Warehouse
     {
-        $data['shop_id'] = self::resolveWarehouseShopId($data['shop_id'] ?? null);
-
         return Warehouse::create($data);
     }
 

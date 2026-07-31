@@ -32,7 +32,7 @@ _Last verified against the codebase: 2026-07-29. Refactored: WarehouseService he
 | **Firebase** | Cloud Messaging (push notifications) |
 | **AI** | OpenAI API (`openai-php/laravel`), Google API (`google/apiclient`) |
 | **Exports & Invoices** | maatwebsite/excel, mpdf (invoice PDF generation), milon/barcode, endroid/qr-code |
-| **DB** | MySQL (MAMP local: `ready_ecommerce`) via a single `mysql` connection |
+| **DB** | MySQL (MAMP local: `janmitram`) via a single `mysql` connection |
 | **Testing** | PHPUnit ^11 (14 automated feature/unit tests) + Laravel Dusk ^8 (21 browser tests) |
 | **Code style** | Laravel Pint ^1 |
 
@@ -118,14 +118,14 @@ janmitram-app/
 ## Database
 
 - The application uses a **single `mysql` connection**. No additional named connections are defined in `config/database.php`.
-- **Local (dev)**: `DB_DATABASE=ready_ecommerce` on MAMP (`127.0.0.1`, `root/root`).
+- **Local (dev)**: `DB_DATABASE=janmitram` on MAMP (`127.0.0.1`, `root/root`).
 - **Production (Hostinger)**: `DB_DATABASE=u939461333_app_janmitram` on the Hostinger MySQL host. Set via the production `.env` — it is **not** stored in the repo.
 - **Migration & Data Utilities**:
   - `php artisan db:truncate-data` resets tables safely during setup or testing.
-- The same local MySQL server also hosts `u939461333_janmitra`, `aitradex_db`, and `lifeskills_db`. These schemas **exist locally** but are **not referenced anywhere in the Laravel app code** — models, migrations, and queries all target the configured `DB_DATABASE` (`ready_ecommerce` locally, `u939461333_app_janmitram` in production).
+- The same local MySQL server also hosts `u939461333_janmitra`, `aitradex_db`, and `lifeskills_db`. These schemas **exist locally** but are **not referenced anywhere in the Laravel app code** — models, migrations, and queries all target the configured `DB_DATABASE` (`janmitram` locally, `u939461333_app_janmitram` in production).
 - **Migrations** live in `database/migrations/` and run against whatever `DB_DATABASE` is configured. Verify the target schema with the Boost `database-schema` tool before adding/changing columns.
 
-> **Environment caveat**: the local DB name (`ready_ecommerce`) differs from production (`u939461333_app_janmitram`). Never hardcode a schema name; always read it from `DB_DATABASE`. Do not assume cross-schema queries work — from the app's perspective there is one schema.
+> **Environment caveat**: the local DB name (`janmitram`) differs from production (`u939461333_app_janmitram`). Never hardcode a schema name; always read it from `DB_DATABASE`. Do not assume cross-schema queries work — from the app's perspective there is one schema.
 
 ---
 

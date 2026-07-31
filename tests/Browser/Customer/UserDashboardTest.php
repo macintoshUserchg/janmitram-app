@@ -160,7 +160,7 @@ class UserDashboardTest extends DuskTestCase
             $this->resetState($browser);
             $browser->press('Buy Now')
                 ->waitForText('Please login first!', 5)
-                ->type('input[placeholder*="email"]', 'user@readyecommerce.com')
+                ->type('input[placeholder*="email"]', 'user@janmitram.com')
                 ->type('input[placeholder*="Password"]', 'secret')
                 ->press('Log in')
                 ->waitForText('Login Successful', 10);

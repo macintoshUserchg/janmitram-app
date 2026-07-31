@@ -30,7 +30,6 @@
                     <span class="input-group-text bg-light"><i class="fas fa-warehouse text-primary"></i></span>
                     <input type="text" class="form-control bg-light" value="{{ $centralWarehouse?->name ?? __('Central Warehouse') }} ({{ __('Central Hub') }})" readonly>
                 </div>
-                <input type="hidden" name="shop_id" value="{{ $warehouse->shop_id ?? $centralWarehouse?->shop_id }}">
                 <div class="form-text text-muted small">{{ __('Sub-warehouse operating under Central Warehouse.') }}</div>
             </div>
 

@@ -27,7 +27,7 @@ Copy `.env.example` to `.env` and configure:
 
 | Key | Value |
 |-----|-------|
-| `DB_DATABASE` | `ready_ecommerce` |
+| `DB_DATABASE` | `janmitram` |
 | `DB_USERNAME` | `root` |
 | `DB_PASSWORD` | `root` |
 

@@ -96,13 +96,13 @@
                                 <div class="text-muted small"><i class="fas fa-map-marker-alt me-1"></i> {{ $warehouse->address ?? __('Main Logistics Hub') }}</div>
                             </td>
                             <td>
-                                @if($warehouse->shop)
-                                    <span class="badge bg-light text-dark border">
-                                        <i class="fas fa-store me-1"></i> {{ $warehouse->shop->name }}
+                                @if($warehouse->is_default)
+                                    <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill fw-semibold">
+                                        <i class="fas fa-star me-1"></i> {{ __('Central Hub') }}
                                     </span>
                                 @else
-                                    <span class="badge bg-secondary">
-                                        <i class="fas fa-building me-1"></i> {{ __('Root Central System') }}
+                                    <span class="badge bg-light text-dark border fs-6 px-3 py-2">
+                                        <i class="fas fa-store me-1"></i> {{ __('Supports All Shops') }}
                                     </span>
                                 @endif
                             </td>

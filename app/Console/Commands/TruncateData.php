@@ -123,9 +123,9 @@ class TruncateData extends Command
     ];
 
     private const KEEP_EMAILS = [
-        'root@readyecommerce.com',
-        'admin@readyecommerce.com',
-        'shop@readyecommerce.com',
+        'root@janmitram.com',
+        'admin@janmitram.com',
+        'shop@janmitram.com',
     ];
 
     public function handle(): int
@@ -181,9 +181,9 @@ class TruncateData extends Command
         $this->line(sprintf('  • %2d orphaned role assignments cleaned', $usersToDelete));
         $this->newLine();
         $this->line('Login credentials:');
-        $this->warn('  root@readyecommerce.com / secret');
-        $this->warn('  admin@readyecommerce.com / secret');
-        $this->warn('  shop@readyecommerce.com / secret');
+        $this->warn('  root@janmitram.com / secret');
+        $this->warn('  admin@janmitram.com / secret');
+        $this->warn('  shop@janmitram.com / secret');
 
         return Command::SUCCESS;
     }

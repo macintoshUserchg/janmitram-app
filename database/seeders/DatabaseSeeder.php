@@ -70,12 +70,12 @@ class DatabaseSeeder extends Seeder
         if (app()->environment('local')) {
             // info for shop user in command line
             $this->command->info('Demo Shop created:');
-            $this->command->warn('- Email: shop@readyecommerce.com');
+            $this->command->warn('- Email: shop@janmitram.com');
             $this->command->warn('- Password: secret');
 
             // info for rider user in command line
             $this->command->info('Rider created:');
-            $this->command->warn('- Email: rider@readyecommerce.com');
+            $this->command->warn('- Email: rider@janmitram.com');
             $this->command->warn('- Password: secret');
         }
     }

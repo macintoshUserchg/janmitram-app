@@ -6,7 +6,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Warehouse extends Model
@@ -19,9 +18,9 @@ class Warehouse extends Model
         'is_default' => 'boolean',
     ];
 
-    public function shop(): BelongsTo
+    public function shops(): HasMany
     {
-        return $this->belongsTo(Shop::class);
+        return $this->hasMany(Shop::class);
     }
 
     public function stocks(): HasMany

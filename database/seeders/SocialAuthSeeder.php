@@ -37,7 +37,7 @@ class SocialAuthSeeder extends Seeder
             ],
             [
                 'name' => 'Apple',
-                'client_id' => $isLocal ? 'com.readyecommerce.web' : null,
+                'client_id' => $isLocal ? 'com.janmitram.web' : null,
                 'client_secret' => '',
                 'redirect' => null,
                 'provider' => 'apple',

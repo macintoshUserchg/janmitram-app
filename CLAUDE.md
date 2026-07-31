@@ -60,7 +60,7 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 ## Database
 
-- The app uses a **single `mysql` connection** named in `.env` via `DB_DATABASE` — never hardcode a schema. Local dev = `ready_ecommerce` (MAMP `root/root`); production (Hostinger) = `u939461333_app_janmitram`. The local server also hosts `u939461333_janmitra`, `aitradex_db`, `lifeskills_db`, but those are **not referenced in the Laravel code** — models/migrations all target `DB_DATABASE`. Do not assume cross-schema queries work.
+- The app uses a **single `mysql` connection** named in `.env` via `DB_DATABASE` — never hardcode a schema. Local dev = `janmitram` (MAMP `root/root`); production (Hostinger) = `u939461333_app_janmitram`. The local server also hosts `u939461333_janmitra`, `aitradex_db`, `lifeskills_db`, but those are **not referenced in the Laravel code** — models/migrations all target `DB_DATABASE`. Do not assume cross-schema queries work.
 
 ## Admin & SPA Hybrid
 

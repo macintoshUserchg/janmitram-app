@@ -23,7 +23,7 @@ The command (`app:truncate-data`) will:
 2. **Get all table names** from `SHOW TABLES`
 3. **Disable foreign key checks** (`SET FOREIGN_KEY_CHECKS = 0`)
 4. **Truncate all business tables** using the explicit list above
-5. **Delete extra users**: `User::whereNotIn('email', ['root@readyecommerce.com', 'admin@readyecommerce.com'])->delete()` — Spatie cascades will clean `model_has_roles` for these users via Eloquent events
+5. **Delete extra users**: `User::whereNotIn('email', ['root@janmitram.com', 'admin@janmitram.com'])->delete()` — Spatie cascades will clean `model_has_roles` for these users via Eloquent events
 6. **Clean orphaned model_has_roles**: Delete any `model_has_roles` entries where the `model_id` doesn't exist in `users.id` (belt-and-suspenders)
 7. **Re-enable foreign key checks**
 8. **Report summary**: tables truncated, users kept vs deleted
@@ -45,7 +45,7 @@ The command (`app:truncate-data`) will:
 
 ### Verification
 1. `php artisan app:truncate-data` runs and reports success
-2. Login with root@readyecommerce.com / secret works
+2. Login with root@janmitram.com / secret works
 3. Business tables (orders, products, etc.) are empty
 4. Reference tables (roles, currencies, settings, etc.) still have their data
 

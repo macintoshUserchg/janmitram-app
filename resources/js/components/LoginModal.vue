@@ -209,7 +209,7 @@ const loginFormData = ref({
 });
 
 const defaultLoginCredentials = {
-    phone: 'user@readyecommerce.com',
+    phone: 'user@janmitram.com',
     password: 'secret'
 };
 

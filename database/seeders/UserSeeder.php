@@ -42,7 +42,7 @@ class UserSeeder extends Seeder
     {
         $adminUser = User::factory()->create([
             'name' => 'Admin',
-            'email' => 'admin@readyecommerce.com',
+            'email' => 'admin@janmitram.com',
             'phone' => '01000000002',
             'is_active' => true,
         ]);
@@ -54,7 +54,7 @@ class UserSeeder extends Seeder
     {
         $visitorUser = User::factory()->create([
             'name' => 'Visitor',
-            'email' => 'visitor@readyecommerce.com',
+            'email' => 'visitor@janmitram.com',
             'phone' => '01000000003',
             'is_active' => true,
         ]);
@@ -66,7 +66,7 @@ class UserSeeder extends Seeder
     {
         $user = User::factory()->create([
             'name' => 'Demo Customer',
-            'email' => 'user@readyecommerce.com',
+            'email' => 'user@janmitram.com',
             'phone' => '01000000405',
             'is_active' => true,
         ]);

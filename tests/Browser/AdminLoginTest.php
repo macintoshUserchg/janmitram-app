@@ -21,7 +21,7 @@ class AdminLoginTest extends DuskTestCase
     {
         $this->browse(function (Browser $browser) {
             $browser->visit('/admin/login')
-                ->type('email', 'root@readyecommerce.com')
+                ->type('email', 'root@janmitram.com')
                 ->type('password', 'secret')
                 ->press('Login')
                 ->pause(3000)
