@@ -1,0 +1,172 @@
+{
+  "project": "Janmitram E-Commerce & Warehouse Stock Management System",
+  "timestamp": "2026-07-30T14:30:00Z",
+  "architecture_type": "Option A: Strict Warehouse-Only Architecture",
+  "key_features": {
+    "backend": [
+      "Laravel 10/11 hybrid structure",
+      "Spatie Laravel Permission for roles/permissions",
+      "Multiple payment gateways (Razorpay, Stripe, PayPal, Paystack, PaySafeCard)",
+      "Laravel Sanctum for API authentication",
+      "Custom middleware: CheckPermission, CheckSubscription, CheckHasRootUser, ShopAuthenticate, DemoModeMiddleware, LocalizationManage"
+    ],
+    "frontend": [
+      "Admin panel: Blade + Bootstrap templates",
+      "Customer shop: Vue 3 SPA served via Vite",
+      "Pusher for real-time notifications",
+      "Chat functionality via WebSocket"
+    ],
+    "modules": [
+      "Purchase module (nwidart/laravel-modules)",
+      "Report module (nwidart/laravel-modules)"
+    ],
+    "testing": [
+      "PHPUnit for unit/feature tests",
+      "Laravel Dusk for browser testing (21 tests)",
+      "PHP Pint for code style"
+    ]
+  },
+  "recent_changes": {
+    "last_20_commits": [
+      "04b95a8 - fix(warehouse): Fix 500 TypeError in resolveWarehouseShopId strict type signature",
+      "e0a496d - fix(seeder): Refine CompleteResetSeeder order and cleanup logic",
+      "b846e9c - Aion ui Changes on 29 jul 2026",
+      "f952130 - feat: add CompleteResetSeeder and remove Central Warehouse card from admin dashboard",
+      "5ecd448 - fix(warehouse): Default all newly created sub-warehouses under Central Warehouse",
+      "2fd4231 - Revert warehouse auto-sync shop inventory feature",
+      "2602850 - feat(warehouse): Automatically sync shop sellable product inventory during transfers",
+      "37239fd - fix(stock-request): Inform admin on inventory shortfall instead of blocking",
+      "9171b0c - fix(warehouse): Add smart variant fallback for stock operations",
+      "f47411f - fix(seeder): Replace CategoryFactory in CategorySeeder for production",
+      "9b0bbf4 - fix(seeder): Prevent duplicate RootAdminShopSeeder invocation",
+      "b59b455 - fix(seeder): Default root user email to root@janmitram.com",
+      "66a397f - style(invoice): Integrate Janmitram brand logo and footer",
+      "c007d18 - style(invoice): Clean HTML borders across invoice components",
+      "c7f5a49 - refactor(admin-menu): Remove Shop Product Management from sidebar",
+      "481a532 - feat(invoice): Admin Invoice Management sidebar menu",
+      "dc5cc2e - feat(stock-request): PDF & Printable Invoice integration",
+      "9f2d5e6 - fix(seeder): class_exists fallback for Faker in PageSeeder",
+      "3a5c5b4 - test(warehouse): Stock request fulfillment and inventory feature test",
+      "3bd7d82 - fix(stock-request): Add missing StockRequestItem import for shop inventory"
+    ]
+  },
+  "statistics": {
+    "files_indexed": 1265,
+    "nodes": 19032,
+    "edges": 73048,
+    "db_size_mb": 67.71,
+    "backend_php_files": 1005,
+    "frontend_js_files": 129,
+    "frontend_vue_files": 129,
+    "node_types": {
+      "import": 4255,
+      "function": 4016,
+      "constant": 3497,
+      "method": 3001,
+      "file": 1263,
+      "class": 951,
+      "namespace": 597,
+      "route": 548,
+      "variable": 496,
+      "field": 176,
+      "component": 129,
+      "property": 52,
+      "enum": 7,
+      "trait": 2,
+      "type_alias": 2,
+      "interface": 1
+    }
+  },
+  "key_components": {
+    "models": [
+      "Product, Category, SubCategory, Brand, Size, Color, Unit",
+      "Warehouse, WarehouseStock, WarehouseTransfer, WarehouseTransferItem",
+      "StockRequest, StockRequestItem, StockLedger",
+      "Order, OrderProduct, OrderPayment, OrderVatTax, Payment",
+      "User, ShopUser, Customer, Employee",
+      "Area, Country, Currency, Address, DeliveryCharge",
+      "Coupon, CouponCollect, FlashSale, FlashSaleProduct",
+      "Banner, Blog, Ad, Menu, Page, Footer, FooterItem",
+      "Notification, SupportTicket, SupportTicketMessage",
+      "Review, Favorite, RecentView, Gallery, Media",
+      "Wallet, Transaction, ReturnOrder, ReturnOrderDetail",
+      "Language, TranslateUtility, ThemeColor, GeneraleSetting"
+    ],
+    "controllers_admin": [
+      "WarehouseController - Manage warehouses (CRUD + stock operations)",
+      "WarehouseTransferController - Handle warehouse-to-warehouse transfers",
+      "StockRequestController - Approve/reject shop stock fulfillment requests",
+      "InvoiceController - Invoice management hub",
+      "ProductController - Central product catalog management",
+      "CategoryController, SubCategoryController - Category hierarchy",
+      "OrderController - Order management",
+      "ShopController - Vendor shop management",
+      "CustomerController - Customer management",
+      "PaymentGatewayController - Payment gateway configuration",
+      "DashboardController - Admin dashboard",
+      "BusinessSetupController - Business settings (POS, registration, withdrawal)"
+    ],
+    "controllers_api": [
+      "Auth\\AuthController - Customer login/register/social auth",
+      "ProductController - Product listing, detail, reviews, favorites",
+      "CartController - Cart CRUD and checkout",
+      "OrderController - Order placement, history, cancellation",
+      "CountryController - Countries, areas lookup",
+      "HomeController - Homepage, recently viewed",
+      "Rider\\* - Rider delivery management",
+      "Seller\\* - Seller dashboard and shop management",
+      "CouponController - Voucher/coupon application",
+      "FlashSaleController - Flash sale display",
+      "ChatController - Messaging and shop contacts"
+    ],
+    "controllers_shop": [
+      "DashboardController - Shop dashboard",
+      "StockRequestController - Request stock from warehouse, view inventory",
+      "POSController - Point of Sale operations",
+      "ProductController - Shop product listing",
+      "OrderController - Shop order management",
+      "CouponController - Shop coupon management",
+      "CategoryController, BrandController, SizeController - Catalog management"
+    ],
+    "services": [
+      "WarehouseService - Stock calculations, deductions, transfers"
+    ],
+    "repositories": [
+      "StockRequestRepository",
+      "UserRepository, AreaRepository, CategoryRepository",
+      "ProductRepository, OrderRepository, PosCartRepository",
+      "CartRepository, VideoUploadRepository"
+    ]
+  },
+  "routes_summary": {
+    "admin_routes_count": 20,
+    "api_routes_count": 30,
+    "shop_routes_count": 25,
+    "key_route_groups": [
+      "Warehouse management (/admin/warehouse, /admin/warehouse-transfer)",
+      "Stock requests (/admin/stock-request, /shop/stock-request)",
+      "Invoice generation (/admin/stock-request/{id}/invoice, /shop/stock-request/{id}/invoice)",
+      "Shop inventory (/shop/shop-inventory)",
+      "Product management (/admin/product, /api/category-products)",
+      "Order management (/admin/order, /api/orders, /shop/order)",
+      "Payment (/api/order-payment, admin/payment-gateway)",
+      "Authentication (/api/login, /api/register, /api/social-auth)",
+      "Customer API: addresses, carts, favorites, reviews, returns"
+    ]
+  },
+  "warehouse_workflow": {
+    "description": "Strict master-copy pattern. Central Admin manages master products and warehouse stock. Shops request stock dispatch from linked warehouse.",
+    "flow": [
+      "1. Admin creates Master Product (master_product_id = null, is_digital = false)",
+      "2. Admin adds stock to Central Warehouse (WarehouseStock created)",
+      "3. Shop submits Stock Request from warehouse catalog",
+      "4. Admin approves & fulfills request (WarehouseStock decremented)",
+      "5. CloneMasterToShop creates Shop Copy Product with full attributes",
+      "6. Shop sells via Order (StockLedger records movement)",
+      "7. Shop can also sell via POS (Point of Sale)"
+    ],
+    "ledger_tracking": "Every stock movement is immutably logged in StockLedger"
+  },
+  "git_branch": "main",
+  "git_latest_commit": "04b95a8 fix(warehouse): Fix 500 TypeError in resolveWarehouseShopId strict type signature"
+}
