@@ -3,11 +3,67 @@
 @section('header-title', __('Payout Management'))
 @section('header-subtitle', __('Analyse the MLM network payouts hierarchically.'))
 
+@push('styles')
+<style>
+.payout-tree-wrapper {
+    position: relative;
+    padding-left: 0;
+}
+.payout-tree-wrapper ul {
+    position: relative;
+    padding-left: 1.75rem;
+    list-style: none;
+    margin-bottom: 0;
+}
+.payout-tree-wrapper ul::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 1.25rem;
+    left: 0.85rem;
+    width: 2px;
+    background-color: #cbd5e1;
+}
+.payout-tree-wrapper li {
+    position: relative;
+    margin-top: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+.payout-tree-wrapper ul > li::before {
+    content: '';
+    position: absolute;
+    top: 1.5rem;
+    left: -0.9rem;
+    width: 0.9rem;
+    height: 2px;
+    background-color: #cbd5e1;
+}
+.payout-tree-card {
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+.payout-tree-card:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.12);
+}
+.payout-chevron {
+    transition: transform 0.2s ease-in-out;
+}
+.payout-expand[aria-expanded="true"] .payout-chevron {
+    transform: rotate(90deg);
+}
+</style>
+@endpush
+
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <div>
         <h4 class="fw-bold mb-1 text-dark">{{ __('Payout Network') }}</h4>
-        <p class="text-muted small mb-0">{{ __('Analyse downline network sales, tiers, and payout distributions.') }}</p>
+        <p class="text-muted small mb-0">{{ __('Analyse downline network sales, tiers, and payout distributions in an expandable hierarchical tree.') }}</p>
     </div>
     <div class="d-flex gap-2">
         @hasPermission('admin.payout.index')
@@ -53,7 +109,7 @@
                 </div>
                 <div>
                     <div class="text-muted small fw-semibold">{{ __('Network Group Sales') }}</div>
-                    <h3 class="fw-bold mb-0 text-info">{{ number_format(collect($nodes)->sum('group_sales'), 2) }}</h3>
+                    <h3 class="fw-bold mb-0 text-info">₹{{ number_format(collect($nodes)->sum('group_sales'), 2) }}</h3>
                 </div>
             </div>
         </div>
@@ -66,7 +122,7 @@
                 </div>
                 <div>
                     <div class="text-muted small fw-semibold">{{ __('Total Payouts') }}</div>
-                    <h3 class="fw-bold mb-0 text-success">{{ number_format(collect($nodes)->sum('total_payout'), 2) }}</h3>
+                    <h3 class="fw-bold mb-0 text-success">₹{{ number_format(collect($nodes)->sum('total_payout'), 2) }}</h3>
                 </div>
             </div>
         </div>
@@ -116,15 +172,15 @@
     </div>
 </div>
 
-{{-- Tree Card --}}
+{{-- Hierarchical Tree Card --}}
 <div class="card border-0 shadow-sm rounded-12">
     <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
         <div>
-            <h5 class="card-title mb-0 fw-bold">{{ __('Network Tree for') }} {{ sprintf('%04d-%02d', $year, $month) }}</h5>
-            <small class="text-muted">{{ __('Click chevrons to expand downline nodes.') }}</small>
+            <h5 class="card-title mb-0 fw-bold">{{ __('Hierarchical Network Tree') }} ({{ sprintf('%04d-%02d', $year, $month) }})</h5>
+            <small class="text-muted">{{ __('Click chevrons to expand downline nodes in the organizational tree.') }}</small>
         </div>
         <div class="d-flex align-items-center gap-2 flex-wrap">
-            <input type="text" id="treeSearchInput" class="form-control form-control-sm" style="width: 200px;" placeholder="{{ __('Filter tree nodes...') }}">
+            <input type="text" id="treeSearchInput" class="form-control form-control-sm" style="width: 220px;" placeholder="{{ __('Filter tree nodes...') }}">
             <button type="button" class="btn btn-sm btn-outline-secondary" id="expandAllBtn">
                 <i class="fas fa-folder-open me-1"></i> {{ __('Expand All') }}
             </button>
@@ -134,17 +190,19 @@
             <span class="badge bg-light text-dark border ms-1">{{ count($nodes) }} {{ __('roots') }}</span>
         </div>
     </div>
-    <div class="card-body p-3">
-        @forelse($nodes as $node)
-            <ul class="list-unstyled mb-0">
-                @include('admin.payout._node', ['node' => $node, 'year' => $year, 'month' => $month])
-            </ul>
-        @empty
-            <div class="text-center py-5 text-muted">
-                <i class="fas fa-sitemap fs-1 mb-3 d-block text-secondary"></i>
-                {{ __('No active shops in the network for this month.') }}
-            </div>
-        @endforelse
+    <div class="card-body p-4">
+        <div class="payout-tree-wrapper">
+            @forelse($nodes as $node)
+                <ul class="list-unstyled mb-3">
+                    @include('admin.payout._node', ['node' => $node, 'year' => $year, 'month' => $month])
+                </ul>
+            @empty
+                <div class="text-center py-5 text-muted">
+                    <i class="fas fa-sitemap fs-1 mb-3 d-block text-secondary"></i>
+                    {{ __('No active shops in the network for this month.') }}
+                </div>
+            @endforelse
+        </div>
     </div>
 </div>
 @endsection
@@ -156,7 +214,7 @@
     document.addEventListener('click', function (e) {
         var btn = e.target.closest('.payout-expand');
         if (!btn) return;
-        var li = btn.closest('.payout-node');
+        var li = btn.closest('.payout-tree-node');
         var target = document.querySelector(btn.getAttribute('data-bs-target'));
         if (!target) return;
 
@@ -173,7 +231,7 @@
                     target.dataset.loaded = '1';
                 })
                 .catch(function () {
-                    target.innerHTML = '<li class="text-danger small py-1">{{ __('Failed to load children.') }}</li>';
+                    target.innerHTML = '<li class="text-danger small py-1 ms-4">{{ __('Failed to load downline children.') }}</li>';
                 });
         }
     });
@@ -204,7 +262,7 @@
     if (treeSearchInput) {
         treeSearchInput.addEventListener('input', function (e) {
             var q = e.target.value.toLowerCase().trim();
-            document.querySelectorAll('.payout-node').forEach(function (node) {
+            document.querySelectorAll('.payout-tree-node').forEach(function (node) {
                 var text = node.textContent.toLowerCase();
                 if (!q || text.includes(q)) {
                     node.style.display = '';
@@ -221,26 +279,27 @@
             : '';
         url = url.replace('__ID__', node.shop_id);
         var chevron = node.has_children
-            ? '<button type="button" class="btn btn-sm btn-link p-0 payout-expand text-secondary me-1" data-bs-toggle="collapse" data-bs-target="#node-' + node.shop_id + '" aria-expanded="false"><i class="fas fa-chevron-right payout-chevron"></i></button>'
-            : '<span class="d-inline-block me-1" style="width:24px;"></span>';
+            ? '<button type="button" class="btn btn-sm btn-light border p-1 rounded-circle payout-expand text-primary me-1" data-bs-toggle="collapse" data-bs-target="#node-' + node.shop_id + '" aria-expanded="false" title="{{ __('Toggle downline') }}"><i class="fas fa-chevron-right payout-chevron fs-6" style="width: 14px; height: 14px; display: inline-flex; align-items: center; justify-content: center;"></i></button>'
+            : '<span class="d-inline-block text-center text-muted me-1" style="width: 24px;"><i class="fas fa-store-alt opacity-50"></i></span>';
         var level = node.level !== null
-            ? '<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2">L' + node.level + '</span>'
-            : '<span class="badge bg-light text-secondary border rounded-pill px-2">—</span>';
+            ? '<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1">Level ' + node.level + '</span>'
+            : '<span class="badge bg-light text-secondary border rounded-pill px-2 py-1">—</span>';
         var children = node.has_children
-            ? '<ul class="list-unstyled ms-4 collapse payout-children" id="node-' + node.shop_id + '"></ul>'
+            ? '<ul class="list-unstyled collapse payout-children" id="node-' + node.shop_id + '"></ul>'
             : '';
-        return '<li class="payout-node border-bottom py-2" data-shop-id="' + node.shop_id + '" data-children-url="' + url + '">'
-            + '<div class="d-flex align-items-center gap-2 flex-wrap payout-node-row">' + chevron
-            + '<div class="d-flex align-items-center gap-2 flex-wrap flex-grow-1">'
+        return '<li class="payout-tree-node" data-shop-id="' + node.shop_id + '" data-children-url="' + url + '">'
+            + '<div class="payout-tree-card"><div class="d-flex align-items-center justify-content-between flex-wrap gap-2">'
+            + '<div class="d-flex align-items-center gap-2 flex-grow-1">' + chevron
+            + '<div class="d-flex align-items-center gap-2 flex-wrap">'
             + '<span class="fw-bold text-dark fs-6">' + esc(node.shop_name) + '</span>'
-            + '<span class="text-muted small">(' + esc(node.owner_name) + ')</span>' + level + '</div>'
-            + '<div class="d-flex align-items-center gap-3 text-nowrap small bg-light px-3 py-1 rounded-pill">'
-            + '<span class="text-muted">{{ __('Personal') }}: <span class="fw-semibold text-dark">' + fmt(node.personal_sales) + '</span></span>'
-            + '<span class="text-muted">{{ __('Group') }}: <span class="fw-semibold text-dark">' + fmt(node.group_sales) + '</span></span>'
-            + '<span class="text-muted">{{ __('Size') }}: <span class="fw-semibold text-dark">' + node.group_size + '</span></span>'
-            + '<span class="text-muted">{{ __('Ph1') }}: <span class="fw-semibold text-primary">' + fmt(node.phase1_amount) + '</span></span>'
-            + '<span class="text-muted">{{ __('Ph2') }}: <span class="fw-semibold text-info">' + fmt(node.phase2_amount) + '</span></span>'
-            + '<span class="fw-bold text-success fs-6">' + fmt(node.total_payout) + '</span></div></div>' + children + '</li>';
+            + '<span class="text-muted small">(' + esc(node.owner_name) + ')</span>' + level + '</div></div>'
+            + '<div class="d-flex align-items-center gap-2 flex-wrap text-nowrap small">'
+            + '<span class="badge bg-light text-dark border px-2 py-1 fw-normal">{{ __('Personal') }}: <span class="fw-bold text-dark">₹' + fmt(node.personal_sales) + '</span></span>'
+            + '<span class="badge bg-light text-dark border px-2 py-1 fw-normal">{{ __('Group Sales') }}: <span class="fw-bold text-primary">₹' + fmt(node.group_sales) + '</span></span>'
+            + '<span class="badge bg-light text-dark border px-2 py-1 fw-normal">{{ __('Group Size') }}: <span class="fw-bold text-dark">' + node.group_size + '</span></span>'
+            + '<span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 fw-normal">{{ __('Phase 1') }}: <span class="fw-bold">₹' + fmt(node.phase1_amount) + '</span></span>'
+            + '<span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1 fw-normal">{{ __('Phase 2') }}: <span class="fw-bold">₹' + fmt(node.phase2_amount) + '</span></span>'
+            + '<span class="badge bg-success text-white px-3 py-1 fw-bold fs-6">₹' + fmt(node.total_payout) + '</span></div></div></div>' + children + '</li>';
     }
     function fmt(v) { return Number(v).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
     function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }

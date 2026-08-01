@@ -3,6 +3,62 @@
 @section('header-title', __('Payout Management'))
 @section('header-subtitle', __('Review the month, then confirm the payout run.'))
 
+@push('styles')
+<style>
+.payout-tree-wrapper {
+    position: relative;
+    padding-left: 0;
+}
+.payout-tree-wrapper ul {
+    position: relative;
+    padding-left: 1.75rem;
+    list-style: none;
+    margin-bottom: 0;
+}
+.payout-tree-wrapper ul::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 1.25rem;
+    left: 0.85rem;
+    width: 2px;
+    background-color: #cbd5e1;
+}
+.payout-tree-wrapper li {
+    position: relative;
+    margin-top: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+.payout-tree-wrapper ul > li::before {
+    content: '';
+    position: absolute;
+    top: 1.5rem;
+    left: -0.9rem;
+    width: 0.9rem;
+    height: 2px;
+    background-color: #cbd5e1;
+}
+.payout-tree-card {
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+.payout-tree-card:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.12);
+}
+.payout-chevron {
+    transition: transform 0.2s ease-in-out;
+}
+.payout-expand[aria-expanded="true"] .payout-chevron {
+    transform: rotate(90deg);
+}
+</style>
+@endpush
+
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <div>
@@ -146,17 +202,19 @@
         </div>
         <span class="badge bg-light text-dark border">{{ count($nodes) }} {{ __('roots') }}</span>
     </div>
-    <div class="card-body p-3">
-        @forelse($nodes as $node)
-            <ul class="list-unstyled mb-0">
-                @include('admin.payout._node', ['node' => $node, 'year' => $year, 'month' => $month])
-            </ul>
-        @empty
-            <div class="text-center py-5 text-muted">
-                <i class="fas fa-sitemap fs-1 mb-3 d-block text-secondary"></i>
-                {{ __('No active shops for this month.') }}
-            </div>
-        @endforelse
+    <div class="card-body p-4">
+        <div class="payout-tree-wrapper">
+            @forelse($nodes as $node)
+                <ul class="list-unstyled mb-3">
+                    @include('admin.payout._node', ['node' => $node, 'year' => $year, 'month' => $month])
+                </ul>
+            @empty
+                <div class="text-center py-5 text-muted">
+                    <i class="fas fa-sitemap fs-1 mb-3 d-block text-secondary"></i>
+                    {{ __('No active shops for this month.') }}
+                </div>
+            @endforelse
+        </div>
     </div>
 </div>
 @endsection
