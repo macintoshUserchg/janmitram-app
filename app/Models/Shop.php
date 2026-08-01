@@ -292,7 +292,7 @@ class Shop extends Model
     public function referralUrl(): Attribute
     {
         return new Attribute(
-            get: fn () => route('shop.create', ['ref' => $this->referral_code]),
+            get: fn () => route('shop.register', ['ref' => $this->referral_code]),
         );
     }
 
