@@ -1,6 +1,9 @@
 @php
     $generaleSetting = function_exists('generaleSetting') ? generaleSetting('setting') : null;
-    $siteName = $generaleSetting?->name ?: 'Janmitram';
+    $siteName = 'Janmitram';
+    if ($generaleSetting && !empty($generaleSetting->name) && $generaleSetting->name !== 'Laravel') {
+        $siteName = $generaleSetting->name;
+    }
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -28,10 +31,20 @@
             margin-bottom: 20px;
         }
         .company-name {
-            font-size: 20px;
+            font-size: 24px;
             font-weight: bold;
             color: #25314C;
+            letter-spacing: 1px;
             margin-bottom: 2px;
+            text-transform: uppercase;
+        }
+        .company-tagline {
+            font-size: 11px;
+            font-weight: bold;
+            color: #4A5568;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
         }
         .company-info {
             font-size: 11px;
@@ -146,13 +159,14 @@
 </head>
 <body>
 
-    <!-- Header Section with Janmitram Branding -->
+    <!-- Header Section with Official Janmitram Branding -->
     <table class="header-table">
         <tr>
             <td style="width: 60%;">
-                <div class="company-name">{{ $siteName }}</div>
+                <div class="company-name">JANMITRAM</div>
+                <div class="company-tagline">Janmitram Partner Network Statement</div>
                 <div class="company-info">
-                    @if($generaleSetting?->email) <div>Email: {{ $generaleSetting->email }}</div> @endif
+                    @if($generaleSetting?->email) <div>Email: {{ $generaleSetting->email }}</div> @else <div>Email: support@janmitram.com</div> @endif
                     @if($generaleSetting?->mobile) <div>Contact: {{ $generaleSetting->mobile }}</div> @endif
                     @if($generaleSetting?->address) <div>Address: {{ $generaleSetting->address }}</div> @endif
                 </div>
@@ -245,7 +259,7 @@
 
     <!-- Footer Section -->
     <div class="footer">
-        <p>This statement is an official computer-generated monthly payout voucher issued by {{ $siteName }}.</p>
+        <p>This statement is an official computer-generated monthly payout voucher issued by JANMITRAM.</p>
         <p style="margin-top: 4px;">No physical signature is required. For any inquiries regarding payout calculations, please contact partner support.</p>
     </div>
 
