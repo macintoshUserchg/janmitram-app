@@ -19,6 +19,9 @@
     </source>
     <php>
         <env name="APP_ENV" value="testing"/>
+        <!-- Root URL: tests must not inherit the /janmitram-app subdirectory
+             from .env, or admin HTTP requests fall through to the SPA catch-all. -->
+        <env name="APP_URL" value="http://localhost"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="CACHE_DRIVER" value="array"/>
         <env name="DB_DATABASE" value="janmitram_testing"/>

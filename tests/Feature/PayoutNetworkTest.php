@@ -14,6 +14,7 @@ use App\Services\PayoutService;
 use Carbon\Carbon;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class PayoutNetworkTest extends TestCase
@@ -46,6 +47,14 @@ class PayoutNetworkTest extends TestCase
             'user_id' => User::factory()->create(['is_active' => true])->id,
             'parent_shop_id' => $parent?->id,
         ]);
+    }
+
+    private function rootUser(): User
+    {
+        $user = User::factory()->create(['is_active' => true]);
+        $user->assignRole(Role::findOrCreate('root', 'web'));
+
+        return $user;
     }
 
     private function deliveredOrder(Shop $shop, float $amount, int $year, int $month): Order
@@ -121,7 +130,8 @@ class PayoutNetworkTest extends TestCase
         $root = $this->shop();
         $this->deliveredOrder($root, 50000, 2026, 7);
 
-        $response = $this->get(route('admin.payout.network', ['year' => 2026, 'month' => 7]));
+        $response = $this->actingAs($this->rootUser())
+            ->get(route('admin.payout.network', ['year' => 2026, 'month' => 7]));
 
         $response->assertOk();
         $response->assertSee('Payout Network');
@@ -132,7 +142,8 @@ class PayoutNetworkTest extends TestCase
         $root = $this->shop();
         $child = $this->shop($root);
 
-        $response = $this->getJson(route('admin.payout.network.children', ['shop' => $root->id, 'year' => 2026, 'month' => 7]));
+        $response = $this->actingAs($this->rootUser())
+            ->getJson(route('admin.payout.network.children', ['shop' => $root->id, 'year' => 2026, 'month' => 7]));
 
         $response->assertOk();
         $response->assertJsonCount(1);
