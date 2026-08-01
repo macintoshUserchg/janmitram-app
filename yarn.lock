@@ -80,22 +80,6 @@
   resolved "https://registry.npmjs.org/@fortawesome/vue-fontawesome/-/vue-fontawesome-3.2.0.tgz"
   integrity sha512-7BwGjTZn8QDvVEIu8fvkHhsDRRv//tq7jtsldaDhF3dE1fyWLIQcEg3zvIzy33su7kcppWsZZ6XRYP5wp3UCgQ==
 
-"@googlemaps/js-api-loader@^2.0.1":
-  version "2.1.1"
-  resolved "https://registry.npmjs.org/@googlemaps/js-api-loader/-/js-api-loader-2.1.1.tgz"
-  integrity sha512-yUpAwksbHrlZIWD49JmveNSfBG4oAK0AwMknfSaPMnP5N7UT8oFRVCqwjGb1XQovi//7KLbPQKZpbofiLGzpDw==
-  dependencies:
-    "@types/google.maps" "^3.53.1"
-
-"@googlemaps/markerclusterer@^2.4.0":
-  version "2.6.2"
-  resolved "https://registry.npmjs.org/@googlemaps/markerclusterer/-/markerclusterer-2.6.2.tgz"
-  integrity sha512-U6uVhq8iWhiIckA89sgRu8OK35mjd6/3CuoZKWakKEf0QmRRWpatlsPb3kqXkoWSmbcZkopRiI4dnW6DQSd7bQ==
-  dependencies:
-    "@types/supercluster" "^7.1.3"
-    fast-equals "^5.2.2"
-    supercluster "^8.0.1"
-
 "@headlessui/vue@^1.7.18":
   version "1.7.23"
   resolved "https://registry.npmjs.org/@headlessui/vue/-/vue-1.7.23.tgz"
@@ -213,16 +197,6 @@
   resolved "https://registry.npmjs.org/@types/estree/-/estree-1.0.9.tgz"
   integrity sha512-GhdPgy1el4/ImP05X05Uw4cw2/M93BCUmnEvWZNStlCzEKME4Fkk+YpoA5OiHNQmoS7Cafb8Xa3Pya8m1Qrzeg==
 
-"@types/geojson@*":
-  version "7946.0.16"
-  resolved "https://registry.npmjs.org/@types/geojson/-/geojson-7946.0.16.tgz"
-  integrity sha512-6C8nqWur3j98U6+lXDfTUWIfgvZU+EumvpHKcYjujKH7woYyLj2sUmff0tRhrqM7BohUw7Pz3ZB1jj2gW9Fvmg==
-
-"@types/google.maps@^3.53.1":
-  version "3.65.1"
-  resolved "https://registry.npmjs.org/@types/google.maps/-/google.maps-3.65.1.tgz"
-  integrity sha512-O9monmoXfyWsuyR4Wz3TZU26qai9y7jUV7DSRySluae6O5tQt3Obw5ETt0HKfNsjctnlF/yx/Tfn3WQNmKRXZA==
-
 "@types/json-schema@^7.0.15", "@types/json-schema@^7.0.9":
   version "7.0.15"
   resolved "https://registry.npmjs.org/@types/json-schema/-/json-schema-7.0.15.tgz"
@@ -234,13 +208,6 @@
   integrity sha512-603BddQMv3pUcr4U2dhujk83N2tTDVr/34wII2B6bJy6g+8WD6yUb11jszNs0gdi4PesVWl7ABt8nYMVpnLUcg==
   dependencies:
     undici-types ">=7.24.0 <7.24.7"
-
-"@types/supercluster@^7.1.3":
-  version "7.1.3"
-  resolved "https://registry.npmjs.org/@types/supercluster/-/supercluster-7.1.3.tgz"
-  integrity sha512-Z0pOY34GDFl3Q6hUFYf3HkTwKEE02e7QgtJppBt+beEAxnyOpJua+voGFvxINBHa06GwLFFym7gRPY2SiKIfIA==
-  dependencies:
-    "@types/geojson" "*"
 
 "@types/trusted-types@^2.0.7":
   version "2.0.7"
@@ -840,11 +807,6 @@ fast-deep-equal@^3.1.3:
   resolved "https://registry.npmjs.org/fast-deep-equal/-/fast-deep-equal-3.1.3.tgz"
   integrity sha512-f3qQ9oQy9j2AhBe/H9VC91wLmKBCCU/gDOnKNAYG5hswO7BLKj09Hc5HYNz9cGI++xlpDCIgDaitVs03ATR84Q==
 
-fast-equals@^5.2.2:
-  version "5.4.0"
-  resolved "https://registry.npmjs.org/fast-equals/-/fast-equals-5.4.0.tgz"
-  integrity sha512-jt2DW/aNFNwke7AUd+Z+e6pz39KO5rzdbbFCg2sGafS4mk13MI7Z8O5z9cADNn5lhGODIgLwug6TZO2ctf7kcw==
-
 fast-glob@^3.3.2:
   version "3.3.3"
   resolved "https://registry.npmjs.org/fast-glob/-/fast-glob-3.3.3.tgz"
@@ -1063,11 +1025,6 @@ jwt-decode@^4.0.0:
   resolved "https://registry.npmjs.org/jwt-decode/-/jwt-decode-4.0.0.tgz"
   integrity sha512-+KJGIyHgkGuIq3IEBNftfhW/LfWhXUIY6OmyVWjliu5KH1y0fw7VQ8YndE2O4qZdMSd9SqbnC8GOcZEy0Om7sA==
 
-kdbush@^4.0.2:
-  version "4.1.0"
-  resolved "https://registry.npmjs.org/kdbush/-/kdbush-4.1.0.tgz"
-  integrity sha512-e9vurzrXJQrFX6ckpHP3bvj5l+9CnYzkxDNnNQ1h2QTqdWsUAJgXiKdGNcOa1EY85dU8KbQ+z/FdQdB7P+9yfQ==
-
 laravel-vite-plugin@^1.0.0:
   version "1.3.0"
   resolved "https://registry.npmjs.org/laravel-vite-plugin/-/laravel-vite-plugin-1.3.0.tgz"
@@ -1075,6 +1032,11 @@ laravel-vite-plugin@^1.0.0:
   dependencies:
     picocolors "^1.0.0"
     vite-plugin-full-reload "^1.1.0"
+
+leaflet@^1.9.4:
+  version "1.9.4"
+  resolved "https://registry.npmjs.org/leaflet/-/leaflet-1.9.4.tgz"
+  integrity sha512-nxS1ynzJOmOlHp+iL3FyWqK89GtNL8U8rvlMOsQdTTssxZwCXh8N2NB3GDQOL+YR3XnWyZAxwQixURb+FA74PA==
 
 lightgallery@^2.8.2:
   version "2.9.0"
@@ -1095,11 +1057,6 @@ loader-runner@^4.3.2:
   version "4.3.2"
   resolved "https://registry.npmjs.org/loader-runner/-/loader-runner-4.3.2.tgz"
   integrity sha512-DFEqQ3ihfS9blba08cLfYf1NRAIEm+dDjic073DRDc3/JspI/8wYmtDsHwd3+4hwvdxSK7PGaElfTmm0awWJ4w==
-
-lodash-es@^4.17.21:
-  version "4.18.1"
-  resolved "https://registry.npmjs.org/lodash-es/-/lodash-es-4.18.1.tgz"
-  integrity sha512-J8xewKD/Gk22OZbhpOVSwcs60zhd95ESDwezOFuA3/099925PdHJ7OFHNTGtajL3AlZkykD32HykiMo+BIBI8A==
 
 magic-string@^0.30.21:
   version "0.30.21"
@@ -1441,13 +1398,6 @@ sucrase@^3.35.0:
     tinyglobby "^0.2.11"
     ts-interface-checker "^0.1.9"
 
-supercluster@^8.0.1:
-  version "8.0.1"
-  resolved "https://registry.npmjs.org/supercluster/-/supercluster-8.0.1.tgz"
-  integrity sha512-IiOea5kJ9iqzD2t7QJq/cREyLHTtSmUT6gQsweojg9WH2sYJqZK9SswTu6jrscO6D1G5v5vYZ9ru/eq85lXeZQ==
-  dependencies:
-    kdbush "^4.0.2"
-
 supports-color@^7.1.0:
   version "7.2.0"
   resolved "https://registry.npmjs.org/supports-color/-/supports-color-7.2.0.tgz"
@@ -1665,7 +1615,7 @@ vue-toastification@^2.0.0-rc.5:
   resolved "https://registry.npmjs.org/vue-toastification/-/vue-toastification-2.0.0-rc.5.tgz"
   integrity sha512-q73e5jy6gucEO/U+P48hqX+/qyXDozAGmaGgLFm5tXX4wJBcVsnGp4e/iJqlm9xzHETYOilUuwOUje2Qg1JdwA==
 
-"vue@^2.7.0 || ^3.0.0", "vue@^2.7.0 || ^3.5.11", vue@^3, vue@^3.0.0, "vue@^3.0.0-0 || ^2.6.0", vue@^3.0.2, vue@^3.0.3, vue@^3.2.0, vue@^3.2.25, vue@^3.3.11, vue@^3.3.4, vue@^3.4.19, vue@^3.4.30, vue@^3.5.0, "vue@>= 3", "vue@>= 3.0.0 < 4", vue@>=1.x.x, vue@3.5.38, vue@3.x:
+"vue@^2.7.0 || ^3.0.0", "vue@^2.7.0 || ^3.5.11", vue@^3.0.0, "vue@^3.0.0-0 || ^2.6.0", vue@^3.0.2, vue@^3.0.3, vue@^3.2.0, vue@^3.2.25, vue@^3.3.11, vue@^3.3.4, vue@^3.4.19, vue@^3.4.30, vue@^3.5.0, "vue@>= 3", "vue@>= 3.0.0 < 4", vue@>=1.x.x, vue@3.5.38, vue@3.x:
   version "3.5.38"
   resolved "https://registry.npmjs.org/vue/-/vue-3.5.38.tgz"
   integrity sha512-vAMKHfImQlYSy0C+PBue4s3ERZ2xGKfgZg5GXAsLInq1dyh2H78ILVP5sK0KPFPVW4kv+OGCIvBEondcjpZp7A==
@@ -1680,16 +1630,6 @@ vue3-google-login@^2.0.33:
   version "2.1.4"
   resolved "https://registry.npmjs.org/vue3-google-login/-/vue3-google-login-2.1.4.tgz"
   integrity sha512-bWYd/vGMgOH001O0w2XI2K4MBr4+SCc2rWJJvqgo/nIuh88hItTCwVBINt5deKeDUILW2LbjXD0RDG2h8h7TDw==
-
-vue3-google-map@^0.26.0:
-  version "0.26.0"
-  resolved "https://registry.npmjs.org/vue3-google-map/-/vue3-google-map-0.26.0.tgz"
-  integrity sha512-jAk8Lr7rOnUItOrSdUupltqirhZyORyYeVLsrow2ydLX9XmKOK+U5sQAEP7MjBVH5dQtuk1338ZaS8ecF8kOXg==
-  dependencies:
-    "@googlemaps/js-api-loader" "^2.0.1"
-    "@googlemaps/markerclusterer" "^2.4.0"
-    fast-deep-equal "^3.1.3"
-    lodash-es "^4.17.21"
 
 vue3-social-sharing@^1.1.2:
   version "1.5.0"
