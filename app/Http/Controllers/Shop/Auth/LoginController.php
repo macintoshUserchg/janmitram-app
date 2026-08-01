@@ -10,6 +10,7 @@ use App\Models\GoogleReCaptcha;
 use App\Models\Shop;
 use App\Models\User;
 use App\Repositories\ShopRepository;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -124,6 +125,26 @@ class LoginController extends Controller
         $shop->user()->update(['is_active' => false]);
 
         return to_route('shop.login')->with('successAlert', 'Your account is pending. Please wait for the admin to activate your account!');
+    }
+
+    public function verifySponsor(Request $request): JsonResponse
+    {
+        $code = trim((string) $request->query('code'));
+        $sponsor = Shop::findByReferralCode($code);
+
+        if ($sponsor && $sponsor->status) {
+            return response()->json([
+                'valid' => true,
+                'name' => $sponsor->name,
+                'id' => $sponsor->id,
+                'message' => __('Sponsor Network Partner: :name (#:id)', ['name' => $sponsor->name, 'id' => $sponsor->id]),
+            ]);
+        }
+
+        return response()->json([
+            'valid' => false,
+            'message' => $code ? __('Invalid or inactive referral code') : '',
+        ]);
     }
 
     /**

@@ -383,6 +383,17 @@
                 $(this).removeClass('is-invalid');
                 $('#' + $(this).attr('name') + '_error').text('')
             });
+
+            @if($errors->has('shop_name') || $errors->has('shop_logo') || $errors->has('shop_banner') || $errors->has('address') || $errors->has('description'))
+                $('#step1').hide();
+                $('#step2').show();
+                $('#backBtn').removeClass('d-none');
+                $('#indicator1').removeClass('active');
+                $('#indicator2').addClass('active');
+                if (window.janmitramMapObj) {
+                    window.janmitramMapObj.invalidateSize();
+                }
+            @endif
         });
 
         function validateStep() {
@@ -407,47 +418,135 @@
             }
 
             if (!profilePhoto.val()) {
-                setError(profilePhoto, '#profile_photo_error', 'Profile photo is required.');
+                setError(profilePhoto, '#profile_photo_error', '{{ __("Profile photo is required.") }}');
             } else {
                 clearError(profilePhoto, '#profile_photo_error');
             }
 
-            if (!firstName.val()) {
-                setError(firstName, '#first_name_error', 'First name is required.');
+            if (!firstName.val().trim()) {
+                setError(firstName, '#first_name_error', '{{ __("First name is required.") }}');
             } else {
                 clearError(firstName, '#first_name_error');
             }
 
-            if (!phone.val()) {
-                setError(phone, '#phone_error', 'Phone number is required.');
+            const phoneVal = phone.val().trim();
+            const phoneRegex = /^\d{9,16}$/;
+            if (!phoneVal) {
+                setError(phone, '#phone_error', '{{ __("Phone number is required.") }}');
+            } else if (!phoneRegex.test(phoneVal)) {
+                setError(phone, '#phone_error', '{{ __("Please enter a valid phone number (9-16 digits).") }}');
             } else {
                 clearError(phone, '#phone_error');
             }
 
-            if (!email.val()) {
-                setError(email, '#email_error', 'Email is required.');
+            const emailVal = email.val().trim();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailVal) {
+                setError(email, '#email_error', '{{ __("Email address is required.") }}');
+            } else if (!emailRegex.test(emailVal)) {
+                setError(email, '#email_error', '{{ __("Please enter a valid email address (e.g. name@domain.com).") }}');
             } else {
                 clearError(email, '#email_error');
             }
 
             if (!password.val()) {
-                setError(password, '#password_error', 'Password is required.');
+                setError(password, '#password_error', '{{ __("Password is required.") }}');
             } else if (password.val().length < 6) {
-                setError(password, '#password_error', 'Password must be at least 6 characters long.');
+                setError(password, '#password_error', '{{ __("Password must be at least 6 characters long.") }}');
             } else {
                 clearError(password, '#password_error');
             }
 
             if (!passwordConfirmation.val()) {
-                setError(passwordConfirmation, '#password_confirmation_error', 'Password confirmation is required.');
+                setError(passwordConfirmation, '#password_confirmation_error', '{{ __("Password confirmation is required.") }}');
             } else if (password.val() !== passwordConfirmation.val()) {
-                setError(passwordConfirmation, '#password_confirmation_error', 'Passwords do not match.');
+                setError(passwordConfirmation, '#password_confirmation_error', '{{ __("Passwords do not match.") }}');
             } else {
                 clearError(passwordConfirmation, '#password_confirmation_error');
             }
 
             return valid;
         }
+
+        function validateStep2() {
+            let valid = true;
+            const shopName = $('input[name=shop_name]');
+            const shopLogo = $('input[name=shop_logo]');
+            const shopBanner = $('input[name=shop_banner]');
+
+            function setError(input, errorId, message) {
+                if ($(errorId).length) {
+                    $(errorId).text(message);
+                } else {
+                    if (!input.next('.step2-err').length) {
+                        input.after('<p class="text text-danger m-0 step2-err">' + message + '</p>');
+                    }
+                }
+                input.addClass('is-invalid');
+                valid = false;
+            }
+
+            function clearError(input, errorId) {
+                if ($(errorId).length) {
+                    $(errorId).text('');
+                }
+                input.next('.step2-err').remove();
+                input.removeClass('is-invalid');
+            }
+
+            if (!shopName.val().trim()) {
+                setError(shopName, '#shop_name_error', '{{ __("Shop name is required.") }}');
+            } else {
+                clearError(shopName, '#shop_name_error');
+            }
+
+            if (!shopLogo.val() && !$('#previewShopLogo').attr('src').includes('http')) {
+                setError(shopLogo, '#shop_logo_error', '{{ __("Shop logo is required.") }}');
+            } else {
+                clearError(shopLogo, '#shop_logo_error');
+            }
+
+            if (!shopBanner.val() && !$('#shopBanner').attr('src').includes('http')) {
+                setError(shopBanner, '#shop_banner_error', '{{ __("Shop banner is required.") }}');
+            } else {
+                clearError(shopBanner, '#shop_banner_error');
+            }
+
+            return valid;
+        }
+
+        $(document).ready(function() {
+            $('form').on('submit', function(e) {
+                if (!validateStep() || !validateStep2()) {
+                    e.preventDefault();
+                    if (!validateStep()) {
+                        $('#step2').hide();
+                        $('#step1').show();
+                        $('#indicator2').removeClass('active');
+                        $('#indicator1').addClass('active');
+                    }
+                    return false;
+                }
+            });
+
+            $('#sponsor_ref_input').on('input change', function() {
+                var code = $(this).val().trim();
+                var badge = $('#sponsor_info_badge');
+
+                if (!code) {
+                    badge.html('');
+                    return;
+                }
+
+                $.get('{{ route("shop.verify-sponsor") }}', { code: code }, function(res) {
+                    if (res.valid) {
+                        badge.removeClass('text-danger text-muted').addClass('text-success').html('<i class="fa fa-check-circle me-1"></i> ' + res.message);
+                    } else {
+                        badge.removeClass('text-success text-muted').addClass('text-danger').html('<i class="fa fa-exclamation-triangle me-1"></i> ' + (res.message || '{{ __("Sponsor code not found") }}'));
+                    }
+                });
+            });
+        });
 
         var previewFile = (event, previewID) => {
             var reader = new FileReader();

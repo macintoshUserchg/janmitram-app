@@ -147,6 +147,7 @@ Route::prefix('shop')->name('shop.')->middleware(['web'])->group(function () {
     Route::post('store', [App\Http\Controllers\Shop\Auth\LoginController::class, 'store'])->name('store');
     Route::get('register', [App\Http\Controllers\Shop\Auth\LoginController::class, 'create'])->name('register');
     Route::post('register-submit', [App\Http\Controllers\Shop\Auth\LoginController::class, 'store'])->name('register.submit');
+    Route::get('verify-sponsor', [App\Http\Controllers\Shop\Auth\LoginController::class, 'verifySponsor'])->name('verify-sponsor');
 
     /* Protected */
     Route::middleware(['authShop'])->group(function () {
