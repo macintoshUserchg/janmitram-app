@@ -25,6 +25,9 @@
 <body>
     <div id="app"></div>
 
+    <script>
+        window.googleMapsApiKey = @json(config('services.google_maps.key'));
+    </script>
     @vite('resources/js/app.js')
 </body>
 

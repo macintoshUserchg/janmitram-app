@@ -365,10 +365,6 @@
                 if (window.janmitramMapObj) {
                     window.janmitramMapObj.invalidateSize();
                 }
-
-                setTimeout(function() {
-                    map.invalidateSize();
-                }, 200);
             });
 
             $('#backBtn').on('click', function() {

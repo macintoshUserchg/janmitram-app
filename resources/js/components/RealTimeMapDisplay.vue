@@ -18,12 +18,14 @@ const props = defineProps({
     },
 });
 
-const apiKey = "AIzaSyBO0p0HW9N2P0f_4QIuzdIK14ffob5B_BQ";
+const apiKey = window.googleMapsApiKey || import.meta.env.VITE_GOOGLE_MAPS_KEY || "AIzaSyBO0p0HW9N2P0f_4QIuzdIK14ffob5B_BQ";
 const mapRef = ref(null);
 const pathCoordinates = ref([]);
 
 const calculateRoute = () => {
     if (!mapRef.value?.ready) return;
+    if (!props.riderLocation?.lat || !props.riderLocation?.lng || (props.riderLocation.lat === 0 && props.riderLocation.lng === 0)) return;
+    if (!props.customerLocation?.lat || !props.customerLocation?.lng || (props.customerLocation.lat === 0 && props.customerLocation.lng === 0)) return;
 
     const google = mapRef.value.api;
     const directionsService = new google.DirectionsService();

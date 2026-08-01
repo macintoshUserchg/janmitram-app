@@ -34,11 +34,11 @@ const isReady = ref(false);
 
 // This ref will now track where the marker is pinned
 const center = ref({
-    lat: 40.6892,
-    lng: -74.0445,
+    lat: 28.6139,
+    lng: 77.2090,
 });
 
-const apiKey = "AIzaSyBO0p0HW9N2P0f_4QIuzdIK14ffob5B_BQ";
+const apiKey = window.googleMapsApiKey || import.meta.env.VITE_GOOGLE_MAPS_KEY || "AIzaSyBO0p0HW9N2P0f_4QIuzdIK14ffob5B_BQ";
 
 // 1. Create the click handler function
 const handleMapClick = (event) => {

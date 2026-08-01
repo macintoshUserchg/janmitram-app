@@ -38,8 +38,10 @@ window.initJanmitramMap = function(config) {
 
     primaryTiles.addTo(map);
 
+    var tileErrors = 0;
     primaryTiles.on('tileerror', function() {
-        if (!map.hasLayer(fallbackTiles)) {
+        tileErrors++;
+        if (tileErrors >= 3 && !map.hasLayer(fallbackTiles)) {
             map.removeLayer(primaryTiles);
             fallbackTiles.addTo(map);
         }
@@ -123,7 +125,9 @@ window.initJanmitramMap = function(config) {
             searchBtn.disabled = true;
             searchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
 
-            fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(query) + '&limit=5')
+            var apiUrl = 'https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(query) + '&limit=5&email=support@janmitram.com';
+
+            fetch(apiUrl)
                 .then(function(res) { return res.json(); })
                 .then(function(data) {
                     searchBtn.disabled = false;
@@ -131,7 +135,10 @@ window.initJanmitramMap = function(config) {
                     searchResults.innerHTML = '';
 
                     if (!data || data.length === 0) {
-                        searchResults.innerHTML = '<div class="list-group-item list-group-item-light small text-muted">No locations found for "' + query + '"</div>';
+                        var noResDiv = document.createElement('div');
+                        noResDiv.className = 'list-group-item list-group-item-light small text-muted';
+                        noResDiv.textContent = 'No locations found for "' + query + '"';
+                        searchResults.appendChild(noResDiv);
                         searchResults.classList.remove('d-none');
                         return;
                     }
@@ -140,7 +147,15 @@ window.initJanmitramMap = function(config) {
                         var btn = document.createElement('button');
                         btn.type = 'button';
                         btn.className = 'list-group-item list-group-item-action text-start small py-2';
-                        btn.innerHTML = '<i class="fas fa-map-marker-alt me-1 text-danger"></i> ' + item.display_name;
+                        
+                        var icon = document.createElement('i');
+                        icon.className = 'fas fa-map-marker-alt me-1 text-danger';
+                        btn.appendChild(icon);
+
+                        var textSpan = document.createElement('span');
+                        textSpan.textContent = ' ' + (item.display_name || '');
+                        btn.appendChild(textSpan);
+
                         btn.onclick = function() {
                             var nLat = parseFloat(item.lat);
                             var nLng = parseFloat(item.lon);
@@ -148,7 +163,7 @@ window.initJanmitramMap = function(config) {
                             marker.setLatLng([nLat, nLng]);
                             updateInputs(nLat, nLng);
                             searchResults.classList.add('d-none');
-                            searchInput.value = item.display_name;
+                            searchInput.value = item.display_name || '';
                         };
                         searchResults.appendChild(btn);
                     });
@@ -158,6 +173,9 @@ window.initJanmitramMap = function(config) {
                 .catch(function(err) {
                     searchBtn.disabled = false;
                     searchBtn.innerHTML = 'Search';
+                    console.error('Janmitram Geocoding Error:', err);
+                });
+        }
                     console.error('Janmitram Geocoding Error:', err);
                 });
         }
