@@ -184,11 +184,20 @@
                             <td class="text-end text-info fw-semibold">₹{{ number_format((float) $payout->phase2_amount, 2) }}</td>
                             <td class="text-end fw-bold text-success fs-6">₹{{ number_format((float) $payout->total_payout, 2) }}</td>
                             <td class="text-center pe-4">
-                                @hasPermission('admin.payout.network')
-                                    <a href="{{ route('admin.payout.network', ['year' => $payout->year, 'month' => $payout->month]) }}" class="btn btn-sm btn-outline-primary shadow-sm" title="{{ __('View Network Tree') }}">
-                                        <i class="fas fa-sitemap"></i>
-                                    </a>
-                                @endhasPermission
+                                <div class="btn-group btn-group-sm" role="group">
+                                    @hasPermission('admin.payout.slip')
+                                        <a href="{{ route('admin.payout.slip', $payout->id) }}" target="_blank"
+                                            class="btn btn-outline-success shadow-sm" title="{{ __('Download Payout Slip') }}">
+                                            <i class="fas fa-file-invoice-dollar"></i>
+                                        </a>
+                                    @endhasPermission
+                                    @hasPermission('admin.payout.network')
+                                        <a href="{{ route('admin.payout.network', ['year' => $payout->year, 'month' => $payout->month]) }}"
+                                            class="btn btn-outline-primary shadow-sm" title="{{ __('View Network Tree') }}">
+                                            <i class="fas fa-sitemap"></i>
+                                        </a>
+                                    @endhasPermission
+                                </div>
                             </td>
                         </tr>
                     @empty

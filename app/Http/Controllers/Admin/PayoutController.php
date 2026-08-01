@@ -10,6 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Mpdf\Mpdf;
 
 class PayoutController extends Controller
 {
@@ -127,6 +128,34 @@ class PayoutController extends Controller
     public function guide(): View
     {
         return view('admin.payout.guide');
+    }
+
+    /**
+     * Download or view monthly payout slip for any shop (admin view).
+     */
+    public function slip(ShopMonthlyPayout $payout, Request $request)
+    {
+        $payout->load(['shop.user', 'shop.parent']);
+
+        if ($request->query('view') === 'html') {
+            return view('PDF.payout-slip', compact('payout'));
+        }
+
+        $mpdf = new Mpdf([
+            'mode' => 'utf-8',
+            'format' => 'A4',
+            'tempDir' => storage_path('app/public/mpdf_tmp'),
+        ]);
+
+        $html = view('PDF.payout-slip', compact('payout'))->render();
+        $mpdf->WriteHTML($html);
+
+        $filename = "payout-slip-JAN-{$payout->shop_id}-{$payout->year}-".str_pad($payout->month, 2, '0', STR_PAD_LEFT).'.pdf';
+
+        return response($mpdf->Output($filename, 'S'), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="'.$filename.'"',
+        ]);
     }
 
     /**

@@ -262,6 +262,7 @@ Route::prefix('shop')->name('shop.')->middleware(['web'])->group(function () {
         Route::get('payout', [App\Http\Controllers\Shop\PayoutController::class, 'index'])->name('payout.index');
         Route::get('payout/network', [App\Http\Controllers\Shop\PayoutController::class, 'network'])->name('payout.network');
         Route::get('payout/network/children/{shop}', [App\Http\Controllers\Shop\PayoutController::class, 'children'])->name('payout.network.children');
+        Route::get('payout/slip/{payout}', [App\Http\Controllers\Shop\PayoutController::class, 'slip'])->name('payout.slip');
 
         Route::get('bulk-product-export', [BulkProductExportController::class, 'index'])->name('bulk-product-export.index');
         Route::post('bulk-product-export/export', [BulkProductExportController::class, 'export'])->name('bulk-product-export.export');
@@ -414,6 +415,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:root'])->group
     Route::get('payout/network/children/{shop}', [PayoutController::class, 'children'])->name('payout.network.children');
     Route::get('payout/run', [PayoutController::class, 'runForm'])->name('payout.run.form');
     Route::get('payout/guide', [PayoutController::class, 'guide'])->name('payout.guide');
+    Route::get('payout/slip/{payout}', [PayoutController::class, 'slip'])->name('payout.slip');
     Route::get('project-guide', [ProjectGuideController::class, 'index'])->name('project-guide.index');
 
     Route::get('category', [App\Http\Controllers\Admin\CategoryController::class, 'index'])->name('category.index');

@@ -142,7 +142,8 @@
                         <th class="text-center">{{ __('Tier Level') }}</th>
                         <th class="text-end">{{ __('Phase 1') }}</th>
                         <th class="text-end">{{ __('Phase 2') }}</th>
-                        <th class="text-end pe-4">{{ __('Total Credited') }}</th>
+                        <th class="text-end">{{ __('Total Credited') }}</th>
+                        <th class="text-center pe-4">{{ __('Action') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -171,11 +172,20 @@
                             </td>
                             <td class="text-end text-primary fw-semibold">₹{{ number_format((float) $payout->phase1_amount, 2) }}</td>
                             <td class="text-end text-info fw-semibold">₹{{ number_format((float) $payout->phase2_amount, 2) }}</td>
-                            <td class="text-end pe-4 fw-bold text-success fs-6">₹{{ number_format((float) $payout->total_payout, 2) }}</td>
+                            <td class="text-end fw-bold text-success fs-6">₹{{ number_format((float) $payout->total_payout, 2) }}</td>
+                            <td class="text-center pe-4">
+                                @hasPermission('shop.payout.slip')
+                                    <a href="{{ route('shop.payout.slip', $payout->id) }}" target="_blank"
+                                        class="btn btn-sm btn-outline-primary shadow-sm"
+                                        title="{{ __('Download / View Payout Slip') }}">
+                                        <i class="fas fa-file-invoice-dollar me-1"></i> {{ __('Payout Slip') }}
+                                    </a>
+                                @endhasPermission
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="text-center py-5 text-muted">
+                            <td colspan="9" class="text-center py-5 text-muted">
                                 <i class="fas fa-coins fs-1 mb-3 d-block text-secondary"></i>
                                 {{ __('No historical payout records credited yet.') }}
                             </td>

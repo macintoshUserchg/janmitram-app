@@ -9,6 +9,7 @@ use App\Services\PayoutService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Mpdf\Mpdf;
 
 class PayoutController extends Controller
 {
@@ -96,6 +97,41 @@ class PayoutController extends Controller
         [$year, $month] = $this->resolveMonth($request->query('year'), $request->query('month'));
 
         return response()->json(PayoutService::childrenOf($shop->id, $year, $month));
+    }
+
+    /**
+     * Download or view monthly payout slip for a shop owner.
+     */
+    public function slip(ShopMonthlyPayout $payout, Request $request)
+    {
+        $user = auth()->user();
+        $shop = $user->shop ?? Shop::where('user_id', $user->id)->first();
+
+        if (! $shop || $payout->shop_id !== $shop->id) {
+            abort(403, 'Unauthorized payout statement access.');
+        }
+
+        $payout->load(['shop.user', 'shop.parent']);
+
+        if ($request->query('view') === 'html') {
+            return view('PDF.payout-slip', compact('payout'));
+        }
+
+        $mpdf = new Mpdf([
+            'mode' => 'utf-8',
+            'format' => 'A4',
+            'tempDir' => storage_path('app/public/mpdf_tmp'),
+        ]);
+
+        $html = view('PDF.payout-slip', compact('payout'))->render();
+        $mpdf->WriteHTML($html);
+
+        $filename = "payout-slip-JAN-{$payout->shop_id}-{$payout->year}-".str_pad($payout->month, 2, '0', STR_PAD_LEFT).'.pdf';
+
+        return response($mpdf->Output($filename, 'S'), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="'.$filename.'"',
+        ]);
     }
 
     /**
