@@ -24,6 +24,7 @@ use App\Http\Controllers\Admin\MailConfigurationController;
 use App\Http\Controllers\Admin\MenuController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\PayoutController;
+use App\Http\Controllers\Admin\ProjectGuideController;
 use App\Http\Controllers\Admin\PusherConfigController;
 use App\Http\Controllers\Admin\ReviewsController;
 use App\Http\Controllers\Admin\RiderController;
@@ -409,6 +410,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:root'])->group
     Route::get('payout/network/children/{shop}', [PayoutController::class, 'children'])->name('payout.network.children');
     Route::get('payout/run', [PayoutController::class, 'runForm'])->name('payout.run.form');
     Route::get('payout/guide', [PayoutController::class, 'guide'])->name('payout.guide');
+    Route::get('project-guide', [ProjectGuideController::class, 'index'])->name('project-guide.index');
 
     Route::get('category', [App\Http\Controllers\Admin\CategoryController::class, 'index'])->name('category.index');
     Route::get('category/create', [App\Http\Controllers\Admin\CategoryController::class, 'create'])->name('category.create');

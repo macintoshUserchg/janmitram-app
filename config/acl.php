@@ -60,6 +60,7 @@ return [
             'stock-request' => ['index', 'show', 'approve', 'reject'],
             'warehouse-transfer' => ['index', 'create', 'store', 'show', 'complete', 'cancel'],
             'payout' => ['index', 'run', 'network', 'guide'],
+            'project-guide' => ['index'],
         ],
         'shop' => [
             'order' => ['index', 'show', 'status.change'],

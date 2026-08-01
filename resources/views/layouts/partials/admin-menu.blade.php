@@ -968,6 +968,20 @@
     </li>
 @endhasPermission
 
+<!--- project guide --->
+@hasPermission('admin.project-guide.index')
+    <li>
+        <a href="{{ route('admin.project-guide.index') }}"
+            class="menu {{ request()->routeIs('admin.project-guide.*') ? 'active' : '' }}">
+            <span>
+                <img class="menu-icon" src="{{ asset('assets/icons-admin/page.svg') }}" alt="icon"
+                    loading="lazy" />
+                {{ __('Project Guide') }}
+            </span>
+        </a>
+    </li>
+@endhasPermission
+
 <!--- contact us --->
 @hasPermission('admin.contactUs.index')
     <li>
