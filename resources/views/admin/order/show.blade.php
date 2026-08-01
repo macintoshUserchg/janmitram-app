@@ -770,8 +770,7 @@
                 $.ajax({
                     url: "{{ route('admin.rider.location', ':id') }}".replace(':id', riderId),
                     success: function(res) {
-
-                        if (!res?.data?.location) return;
+                        if (!res?.data?.location || !riderMarker || !routingControl) return;
 
                         let {
                             latitude,
