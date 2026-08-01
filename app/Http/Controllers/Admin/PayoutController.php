@@ -20,6 +20,7 @@ class PayoutController extends Controller
     {
         $year = request('year');
         $month = request('month');
+        $search = request('search');
         $months = collect(range(1, 12));
 
         $payouts = ShopMonthlyPayout::with('shop.user')
@@ -29,12 +30,21 @@ class PayoutController extends Controller
             ->when($month, function ($query) use ($month) {
                 return $query->where('month', $month);
             })
+            ->when($search, function ($query) use ($search) {
+                return $query->whereHas('shop', function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhereHas('user', function ($uq) use ($search) {
+                            $uq->where('name', 'like', "%{$search}%");
+                        });
+                });
+            })
             ->orderByDesc('year')
             ->orderByDesc('month')
             ->orderByDesc('id')
-            ->paginate(20);
+            ->paginate(20)
+            ->withQueryString();
 
-        return view('admin.payout.index', compact('payouts', 'months', 'year', 'month'));
+        return view('admin.payout.index', compact('payouts', 'months', 'year', 'month', 'search'));
     }
 
     /**

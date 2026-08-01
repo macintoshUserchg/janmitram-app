@@ -123,14 +123,15 @@
             <h5 class="card-title mb-0 fw-bold">{{ __('Network Tree for') }} {{ sprintf('%04d-%02d', $year, $month) }}</h5>
             <small class="text-muted">{{ __('Click chevrons to expand downline nodes.') }}</small>
         </div>
-        <div class="d-flex align-items-center gap-2">
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <input type="text" id="treeSearchInput" class="form-control form-control-sm" style="width: 200px;" placeholder="{{ __('Filter tree nodes...') }}">
             <button type="button" class="btn btn-sm btn-outline-secondary" id="expandAllBtn">
                 <i class="fas fa-folder-open me-1"></i> {{ __('Expand All') }}
             </button>
             <button type="button" class="btn btn-sm btn-outline-secondary" id="collapseAllBtn">
                 <i class="fas fa-folder me-1"></i> {{ __('Collapse All') }}
             </button>
-            <span class="badge bg-light text-dark border ms-2">{{ count($nodes) }} {{ __('roots') }}</span>
+            <span class="badge bg-light text-dark border ms-1">{{ count($nodes) }} {{ __('roots') }}</span>
         </div>
     </div>
     <div class="card-body p-3">
@@ -195,6 +196,21 @@
             document.querySelectorAll('.payout-children.show').forEach(function(el) {
                 var bsCollapse = bootstrap.Collapse.getInstance(el) || new bootstrap.Collapse(el, {toggle: false});
                 bsCollapse.hide();
+            });
+        });
+    }
+
+    var treeSearchInput = document.getElementById('treeSearchInput');
+    if (treeSearchInput) {
+        treeSearchInput.addEventListener('input', function (e) {
+            var q = e.target.value.toLowerCase().trim();
+            document.querySelectorAll('.payout-node').forEach(function (node) {
+                var text = node.textContent.toLowerCase();
+                if (!q || text.includes(q)) {
+                    node.style.display = '';
+                } else {
+                    node.style.display = 'none';
+                }
             });
         });
     }

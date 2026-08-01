@@ -107,6 +107,9 @@
                         <option value="{{ $y }}" @selected((string) $year === (string) $y)>{{ $y }}</option>
                     @endfor
                 </select>
+            <div class="col-md-3">
+                <label class="form-label small text-muted mb-1">{{ __('Search Shop / Owner') }}</label>
+                <input type="text" name="search" value="{{ $search }}" class="form-control form-control-sm" placeholder="{{ __('Shop or Owner Name...') }}">
             </div>
             <div class="col-auto">
                 <button type="submit" class="btn btn-outline-primary btn-sm shadow-sm">
