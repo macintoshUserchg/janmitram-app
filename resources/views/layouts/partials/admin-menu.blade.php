@@ -223,7 +223,7 @@
         <a class="menu {{ request()->routeIs('admin.payout.*') ? 'active' : '' }}"
             data-bs-toggle="collapse" href="#payoutMenu">
             <span>
-                <img class="menu-icon" src="{{ asset('assets/icons-admin/payout.svg') }}" alt="icon" loading="lazy" />
+                <img class="menu-icon" src="{{ asset('assets/icons-admin/shop.svg') }}" alt="icon" loading="lazy" />
                 {{ __('Payout Management') }}
             </span>
             <img src="{{ asset('assets/icons-admin/caret-down.svg') }}" alt="icon" class="downIcon">

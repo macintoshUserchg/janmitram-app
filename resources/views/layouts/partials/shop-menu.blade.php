@@ -230,7 +230,7 @@
         <a class="menu {{ request()->routeIs('shop.payout.*') ? 'active' : '' }}"
             href="{{ route('shop.payout.index') }}">
             <span>
-                <img class="menu-icon" src="{{ asset('assets/icons-admin/payout.svg') }}" alt="icon"
+                <img class="menu-icon" src="{{ asset('assets/icons-admin/shop.svg') }}" alt="icon"
                     loading="lazy" />
                 {{ __('Payout & Earnings') }}
             </span>
