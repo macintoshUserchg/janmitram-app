@@ -203,11 +203,16 @@
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
 
+        let tileErrors = 0;
         mainTiles.on('tileerror', function() {
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                maxZoom: 19,
-                subdomains: 'abcd'
-            }).addTo(map);
+            tileErrors++;
+            if (tileErrors >= 3 && !map.hasLayer(fallbackTiles)) {
+                map.removeLayer(mainTiles);
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                    maxZoom: 19,
+                    subdomains: 'abcd'
+                }).addTo(map);
+            }
         });
 
         riderMarker = L.marker([lat, lng], {

@@ -445,11 +445,16 @@
                 attribution: '&copy; OpenStreetMap contributors'
             }).addTo(map);
 
+            let tileErrors = 0;
             mainTiles.on('tileerror', function() {
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                    maxZoom: 19,
-                    subdomains: 'abcd'
-                }).addTo(map);
+                tileErrors++;
+                if (tileErrors >= 3) {
+                    map.removeLayer(mainTiles);
+                    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                        maxZoom: 19,
+                        subdomains: 'abcd'
+                    }).addTo(map);
+                }
             });
 
             const orderIcon = L.icon({
@@ -545,7 +550,7 @@
 
                 // Rider exists → fetch live location
                 $.ajax({
-                    url: "{{ route('admin.rider.location', ':id') }}".replace(':id', riderId),
+                    url: "{{ route('shop.rider.location', ':id') }}".replace(':id', riderId),
                     success: function(res) {
 
                         if (!res?.data?.location) return;

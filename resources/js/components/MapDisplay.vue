@@ -203,8 +203,11 @@ onUnmounted(() => {
 watch(
     [() => props.latitude, () => props.longitude],
     ([newLat, newLng]) => {
-        if (newLat && newLng) {
+        if (newLat != null && newLng != null && !isNaN(newLat) && !isNaN(newLng)) {
             updateLocation(newLat, newLng, false);
+            if (map) {
+                map.setView([newLat, newLng], map.getZoom() || 15);
+            }
         }
     }
 );

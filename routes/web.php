@@ -211,6 +211,7 @@ Route::prefix('shop')->name('shop.')->middleware(['web'])->group(function () {
 
         Route::get('order', [OrderController::class, 'index'])->name('order.index');
         Route::get('order/{order}', [OrderController::class, 'show'])->name('order.show');
+        Route::get('rider/{id}/location', [OrderController::class, 'riderLocation'])->name('rider.location');
         Route::match(['get', 'put'], 'order/{order}/status', [OrderController::class, 'statusChange'])->name('order.status.change');
         Route::match(['get', 'put'], 'order/{order}/payment-status-toggle', [OrderController::class, 'paymentStatusToggle'])->name('order.payment.status.toggle');
         Route::get('order/{order}/invoice-download', [OrderController::class, 'downloadInvoice'])->name('download-invoice');

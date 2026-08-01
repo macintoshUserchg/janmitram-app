@@ -30,8 +30,5 @@ return [
         'secret' => env('AWS_SECRET_ACCESS_KEY'),
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
-    'google_maps' => [
-        'key' => env('GOOGLE_MAPS_KEY', env('GOOGLE_MAPS_AI_PKEY', env('VITE_GOOGLE_MAPS_KEY'))),
-    ],
 
 ];

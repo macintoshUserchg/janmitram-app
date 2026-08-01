@@ -6,6 +6,7 @@ use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Driver;
+use App\Models\DriverLocation;
 use App\Models\Order;
 use App\Repositories\NotificationRepository;
 use App\Repositories\OrderRepository;
@@ -52,6 +53,20 @@ class OrderController extends Controller
         })->get();
 
         return view('shop.order.show', compact('order', 'orderStatus', 'riders'));
+    }
+
+    public function riderLocation($id)
+    {
+        $location = DriverLocation::where('driver_id', $id)->first();
+
+        return response()->json([
+            'data' => [
+                'location' => $location ? [
+                    'latitude' => (float) $location->latitude,
+                    'longitude' => (float) $location->longitude,
+                ] : null,
+            ],
+        ]);
     }
 
     /**

@@ -121,21 +121,48 @@ function updateMapLayers() {
         }
     }
 
-    // Route Polyline
+    // Route Polyline (OSRM Real Road Routing)
     if (rValid && cValid) {
-        const routeCoords = [
-            [parseFloat(props.riderLocation.lat), parseFloat(props.riderLocation.lng)],
-            [parseFloat(props.customerLocation.lat), parseFloat(props.customerLocation.lng)],
-        ];
+        const rLat = parseFloat(props.riderLocation.lat);
+        const rLng = parseFloat(props.riderLocation.lng);
+        const cLat = parseFloat(props.customerLocation.lat);
+        const cLng = parseFloat(props.customerLocation.lng);
 
-        if (!routePolyline) {
-            routePolyline = L.polyline(routeCoords, { color: "#2563eb", weight: 5, opacity: 0.8, dashArray: "8, 8" }).addTo(map);
-        } else {
-            routePolyline.setLatLngs(routeCoords);
-        }
-    }
+        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${rLng},${rLat};${cLng},${cLat}?overview=full&geometries=geojson`;
 
-    if (bounds.length > 0) {
+        fetch(osrmUrl)
+            .then((res) => res.json())
+            .then((data) => {
+                let routePoints = [];
+                if (data && data.routes && data.routes.length > 0 && data.routes[0].geometry) {
+                    // OSRM returns [lng, lat] array, map to [lat, lng] for Leaflet
+                    routePoints = data.routes[0].geometry.coordinates.map((pt) => [pt[1], pt[0]]);
+                } else {
+                    routePoints = [[rLat, rLng], [cLat, cLng]];
+                }
+
+                if (!routePolyline) {
+                    routePolyline = L.polyline(routePoints, { color: "#2563eb", weight: 5, opacity: 0.85 }).addTo(map);
+                } else {
+                    routePolyline.setLatLngs(routePoints);
+                }
+
+                if (map) {
+                    map.fitBounds(routePolyline.getBounds(), { padding: [50, 50] });
+                }
+            })
+            .catch(() => {
+                const fallbackPoints = [[rLat, rLng], [cLat, cLng]];
+                if (!routePolyline) {
+                    routePolyline = L.polyline(fallbackPoints, { color: "#2563eb", weight: 5, opacity: 0.8, dashArray: "8, 8" }).addTo(map);
+                } else {
+                    routePolyline.setLatLngs(fallbackPoints);
+                }
+                if (map) {
+                    map.fitBounds(L.latLngBounds(bounds), { padding: [50, 50] });
+                }
+            });
+    } else if (bounds.length > 0) {
         if (bounds.length === 1) {
             map.setView(bounds[0], 14);
         } else {
