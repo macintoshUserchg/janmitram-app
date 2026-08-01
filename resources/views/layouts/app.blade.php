@@ -576,6 +576,7 @@
 
     <script src="{{ asset('assets/scripts/leaflet.js') }}"></script>
     <script src="{{ asset('assets/scripts/leaflet-routing-machine.js') }}"></script>
+    <script src="{{ asset('assets/scripts/janmitram-map-helper.js') }}"></script>
     {{-- daterange-picker --}}
     <script type="text/javascript" src="{{ asset('assets/scripts/moment.min.js') }}"></script>
     <script type="text/javascript" src="{{ asset('assets/scripts/daterangepicker.min.js') }}"></script>

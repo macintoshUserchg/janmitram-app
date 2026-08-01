@@ -199,43 +199,22 @@
         }
     </script>
     <script>
-        let lat = {{ $shop->latitude ?? 24.1307138 }};
-        let lng = {{ $shop->longitude ?? 39.7824587 }};
+        $(document).ready(function() {
+            window.janmitramMapObj = initJanmitramMap({
+                containerId: 'map',
+                lat: {{ old('latitude', $shop->latitude ?? 28.6139) }},
+                lng: {{ old('longitude', $shop->longitude ?? 77.2090) }},
+                iconUrl: '{{ asset('assets/icons/home.png') }}',
+                latInputId: 'latitude',
+                lngInputId: 'longitude'
+            });
 
-        const map = L.map('map').setView([lat, lng], 13);
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap'
-        }).addTo(map);
-
-        const shopIcon = L.icon({
-            iconUrl: '{{ asset('assets/icons/home.png') }}',
-            iconSize: [35, 35],
-            iconAnchor: [17, 35],
-            popupAnchor: [0, -30],
-            shadowUrl: null
-        });
-
-        let marker = L.marker([lat, lng], {
-            draggable: true,
-            icon: shopIcon
-        }).addTo(map);
-
-        function updateLatLng(lat, lng) {
-            document.getElementById('latitude').value = lat;
-            document.getElementById('longitude').value = lng;
-        }
-
-        updateLatLng(lat, lng);
-
-        map.on('click', function(e) {
-            marker.setLatLng(e.latlng);
-            updateLatLng(e.latlng.lat, e.latlng.lng);
-        });
-
-        marker.on('dragend', function(e) {
-            const pos = marker.getLatLng();
-            updateLatLng(pos.lat, pos.lng);
+            // Handle tab switch / resize
+            $('a[data-bs-toggle="tab"], button[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
+                if (window.janmitramMapObj) {
+                    window.janmitramMapObj.invalidateSize();
+                }
+            });
         });
     </script>
 @endpush

@@ -639,8 +639,14 @@
         const orderStatus = @json($order->order_status);
 
 
-        const orderLat = {{ $order->address->latitude ?? 0 }};
-        const orderLng = {{ $order->address->longitude ?? 0 }};
+        let rawLat = parseFloat({{ $order->address->latitude ?? 0 }});
+        let rawLng = parseFloat({{ $order->address->longitude ?? 0 }});
+        if (isNaN(rawLat) || isNaN(rawLng) || (rawLat === 0 && rawLng === 0)) {
+            rawLat = 28.6139;
+            rawLng = 77.2090;
+        }
+        const orderLat = rawLat;
+        const orderLng = rawLng;
 
         const blockedStatuses = ['Delivered', 'Cancelled'];
 
@@ -648,14 +654,21 @@
             return riderId && !blockedStatuses.includes(orderStatus);
         }
 
-
         function initMap(riderLat, riderLng) {
-
             map = L.map('map').setView([orderLat, orderLng], 14);
 
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            const mainTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                subdomains: ['a', 'b', 'c'],
                 attribution: '&copy; OpenStreetMap contributors'
             }).addTo(map);
+
+            mainTiles.on('tileerror', function() {
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                    maxZoom: 19,
+                    subdomains: 'abcd'
+                }).addTo(map);
+            });
 
             const orderIcon = L.icon({
                 iconUrl: '{{ asset('assets/icons/home.png') }}',

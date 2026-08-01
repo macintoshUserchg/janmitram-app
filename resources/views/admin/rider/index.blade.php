@@ -192,11 +192,23 @@
     let riderId = null;
 
     function initMap(lat, lng) {
+        lat = parseFloat(lat) || 28.6139;
+        lng = parseFloat(lng) || 77.2090;
+
         map = L.map('map').setView([lat, lng], 15);
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        const mainTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            subdomains: ['a', 'b', 'c'],
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
+
+        mainTiles.on('tileerror', function() {
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                maxZoom: 19,
+                subdomains: 'abcd'
+            }).addTo(map);
+        });
 
         riderMarker = L.marker([lat, lng], {
             icon: L.icon({
