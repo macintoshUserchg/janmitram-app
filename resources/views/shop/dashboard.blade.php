@@ -95,6 +95,26 @@
                         </div>
                     </a>
                 </div>
+
+                @hasPermission('shop.payout.index')
+                    <div class="col-md-6 col-lg-4 col-xl-3">
+                        <a href="{{ route('shop.payout.index') }}" class="text-decoration-none">
+                            <div class="dashboard-box item-2">
+                                <h2 class="count">
+                                    @php
+                                        $userShop = auth()->user()?->shop;
+                                        $myPayoutTotal = $userShop ? \App\Models\ShopMonthlyPayout::where('shop_id', $userShop->id)->sum('total_payout') : 0;
+                                    @endphp
+                                    ₹{{ number_format((float) $myPayoutTotal, 2) }}
+                                </h2>
+                                <h3 class="title">{{ __('My Payouts & Earnings') }}</h3>
+                                <div class="icon svg-bg">
+                                    <img src="{{ asset('assets/icons-admin/payout.svg') }}" alt="icon" loading="lazy" />
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                @endhasPermission
             </div>
         </div>
     </div>

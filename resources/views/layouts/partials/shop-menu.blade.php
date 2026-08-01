@@ -224,6 +224,20 @@
     </li>
 @endhasPermission
 
+@hasPermission('shop.payout.index')
+    <!--- Payout & Earnings --->
+    <li>
+        <a class="menu {{ request()->routeIs('shop.payout.*') ? 'active' : '' }}"
+            href="{{ route('shop.payout.index') }}">
+            <span>
+                <img class="menu-icon" src="{{ asset('assets/icons-admin/payout.svg') }}" alt="icon"
+                    loading="lazy" />
+                {{ __('Payout & Earnings') }}
+            </span>
+        </a>
+    </li>
+@endhasPermission
+
 
 
 @if (!auth()->user()->hasRole('root'))

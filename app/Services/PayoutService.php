@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\Wallet;
 use App\Repositories\TransactionRepository;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -233,9 +234,26 @@ class PayoutService
     }
 
     /**
+     * Build the network tree rooted at a specific shop (for shop owner dashboard).
+     *
+     * @return array<string, mixed>|null
+     */
+    public static function treeForShop(int $shopId, int $year, int $month): ?array
+    {
+        [$shops, $byParent, $orders, $snapshots] = self::networkData($year, $month);
+
+        $shop = $shops[$shopId] ?? Shop::find($shopId);
+        if ($shop === null) {
+            return null;
+        }
+
+        return self::node($shop, $byParent, $orders, $snapshots, $year, $month);
+    }
+
+    /**
      * Shared tree + sales + snapshot data for the network views.
      *
-     * @return array{0: \Illuminate\Support\Collection<int, Shop>, 1: \Illuminate\Support\Collection, 2: \Illuminate\Support\Collection, 3: \Illuminate\Support\Collection}
+     * @return array{0: Collection<int, Shop>, 1: Collection, 2: Collection, 3: Collection}
      */
     private static function networkData(int $year, int $month): array
     {
@@ -260,9 +278,9 @@ class PayoutService
     /**
      * Build one node (values snapshot-backed for paid months, computed otherwise).
      *
-     * @param  \Illuminate\Support\Collection  $byParent
-     * @param  \Illuminate\Support\Collection  $orders
-     * @param  \Illuminate\Support\Collection  $snapshots
+     * @param  Collection  $byParent
+     * @param  Collection  $orders
+     * @param  Collection  $snapshots
      * @return array<string, mixed>
      */
     private static function node(
@@ -314,10 +332,9 @@ class PayoutService
     /**
      * Iterative DFS over a shop's descendants (excludes the shop itself).
      *
-     * @param  \Illuminate\Support\Collection  $byParent
-     * @return \Illuminate\Support\Collection
+     * @param  Collection  $byParent
      */
-    private static function descendants(int $shopId, $byParent): \Illuminate\Support\Collection
+    private static function descendants(int $shopId, $byParent): Collection
     {
         $result = collect();
         // Copy with values() so pop() does not mutate the shared $byParent map.

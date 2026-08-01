@@ -259,6 +259,10 @@ Route::prefix('shop')->name('shop.')->middleware(['web'])->group(function () {
         Route::get('subscription/payment-success', [SubscriptionController::class, 'paymentSuccess'])->name('subscription.payment-success');
         Route::get('subscription/payment-cancel', [SubscriptionController::class, 'paymentCancel'])->name('subscription.payment-cancel');
 
+        Route::get('payout', [App\Http\Controllers\Shop\PayoutController::class, 'index'])->name('payout.index');
+        Route::get('payout/network', [App\Http\Controllers\Shop\PayoutController::class, 'network'])->name('payout.network');
+        Route::get('payout/network/children/{shop}', [App\Http\Controllers\Shop\PayoutController::class, 'children'])->name('payout.network.children');
+
         Route::get('bulk-product-export', [BulkProductExportController::class, 'index'])->name('bulk-product-export.index');
         Route::post('bulk-product-export/export', [BulkProductExportController::class, 'export'])->name('bulk-product-export.export');
         Route::get('bulk-product-export/demo', [BulkProductExportController::class, 'demoExport'])->name('bulk-product-export.demo');

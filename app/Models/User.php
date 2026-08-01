@@ -99,9 +99,9 @@ class User extends Authenticatable
     /**
      * get shop model for this user.
      */
-    public function shop(): BelongsTo
+    public function shop(): HasOne
     {
-        return $this->belongsTo(Shop::class, 'id', 'user_id');
+        return $this->hasOne(Shop::class, 'user_id');
     }
 
     /**

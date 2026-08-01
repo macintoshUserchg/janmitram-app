@@ -43,7 +43,7 @@ class CheckSubscription
 
         $rootShop = generaleSetting('rootShop');
 
-        if ($shop->id == $rootShop->id) {
+        if ($rootShop && $shop->id == $rootShop->id) {
             return $next($request);
         }
 
