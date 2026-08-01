@@ -23,6 +23,7 @@ use App\Http\Controllers\Admin\LegalPageController;
 use App\Http\Controllers\Admin\MailConfigurationController;
 use App\Http\Controllers\Admin\MenuController;
 use App\Http\Controllers\Admin\PageController;
+use App\Http\Controllers\Admin\PayoutController;
 use App\Http\Controllers\Admin\PusherConfigController;
 use App\Http\Controllers\Admin\ReviewsController;
 use App\Http\Controllers\Admin\RiderController;
@@ -401,6 +402,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:root'])->group
     Route::resource('warehouse-transfer', WarehouseTransferController::class)->names('warehouse-transfer');
     Route::post('warehouse-transfer/{warehouseTransfer}/complete', [WarehouseTransferController::class, 'complete'])->name('warehouse-transfer.complete');
     Route::post('warehouse-transfer/{warehouseTransfer}/cancel', [WarehouseTransferController::class, 'cancel'])->name('warehouse-transfer.cancel');
+
+    Route::get('payout', [PayoutController::class, 'index'])->name('payout.index');
+    Route::post('payout/run', [PayoutController::class, 'run'])->name('payout.run');
+    Route::get('payout/network', [PayoutController::class, 'network'])->name('payout.network');
+    Route::get('payout/network/children/{shop}', [PayoutController::class, 'children'])->name('payout.network.children');
+    Route::get('payout/run', [PayoutController::class, 'runForm'])->name('payout.run.form');
 
     Route::get('category', [App\Http\Controllers\Admin\CategoryController::class, 'index'])->name('category.index');
     Route::get('category/create', [App\Http\Controllers\Admin\CategoryController::class, 'create'])->name('category.create');

@@ -115,4 +115,27 @@ class PayoutNetworkTest extends TestCase
         $this->assertSame(5000.0, $nodes[0]['phase1_amount']);
         $this->assertSame(0.0, $nodes[0]['phase2_amount']);
     }
+
+    public function test_network_route_renders_tree_page(): void
+    {
+        $root = $this->shop();
+        $this->deliveredOrder($root, 50000, 2026, 7);
+
+        $response = $this->get(route('admin.payout.network', ['year' => 2026, 'month' => 7]));
+
+        $response->assertOk();
+        $response->assertSee('Payout Network');
+    }
+
+    public function test_children_route_returns_json(): void
+    {
+        $root = $this->shop();
+        $child = $this->shop($root);
+
+        $response = $this->getJson(route('admin.payout.network.children', ['shop' => $root->id, 'year' => 2026, 'month' => 7]));
+
+        $response->assertOk();
+        $response->assertJsonCount(1);
+        $response->assertJsonPath('0.shop_id', $child->id);
+    }
 }
