@@ -1,3 +1,7 @@
+@php
+    $generaleSetting = function_exists('generaleSetting') ? generaleSetting('setting') : null;
+    $siteName = $generaleSetting?->name ?: 'Janmitram';
+@endphp
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -19,15 +23,20 @@
         
         .header-table {
             width: 100%;
-            border-bottom: 2px solid #3182CE;
+            border-bottom: 2px solid #25314C;
             padding-bottom: 15px;
             margin-bottom: 20px;
         }
         .company-name {
-            font-size: 22px;
+            font-size: 20px;
             font-weight: bold;
-            color: #2B6CB0;
-            margin-bottom: 4px;
+            color: #25314C;
+            margin-bottom: 2px;
+        }
+        .company-info {
+            font-size: 11px;
+            color: #5E6470;
+            line-height: 15px;
         }
         .statement-title {
             font-size: 18px;
@@ -95,7 +104,7 @@
             margin-bottom: 25px;
         }
         .breakdown-table th {
-            background-color: #2B6CB0;
+            background-color: #25314C;
             color: #FFFFFF;
             font-size: 12px;
             text-transform: uppercase;
@@ -112,8 +121,8 @@
             font-size: 15px;
             background-color: #EBF8FF;
             color: #2B6CB0;
-            border-top: 2px solid #3182CE;
-            border-bottom: 2px solid #3182CE;
+            border-top: 2px solid #2B6CB0;
+            border-bottom: 2px solid #2B6CB0;
         }
 
         .badge-success {
@@ -137,13 +146,16 @@
 </head>
 <body>
 
-    <!-- Header Section -->
+    <!-- Header Section with Janmitram Branding -->
     <table class="header-table">
         <tr>
             <td style="width: 60%;">
-                <div class="company-name">{{ config('app.name', 'Janmitram') }}</div>
-                <div style="font-size: 11px; color: #4A5568;">E-Commerce & MLM Network Partner Portal</div>
-                <div style="font-size: 11px; color: #718096; margin-top: 2px;">Official Monthly Payout Voucher</div>
+                <div class="company-name">{{ $siteName }}</div>
+                <div class="company-info">
+                    @if($generaleSetting?->email) <div>Email: {{ $generaleSetting->email }}</div> @endif
+                    @if($generaleSetting?->mobile) <div>Contact: {{ $generaleSetting->mobile }}</div> @endif
+                    @if($generaleSetting?->address) <div>Address: {{ $generaleSetting->address }}</div> @endif
+                </div>
             </td>
             <td style="width: 40%;" class="text-right">
                 <div class="statement-title">Payout Statement</div>
@@ -189,7 +201,7 @@
         </thead>
         <tbody>
             <tr>
-                <td><span class="font-bold" style="color: #2B6CB0;">{{ $payout->level ?? 'Level 0' }}</span></td>
+                <td><span class="font-bold" style="color: #25314C;">{{ $payout->level ?? 'Level 0' }}</span></td>
                 <td>₹{{ number_format((float) $payout->personal_sales, 2) }}</td>
                 <td>₹{{ number_format((float) $payout->group_sales, 2) }}</td>
                 <td>{{ number_format((int) $payout->group_size) }} Members</td>
@@ -233,7 +245,7 @@
 
     <!-- Footer Section -->
     <div class="footer">
-        <p>This statement is an official computer-generated monthly payout voucher issued by {{ config('app.name', 'Janmitram') }}.</p>
+        <p>This statement is an official computer-generated monthly payout voucher issued by {{ $siteName }}.</p>
         <p style="margin-top: 4px;">No physical signature is required. For any inquiries regarding payout calculations, please contact partner support.</p>
     </div>
 
