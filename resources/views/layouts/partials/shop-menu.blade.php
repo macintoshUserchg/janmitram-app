@@ -224,17 +224,35 @@
     </li>
 @endhasPermission
 
-@hasPermission('shop.payout.index')
+@hasPermission(['shop.payout.index', 'shop.payout.network'])
     <!--- Payout & Earnings --->
     <li>
         <a class="menu {{ request()->routeIs('shop.payout.*') ? 'active' : '' }}"
-            href="{{ route('shop.payout.index') }}">
+            data-bs-toggle="collapse" href="#shopPayoutMenu">
             <span>
                 <img class="menu-icon" src="{{ asset('assets/icons-admin/shop.svg') }}" alt="icon"
                     loading="lazy" />
                 {{ __('Payout & Earnings') }}
             </span>
+            <img src="{{ asset('assets/icons-admin/caret-down.svg') }}" alt="icon" class="downIcon">
         </a>
+        <div class="collapse dropdownMenuCollapse {{ request()->routeIs('shop.payout.*') ? 'show' : '' }}"
+            id="shopPayoutMenu">
+            <div class="listBar">
+                @hasPermission('shop.payout.index')
+                    <a href="{{ route('shop.payout.index') }}"
+                        class="subMenu hasCount {{ request()->routeIs('shop.payout.index') ? 'active' : '' }}">
+                        {{ __('Payout History') }}
+                    </a>
+                @endhasPermission
+                @hasPermission('shop.payout.network')
+                    <a href="{{ route('shop.payout.network') }}"
+                        class="subMenu hasCount {{ request()->routeIs('shop.payout.network') ? 'active' : '' }}">
+                        {{ __('My Downline') }}
+                    </a>
+                @endhasPermission
+            </div>
+        </div>
     </li>
 @endhasPermission
 
