@@ -65,11 +65,12 @@ class PayoutController extends Controller
                 $result['errors']
             ));
 
-            return redirect()->route('admin.payout.index')
+            return redirect()->route('admin.payout.network', ['year' => $data['year'], 'month' => $data['month']])
                 ->with('error', $summary."\n".$details);
         }
 
-        return redirect()->route('admin.payout.index')->with('success', $summary);
+        return redirect()->route('admin.payout.network', ['year' => $data['year'], 'month' => $data['month']])
+            ->with('success', $summary);
     }
 
     /**

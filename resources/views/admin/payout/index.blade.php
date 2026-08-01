@@ -9,11 +9,11 @@
         <h1 class="h3 mb-0 text-gray-800 fw-bold">{{ __('Monthly Payouts') }}</h1>
         <p class="text-muted small mb-0">{{ __('Phase 1 (own sales) plus Phase 2 (group network) income per shop.') }}</p>
     </div>
-    @hasPermission('admin.payout.run')
+    @hasPermission('admin.payout.network')
         <div class="d-flex gap-2">
-            <button type="button" class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#runPayoutModal">
-                <i class="fas fa-play me-1"></i> {{ __('Run Payout') }}
-            </button>
+            <a href="{{ route('admin.payout.network') }}" class="btn btn-outline-primary shadow-sm">
+                <i class="fas fa-sitemap me-1"></i> {{ __('Payout Network') }}
+            </a>
         </div>
     @endhasPermission
 </div>
@@ -133,48 +133,4 @@
         </div>
     @endif
 </div>
-
-@hasPermission('admin.payout.run')
-<!-- Run Payout Modal -->
-<div class="modal fade" id="runPayoutModal" tabindex="-1" aria-labelledby="runPayoutModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-12">
-            <form method="POST" action="{{ route('admin.payout.run') }}">
-                @csrf
-                <div class="modal-header border-bottom bg-white py-3">
-                    <h5 class="modal-title fw-bold" id="runPayoutModalLabel">{{ __('Run Monthly Payout') }}</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p class="text-muted small">{{ __('Credits each active shop for the selected month. Already-paid shops are skipped.') }}</p>
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label">{{ __('Month') }} <span class="text-danger">*</span></label>
-                            <select name="month" class="form-select" required>
-                                @foreach($months as $m)
-                                    <option value="{{ $m }}" @selected((string) $month === (string) $m)>{{ $m }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">{{ __('Year') }} <span class="text-danger">*</span></label>
-                            <select name="year" class="form-select" required>
-                                @for($y = now()->year; $y >= 2024; $y--)
-                                    <option value="{{ $y }}" @selected((string) $year === (string) $y)>{{ $y }}</option>
-                                @endfor
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer border-top bg-white py-3">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
-                    <button type="submit" class="btn btn-primary shadow-sm">
-                        <i class="fas fa-play me-1"></i> {{ __('Run Payout') }}
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-@endhasPermission
 @endsection
