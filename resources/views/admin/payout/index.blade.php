@@ -11,7 +11,7 @@
     </div>
     <div class="d-flex gap-2">
         @hasPermission('admin.payout.network')
-            <a href="{{ route('admin.payout.network') }}" class="btn btn-outline-secondary shadow-sm">
+            <a href="{{ route('admin.payout.network') }}" class="btn btn-outline-primary shadow-sm">
                 <i class="fas fa-sitemap me-1"></i> {{ __('Payout Network') }}
             </a>
         @endhasPermission
@@ -53,7 +53,7 @@
                 </div>
                 <div>
                     <div class="text-muted small fw-semibold">{{ __('Total Credited') }}</div>
-                    <h3 class="fw-bold mb-0 text-success">{{ number_format((float) $payouts->sum('total_payout'), 2) }}</h3>
+                    <h3 class="fw-bold mb-0 text-success">₹{{ number_format((float) $payouts->sum('total_payout'), 2) }}</h3>
                 </div>
             </div>
         </div>
@@ -66,7 +66,7 @@
                 </div>
                 <div>
                     <div class="text-muted small fw-semibold">{{ __('Personal Sales') }}</div>
-                    <h3 class="fw-bold mb-0 text-info">{{ number_format((float) $payouts->sum('personal_sales'), 2) }}</h3>
+                    <h3 class="fw-bold mb-0 text-info">₹{{ number_format((float) $payouts->sum('personal_sales'), 2) }}</h3>
                 </div>
             </div>
         </div>
@@ -79,18 +79,18 @@
                 </div>
                 <div>
                     <div class="text-muted small fw-semibold">{{ __('Group Sales') }}</div>
-                    <h3 class="fw-bold mb-0 text-dark">{{ number_format((float) $payouts->sum('group_sales'), 2) }}</h3>
+                    <h3 class="fw-bold mb-0 text-dark">₹{{ number_format((float) $payouts->sum('group_sales'), 2) }}</h3>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Month / Year Filter -->
+<!-- Filter Bar -->
 <div class="card border-0 shadow-sm rounded-12 mb-4">
     <div class="card-body py-3">
         <form method="GET" action="{{ route('admin.payout.index') }}" class="row g-2 align-items-end">
-            <div class="col-auto">
+            <div class="col-md-2">
                 <label class="form-label small text-muted mb-1">{{ __('Month') }}</label>
                 <select name="month" class="form-select form-select-sm">
                     <option value="">{{ __('All Months') }}</option>
@@ -99,7 +99,7 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-auto">
+            <div class="col-md-2">
                 <label class="form-label small text-muted mb-1">{{ __('Year') }}</label>
                 <select name="year" class="form-select form-select-sm">
                     <option value="">{{ __('All Years') }}</option>
@@ -107,13 +107,14 @@
                         <option value="{{ $y }}" @selected((string) $year === (string) $y)>{{ $y }}</option>
                     @endfor
                 </select>
-            <div class="col-md-3">
+            </div>
+            <div class="col-md-4">
                 <label class="form-label small text-muted mb-1">{{ __('Search Shop / Owner') }}</label>
                 <input type="text" name="search" value="{{ $search }}" class="form-control form-control-sm" placeholder="{{ __('Shop or Owner Name...') }}">
             </div>
-            <div class="col-auto">
+            <div class="col-md-4 d-flex gap-2 justify-content-md-end">
                 <button type="submit" class="btn btn-outline-primary btn-sm shadow-sm">
-                    <i class="fas fa-filter me-1"></i> {{ __('Apply') }}
+                    <i class="fas fa-filter me-1"></i> {{ __('Apply Filter') }}
                 </button>
                 <a href="{{ route('admin.payout.index') }}" class="btn btn-outline-secondary btn-sm shadow-sm">
                     {{ __('Reset') }}
@@ -123,27 +124,29 @@
     </div>
 </div>
 
+<!-- History Table Card -->
 <div class="card border-0 shadow-sm rounded-12">
     <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-        <h5 class="card-title mb-0 fw-bold">{{ __('Historical Payout Records') }}</h5>
-        <span class="badge bg-light text-dark border">{{ $payouts->total() }} {{ __('Total') }}</span>
+        <h5 class="card-title mb-0 fw-bold">{{ __('Historical Payout Ledger') }}</h5>
+        <span class="badge bg-light text-dark border">{{ $payouts->total() }} {{ __('Total Records') }}</span>
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th class="ps-4">{{ __('SL') }}</th>
-                        <th>{{ __('Month') }}</th>
-                        <th>{{ __('Shop') }}</th>
-                        <th>{{ __('Owner') }}</th>
+                        <th class="ps-4" style="width: 50px;">{{ __('SL') }}</th>
+                        <th>{{ __('Period') }}</th>
+                        <th>{{ __('Shop Name') }}</th>
+                        <th>{{ __('Owner Name') }}</th>
                         <th class="text-end">{{ __('Personal Sales') }}</th>
                         <th class="text-end">{{ __('Group Sales') }}</th>
                         <th class="text-center">{{ __('Group Size') }}</th>
                         <th class="text-center">{{ __('Level') }}</th>
                         <th class="text-end">{{ __('Phase 1') }}</th>
                         <th class="text-end">{{ __('Phase 2') }}</th>
-                        <th class="text-end pe-4">{{ __('Total Payout') }}</th>
+                        <th class="text-end">{{ __('Total Payout') }}</th>
+                        <th class="text-center pe-4" style="width: 110px;">{{ __('Action') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -151,7 +154,7 @@
                         <tr>
                             <td class="ps-4 text-muted small">{{ $payouts->firstItem() + $key }}</td>
                             <td>
-                                <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill">
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 rounded-pill fw-semibold">
                                     {{ sprintf('%04d-%02d', $payout->year, $payout->month) }}
                                 </span>
                             </td>
@@ -161,8 +164,8 @@
                             <td>
                                 <div class="text-muted small">{{ $payout->shop?->user?->name ?? '—' }}</div>
                             </td>
-                            <td class="text-end">{{ number_format((float) $payout->personal_sales, 2) }}</td>
-                            <td class="text-end">{{ number_format((float) $payout->group_sales, 2) }}</td>
+                            <td class="text-end">₹{{ number_format((float) $payout->personal_sales, 2) }}</td>
+                            <td class="text-end">₹{{ number_format((float) $payout->group_sales, 2) }}</td>
                             <td class="text-center">
                                 <span class="badge bg-light text-dark border px-3 py-2 rounded-pill">
                                     {{ $payout->group_size }}
@@ -170,22 +173,29 @@
                             </td>
                             <td class="text-center">
                                 @if($payout->level !== null)
-                                    <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill fw-semibold">
-                                        L{{ $payout->level }}
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill fw-semibold">
+                                        Level {{ $payout->level }}
                                     </span>
                                 @else
                                     <span class="badge bg-light text-secondary border rounded-pill">—</span>
                                 @endif
                             </td>
-                            <td class="text-end text-primary fw-semibold">{{ number_format((float) $payout->phase1_amount, 2) }}</td>
-                            <td class="text-end text-info fw-semibold">{{ number_format((float) $payout->phase2_amount, 2) }}</td>
-                            <td class="text-end pe-4 fw-bold text-success fs-6">{{ number_format((float) $payout->total_payout, 2) }}</td>
+                            <td class="text-end text-primary fw-semibold">₹{{ number_format((float) $payout->phase1_amount, 2) }}</td>
+                            <td class="text-end text-info fw-semibold">₹{{ number_format((float) $payout->phase2_amount, 2) }}</td>
+                            <td class="text-end fw-bold text-success fs-6">₹{{ number_format((float) $payout->total_payout, 2) }}</td>
+                            <td class="text-center pe-4">
+                                @hasPermission('admin.payout.network')
+                                    <a href="{{ route('admin.payout.network', ['year' => $payout->year, 'month' => $payout->month]) }}" class="btn btn-sm btn-outline-primary shadow-sm" title="{{ __('View Network Tree') }}">
+                                        <i class="fas fa-sitemap"></i>
+                                    </a>
+                                @endhasPermission
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="11" class="text-center py-5 text-muted">
+                            <td colspan="12" class="text-center py-5 text-muted">
                                 <i class="fas fa-hand-holding-usd fs-1 mb-3 d-block text-secondary"></i>
-                                {{ __('No payouts found yet. Click "Run Payout" to generate one.') }}
+                                {{ __('No payout records found. Click "Run Payout" to execute a monthly payout.') }}
                             </td>
                         </tr>
                     @endforelse
