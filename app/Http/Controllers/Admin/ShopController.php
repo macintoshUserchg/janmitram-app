@@ -27,11 +27,15 @@ class ShopController extends Controller
     /**
      * Create a new shop.
      */
+    /**
+     * Create a new shop.
+     */
     public function create()
     {
         $warehouses = Warehouse::all();
+        $parentShops = Shop::where('status', true)->get();
 
-        return view('admin.shop.create', compact('warehouses'));
+        return view('admin.shop.create', compact('warehouses', 'parentShops'));
     }
 
     /**
@@ -61,8 +65,9 @@ class ShopController extends Controller
     public function edit(Shop $shop)
     {
         $warehouses = Warehouse::all();
+        $parentShops = Shop::where('status', true)->where('id', '!=', $shop->id)->get();
 
-        return view('admin.shop.edit', compact('shop', 'warehouses'));
+        return view('admin.shop.edit', compact('shop', 'warehouses', 'parentShops'));
     }
 
     /**

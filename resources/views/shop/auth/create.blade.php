@@ -273,6 +273,26 @@
                                     {{ __('Shop Information') }}
                                 </div>
                                 <div class="row">
+                                    <div class="col-md-12 mb-3">
+                                        <div class="p-3 border rounded-3 bg-light">
+                                            <label class="form-label fw-bold text-dark mb-1">
+                                                <i class="fa fa-sitemap me-1 text-primary"></i> {{ __('Sponsor / Referral Code (Optional)') }}
+                                            </label>
+                                            <input type="text" name="ref" id="sponsor_ref_input" class="form-control"
+                                                placeholder="e.g. JAN-00002"
+                                                value="{{ old('ref', $sponsorCode ?? request()->query('ref')) }}">
+                                            @if(isset($sponsorShop) && $sponsorShop)
+                                                <div class="mt-2 text-success small fw-semibold" id="sponsor_info_badge">
+                                                    <i class="fa fa-check-circle me-1"></i> {{ __('Sponsor Network Partner') }}: <strong>{{ $sponsorShop->name }}</strong> (#{{ $sponsorShop->id }})
+                                                </div>
+                                            @else
+                                                <div class="form-text text-muted small mt-1">
+                                                    {{ __('Enter the Referral Code (e.g. JAN-00002) of the partner who referred you.') }}
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+
                                     <div class="col-md-12">
                                         <x-input type="text" name="shop_name" label="Shop Name"
                                             placeholder="Enter Shop Name" required="true" />

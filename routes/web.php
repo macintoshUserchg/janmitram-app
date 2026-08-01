@@ -261,6 +261,8 @@ Route::prefix('shop')->name('shop.')->middleware(['web'])->group(function () {
 
         Route::get('payout', [App\Http\Controllers\Shop\PayoutController::class, 'index'])->name('payout.index');
         Route::get('payout/network', [App\Http\Controllers\Shop\PayoutController::class, 'network'])->name('payout.network');
+        Route::get('payout/network/create', [App\Http\Controllers\Shop\PayoutController::class, 'createDownline'])->name('payout.network.create');
+        Route::post('payout/network/store', [App\Http\Controllers\Shop\PayoutController::class, 'storeDownline'])->name('payout.network.store');
         Route::get('payout/network/children/{shop}', [App\Http\Controllers\Shop\PayoutController::class, 'children'])->name('payout.network.children');
         Route::get('payout/slip/{payout}', [App\Http\Controllers\Shop\PayoutController::class, 'slip'])->name('payout.slip');
 

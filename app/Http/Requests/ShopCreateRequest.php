@@ -61,6 +61,9 @@ class ShopCreateRequest extends FormRequest
             'latitude' => ['required', 'numeric'],
             'longitude' => ['required', 'numeric'],
             'warehouse_id' => ['nullable', 'exists:warehouses,id'],
+            'parent_shop_id' => ['nullable', 'exists:shops,id'],
+            'ref' => ['nullable', 'string'],
+            'sponsor_code' => ['nullable', 'string'],
         ];
     }
 

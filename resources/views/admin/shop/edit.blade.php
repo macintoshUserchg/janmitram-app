@@ -98,12 +98,23 @@
                             :value="$shop->address" />
                     </div>
 
-                    <div class="col-md-4 mt-3 mt-md-0">
+                    <div class="col-md-3 mt-3 mt-md-0">
                         <x-select label="Linked Warehouse" name="warehouse_id">
-                            <option value="">{{ __('-- Central Warehouse (Default) --') }}</option>
+                            <option value="">{{ __('-- Central Hub (Default) --') }}</option>
                             @foreach($warehouses as $wh)
                                 <option value="{{ $wh->id }}" {{ (old('warehouse_id', $shop->warehouse_id) == $wh->id) ? 'selected' : '' }}>
                                     {{ $wh->name }} {{ $wh->is_default ? '('.__('Central Hub').')' : '' }}
+                                </option>
+                            @endforeach
+                        </x-select>
+                    </div>
+
+                    <div class="col-md-3 mt-3 mt-md-0">
+                        <x-select label="Sponsor / Parent Shop (MLM Tree)" name="parent_shop_id">
+                            <option value="">{{ __('-- Root Node (No Sponsor) --') }}</option>
+                            @foreach($parentShops ?? [] as $pShop)
+                                <option value="{{ $pShop->id }}" {{ (old('parent_shop_id', $shop->parent_shop_id) == $pShop->id) ? 'selected' : '' }}>
+                                    {{ $pShop->name }} ({{ $pShop->referral_code }})
                                 </option>
                             @endforeach
                         </x-select>

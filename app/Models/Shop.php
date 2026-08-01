@@ -275,4 +275,46 @@ class Shop extends Model
     {
         return $this->hasMany(StockRequest::class);
     }
+
+    /**
+     * Get unique referral / sponsor code for this shop (e.g. JAN-00002).
+     */
+    public function referralCode(): Attribute
+    {
+        return new Attribute(
+            get: fn () => 'JAN-'.str_pad((string) $this->id, 5, '0', STR_PAD_LEFT),
+        );
+    }
+
+    /**
+     * Get full public referral registration URL for this shop.
+     */
+    public function referralUrl(): Attribute
+    {
+        return new Attribute(
+            get: fn () => route('shop.create', ['ref' => $this->referral_code]),
+        );
+    }
+
+    /**
+     * Find shop by referral code (e.g. "JAN-00002", "2", or "SHOP-00002").
+     */
+    public static function findByReferralCode(?string $code): ?self
+    {
+        if (! $code) {
+            return null;
+        }
+
+        $code = trim($code);
+
+        if (is_numeric($code)) {
+            return self::find((int) $code);
+        }
+
+        if (preg_match('/^(?:JAN|SHOP)-?(\d+)$/i', $code, $matches)) {
+            return self::find((int) $matches[1]);
+        }
+
+        return self::where('name', 'like', "%{$code}%")->first();
+    }
 }

@@ -42,6 +42,16 @@ class ShopRepository extends Repository
             $banner = MediaRepository::storeByRequest($request->shop_banner, 'shops/banner', 'image');
         }
 
+        // resolve parent / sponsor shop in MLM network
+        $parentShopId = $request->parent_shop_id;
+        if (! $parentShopId && $request->filled('ref')) {
+            $sponsor = Shop::findByReferralCode($request->ref);
+            $parentShopId = $sponsor?->id;
+        } elseif (! $parentShopId && $request->filled('sponsor_code')) {
+            $sponsor = Shop::findByReferralCode($request->sponsor_code);
+            $parentShopId = $sponsor?->id;
+        }
+
         // create new shop and return
         return self::create([
             'user_id' => $user->id,
@@ -55,6 +65,7 @@ class ShopRepository extends Repository
             'latitude' => $request->latitude,
             'longitude' => $request->longitude,
             'warehouse_id' => $request->warehouse_id,
+            'parent_shop_id' => $parentShopId,
         ]);
     }
 
@@ -80,6 +91,7 @@ class ShopRepository extends Repository
             'delivery_charge' => $request->delivery_charge ?? 0,
             'address' => $request->address,
             'description' => $request->description,
+            'parent_shop_id' => $request->has('parent_shop_id') ? $request->parent_shop_id : $shop->parent_shop_id,
             'min_order_amount' => $request->min_order_amount ?? $shop->min_order_amount,
             'prefix' => $request->prefix ?? $shop->prefix,
             'opening_time' => $request->opening_time ?? $shop->opening_time,

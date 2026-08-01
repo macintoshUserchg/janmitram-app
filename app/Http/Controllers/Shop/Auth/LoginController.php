@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\AdminLoginRequest;
 use App\Http\Requests\ShopCreateRequest;
 use App\Models\GoogleReCaptcha;
+use App\Models\Shop;
 use App\Models\User;
 use App\Repositories\ShopRepository;
 use Illuminate\Http\Request;
@@ -102,9 +103,18 @@ class LoginController extends Controller
         return false;
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        return view('shop.auth.create');
+        $sponsorCode = $request->query('ref') ?? $request->query('sponsor_code');
+        $sponsorShop = null;
+
+        if ($sponsorCode) {
+            $sponsorShop = Shop::findByReferralCode($sponsorCode);
+        } elseif ($request->query('parent_shop_id')) {
+            $sponsorShop = Shop::find((int) $request->query('parent_shop_id'));
+        }
+
+        return view('shop.auth.create', compact('sponsorShop', 'sponsorCode'));
     }
 
     public function store(ShopCreateRequest $request)

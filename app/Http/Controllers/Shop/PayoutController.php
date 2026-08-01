@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Shop;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ShopCreateRequest;
 use App\Models\Shop;
 use App\Models\ShopMonthlyPayout;
+use App\Repositories\ShopRepository;
 use App\Services\PayoutService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -132,6 +134,37 @@ class PayoutController extends Controller
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="'.$filename.'"',
         ]);
+    }
+
+    /**
+     * Show form to add a new downline shop under current shop owner.
+     */
+    public function createDownline(): View
+    {
+        $user = auth()->user();
+        $shop = $user->shop ?? Shop::where('user_id', $user->id)->firstOrFail();
+
+        return view('shop.payout.create-downline', compact('shop'));
+    }
+
+    /**
+     * Store a new downline shop directly registered by current shop owner.
+     */
+    public function storeDownline(ShopCreateRequest $request)
+    {
+        $user = auth()->user();
+        $shop = $user->shop ?? Shop::where('user_id', $user->id)->firstOrFail();
+
+        // Force parent_shop_id to logged-in shop owner
+        $request->merge(['parent_shop_id' => $shop->id]);
+
+        $newShop = ShopRepository::storeByRequest($request);
+
+        return to_route('shop.payout.network')
+            ->withSuccess(__('Downline shop ":name" (#:id) registered successfully in your downline network!', [
+                'name' => $newShop->name,
+                'id' => $newShop->id,
+            ]));
     }
 
     /**

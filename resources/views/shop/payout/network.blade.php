@@ -66,6 +66,11 @@
         <p class="text-muted small mb-0">{{ __('Explore your downline shops, sales performance, and group tree structure.') }}</p>
     </div>
     <div class="d-flex gap-2">
+        @hasPermission('shop.payout.network.create')
+            <a href="{{ route('shop.payout.network.create') }}" class="btn btn-primary shadow-sm">
+                <i class="fas fa-plus-circle me-1"></i> {{ __('Add Downline Partner') }}
+            </a>
+        @endhasPermission
         @hasPermission('shop.payout.index')
             <a href="{{ route('shop.payout.index') }}" class="btn btn-outline-secondary shadow-sm">
                 <i class="fas fa-arrow-left me-1"></i> {{ __('Back to My Payouts') }}
@@ -73,6 +78,36 @@
         @endhasPermission
     </div>
 </div>
+
+@if(isset($rootShop) && $rootShop)
+{{-- Referral Link & Invite Card --}}
+<div class="card border-0 shadow-sm rounded-12 mb-4 bg-primary text-white" style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);">
+    <div class="card-body p-4">
+        <div class="row align-items-center g-3">
+            <div class="col-md-7">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="badge bg-white text-primary fw-bold px-3 py-1 rounded-pill">{{ __('Sponsor Code') }}: {{ $rootShop->referral_code }}</span>
+                    <span class="badge bg-info-subtle text-light px-2 py-1 rounded-pill small">{{ __('Level 1 Direct Sponsor') }}</span>
+                </div>
+                <h5 class="fw-bold mb-1 text-white">{{ __('Grow Your Downline Network') }}</h5>
+                <p class="mb-0 text-white-50 small">{{ __('Share your unique referral link with new shop owners. When they register, they automatically join your downline group.') }}</p>
+            </div>
+            <div class="col-md-5">
+                <label class="form-label text-white-50 small mb-1">{{ __('Your Referral Link') }}</label>
+                <div class="input-group shadow-sm">
+                    <input type="text" id="referralUrlInput" class="form-control form-control-sm border-0 bg-white" value="{{ $rootShop->referral_url }}" readonly>
+                    <button class="btn btn-light text-primary fw-bold btn-sm px-3" type="button" onclick="copyReferralLink()">
+                        <i class="fas fa-copy me-1"></i> {{ __('Copy Link') }}
+                    </button>
+                </div>
+                <div id="copySuccessMsg" class="text-warning small mt-1 d-none font-semibold">
+                    <i class="fas fa-check-circle me-1"></i> {{ __('Referral link copied to clipboard!') }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
 
 {{-- Month / Year Filter --}}
 <div class="card border-0 shadow-sm rounded-12 mb-4">
@@ -218,5 +253,19 @@
     function fmt(v) { return Number(v).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
     function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 })();
+
+function copyReferralLink() {
+    var copyText = document.getElementById("referralUrlInput");
+    if (!copyText) return;
+    copyText.select();
+    copyText.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(copyText.value);
+    
+    var msg = document.getElementById("copySuccessMsg");
+    if (msg) {
+        msg.classList.remove("d-none");
+        setTimeout(function() { msg.classList.add("d-none"); }, 3000);
+    }
+}
 </script>
 @endpush

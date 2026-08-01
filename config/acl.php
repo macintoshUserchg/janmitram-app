@@ -78,7 +78,7 @@ return [
             'purchase' => ['index', 'create', 'store', 'show', 'edit', 'update', 'destroy', 'attach.product', 'products', 'makeReceived', 'product.delete.barcode', 'invoice.search', 'invoice.add', 'summary', 'purchaseInvoice', 'summary', 'allProduct.stockSummary'],
             'purchaseReturn' => ['index', 'create', 'store', 'show', 'invoice.search', 'Invoice', 'invoice.add'],
             'stock-request' => ['index', 'create', 'store', 'show'],
-            'payout' => ['index', 'network', 'slip'],
+            'payout' => ['index', 'network', 'network.create', 'network.store', 'slip'],
         ],
         'shopMultiShop' => [
             'dashboard' => ['index', 'notification'],
@@ -90,7 +90,7 @@ return [
             'category' => ['index'],
             'subcategory' => ['index'],
             'withdraw' => ['index', 'store', 'show'],
-            'payout' => ['index', 'network', 'slip'],
+            'payout' => ['index', 'network', 'network.create', 'network.store', 'slip'],
         ],
     ],
 
