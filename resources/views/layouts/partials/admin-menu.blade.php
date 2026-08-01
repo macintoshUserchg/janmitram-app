@@ -217,6 +217,43 @@
     </li>
 @endhasPermission
 
+@hasPermission(['admin.payout.index', 'admin.payout.network', 'admin.payout.run'])
+    <!--- Payout Management --->
+    <li>
+        <a class="menu {{ request()->routeIs('admin.payout.*') ? 'active' : '' }}"
+            data-bs-toggle="collapse" href="#payoutMenu">
+            <span>
+                <img class="menu-icon" src="{{ asset('assets/icons-admin/payout.svg') }}" alt="icon" loading="lazy" />
+                {{ __('Payout Management') }}
+            </span>
+            <img src="{{ asset('assets/icons-admin/caret-down.svg') }}" alt="icon" class="downIcon">
+        </a>
+        <div class="collapse dropdownMenuCollapse {{ $request->routeIs('admin.payout.*') ? 'show' : '' }}"
+            id="payoutMenu">
+            <div class="listBar">
+                @hasPermission('admin.payout.network')
+                    <a href="{{ route('admin.payout.network') }}"
+                        class="subMenu hasCount {{ request()->routeIs('admin.payout.network') ? 'active' : '' }}">
+                        {{ __('Payout Network') }}
+                    </a>
+                @endhasPermission
+                @hasPermission('admin.payout.index')
+                    <a href="{{ route('admin.payout.index') }}"
+                        class="subMenu hasCount {{ request()->routeIs('admin.payout.index') ? 'active' : '' }}">
+                        {{ __('Payout History') }}
+                    </a>
+                @endhasPermission
+                @hasPermission('admin.payout.run')
+                    <a href="{{ route('admin.payout.run.form') }}"
+                        class="subMenu hasCount {{ request()->routeIs('admin.payout.run*') ? 'active' : '' }}">
+                        {{ __('Run Payout') }}
+                    </a>
+                @endhasPermission
+            </div>
+        </div>
+    </li>
+@endhasPermission
+
 @hasPermission(['admin.stock-request.index', 'admin.warehouse.index'])
     <!--- Invoice Management --->
     <li>
