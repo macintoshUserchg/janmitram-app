@@ -190,6 +190,7 @@
     let map = null;
     let riderMarker = null;
     let riderId = null;
+    let channel = null;
 
     function initMap(lat, lng) {
         lat = parseFloat(lat) || 28.6139;
@@ -206,7 +207,7 @@
         let tileErrors = 0;
         mainTiles.on('tileerror', function() {
             tileErrors++;
-            if (tileErrors >= 3 && !map.hasLayer(fallbackTiles)) {
+            if (tileErrors === 3) {
                 map.removeLayer(mainTiles);
                 L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
                     maxZoom: 19,

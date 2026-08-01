@@ -416,10 +416,9 @@
         let routingControl;
         let trackingInterval = null;
         let riderId = @json($order->driverOrder->driver_id ?? null);
-
+        let channel = null;
 
         const orderStatus = @json($order->order_status);
-
 
         let rawLat = parseFloat({{ $order->address->latitude ?? 0 }});
         let rawLng = parseFloat({{ $order->address->longitude ?? 0 }});
@@ -448,7 +447,7 @@
             let tileErrors = 0;
             mainTiles.on('tileerror', function() {
                 tileErrors++;
-                if (tileErrors >= 3) {
+                if (tileErrors === 3) {
                     map.removeLayer(mainTiles);
                     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
                         maxZoom: 19,
