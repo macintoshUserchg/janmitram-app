@@ -228,7 +228,7 @@
             </span>
             <img src="{{ asset('assets/icons-admin/caret-down.svg') }}" alt="icon" class="downIcon">
         </a>
-        <div class="collapse dropdownMenuCollapse {{ $request->routeIs('admin.payout.*') ? 'show' : '' }}"
+        <div class="collapse dropdownMenuCollapse {{ request()->routeIs('admin.payout.*') ? 'show' : '' }}"
             id="payoutMenu">
             <div class="listBar">
                 @hasPermission('admin.payout.network')

@@ -12,7 +12,9 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
+        // Deactivation first, so the 1st's payout sees a cleaned tree.
+        $schedule->command('mlm:deactivate-inactive')->dailyAt('00:30');
+        $schedule->command('mlm:calculate-payouts')->monthlyOn(1, '01:00');
     }
 
     /**

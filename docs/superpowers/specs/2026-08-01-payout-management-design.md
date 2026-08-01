@@ -56,13 +56,13 @@ Behavior:
 - For each root (parent null), build the subtree **recursively in memory**, computing per node:
   - **Paid month**: pull values from the `ShopMonthlyPayout` snapshot for that shop (authoritative).
   - **Unpaid month**: compute via the same tier logic (`PayoutService::phase2`) + phase 1 rate.
-- `children` array contains full subtree (recursion). For the lazy-load endpoint, a variant returns only the direct children of one shop.
+- `children` array contains the **direct children** of a node (lazy-load: deeper levels fetched on demand via the AJAX endpoint). `networkForMonth()` renders the forest at depth 1 (roots + direct children); expanding a child fetches its own children via the endpoint.
 
 This reuses the tier table and `phase2()` already in the service — no duplication of payout math.
 
 ### Controller (PayoutController)
 
-- `network()`: GET month/year (defaults: latest month with any snapshot, else previous month) → `PayoutService::networkForMonth()` → view `admin.payout.network`.
+- `network()`: GET month/year (defaults: latest month with any snapshot, else previous month) → `PayoutService::networkForMonth()` (roots + direct children) → view `admin.payout.network`.
 - `children(Shop $shop)`: AJAX — returns JSON of the shop's direct children (each with the same node shape) for the requested month/year (from query string). Used for lazy expand.
 - `runForm()`: GET — month/year selects + a **preview** (same tree, read-only) + confirm button; POST to existing `admin.payout.run` with the same validation. Redirects to History/Network after run with the existing flash summary.
 

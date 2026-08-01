@@ -59,6 +59,7 @@ return [
             'warehouse' => ['index', 'create', 'edit', 'destroy', 'show', 'stock', 'stock.add'],
             'stock-request' => ['index', 'show', 'approve', 'reject'],
             'warehouse-transfer' => ['index', 'create', 'store', 'show', 'complete', 'cancel'],
+            'payout' => ['index', 'run', 'network'],
         ],
         'shop' => [
             'order' => ['index', 'show', 'status.change'],

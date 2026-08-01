@@ -6,10 +6,15 @@
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <div>
-        <h1 class="h3 mb-0 text-gray-800 fw-bold">{{ __('Payout Network') }}</h1>
-        <p class="text-muted small mb-0">{{ __('Expand nodes to explore downline payouts.') }}</p>
+        <h4 class="fw-bold mb-1 text-dark">{{ __('Payout Network') }}</h4>
+        <p class="text-muted small mb-0">{{ __('Analyse downline network sales, tiers, and payout distributions.') }}</p>
     </div>
     <div class="d-flex gap-2">
+        @hasPermission('admin.payout.index')
+            <a href="{{ route('admin.payout.index') }}" class="btn btn-outline-secondary shadow-sm">
+                <i class="fas fa-history me-1"></i> {{ __('Payout History') }}
+            </a>
+        @endhasPermission
         @hasPermission('admin.payout.run')
             <a href="{{ route('admin.payout.run.form', ['year' => $year, 'month' => $month]) }}" class="btn btn-primary shadow-sm">
                 <i class="fas fa-play me-1"></i> {{ __('Run Payout') }}
@@ -24,6 +29,64 @@
 @if(session('error'))
     <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm mb-4">{!! nl2br(e(session('error'))) !!}</div>
 @endif
+
+<!-- Summary Metric Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm rounded-12 bg-white h-100">
+            <div class="card-body p-3 d-flex align-items-center gap-3">
+                <div class="p-3 bg-primary-subtle text-primary rounded-12">
+                    <i class="fas fa-sitemap fs-3"></i>
+                </div>
+                <div>
+                    <div class="text-muted small fw-semibold">{{ __('Root Networks') }}</div>
+                    <h3 class="fw-bold mb-0 text-dark">{{ count($nodes) }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm rounded-12 bg-white h-100">
+            <div class="card-body p-3 d-flex align-items-center gap-3">
+                <div class="p-3 bg-info-subtle text-info rounded-12">
+                    <i class="fas fa-chart-line fs-3"></i>
+                </div>
+                <div>
+                    <div class="text-muted small fw-semibold">{{ __('Network Group Sales') }}</div>
+                    <h3 class="fw-bold mb-0 text-info">{{ number_format(collect($nodes)->sum('group_sales'), 2) }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm rounded-12 bg-white h-100">
+            <div class="card-body p-3 d-flex align-items-center gap-3">
+                <div class="p-3 bg-success-subtle text-success rounded-12">
+                    <i class="fas fa-wallet fs-3"></i>
+                </div>
+                <div>
+                    <div class="text-muted small fw-semibold">{{ __('Total Payouts') }}</div>
+                    <h3 class="fw-bold mb-0 text-success">{{ number_format(collect($nodes)->sum('total_payout'), 2) }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm rounded-12 bg-white h-100">
+            <div class="card-body p-3 d-flex align-items-center gap-3">
+                <div class="p-3 {{ $isPaid ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning' }} rounded-12">
+                    <i class="fas {{ $isPaid ? 'fa-check-circle' : 'fa-clock' }} fs-3"></i>
+                </div>
+                <div>
+                    <div class="text-muted small fw-semibold">{{ __('Month Status') }}</div>
+                    <span class="badge {{ $isPaid ? 'bg-success text-white' : 'bg-warning text-dark' }} px-2 py-1 fs-6">
+                        {{ $isPaid ? __('Snapshot (Paid)') : __('Live Preview') }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 {{-- Month / Year Filter --}}
 <div class="card border-0 shadow-sm rounded-12 mb-4">
@@ -53,11 +116,22 @@
     </div>
 </div>
 
-{{-- Tree --}}
+{{-- Tree Card --}}
 <div class="card border-0 shadow-sm rounded-12">
-    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-        <h5 class="card-title mb-0 fw-bold">{{ __('Network for') }} {{ sprintf('%04d-%02d', $year, $month) }}</h5>
-        <span class="badge bg-light text-dark border">{{ count($nodes) }} {{ __('roots') }}</span>
+    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <h5 class="card-title mb-0 fw-bold">{{ __('Network Tree for') }} {{ sprintf('%04d-%02d', $year, $month) }}</h5>
+            <small class="text-muted">{{ __('Click chevrons to expand downline nodes.') }}</small>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="expandAllBtn">
+                <i class="fas fa-folder-open me-1"></i> {{ __('Expand All') }}
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="collapseAllBtn">
+                <i class="fas fa-folder me-1"></i> {{ __('Collapse All') }}
+            </button>
+            <span class="badge bg-light text-dark border ms-2">{{ count($nodes) }} {{ __('roots') }}</span>
+        </div>
     </div>
     <div class="card-body p-3">
         @forelse($nodes as $node)
@@ -83,26 +157,47 @@
         if (!btn) return;
         var li = btn.closest('.payout-node');
         var target = document.querySelector(btn.getAttribute('data-bs-target'));
-        if (!target || target.dataset.loaded) return;
+        if (!target) return;
 
-        var url = li.dataset.childrenUrl;
-        if (!url) return;
-
-        fetch(url)
-            .then(function (r) { return r.json(); })
-            .then(function (children) {
-                if (!children || !children.length) { target.dataset.loaded = '1'; return; }
-                var html = '';
-                children.forEach(function (node) {
-                    html += renderNode(node, {{ $year }}, {{ $month }});
+        if (!target.dataset.loaded && li.dataset.childrenUrl) {
+            fetch(li.dataset.childrenUrl)
+                .then(function (r) { return r.json(); })
+                .then(function (children) {
+                    if (!children || !children.length) { target.dataset.loaded = '1'; return; }
+                    var html = '';
+                    children.forEach(function (node) {
+                        html += renderNode(node, {{ $year }}, {{ $month }});
+                    });
+                    target.innerHTML = html;
+                    target.dataset.loaded = '1';
+                })
+                .catch(function () {
+                    target.innerHTML = '<li class="text-danger small py-1">{{ __('Failed to load children.') }}</li>';
                 });
-                target.innerHTML = html;
-                target.dataset.loaded = '1';
-            })
-            .catch(function () {
-                target.innerHTML = '<li class="text-danger small py-1">{{ __('Failed to load children.') }}</li>';
-            });
+        }
     });
+
+    var expandBtn = document.getElementById('expandAllBtn');
+    if (expandBtn) {
+        expandBtn.addEventListener('click', function () {
+            document.querySelectorAll('.payout-expand').forEach(function(btn) {
+                var target = document.querySelector(btn.getAttribute('data-bs-target'));
+                if (target && !target.classList.contains('show')) {
+                    btn.click();
+                }
+            });
+        });
+    }
+
+    var collapseBtn = document.getElementById('collapseAllBtn');
+    if (collapseBtn) {
+        collapseBtn.addEventListener('click', function () {
+            document.querySelectorAll('.payout-children.show').forEach(function(el) {
+                var bsCollapse = bootstrap.Collapse.getInstance(el) || new bootstrap.Collapse(el, {toggle: false});
+                bsCollapse.hide();
+            });
+        });
+    }
 
     function renderNode(node, year, month) {
         var url = node.has_children
@@ -110,26 +205,26 @@
             : '';
         url = url.replace('__ID__', node.shop_id);
         var chevron = node.has_children
-            ? '<button type="button" class="btn btn-sm btn-link p-0 payout-expand" data-bs-toggle="collapse" data-bs-target="#node-' + node.shop_id + '" aria-expanded="false"><i class="fas fa-chevron-right payout-chevron"></i></button>'
-            : '<span class="d-inline-block" style="width:24px;"></span>';
+            ? '<button type="button" class="btn btn-sm btn-link p-0 payout-expand text-secondary me-1" data-bs-toggle="collapse" data-bs-target="#node-' + node.shop_id + '" aria-expanded="false"><i class="fas fa-chevron-right payout-chevron"></i></button>'
+            : '<span class="d-inline-block me-1" style="width:24px;"></span>';
         var level = node.level !== null
-            ? '<span class="badge bg-success-subtle text-success rounded-pill">L' + node.level + '</span>'
-            : '<span class="badge bg-light text-secondary border rounded-pill">—</span>';
+            ? '<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2">L' + node.level + '</span>'
+            : '<span class="badge bg-light text-secondary border rounded-pill px-2">—</span>';
         var children = node.has_children
             ? '<ul class="list-unstyled ms-4 collapse payout-children" id="node-' + node.shop_id + '"></ul>'
             : '';
-        return '<li class="payout-node" data-shop-id="' + node.shop_id + '" data-children-url="' + url + '">'
-            + '<div class="d-flex align-items-center gap-2 py-2 payout-node-row">' + chevron
+        return '<li class="payout-node border-bottom py-2" data-shop-id="' + node.shop_id + '" data-children-url="' + url + '">'
+            + '<div class="d-flex align-items-center gap-2 flex-wrap payout-node-row">' + chevron
             + '<div class="d-flex align-items-center gap-2 flex-wrap flex-grow-1">'
-            + '<span class="fw-bold text-dark">' + esc(node.shop_name) + '</span>'
-            + '<span class="text-muted small">' + esc(node.owner_name) + '</span>' + level + '</div>'
-            + '<div class="d-flex align-items-center gap-3 text-nowrap small">'
-            + '<span class="text-muted">{{ __('Personal') }} <span class="fw-semibold text-dark">' + fmt(node.personal_sales) + '</span></span>'
-            + '<span class="text-muted">{{ __('Group') }} <span class="fw-semibold text-dark">' + fmt(node.group_sales) + '</span></span>'
-            + '<span class="text-muted">{{ __('Size') }} <span class="fw-semibold text-dark">' + node.group_size + '</span></span>'
-            + '<span class="text-muted">{{ __('Ph1') }} <span class="fw-semibold">' + fmt(node.phase1_amount) + '</span></span>'
-            + '<span class="text-muted">{{ __('Ph2') }} <span class="fw-semibold">' + fmt(node.phase2_amount) + '</span></span>'
-            + '<span class="fw-bold text-success">' + fmt(node.total_payout) + '</span></div></div>' + children + '</li>';
+            + '<span class="fw-bold text-dark fs-6">' + esc(node.shop_name) + '</span>'
+            + '<span class="text-muted small">(' + esc(node.owner_name) + ')</span>' + level + '</div>'
+            + '<div class="d-flex align-items-center gap-3 text-nowrap small bg-light px-3 py-1 rounded-pill">'
+            + '<span class="text-muted">{{ __('Personal') }}: <span class="fw-semibold text-dark">' + fmt(node.personal_sales) + '</span></span>'
+            + '<span class="text-muted">{{ __('Group') }}: <span class="fw-semibold text-dark">' + fmt(node.group_sales) + '</span></span>'
+            + '<span class="text-muted">{{ __('Size') }}: <span class="fw-semibold text-dark">' + node.group_size + '</span></span>'
+            + '<span class="text-muted">{{ __('Ph1') }}: <span class="fw-semibold text-primary">' + fmt(node.phase1_amount) + '</span></span>'
+            + '<span class="text-muted">{{ __('Ph2') }}: <span class="fw-semibold text-info">' + fmt(node.phase2_amount) + '</span></span>'
+            + '<span class="fw-bold text-success fs-6">' + fmt(node.total_payout) + '</span></div></div>' + children + '</li>';
     }
     function fmt(v) { return Number(v).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
     function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }

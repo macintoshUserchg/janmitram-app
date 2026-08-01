@@ -82,8 +82,9 @@ class PayoutController extends Controller
 
         $nodes = PayoutService::networkForMonth($year, $month);
         $months = collect(range(1, 12));
+        $isPaid = ShopMonthlyPayout::where('year', $year)->where('month', $month)->exists();
 
-        return view('admin.payout.network', compact('nodes', 'months', 'year', 'month'));
+        return view('admin.payout.network', compact('nodes', 'months', 'year', 'month', 'isPaid'));
     }
 
     /**
@@ -105,8 +106,9 @@ class PayoutController extends Controller
 
         $nodes = PayoutService::networkForMonth($year, $month);
         $months = collect(range(1, 12));
+        $isPaid = ShopMonthlyPayout::where('year', $year)->where('month', $month)->exists();
 
-        return view('admin.payout.run', compact('nodes', 'months', 'year', 'month'));
+        return view('admin.payout.run', compact('nodes', 'months', 'year', 'month', 'isPaid'));
     }
 
     /**

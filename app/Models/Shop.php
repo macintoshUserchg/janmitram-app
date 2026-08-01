@@ -175,6 +175,30 @@ class Shop extends Model
     }
 
     /**
+     * Get the parent shop in the MLM network.
+     */
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(Shop::class, 'parent_shop_id');
+    }
+
+    /**
+     * Get the direct downline shops of this shop.
+     */
+    public function children(): HasMany
+    {
+        return $this->hasMany(Shop::class, 'parent_shop_id');
+    }
+
+    /**
+     * Get the monthly MLM payouts of this shop.
+     */
+    public function monthlyPayouts(): HasMany
+    {
+        return $this->hasMany(ShopMonthlyPayout::class);
+    }
+
+    /**
      * Get all of the banners for the Shop.
      */
     public function banners(): HasMany
