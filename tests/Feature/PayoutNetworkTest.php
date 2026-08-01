@@ -149,4 +149,13 @@ class PayoutNetworkTest extends TestCase
         $response->assertJsonCount(1);
         $response->assertJsonPath('0.shop_id', $child->id);
     }
+
+    public function test_guide_route_returns_ok(): void
+    {
+        $response = $this->actingAs($this->rootUser())
+            ->get(route('admin.payout.guide'));
+
+        $response->assertOk();
+        $response->assertSee('Payout User Guide & Compensation Plan');
+    }
 }

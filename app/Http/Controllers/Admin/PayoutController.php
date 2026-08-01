@@ -112,6 +112,14 @@ class PayoutController extends Controller
     }
 
     /**
+     * Show the payout user guide and compensation plan documentation.
+     */
+    public function guide(): View
+    {
+        return view('admin.payout.guide');
+    }
+
+    /**
      * Resolve the requested month, defaulting to the latest month with a
      * snapshot, else the previous month.
      *

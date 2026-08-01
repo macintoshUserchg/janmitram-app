@@ -408,6 +408,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:root'])->group
     Route::get('payout/network', [PayoutController::class, 'network'])->name('payout.network');
     Route::get('payout/network/children/{shop}', [PayoutController::class, 'children'])->name('payout.network.children');
     Route::get('payout/run', [PayoutController::class, 'runForm'])->name('payout.run.form');
+    Route::get('payout/guide', [PayoutController::class, 'guide'])->name('payout.guide');
 
     Route::get('category', [App\Http\Controllers\Admin\CategoryController::class, 'index'])->name('category.index');
     Route::get('category/create', [App\Http\Controllers\Admin\CategoryController::class, 'create'])->name('category.create');

@@ -217,7 +217,7 @@
     </li>
 @endhasPermission
 
-@hasPermission(['admin.payout.index', 'admin.payout.network', 'admin.payout.run'])
+@hasPermission(['admin.payout.index', 'admin.payout.network', 'admin.payout.run', 'admin.payout.guide'])
     <!--- Payout Management --->
     <li>
         <a class="menu {{ request()->routeIs('admin.payout.*') ? 'active' : '' }}"
@@ -247,6 +247,12 @@
                     <a href="{{ route('admin.payout.run.form') }}"
                         class="subMenu hasCount {{ request()->routeIs('admin.payout.run*') ? 'active' : '' }}">
                         {{ __('Run Payout') }}
+                    </a>
+                @endhasPermission
+                @hasPermission('admin.payout.guide')
+                    <a href="{{ route('admin.payout.guide') }}"
+                        class="subMenu hasCount {{ request()->routeIs('admin.payout.guide') ? 'active' : '' }}">
+                        {{ __('Payout User Guide & Plan') }}
                     </a>
                 @endhasPermission
             </div>
