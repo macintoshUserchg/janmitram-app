@@ -23,22 +23,10 @@ class ExecutePaymentController extends Controller
             $response = $this->executePayment($paymentID, $token);
 
             if ($response->statusCode == '0000') {
-                if ($info && $info['type'] == 'subscription') {
-                    return to_route('subscription.payment.success', ['payment' => $payment->id, 'token' => $info['payment_token']]);
-                }
-
                 return to_route('payment.success', ['payment' => $payment->id, 'token' => $token]);
             }
 
-            if ($info && $info['type'] == 'subscription') {
-                return to_route('subscription.payment.cancel', ['payment' => $payment, 'token' => $info['payment_token'], 'error' => 'Payment execute failed']);
-            }
-
             return to_route('order.payment.cancel', ['payment' => $payment, 'error' => 'Payment execute failed']);
-        }
-
-        if ($info && $info['type'] == 'subscription') {
-            return to_route('subscription.payment.cancel', ['payment' => $payment, 'token' => $info['payment_token'], 'error' => 'Payment execute failed']);
         }
 
         return to_route('order.payment.cancel', ['payment' => $payment, 'error' => 'Payment execute failed']);

@@ -29,18 +29,8 @@ class ProcessController extends Controller
 
         $successUrl = $cancelUrl = null;
 
-        if ($info) {
-            if ($info['type'] == 'subscription') {
-                $successUrl = route('subscription.payment.success', ['payment' => $payment, 'token' => $paymentToken]);
-                $cancelUrl = route('subscription.payment.cancel', ['payment' => $payment, 'token' => $paymentToken]);
-            } else {
-                $successUrl = route('payment.success', $payment->id);
-                $cancelUrl = route('payment.cancel', $payment->id);
-            }
-        } else {
-            $successUrl = route('payment.success', $payment->id);
-            $cancelUrl = route('payment.cancel', $payment->id);
-        }
+        $successUrl = route('payment.success', $payment->id);
+        $cancelUrl = route('payment.cancel', $payment->id);
 
         $session = Session::create([
             'payment_method_types' => ['card'],

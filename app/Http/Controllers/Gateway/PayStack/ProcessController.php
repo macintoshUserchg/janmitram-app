@@ -28,20 +28,9 @@ class ProcessController extends Controller
         $successUrl = $cancelUrl = null;
         $value = null;
 
-        if ($info) {
-            if ($info['type'] == 'subscription') {
-                $successUrl = route('subscription.payment.success', ['payment' => $payment, 'token' => $paymentToken]);
-                $cancelUrl = route('subscription.payment.cancel', ['payment' => $payment, 'token' => $paymentToken]);
-                $value = $info['description'];
-            } else {
-                $successUrl = route('payment.success', $payment->id);
-                $cancelUrl = route('payment.cancel', $payment->id);
-            }
-        } else {
-            $successUrl = route('payment.success', $payment->id);
-            $cancelUrl = route('payment.cancel', $payment->id);
-            $value = 'Total Orders ('.$payment->orders->count().')';
-        }
+        $successUrl = route('payment.success', $payment->id);
+        $cancelUrl = route('payment.cancel', $payment->id);
+        $value = $info ? ($info['description'] ?? '') : 'Total Orders ('.$payment->orders->count().')';
 
         try {
             // Initialize transaction with success and cancel URLs

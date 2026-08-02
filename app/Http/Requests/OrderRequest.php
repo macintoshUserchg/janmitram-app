@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use App\Repositories\ShopRepository;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -41,29 +40,7 @@ class OrderRequest extends FormRequest
 
     public function withValidator($validator)
     {
-        $validator->after(function ($validator) {
-            $generalSetting = generaleSetting('setting');
-
-            if ($generalSetting?->business_based_on != 'subscription') {
-                return;
-            }
-
-            $shops = ShopRepository::query()->whereIn('id', $this->shop_ids)->get();
-
-            foreach ($shops as $shop) {
-                if ($shop->user->hasRole('root')) {
-                    continue;
-                }
-
-                $subscription = $shop->currentSubscription;
-
-                if (! $subscription) {
-                    $validator->errors()->add('shop_ids', 'Some of the selected shops are not available.');
-
-                    return;
-                }
-            }
-        });
+        // Subscription checks removed
     }
 
     public function messages(): array

@@ -47,15 +47,7 @@ class ProcessController extends Controller
 
         $successUrl = route('paypal.payment.success', ['paypalPayment' => $paypalPayment, 'info' => $info]);
 
-        if ($info) {
-            if ($info['type'] == 'subscription') {
-                $cancelUrl = route('subscription.payment.cancel', ['payment' => $payment, 'token' => $paymentToken]);
-            } else {
-                $cancelUrl = route('payment.cancel', $payment->id);
-            }
-        } else {
-            $cancelUrl = route('payment.cancel', $payment->id);
-        }
+        $cancelUrl = route('payment.cancel', $payment->id);
 
         $request = new OrdersCreateRequest;
         $request->prefer('return=representation');
@@ -110,16 +102,8 @@ class ProcessController extends Controller
             }
 
             if ($response->result->status == 'COMPLETED' && $response->result->purchase_units[0]->payments->captures[0]->status == 'COMPLETED') {
-                if ($info && $info['type'] == 'subscription') {
-                    return to_route('subscription.payment.success', ['payment' => $payment, 'token' => $payment->payment_token]);
-                }
-
                 return to_route('payment.success', ['payment' => $payment]);
             } else {
-                if ($info && $info['type'] == 'subscription') {
-                    return to_route('subscription.payment.cancel', ['payment' => $payment, 'token' => $payment->payment_token, 'error' => 'Payment failed']);
-                }
-
                 return to_route('payment.cancel', ['payment' => $payment, 'error' => 'Payment failed']);
             }
         }

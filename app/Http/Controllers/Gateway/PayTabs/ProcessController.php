@@ -19,17 +19,10 @@ class ProcessController extends Controller
     {
         $config = json_decode($paymentGateway->config);
 
-        if ($info && $info['type'] == 'subscription') {
-            $name = $info['name'] ?? 'Not Available';
-            $email = $info['email'] ?? 'Not Available';
-            $phone = $info['phone'] ?? '0000000000';
-            $callbackUrl = route('paytabs.payment.callback', ['payment' => $payment, 'info' => $info]);
-        } else {
-            $name = $payment->orders[0]->customer?->user?->name ?? 'Not Available';
-            $email = $payment->orders[0]->customer?->user?->email ?? 'Not Available';
-            $phone = $payment->orders[0]->customer?->user?->phone ?? '0000000000';
-            $callbackUrl = route('paytabs.payment.callback', $payment->id);
-        }
+        $name = $info ? ($info['name'] ?? 'Not Available') : ($payment->orders[0]->customer?->user?->name ?? 'Not Available');
+        $email = $info ? ($info['email'] ?? 'Not Available') : ($payment->orders[0]->customer?->user?->email ?? 'Not Available');
+        $phone = $info ? ($info['phone'] ?? '0000000000') : ($payment->orders[0]->customer?->user?->phone ?? '0000000000');
+        $callbackUrl = route('paytabs.payment.callback', $payment->id);
 
         $params = [
             'profile_id' => $config->profile_id,
@@ -94,17 +87,9 @@ class ProcessController extends Controller
         ])->json();
 
         if (isset($response['payment_result']['response_status']) && $response['payment_result']['response_status'] == 'A') {
-            if ($info && $info['type'] == 'subscription') {
-                return to_route('subscription.payment.success', ['payment' => $payment, 'token' => $payment->payment_token]);
-            }
-
             return to_route('payment.success', ['payment' => $payment]);
         } else {
             $errorMessage = isset($response['payment_result']['response_message']) ? $response['payment_result']['response_message'] : 'Payment failed';
-
-            if ($info && $info['type'] == 'subscription') {
-                return to_route('subscription.payment.cancel', ['payment' => $payment, 'token' => $payment->payment_token, 'error' => $errorMessage]);
-            }
 
             return to_route('order.payment.cancel', ['payment' => $payment, 'error' => $errorMessage]);
         }

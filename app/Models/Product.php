@@ -2,10 +2,7 @@
 
 namespace App\Models;
 
-use App\Models\Scopes\hasSubscription;
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Attributes\ScopedBy;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -18,7 +15,6 @@ use Illuminate\Support\Facades\Storage;
 use Modules\Purchase\App\Models\ProductStockOut;
 use Modules\Purchase\App\Models\PurchaseProduct;
 
-#[ScopedBy([hasSubscription::class])]
 class Product extends Model
 {
     use HasFactory ,SoftDeletes;

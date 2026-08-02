@@ -31,13 +31,8 @@ class ProcessController extends Controller
             $customerName = $info['name'] ?? 'Example Name';
             $description = $info['description'];
 
-            if ($info['type'] == 'subscription') {
-                $successUrl = route('subscription.payment.success', ['payment' => $payment, 'token' => $paymentToken]);
-                $cancelUrl = route('subscription.payment.cancel', ['payment' => $payment, 'token' => $paymentToken]);
-            } else {
-                $successUrl = route('payment.success', $payment->id);
-                $cancelUrl = route('payment.cancel', $payment->id);
-            }
+            $successUrl = route('payment.success', $payment->id);
+            $cancelUrl = route('payment.cancel', $payment->id);
         } else {
             $customerEmail = $payment->orders[0]?->customer?->user?->email ?? 'example@gmail.com';
             $customerPhone = $payment->orders[0]?->customer?->user?->phone ?? '01870******';

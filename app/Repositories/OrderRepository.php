@@ -249,18 +249,6 @@ class OrderRepository extends Repository
             'order_area' => $address->getArea->name ?? null,
         ]);
 
-        $generalSetting = generaleSetting('setting');
-
-        if ($generalSetting?->business_based_on == 'subscription') {
-            $subscription = $shop->currentSubscription;
-
-            if ($subscription && $subscription->remaining_sales && $subscription->remaining_sales > 0) {
-                $subscription->update([
-                    'remaining_sales' => $subscription->remaining_sales - 1,
-                ]);
-            }
-        }
-
         return $order;
     }
 

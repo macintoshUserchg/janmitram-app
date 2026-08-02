@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Gateway\Bkash;
 use App\Http\Controllers\Controller;
 use App\Models\Payment;
 use App\Models\PaymentGateway;
-use Illuminate\Support\Str;
 
 class ProcessController extends Controller
 {
@@ -24,18 +23,7 @@ class ProcessController extends Controller
             return json_encode(['error' => $response->statusMessage]);
         }
 
-        if ($info && $info['type'] == 'subscription') {
-            $paymentToken = Str::uuid()->toString();
-
-            $payment->update([
-                'payment_token' => $paymentToken,
-            ]);
-
-            $info['payment_token'] = $paymentToken;
-            $callbackUrl = route('bkash.payment.execute', ['payment' => $payment->id, 'info' => $info, 'token' => $response->id_token]);
-        } else {
-            $callbackUrl = route('bkash.payment.execute', ['payment' => $payment->id, 'token' => $response->id_token]);
-        }
+        $callbackUrl = route('bkash.payment.execute', ['payment' => $payment->id, 'token' => $response->id_token]);
 
         $url = 'https://tokenized.sandbox.bka.sh/v1.2.0-beta/tokenized/checkout/create';
         if ($paymentGateway->mode == 'live') {
