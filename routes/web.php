@@ -208,7 +208,7 @@ Route::prefix('shop')->name('shop.')->middleware(['web'])->group(function () {
         Route::post('employee/{user}/reset-password', [EmployeeController::class, 'resetPassword'])->name('employee.reset-password');
         Route::delete('employee/{user}', [EmployeeController::class, 'destroy'])->name('employee.destroy');
 
-        Route::get('order', [OrderController::class, 'index'])->name('order.index');
+        Route::get('order/{status?}', [OrderController::class, 'index'])->name('order.index');
         Route::get('order/{order}', [OrderController::class, 'show'])->name('order.show');
         Route::get('rider/{id}/location', [OrderController::class, 'riderLocation'])->name('rider.location');
         Route::match(['get', 'put'], 'order/{order}/status', [OrderController::class, 'statusChange'])->name('order.status.change');
@@ -237,7 +237,7 @@ Route::prefix('shop')->name('shop.')->middleware(['web'])->group(function () {
         Route::match(['get', 'post'], 'pos/sales', [POSController::class, 'sales'])->name('pos.sales');
         Route::match(['get', 'post'], 'pos/draft', [POSController::class, 'draft'])->name('pos.draft');
         Route::delete('pos/draft/{posCart}', [POSController::class, 'draftDelete'])->name('pos.draft.delete');
-        Route::match(['get', 'post'], 'pos/invoice', [POSController::class, 'invoice'])->name('pos.invoice');
+        Route::match(['get', 'post'], 'pos/invoice/{order?}', [POSController::class, 'invoice'])->name('pos.invoice');
         Route::post('pos/store-order', [POSController::class, 'storeOrder'])->name('pos.submitOrder');
         Route::post('pos/store-customer', [POSController::class, 'storeCustomer'])->name('pos.customerStore');
         Route::match(['get', 'post'], 'pos/product', [POSController::class, 'getProduct'])->name('pos.product');

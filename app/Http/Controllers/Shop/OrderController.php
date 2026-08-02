@@ -15,6 +15,7 @@ use App\Services\NotificationServices;
 use Endroid\QrCode\QrCode as EndroidQrCode;
 use Endroid\QrCode\Writer\PngWriter;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use Mpdf\Config\ConfigVariables;
 use Mpdf\Config\FontVariables;
 use Mpdf\Mpdf;
@@ -24,8 +25,9 @@ class OrderController extends Controller
     /**
      * Display the order list with filter status.
      */
-    public function index($status = null)
+    public function index(Request $request, $status = null)
     {
+        $status = $status ?: $request->get('status');
         $status = $status ? str_replace('_', ' ', $status) : '';
 
         $shop = generaleSetting('shop');
@@ -35,7 +37,6 @@ class OrderController extends Controller
         })->latest('id')->paginate(20);
 
         return view('shop.order.index', compact('orders', 'status'));
-
     }
 
     /**
@@ -140,6 +141,10 @@ class OrderController extends Controller
 
     public function downloadInvoice($id)
     {
+        ini_set('memory_limit', '512M');
+        $tmpDir = storage_path('app/public/mpdf_tmp');
+        File::ensureDirectoryExists($tmpDir);
+
         $order = Order::withoutGlobalScopes()->findOrFail($id);
 
         $orderCode = '#'.$order->prefix.$order->order_code;
@@ -171,7 +176,7 @@ class OrderController extends Controller
             'margin_bottom' => 0,
             'autoScriptToLang' => true,
             'autoLangToFont' => true,
-            'tempDir' => storage_path('app/public/mpdf_tmp'),
+            'tempDir' => $tmpDir,
             'fontDir' => array_merge($fontDirs, [public_path('fonts')]),
             'fontdata' => $fontData,
             'format' => $paperSize,
@@ -180,15 +185,16 @@ class OrderController extends Controller
         $view = view('PDF.invoice', compact('order', 'qrCodeImage'))->render();
         $mPdf->WriteHTML($view);
 
-        // Output the PDF as a download
-        // return $mPdf->Output('invoice-'.$order->prefix.$order->order_code.'.pdf', 'D');
-
         // Output the PDF as a stream
         return $mPdf->Output('invoice-'.$order->prefix.$order->order_code.'.pdf', 'I');
     }
 
     public function paymentSlip($id)
     {
+        ini_set('memory_limit', '512M');
+        $tmpDir = storage_path('app/public/mpdf_tmp');
+        File::ensureDirectoryExists($tmpDir);
+
         $order = Order::findOrFail($id);
 
         // pdf config
@@ -212,7 +218,7 @@ class OrderController extends Controller
             'margin_bottom' => 0,
             'autoScriptToLang' => true,
             'autoLangToFont' => true,
-            'tempDir' => storage_path('app/public/mpdf_tmp'),
+            'tempDir' => $tmpDir,
             'fontDir' => array_merge($fontDirs, [public_path('fonts')]),
             'fontdata' => $fontData,
             'format' => $paperSize,

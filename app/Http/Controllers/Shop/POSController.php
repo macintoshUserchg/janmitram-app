@@ -23,6 +23,7 @@ use App\Repositories\VatTaxRepository;
 use Endroid\QrCode\QrCode as EndroidQrCode;
 use Endroid\QrCode\Writer\PngWriter;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Mpdf\Config\ConfigVariables;
 use Mpdf\Config\FontVariables;
@@ -86,8 +87,14 @@ class POSController extends Controller
         return back()->withSuccess(__('Draft deleted successfully'));
     }
 
-    public function invoice($orderId)
+    public function invoice(Request $request, $orderId = null)
     {
+        ini_set('memory_limit', '512M');
+
+        if (! $orderId) {
+            $orderId = $request->get('id') ?: array_key_first($request->query()) ?: 1;
+        }
+
         $order = Order::withoutGlobalScopes()->findOrFail($orderId);
 
         $orderCode = '#'.$order->prefix.$order->order_code;
@@ -97,6 +104,9 @@ class POSController extends Controller
 
         $writer = new PngWriter;
         $qrCodeImage = $writer->write($qrCode)->getDataUri();
+
+        $tmpDir = storage_path('app/public/mpdf_tmp');
+        File::ensureDirectoryExists($tmpDir);
 
         // pdf config
         $defaultConfig = (new ConfigVariables)->getDefaults();
@@ -118,7 +128,7 @@ class POSController extends Controller
             'margin_bottom' => 0,
             'autoScriptToLang' => true,
             'autoLangToFont' => true,
-            'tempDir' => storage_path('app/public/mpdf_tmp'),
+            'tempDir' => $tmpDir,
             'fontDir' => array_merge($fontDirs, [public_path('fonts')]),
             'fontdata' => $fontData,
             'format' => $paperSize,
