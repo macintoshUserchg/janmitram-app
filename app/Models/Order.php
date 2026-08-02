@@ -5,7 +5,6 @@ namespace App\Models;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
-use App\Models\Scopes\PosOrderFalse;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -101,10 +100,7 @@ class Order extends Model
     /**
      * apply global scope
      */
-    protected static function booted()
-    {
-        static::addGlobalScope(new PosOrderFalse);
-    }
+    protected static function booted() {}
 
     protected static function boot()
     {
