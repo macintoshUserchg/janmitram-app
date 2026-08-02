@@ -1,104 +1,119 @@
-<div class="modal-header bg-light py-3">
-    <div class="d-flex align-items-center justify-content-between w-100 me-3 flex-wrap gap-2">
-        <div>
-            <h5 class="modal-title fw-bold text-dark mb-0">
-                <i class="fas fa-receipt text-primary me-2"></i>{{ __('Order Details') }} #{{ $order->prefix . $order->order_code }}
-            </h5>
-            <small class="text-muted"><i class="far fa-clock me-1"></i>{{ $order->created_at->format('M d, Y h:i A') }}</small>
+<div class="modal-header bg-gradient bg-primary text-white py-3 px-4 rounded-top">
+    <div class="d-flex align-items-center justify-content-between w-100 me-2">
+        <div class="d-flex align-items-center gap-2">
+            <i class="fas fa-shopping-bag fs-4 text-warning"></i>
+            <div>
+                <h5 class="modal-title fw-bold text-white mb-0">
+                    {{ __('Order Details') }} #{{ $order->prefix . $order->order_code }}
+                </h5>
+                <small class="text-white-50"><i class="far fa-clock me-1"></i>{{ $order->created_at->format('d M Y, h:i A') }}</small>
+            </div>
         </div>
-        <div class="d-flex gap-2 flex-wrap">
-            <a href="{{ route('shop.payment-slip', $order->id) }}" target="_blank" class="btn btn-sm btn-success">
-                <i class="fas fa-file-invoice me-1"></i>{{ __('Payment Slip') }}
+        <div class="d-flex align-items-center gap-2">
+            <a href="{{ route('shop.download-invoice', $order->id) }}" target="_blank" class="btn btn-sm btn-light text-primary fw-bold shadow-sm">
+                <i class="fas fa-file-pdf me-1 text-danger"></i>{{ __('Invoice PDF') }}
             </a>
-            <a href="{{ route('shop.download-invoice', $order->id) }}" target="_blank" class="btn btn-sm btn-outline-secondary">
-                <i class="fas fa-file-pdf me-1"></i>{{ __('Download Invoice') }}
-            </a>
-            <a href="{{ route('shop.order.show', $order->id) }}" class="btn btn-sm btn-primary">
-                <i class="fas fa-external-link-alt me-1"></i>{{ __('Full Page View') }}
-            </a>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
     </div>
-    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 </div>
 
-<div class="modal-body p-4">
-    <!-- Row 1: Order Info & Status Change Controls -->
+<div class="modal-body p-4 bg-light-subtle">
+    <!-- Status Overview Cards -->
     <div class="row g-3 mb-4">
-        <div class="col-md-8">
-            <div class="card h-100 border-light shadow-sm">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-12 p-3 text-center bg-white h-100">
+                <span class="text-muted small fw-semibold text-uppercase d-block mb-1">{{ __('Order Status') }}</span>
+                <div>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 fs-6 rounded-pill fw-bold">
+                        <i class="fas fa-info-circle me-1"></i>{{ is_object($order->order_status) ? $order->order_status->value : $order->order_status }}
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-12 p-3 text-center bg-white h-100">
+                <span class="text-muted small fw-semibold text-uppercase d-block mb-1">{{ __('Payment Status') }}</span>
+                <div>
+                    @php
+                        $payStatus = is_object($order->payment_status) ? $order->payment_status->value : $order->payment_status;
+                    @endphp
+                    <span class="badge {{ $payStatus == 'Paid' ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-warning-subtle text-warning border border-warning-subtle' }} px-3 py-2 fs-6 rounded-pill fw-bold">
+                        <i class="fas {{ $payStatus == 'Paid' ? 'fa-check-circle' : 'fa-exclamation-circle' }} me-1"></i>{{ $payStatus }}
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-12 p-3 text-center bg-white h-100">
+                <span class="text-muted small fw-semibold text-uppercase d-block mb-1">{{ __('Payment Method') }}</span>
+                <div>
+                    <span class="badge bg-secondary-subtle text-dark border border-secondary-subtle px-3 py-2 fs-6 rounded-pill fw-bold">
+                        <i class="fas fa-credit-card me-1"></i>{{ is_object($order->payment_method) ? $order->payment_method->value : $order->payment_method }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer & Shipping Grid -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-12 h-100 bg-white">
+                <div class="card-header bg-white border-bottom py-2.5 px-3 fw-bold text-dark d-flex align-items-center gap-2">
+                    <i class="fas fa-user-circle text-primary fs-5"></i>{{ __('Customer Details') }}
+                </div>
                 <div class="card-body p-3">
-                    <div class="row g-3">
-                        <div class="col-6 col-sm-4">
-                            <label class="text-muted small d-block">{{ __('Order ID') }}</label>
-                            <span class="fw-bold text-dark">#{{ $order->prefix . $order->order_code }}</span>
-                        </div>
-                        <div class="col-6 col-sm-4">
-                            <label class="text-muted small d-block">{{ __('Order Date') }}</label>
-                            <span class="fw-semibold">{{ $order->created_at->format('M d, Y') }}</span>
-                        </div>
-                        <div class="col-6 col-sm-4">
-                            <label class="text-muted small d-block">{{ __('Delivery Date') }}</label>
-                            <span class="fw-semibold">{{ $order->delivery_date ? Carbon\Carbon::parse($order->delivery_date)->format('M d, Y') : '-' }}</span>
-                        </div>
-                        <div class="col-6 col-sm-4">
-                            <label class="text-muted small d-block">{{ __('Payment Method') }}</label>
-                            <span class="badge bg-secondary px-2.5 py-1.5 fs-6">{{ is_object($order->payment_method) ? $order->payment_method->value : $order->payment_method }}</span>
-                        </div>
-                        <div class="col-6 col-sm-4">
-                            <label class="text-muted small d-block">{{ __('Payment Status') }}</label>
-                            <span class="badge {{ (is_object($order->payment_status) ? $order->payment_status->value : $order->payment_status) == 'Paid' ? 'bg-success' : 'bg-warning text-dark' }} px-2.5 py-1.5 fs-6">
-                                {{ is_object($order->payment_status) ? $order->payment_status->value : $order->payment_status }}
-                            </span>
-                        </div>
-                        <div class="col-6 col-sm-4">
-                            <label class="text-muted small d-block">{{ __('Current Order Status') }}</label>
-                            <span class="badge bg-primary px-2.5 py-1.5 fs-6">{{ is_object($order->order_status) ? $order->order_status->value : $order->order_status }}</span>
-                        </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted small">{{ __('Customer Name') }}:</span>
+                        <span class="fw-bold text-dark">
+                            {{ $order->customer?->user?->name ?? ($order->pos_order ? __('Walk-in Customer / POS') : __('N/A')) }}
+                        </span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted small">{{ __('Phone Number') }}:</span>
+                        <span class="fw-semibold text-dark">{{ $order->customer?->user?->phone ?? 'N/A' }}</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-4">
-            <div class="card h-100 border-light shadow-sm bg-light">
-                <div class="card-body p-3 d-flex flex-column justify-content-center">
-                    <label class="text-muted small fw-bold mb-2">{{ __('Change Order Status') }}</label>
-                    <div class="dropdown w-100">
-                        <button class="btn btn-outline-primary dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <span>{{ is_object($order->order_status) ? $order->order_status->value : $order->order_status }}</span>
-                        </button>
-                        <ul class="dropdown-menu w-100 shadow-sm">
-                            @foreach ($orderStatus as $status)
-                                <li>
-                                    <a class="dropdown-item py-2 {{ (is_object($order->order_status) ? $order->order_status->value : $order->order_status) == $status->value ? 'active fw-bold' : '' }}"
-                                       href="{{ route('shop.order.status.change', $order->id) }}?status={{ $status->value }}">
-                                        {{ __($status->value) }}
-                                    </a>
-                                </li>
-                            @endforeach
-                        </ul>
-                    </div>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-12 h-100 bg-white">
+                <div class="card-header bg-white border-bottom py-2.5 px-3 fw-bold text-dark d-flex align-items-center gap-2">
+                    <i class="fas fa-map-marker-alt text-warning fs-5"></i>{{ __('Shipping Address') }}
+                </div>
+                <div class="card-body p-3">
+                    @if ($order->pos_order || !$order->address)
+                        <div class="text-muted fst-italic small">
+                            <i class="fas fa-store me-1 text-secondary"></i>{{ __('POS Counter Sale (In-Store Purchase - No Shipping Required)') }}
+                        </div>
+                    @else
+                        <div class="fw-bold text-dark mb-1">{{ $order->address->name }} ({{ $order->address->phone }})</div>
+                        <div class="text-muted small">{{ $order->address->address_line }}, {{ $order->address->area }}</div>
+                    @endif
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Products Table -->
-    <div class="card border-light shadow-sm mb-4">
-        <div class="card-header bg-white fw-bold py-2 border-bottom">
-            <i class="fas fa-box me-1 text-primary"></i>{{ __('Purchased Items') }} ({{ count($order->products) }})
+    <div class="card border-0 shadow-sm rounded-12 mb-4 bg-white overflow-hidden">
+        <div class="card-header bg-white border-bottom py-3 px-3 fw-bold text-dark d-flex align-items-center justify-content-between">
+            <span class="d-flex align-items-center gap-2">
+                <i class="fas fa-boxes text-success fs-5"></i>{{ __('Order Items') }}
+            </span>
+            <span class="badge bg-light text-dark border">{{ count($order->products) }} {{ __('Items') }}</span>
         </div>
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
+                <thead class="table-light text-uppercase small text-muted">
                     <tr>
-                        <th style="width: 50px;" class="text-center">{{ __('SL') }}</th>
+                        <th class="text-center" style="width: 50px;">#</th>
                         <th>{{ __('Product') }}</th>
-                        <th class="text-center" style="width: 90px;">{{ __('Quantity') }}</th>
-                        <th class="text-center" style="width: 80px;">{{ __('Size') }}</th>
-                        <th class="text-center" style="width: 80px;">{{ __('Color') }}</th>
-                        <th class="text-end" style="width: 110px;">{{ __('Unit Price') }}</th>
-                        <th class="text-end" style="width: 120px;">{{ __('Total') }}</th>
+                        <th class="text-center" style="width: 90px;">{{ __('Qty') }}</th>
+                        <th class="text-end" style="width: 120px;">{{ __('Unit Price') }}</th>
+                        <th class="text-end" style="width: 130px;">{{ __('Total Amount') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -107,27 +122,27 @@
                             $price = $product->pivot->price > 0 ? $product->pivot->price : ($product->discount_price > 0 ? $product->discount_price : $product->price);
                         @endphp
                         <tr>
-                            <td class="text-center">{{ $key + 1 }}</td>
+                            <td class="text-center fw-bold text-muted">{{ $key + 1 }}</td>
                             <td>
-                                <div class="d-flex align-items-center gap-2">
-                                    <img src="{{ $product->thumbnail }}" alt="" class="rounded border" width="42" height="42" style="object-fit: cover;">
+                                <div class="d-flex align-items-center gap-3">
+                                    <img src="{{ $product->thumbnail }}" alt="" class="rounded border p-1 bg-light" width="48" height="48" style="object-fit: cover;">
                                     <div>
-                                        <div class="fw-semibold text-dark">{{ $product->name }}</div>
+                                        <div class="fw-bold text-dark">{{ $product->name }}</div>
                                         @if (module_exists('purchase') && !empty($product->pivot->sku))
-                                            <small class="text-muted">#{{ __('SKU') }}: <span class="text-primary">{{ $product->pivot->sku }}</span></small>
+                                            <span class="badge bg-light text-muted border">#SKU: {{ $product->pivot->sku }}</span>
                                         @endif
                                     </div>
                                 </div>
                             </td>
-                            <td class="text-center fw-bold">{{ $product->pivot->quantity }}</td>
-                            <td class="text-center text-muted">{{ $product->pivot->size ?? '-' }}</td>
-                            <td class="text-center text-muted">{{ $product->pivot->color ?? '-' }}</td>
-                            <td class="text-end">{{ showCurrency($price) }}</td>
+                            <td class="text-center">
+                                <span class="badge bg-light text-dark border fs-6 px-3 py-1 fw-bold">{{ $product->pivot->quantity }}</span>
+                            </td>
+                            <td class="text-end fw-semibold text-muted">{{ showCurrency($price) }}</td>
                             <td class="text-end fw-bold text-dark">{{ showCurrency($product->pivot->quantity * $price) }}</td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center py-4 text-muted fs-6">{{ __('No products found in this order.') }}</td>
+                            <td colspan="5" class="text-center py-4 text-muted">{{ __('No products found for this order.') }}</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -135,76 +150,32 @@
         </div>
     </div>
 
-    <!-- Row 2: Customer Info, Shipping Address & Financial Totals -->
-    <div class="row g-4">
-        <!-- Customer Info -->
-        <div class="col-md-4">
-            <div class="card h-100 border-light shadow-sm">
-                <div class="card-header bg-white fw-bold py-2 border-bottom">
-                    <i class="fas fa-user me-1 text-primary"></i>{{ __('Customer Info') }}
-                </div>
+    <!-- Financial Calculation Summary Card -->
+    <div class="row justify-content-end">
+        <div class="col-md-6 col-lg-5">
+            <div class="card border-0 shadow-sm rounded-12 bg-white">
                 <div class="card-body p-3">
-                    <div class="mb-2">
-                        <span class="text-muted d-block small">{{ __('Name') }}</span>
-                        <span class="fw-semibold text-dark">
-                            {{ $order->customer?->user?->name ?? ($order->pos_order ? __('Walk-in Customer / POS') : __('N/A')) }}
-                        </span>
-                    </div>
-                    <div>
-                        <span class="text-muted d-block small">{{ __('Phone') }}</span>
-                        <span class="fw-semibold text-dark">{{ $order->customer?->user?->phone ?? 'N/A' }}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Shipping Address -->
-        <div class="col-md-4">
-            <div class="card h-100 border-light shadow-sm">
-                <div class="card-header bg-white fw-bold py-2 border-bottom">
-                    <i class="fas fa-map-marker-alt me-1 text-warning"></i>{{ __('Shipping Address') }}
-                </div>
-                <div class="card-body p-3">
-                    @if ($order->pos_order || !$order->address)
-                        <div class="text-muted fst-italic">
-                            <i class="fas fa-store me-1"></i>{{ __('POS Counter Sale (In-Store Purchase - No Shipping Required)') }}
-                        </div>
-                    @else
-                        <div class="fw-semibold text-dark mb-1">{{ $order->address->name }} ({{ $order->address->phone }})</div>
-                        <div class="text-muted small">{{ $order->address->address_line }}, {{ $order->address->area }}</div>
-                    @endif
-                </div>
-            </div>
-        </div>
-
-        <!-- Financial Order Summary -->
-        <div class="col-md-4">
-            <div class="card h-100 border-light shadow-sm">
-                <div class="card-header bg-white fw-bold py-2 border-bottom">
-                    <i class="fas fa-calculator me-1 text-success"></i>{{ __('Order Summary') }}
-                </div>
-                <div class="card-body p-3">
-                    <div class="d-flex justify-content-between mb-1.5">
-                        <span class="text-muted">{{ __('Sub Total') }}</span>
-                        <span class="fw-medium">{{ showCurrency($order->total_amount) }}</span>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted small">{{ __('Sub Total') }}</span>
+                        <span class="fw-semibold">{{ showCurrency($order->total_amount) }}</span>
                     </div>
                     @if($order->coupon_discount > 0)
-                        <div class="d-flex justify-content-between mb-1.5 text-danger">
-                            <span>{{ __('Coupon Discount') }}</span>
-                            <span>-{{ showCurrency($order->coupon_discount) }}</span>
+                        <div class="d-flex justify-content-between mb-2 text-danger">
+                            <span class="small">{{ __('Coupon Discount') }}</span>
+                            <span class="fw-semibold">-{{ showCurrency($order->coupon_discount) }}</span>
                         </div>
                     @endif
-                    <div class="d-flex justify-content-between mb-1.5">
-                        <span class="text-muted">{{ __('Delivery Charge') }}</span>
-                        <span class="fw-medium">{{ showCurrency($order->delivery_charge) }}</span>
-                    </div>
                     <div class="d-flex justify-content-between mb-2">
-                        <span class="text-muted">{{ __('VAT & Tax') }}</span>
-                        <span class="fw-medium">{{ showCurrency($order->tax_amount) }}</span>
+                        <span class="text-muted small">{{ __('Delivery Charge') }}</span>
+                        <span class="fw-semibold">{{ showCurrency($order->delivery_charge) }}</span>
                     </div>
-                    <div class="d-flex justify-content-between border-top pt-2 fw-bold fs-5 text-dark">
-                        <span>{{ __('Grand Total') }}</span>
-                        <span class="text-primary">{{ showCurrency($order->payable_amount) }}</span>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted small">{{ __('VAT & Tax') }}</span>
+                        <span class="fw-semibold">{{ showCurrency($order->tax_amount) }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between border-top pt-2 mt-1">
+                        <span class="fw-bold fs-5 text-dark">{{ __('Grand Total') }}</span>
+                        <span class="fw-bold fs-5 text-primary">{{ showCurrency($order->payable_amount) }}</span>
                     </div>
                 </div>
             </div>
@@ -212,6 +183,9 @@
     </div>
 </div>
 
-<div class="modal-footer bg-light py-2">
-    <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">{{ __('Close') }}</button>
+<div class="modal-footer bg-white border-top py-3 px-4 d-flex justify-content-between align-items-center">
+    <div class="small text-muted">
+        <i class="fas fa-info-circle me-1"></i>{{ __('Showing details for Order') }} <strong>#{{ $order->prefix . $order->order_code }}</strong>
+    </div>
+    <button type="button" class="btn btn-secondary px-4 fw-semibold" data-bs-dismiss="modal">{{ __('Close') }}</button>
 </div>
