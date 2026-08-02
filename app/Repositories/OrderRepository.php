@@ -627,7 +627,15 @@ class OrderRepository extends Repository
                 $wallet = WalletRepository::storeByRequest($order->shop->user);
             }
 
-            WalletRepository::updateByRequest($wallet, $order->total_amount, 'credit');
+            TransactionRepository::storeByRequest(
+                $wallet,
+                $order->total_amount,
+                'credit',
+                false,
+                false,
+                'order_sale',
+                "Order sale proceeds for order #{$order->prefix}{$order->order_code}"
+            );
 
             if ($generaleSetting?->business_based_on == 'commission') {
                 TransactionRepository::storeByRequest($wallet, $commission, 'debit', true, true, 'admin commission added', 'order commission added in admin wallet');

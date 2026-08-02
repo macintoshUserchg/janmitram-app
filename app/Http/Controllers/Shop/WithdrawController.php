@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\WithdrawRequest;
 use App\Models\GeneraleSetting;
 use App\Models\Notification;
+use App\Models\Shop;
 use App\Models\ShopMonthlyPayout;
 use App\Models\Withdraw;
 use App\Repositories\NotificationRepository;
@@ -21,13 +22,14 @@ class WithdrawController extends Controller
     public function index()
     {
         $shop = generaleSetting('shop');
+        $userShopIds = Shop::where('user_id', auth()->id())->pluck('id');
 
         $withdraws = $shop->withdraws()->latest('id')->paginate(20);
 
         $walletBalance = (float) (auth()->user()->wallet?->balance ?? 0);
-        $pendingWithdraws = (float) $shop->withdraws()->where('status', 'pending')->sum('amount');
-        $approvedWithdraws = (float) $shop->withdraws()->where('status', 'approved')->sum('amount');
-        $lifetimePayouts = (float) ShopMonthlyPayout::where('shop_id', $shop->id)->sum('total_payout');
+        $pendingWithdraws = (float) Withdraw::whereIn('shop_id', $userShopIds)->where('status', 'pending')->sum('amount');
+        $approvedWithdraws = (float) Withdraw::whereIn('shop_id', $userShopIds)->where('status', 'approved')->sum('amount');
+        $lifetimePayouts = (float) ShopMonthlyPayout::whereIn('shop_id', $userShopIds)->sum('total_payout');
         $withdrawableBalance = max(0, $walletBalance - $pendingWithdraws);
         $generaleSetting = GeneraleSetting::first();
 
@@ -48,11 +50,12 @@ class WithdrawController extends Controller
     public function store(WithdrawRequest $request)
     {
         $shop = generaleSetting('shop');
+        $userShopIds = Shop::where('user_id', auth()->id())->pluck('id');
 
-        $pendingWithdraws = $shop->withdraws()->where('status', 'pending')->sum('amount');
+        $pendingWithdraws = Withdraw::whereIn('shop_id', $userShopIds)->where('status', 'pending')->sum('amount');
         $walletBalance = auth()->user()->wallet?->balance;
 
-        $latestPendingWithdraw = $shop->withdraws()->where('status', 'pending')->latest('id')->first();
+        $latestPendingWithdraw = Withdraw::whereIn('shop_id', $userShopIds)->where('status', 'pending')->latest('id')->first();
         $generaleSetting = GeneraleSetting::first();
 
         $minWithdrawAmount = $generaleSetting?->min_withdraw ?? 0;

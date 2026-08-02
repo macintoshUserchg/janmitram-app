@@ -11,7 +11,6 @@ use App\Models\Order;
 use App\Repositories\NotificationRepository;
 use App\Repositories\OrderRepository;
 use App\Repositories\TransactionRepository;
-use App\Repositories\WalletRepository;
 use App\Services\NotificationServices;
 use Endroid\QrCode\QrCode as EndroidQrCode;
 use Endroid\QrCode\Writer\PngWriter;
@@ -255,7 +254,15 @@ class OrderController extends Controller
 
         $wallet = $order->shop->user->wallet;
 
-        WalletRepository::updateByRequest($wallet, $order->payable_amount, 'credit');
+        TransactionRepository::storeByRequest(
+            $wallet,
+            $order->payable_amount,
+            'credit',
+            false,
+            false,
+            'order_sale',
+            "Order sale proceeds for order #{$order->prefix}{$order->order_code}"
+        );
 
         TransactionRepository::storeByRequest($wallet, $commission, 'debit', true, true, 'admin commission', 'order');
     }

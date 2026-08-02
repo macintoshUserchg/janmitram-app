@@ -104,6 +104,11 @@ class User extends Authenticatable
         return $this->hasOne(Shop::class, 'user_id');
     }
 
+    public function shops(): HasMany
+    {
+        return $this->hasMany(Shop::class, 'user_id');
+    }
+
     /**
      * get my shop model for this user.
      */

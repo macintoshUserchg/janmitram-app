@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\WithdrawRequest;
 use App\Http\Resources\WithdrawResource;
 use App\Models\GeneraleSetting;
+use App\Models\Withdraw;
 use App\Repositories\NotificationRepository;
 use App\Repositories\WithdrawRepository;
 use Carbon\Carbon;
@@ -67,7 +68,9 @@ class WalletController extends Controller
 
         $profit = $totalSales - $commission;
 
-        $pendingWithdraws = $shop->withdraws()->where('status', 'pending')->sum('amount');
+        $userShopIds = Shop::where('user_id', auth()->id())->pluck('id');
+
+        $pendingWithdraws = Withdraw::whereIn('shop_id', $userShopIds)->where('status', 'pending')->sum('amount');
 
         $authBalance = auth()->user()->wallet->balance ?? 0;
 
@@ -77,7 +80,7 @@ class WalletController extends Controller
 
         $lifetimeSales = $totalOrders->sum('total_amount') - $totalOrders->sum('coupon_discount');
 
-        $latestPendingWithdraw = $shop->withdraws()->where('status', 'pending')->latest('id')->first();
+        $latestPendingWithdraw = Withdraw::whereIn('shop_id', $userShopIds)->where('status', 'pending')->latest('id')->first();
 
         $generaleSetting = generaleSetting('setting');
 
@@ -168,13 +171,12 @@ class WalletController extends Controller
     {
         /** @var Shop $shop */
         $shop = generaleSetting('shop');
+        $userShopIds = Shop::where('user_id', auth()->id())->pluck('id');
 
-        $pendingWithdraws = $shop->withdraws()->where('status', 'pending')->sum('amount');
+        $pendingWithdraws = Withdraw::whereIn('shop_id', $userShopIds)->where('status', 'pending')->sum('amount');
         $walletBalance = auth()->user()->wallet?->balance;
 
-        $latestPendingWithdraw = $shop->withdraws()->where(function ($query) {
-            $query->where('status', 'pending');
-        })->latest('id')->first();
+        $latestPendingWithdraw = Withdraw::whereIn('shop_id', $userShopIds)->where('status', 'pending')->latest('id')->first();
 
         $generaleSetting = GeneraleSetting::first();
 

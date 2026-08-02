@@ -2,12 +2,20 @@
 
 namespace Tests\Feature;
 
+use App\Enums\OrderStatus;
+use App\Enums\PaymentMethod;
+use App\Enums\PaymentStatus;
+use App\Models\Address;
+use App\Models\Customer;
 use App\Models\GeneraleSetting;
+use App\Models\Order;
 use App\Models\Shop;
 use App\Models\ShopMonthlyPayout;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Models\Withdraw;
+use Database\Seeders\PermissionSeeder;
+use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -19,8 +27,8 @@ class ShopWithdrawalPayoutIntegrationTest extends TestCase
     {
         parent::setUp();
 
-        $this->seed(\Database\Seeders\RoleSeeder::class);
-        $this->seed(\Database\Seeders\PermissionSeeder::class);
+        $this->seed(RoleSeeder::class);
+        $this->seed(PermissionSeeder::class);
 
         GeneraleSetting::create([
             'name' => 'Janmitram',
@@ -127,6 +135,80 @@ class ShopWithdrawalPayoutIntegrationTest extends TestCase
             'amount' => 1200,
             'type' => 'debit',
             'purpose' => 'payout_withdraw',
+        ]);
+    }
+
+    public function test_multi_shop_owner_pending_withdrawals_are_scoped_across_all_owned_shops(): void
+    {
+        $user = User::factory()->create();
+        $user->assignRole('shop');
+        $wallet = Wallet::create(['user_id' => $user->id, 'balance' => 3000]);
+
+        $shopA = Shop::factory()->create(['user_id' => $user->id, 'name' => 'Shop A']);
+        $shopB = Shop::factory()->create(['user_id' => $user->id, 'name' => 'Shop B']);
+
+        // Request 2000 from Shop A -> Total wallet balance 3000 -> Withdrawable remaining is 1000
+        Withdraw::create([
+            'shop_id' => $shopA->id,
+            'amount' => 2000,
+            'name' => 'Multi Shop Owner',
+            'contact_number' => '1234567890',
+            'status' => 'pending',
+        ]);
+
+        // Requesting 1500 from Shop B should fail because remaining available balance across all shops is only 1000
+        session(['shop' => $shopB]);
+        $response = $this->actingAs($user)->postJson(route('shop.withdraw.store'), [
+            'amount' => 1500,
+            'name' => 'Multi Shop Owner',
+            'contact_number' => '1234567890',
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonFragment(['message' => 'Sorry! Insufficient balance!']);
+    }
+
+    public function test_order_delivery_credits_wallet_and_creates_order_sale_transaction(): void
+    {
+        $user = User::factory()->create();
+        $user->assignRole('shop');
+        $wallet = Wallet::create(['user_id' => $user->id, 'balance' => 0]);
+        $shop = Shop::factory()->create(['user_id' => $user->id]);
+
+        $customerUser = User::factory()->create();
+        $customerUser->assignRole('customer');
+        $customer = Customer::create(['user_id' => $customerUser->id]);
+        $address = Address::create([
+            'user_id' => $customerUser->id,
+            'name' => 'John Doe',
+            'phone' => '1234567890',
+            'address' => 'Test Street',
+        ]);
+
+        $order = Order::create([
+            'shop_id' => $shop->id,
+            'customer_id' => $customer->id,
+            'address_id' => $address->id,
+            'order_code' => '1001',
+            'prefix' => 'ORD',
+            'total_amount' => 2500,
+            'payable_amount' => 2500,
+            'order_status' => OrderStatus::PENDING->value,
+            'payment_status' => PaymentStatus::PENDING->value,
+            'payment_method' => PaymentMethod::CASH->value,
+        ]);
+
+        session(['shop' => $shop]);
+        $response = $this->actingAs($user)->put(route('shop.order.status.change', $order->id), [
+            'status' => OrderStatus::DELIVERED->value,
+        ]);
+
+        $this->assertEquals(2250.0, $wallet->fresh()->balance);
+        $this->assertDatabaseHas('transactions', [
+            'wallet_id' => $wallet->id,
+            'amount' => 2500,
+            'type' => 'credit',
+            'purpose' => 'order_sale',
         ]);
     }
 }
