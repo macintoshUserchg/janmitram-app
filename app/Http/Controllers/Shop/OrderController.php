@@ -43,7 +43,14 @@ class OrderController extends Controller
      */
     public function show($orderId)
     {
-        $order = Order::withoutGlobalScopes()->findOrFail($orderId);
+        $shop = generaleSetting('shop');
+
+        $query = Order::withoutGlobalScopes();
+        if ($shop) {
+            $query->where('shop_id', $shop->id);
+        }
+
+        $order = $query->findOrFail($orderId);
 
         $orderStatus = OrderStatus::cases();
 

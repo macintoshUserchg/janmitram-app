@@ -208,8 +208,8 @@ Route::prefix('shop')->name('shop.')->middleware(['web'])->group(function () {
         Route::post('employee/{user}/reset-password', [EmployeeController::class, 'resetPassword'])->name('employee.reset-password');
         Route::delete('employee/{user}', [EmployeeController::class, 'destroy'])->name('employee.destroy');
 
+        Route::get('order/{order}', [OrderController::class, 'show'])->name('order.show')->where('order', '[0-9]+');
         Route::get('order/{status?}', [OrderController::class, 'index'])->name('order.index');
-        Route::get('order/{order}', [OrderController::class, 'show'])->name('order.show');
         Route::get('rider/{id}/location', [OrderController::class, 'riderLocation'])->name('rider.location');
         Route::match(['get', 'put'], 'order/{order}/status', [OrderController::class, 'statusChange'])->name('order.status.change');
         Route::match(['get', 'put'], 'order/{order}/payment-status-toggle', [OrderController::class, 'paymentStatusToggle'])->name('order.payment.status.toggle');
