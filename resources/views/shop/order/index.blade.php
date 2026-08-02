@@ -59,8 +59,6 @@
                                     @hasPermission('shop.order.show')
                                     <button type="button"
                                         data-url="{{ route('shop.order.show', $order->id) }}?modal=1"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#orderDetailsModal"
                                         title="{{__('view order details')}}"
                                         class="circleIcon btn-outline-primary svg-bg border-0 btn-view-order-modal">
                                         <img src="{{ asset('assets/icons-admin/eye.svg') }}" alt="icon" loading="lazy" />
@@ -102,10 +100,12 @@
 
 @push('scripts')
 <script>
-    $(document).on('click', '.btn-view-order-modal', function() {
+    $(document).on('click', '.btn-view-order-modal', function(e) {
+        e.preventDefault();
         let url = $(this).data('url');
         let modalContent = $('#orderDetailsModalContent');
 
+        // Reset modal body to loading spinner immediately to prevent showing old data
         modalContent.html(`
             <div class="modal-body text-center p-5">
                 <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
@@ -115,9 +115,16 @@
             </div>
         `);
 
+        // Show Bootstrap Modal
+        $('#orderDetailsModal').modal('show');
+
+        // Fetch fresh order details for this specific order
         $.ajax({
             url: url,
             type: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
             success: function(response) {
                 modalContent.html(response);
             },

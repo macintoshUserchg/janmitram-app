@@ -52,7 +52,7 @@ class OrderController extends Controller
         })->get();
 
         if ($request->ajax() || $request->has('modal')) {
-            return view('shop.order.modal', compact('order', 'orderStatus', 'riders'))->render();
+            return view('shop.order.modal', compact('order', 'orderStatus', 'riders'));
         }
 
         return view('shop.order.show', compact('order', 'orderStatus', 'riders'));
