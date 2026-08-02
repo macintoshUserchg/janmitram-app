@@ -9,7 +9,6 @@ use App\Models\Driver;
 use App\Models\DriverLocation;
 use App\Models\Order;
 use App\Repositories\NotificationRepository;
-use App\Repositories\OrderRepository;
 use App\Repositories\TransactionRepository;
 use App\Services\NotificationServices;
 use Endroid\QrCode\QrCode as EndroidQrCode;
@@ -44,7 +43,14 @@ class OrderController extends Controller
      */
     public function show($orderId)
     {
-        $order = OrderRepository::query()->withoutGlobalScopes()->whereId($orderId)->firstOrFail();
+        $shop = generaleSetting('shop');
+
+        $query = Order::withoutGlobalScopes();
+        if ($shop) {
+            $query->where('shop_id', $shop->id);
+        }
+
+        $order = $query->findOrFail($orderId);
 
         $orderStatus = OrderStatus::cases();
 

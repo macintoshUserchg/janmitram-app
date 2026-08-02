@@ -167,11 +167,11 @@
 
                 <div class="border-bottom px-3 py-2 d-flex  align-items-center gap-3">
                     <span class="text-color">{{ __('Name') }}: </span>
-                    <span class="fw-medium">{{ $order->customer?->user?->name }}</span>
+                    <span class="fw-medium">{{ $order->customer?->user?->name ?? ($order->pos_order ? __('Walk-in Customer / POS') : __('N/A')) }}</span>
                 </div>
                 <div class="px-3 py-2 d-flex  align-items-center gap-3">
                     <span class="text-color">{{ __('Phone') }}: </span>
-                    <span class="fw-medium">{{ $order->customer?->user?->phone }}</span>
+                    <span class="fw-medium">{{ $order->customer?->user?->phone ?? 'N/A' }}</span>
                 </div>
             </div>
 
@@ -226,26 +226,32 @@
             <div class="card mt-3">
                 <h5 class="fz-18 border-bottom p-3 m-0">{{ __('Shipping Address') }}</h5>
 
-                <div class="border-bottom d-flex align-items-center justify-content-between gap-2 px-3 py-12">
-                    <span class="text-color">{{ __('Name') }}: </span>
-                    <span class="fw-medium">{{ $order->address?->name }}</span>
-                </div>
-                <div class="border-bottom d-flex align-items-center justify-content-between gap-2 px-3 py-12">
-                    <span class="text-color">{{ __('Phone') }}: </span>
-                    <span class="fw-medium">{{ $order->address?->phone }}</span>
-                </div>
-                <div class="border-bottom d-flex align-items-center justify-content-between gap-2 px-3 py-12">
-                    <span class="text-color">{{ __('Address Type') }}: </span>
-                    <span class="fw-medium">{{ $order->address?->address_type }}</span>
-                </div>
-                <div class="border-bottom d-flex align-items-center justify-content-between gap-2 px-3 py-12">
-                    <span class="text-color">{{ __('Area') }}: </span>
-                    <span class="fw-medium">{{ $order->order_area ?? 'N/A' }}</span>
-                </div>
-                <div class="border-bottom d-flex align-items-center justify-content-between gap-2 px-3 py-12">
-                    <span class="text-color">{{ __('Address Line') }}: </span>
-                    <span class="fw-medium">{{ $order->address?->address_line }}</span>
-                </div>
+                @if ($order->pos_order || !$order->address)
+                    <div class="p-3 text-muted">
+                        {{ __('POS Counter Sale (In-Store Purchase - No Shipping Required)') }}
+                    </div>
+                @else
+                    <div class="border-bottom d-flex align-items-center justify-content-between gap-2 px-3 py-12">
+                        <span class="text-color">{{ __('Name') }}: </span>
+                        <span class="fw-medium">{{ $order->address->name }}</span>
+                    </div>
+                    <div class="border-bottom d-flex align-items-center justify-content-between gap-2 px-3 py-12">
+                        <span class="text-color">{{ __('Phone') }}: </span>
+                        <span class="fw-medium">{{ $order->address->phone }}</span>
+                    </div>
+                    <div class="border-bottom d-flex align-items-center justify-content-between gap-2 px-3 py-12">
+                        <span class="text-color">{{ __('Address Type') }}: </span>
+                        <span class="fw-medium">{{ $order->address->address_type }}</span>
+                    </div>
+                    <div class="border-bottom d-flex align-items-center justify-content-between gap-2 px-3 py-12">
+                        <span class="text-color">{{ __('Area') }}: </span>
+                        <span class="fw-medium">{{ $order->order_area ?? 'N/A' }}</span>
+                    </div>
+                    <div class="border-bottom d-flex align-items-center justify-content-between gap-2 px-3 py-12">
+                        <span class="text-color">{{ __('Address Line') }}: </span>
+                        <span class="fw-medium">{{ $order->address->address_line }}</span>
+                    </div>
+                @endif
             </div>
 
         </div>
