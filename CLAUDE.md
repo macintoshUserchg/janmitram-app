@@ -68,20 +68,22 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 ## Dusk Browser Testing
 
-- 28 Laravel Dusk tests live in `tests/Browser/` (Helpers.php + Components/ patterns). Run with `php artisan dusk --filter=testName`. Screenshots/source are written alongside test files. Follow existing test structure when adding coverage.
+- Laravel Dusk tests live in `tests/Browser/` (Helpers.php + Components/ patterns; 21 test classes, 89 test methods). Run with `php artisan dusk --filter=testName`. Screenshots/source are written alongside test files. Follow existing test structure when adding coverage. See `tests/Browser/README.md` for the Dusk authoring guide.
 
 ## Modules (nwidart/laravel-modules)
 
-- Feature modules live in `Modules/` (`purchase`, `report`). Standard nwidart structure with their own controllers, views, routes, and namespace `Modules`.
+- `nwidart/laravel-modules` is installed, but the feature modules in `Modules/` (`purchase`, `report`) are currently **asset-only stubs** — only `css/`/`icon.*` files, **zero PHP** (no controllers, views, routes, or providers), and no `modules_statuses.json`. `module_exists()` (in `app/helpers.php`) therefore returns **false** for both, so every `module_exists('Purchase')` code path (stock-out on order cancel, the barcode scanner in `admin/order/show`) is **dormant**. Do not assume module PHP is present; treat `purchase`/`report` as server-withheld/aspirational.
 
 ## Custom Middleware & Permissions
 
-- `app/Http/Middleware/CheckPermission.php` bridges Spatie Permission for admin routes. Also active: `CheckSubscription`, `CheckHasRootUser`, `ShopAuthenticate`, `DemoModeMiddleware`, `LocalizationManage`. `PermissionServiceProvider` registers permission gates.
+- Active middleware: `CheckSubscription`, `CheckHasRootUser`, `ShopAuthenticate` (alias `authShop`), `DemoModeMiddleware`, `LocalizationManage`. `PermissionServiceProvider` registers permission gates.
 - `User` model uses `Spatie\Permission\Traits\HasRoles`. Admin roles/permissions use `spatie/laravel-permission` v6.
+- `app/Http/Middleware/CheckPermission.php` exists and `config/acl.php` defines a full granular permission tree, but **`checkPermission` is not wired into any route** in the current (re-scaffolded) `routes/web.php`. Admin routes are gated by `['auth','role:root']` only and shop routes by `['authShop']` only. Practical consequence: the **admin panel is reachable only by the `root` role**; the `admin`/`adminMultiShop` roles in `acl.php` cannot reach admin routes under current routing, and the Spatie permission UIs (`RolePermissionController`, `EmployeeManageController`) write to Spatie tables but do not gate route access. Re-wire `checkPermission` (or officially retire `acl.php`) before relying on per-role admin permissions.
 
 ## Payment Gateways
 
-- Multiple providers integrated: Razorpay, Stripe, PayPal, Paystack, PaySafeCard, plus a config-driven payment gateway model. `Gateway/PaymentGatewayController` is the main integration point.
+- 11 pluggable gateways via `Gateway/PaymentGatewayController` + per-gateway `Gateway/{alias}/ProcessController.php`: AamarPay, Bkash, CashFree, JazzCash, PayPal, PayStack, PayTabs, PayU, QiCard, Razorpay, Stripe. `PaySafeCard` is a composer dependency but has **no integration** (no controller, no seeder entry, no `PaymentMethod` enum case) — unused. No webhooks; all verification is redirect/return-URL based.
+- **Known gap:** `Gateway/PayPal|Bkash|PayTabs/ProcessController.php` reference `paypal.payment.success`, `bkash.payment.execute`, and `paytabs.payment.callback` named routes, but **these routes are not registered** in `routes/web.php`/`api.php` (lost in the route re-scaffold). PayPal capture / Bkash execute / PayTabs callback will throw "Route not defined" at the return-URL step.
 
 === boost rules ===
 

@@ -84,7 +84,7 @@ Under this architecture:
 | :--- | :--- | :--- |
 | `Product` (`products`) | `id`, `name`, `shop_id`, `master_product_id`, `is_digital`, `is_stock_managed`, `quantity`, `price` | **Master Products** (`master_product_id = null`): Central catalog items.<br>**Shop Copy Products** (`master_product_id = X`, `shop_id = Y`): Local shop sellable stock items. |
 | `Warehouse` (`warehouses`) | `id`, `name`, `code`, `is_default`, `status` | Physical Central or Regional Warehouse hubs storing bulk stock. |
-| `WarehouseStock` (`warehouse_stocks`) | `id`, `warehouse_id`, `product_id`, `color_id`, `size_id`, `quantity` | Tracks exact physical stock quantities of products inside a specific warehouse. |
+| `WarehouseStock` (`warehouse_stock` — **singular table name**; model sets `protected $table = 'warehouse_stock'`) | `id`, `warehouse_id`, `product_id`, `color_id`, `size_id`, `quantity` | Tracks exact physical stock quantities of products inside a specific warehouse. |
 | `StockRequest` (`stock_requests`) | `id`, `shop_id`, `warehouse_id`, `status` (`pending`, `completed`, `rejected`), `notes` | Order request submitted by vendor shop to receive physical inventory from warehouse. |
 | `StockRequestItem` (`stock_request_items`) | `id`, `stock_request_id`, `product_id`, `color_id`, `size_id`, `quantity` | Line items attached to a StockRequest. |
 | `WarehouseTransfer` (`warehouse_transfers`) | `id`, `transfer_no`, `from_warehouse_id`, `to_warehouse_id`, `status`, `notes` | Tracks inventory transfers between two central/regional warehouses. |
@@ -146,6 +146,7 @@ Under this architecture:
    - Customer orders product from Shop via Vue SPA or Mobile App.
    - `OrderRepository` decrements `$shopProduct->quantity`.
    - `WarehouseService::deductStock()` records `StockLedger` entry (`reference_type = 'order_sale'`).
+   - **⚠️ Known caveat:** in `OrderRepository::storeByRequestFromCart` the warehouse deduction is wrapped in `catch (\Throwable $th) {}`, so an `InsufficientStockException` is **silently swallowed** and the order still completes. Unlike Phase 4 (which caps dispatch to available qty and never creates phantom stock), an online sale can therefore succeed even when warehouse stock is short. Decide whether to enforce strict stock here or keep the permissive behaviour intentionally.
 2. **In-Person Vendor POS Sale**:
    - Vendor processes POS transaction in Shop Panel (`/shop/pos`).
    - `PosCartRepository` decrements `$shopProduct->quantity`.
@@ -176,6 +177,14 @@ The **Shop Vendor Sidebar** (`resources/views/layouts/partials/shop-menu.blade.p
 
 ### 6. Complete API & Web Routes Reference
 
+> **Note:** this table covers the warehouse/stock-request surface only — it is a
+> **subset** of the real route layer. `routes/web.php` is 651 lines (~436
+> `Route::` definitions: SPA entry, full admin panel, shop panel, payment
+> callbacks) and `routes/api.php` has ~109 definitions (customer/seller/rider
+> mobile APIs). Both files are re-scaffolded reconstructions (see the
+> "RECONSTRUCTION NOTE" header in each). Inspect the full set with
+> `php artisan route:list`.
+
 | Section | Method | URI Path | Route Name | Action / Controller |
 | :--- | :--- | :--- | :--- | :--- |
 | **Admin Warehouse** | `GET` | `/admin/warehouse` | `admin.warehouse.index` | `WarehouseController@index` |
@@ -202,14 +211,18 @@ The **Shop Vendor Sidebar** (`resources/views/layouts/partials/shop-menu.blade.p
 To ensure system integrity across all warehouse transactions, stock request fulfillments, and stock calculations, run the test suites:
 
 ```bash
-# Run all automated feature/unit tests compact (14 tests passed)
+# Run all automated feature/unit tests compact (13 feature files / 56 methods)
 php artisan test --compact
 
 # Filter specific warehouse & inventory tests
 php artisan test --compact --filter=WarehouseTest
 php artisan test --compact --filter=ProductWarehouseSyncTest
 
-# Run Laravel Dusk browser automation tests (21 tests)
+# MLM payout / deactivation coverage
+php artisan test --compact --filter=PayoutTest
+php artisan test --compact --filter=DeactivationTest
+
+# Run Laravel Dusk browser automation tests (21 classes / 89 methods)
 php artisan dusk
 
 # Apply Laravel Pint code style formatting
@@ -218,4 +231,4 @@ vendor/bin/pint --dirty --format agent
 
 ---
 
-_Last updated: 2026-07-29. Maintained for developer & administrative reference._
+_Last updated: 2026-08-02. Warehouse/stock surface verified; route table is a subset of the re-scaffolded `web.php`/`api.php`._

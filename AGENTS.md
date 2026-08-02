@@ -1,6 +1,12 @@
 <laravel-boost-guidelines>
 === foundation rules ===
 
+> **⚠️ OBSOLETE**: This AGENTS.md is legacy and no longer updated. The authoritative architecture &
+> coding-standard references are **WORKFLOW_PROJECT.md** (warehouse architecture & workflows) and
+> **project_notes.md** (full project map, structural guidelines, stack, and a "Known Gaps &
+> Docs-vs-Reality" section verified 2026-08-02). Start there for all architectural decisions and
+> code conventions.
+
 # Laravel Boost Guidelines
 
 The Laravel Boost guidelines are specifically curated by Laravel maintainers for this application. These guidelines should be followed closely to ensure the best experience when building Laravel applications.
