@@ -2,15 +2,13 @@
 
 return [
     'permissions' => [
-        'adminMultiShop' => [
+        'admin' => [
+            'dashboard' => ['index', 'notification'],
             'shop' => ['index', 'create', 'edit', 'status.toggle', 'show', 'orders', 'products', 'reset.password'],
             'product' => ['index', 'approve', 'show', 'destroy'],
             'coupon' => ['index', 'create', 'edit', 'destroy'],
             'withdraw' => ['index', 'update', 'show'],
             'subscription-plan' => ['index', 'create', 'edit', 'toggle', 'destroy', 'subscription.list', 'subscription.status'],
-        ],
-        'admin' => [
-            'dashboard' => ['index', 'notification'],
             'banner' => ['index', 'create', 'edit', 'toggle', 'destroy'],
             'ad' => ['index', 'create', 'edit', 'toggle', 'destroy'],
             'order' => ['index', 'show', 'status.change', 'payment.status.toggle', 'assign.rider'],
@@ -63,6 +61,7 @@ return [
             'project-guide' => ['index'],
         ],
         'shop' => [
+            'dashboard' => ['index', 'notification'],
             'order' => ['index', 'show', 'status.change'],
             'product' => ['index', 'create', 'show', 'edit', 'toggle', 'destroy', 'barcode', 'generate.AI.data'],
             'flashSale' => ['index', 'show', 'productStore', 'productRemove', 'product.edit'],
@@ -79,9 +78,6 @@ return [
             'purchaseReturn' => ['index', 'create', 'store', 'show', 'invoice.search', 'Invoice', 'invoice.add'],
             'stock-request' => ['index', 'create', 'store', 'show'],
             'payout' => ['index', 'network', 'network.create', 'network.store', 'slip'],
-        ],
-        'shopMultiShop' => [
-            'dashboard' => ['index', 'notification'],
             'subscription' => ['index', 'purchase', 'renew', 'switch', 'cancel'],
             'brand' => ['index'],
             'color' => ['index'],
@@ -90,7 +86,6 @@ return [
             'category' => ['index'],
             'subcategory' => ['index'],
             'withdraw' => ['index', 'store', 'show'],
-            'payout' => ['index', 'network', 'network.create', 'network.store', 'slip'],
         ],
     ],
 

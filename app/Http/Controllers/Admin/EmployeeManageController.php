@@ -103,14 +103,8 @@ class EmployeeManageController extends Controller
 
         $allPermissionArray = [];
 
-        if ($generaleSetting?->shop_type == 'single') {
-            $allPermissionArray['shop'] = config('acl.permissions.shop');
-            $allPermissionArray['admin'] = config('acl.permissions.admin');
-        } else {
-            $allPermissionArray['adminMultiShop'] = config('acl.permissions.adminMultiShop');
-            $allPermissionArray['shop'] = config('acl.permissions.shop');
-            $allPermissionArray['admin'] = config('acl.permissions.admin');
-        }
+        $allPermissionArray['shop'] = config('acl.permissions.shop');
+        $allPermissionArray['admin'] = config('acl.permissions.admin');
 
         if (! module_exists('purchase')) {
             unset(

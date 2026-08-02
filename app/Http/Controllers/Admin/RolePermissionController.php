@@ -85,23 +85,11 @@ class RolePermissionController extends Controller
 
         $allPermissionArray = [];
 
-        if ($generaleSetting?->shop_type == 'single') {
-            if ($role->is_shop) {
-                $allPermissionArray['shop'] = config('acl.permissions.shop');
-            } else {
-                $allPermissionArray['shop'] = config('acl.permissions.shop');
-                $allPermissionArray['admin'] = config('acl.permissions.admin');
-            }
+        if ($role->is_shop) {
+            $allPermissionArray['shop'] = config('acl.permissions.shop');
         } else {
-            if ($role->is_shop) {
-                // for multi shop role
-                $allPermissionArray['shop'] = config('acl.permissions.shopMultiShop');
-                $allPermissionArray['shop'] = config('acl.permissions.shop');
-            } else {
-                $allPermissionArray['adminMultiShop'] = config('acl.permissions.adminMultiShop');
-                $allPermissionArray['shop'] = config('acl.permissions.shop');
-                $allPermissionArray['admin'] = config('acl.permissions.admin');
-            }
+            $allPermissionArray['shop'] = config('acl.permissions.shop');
+            $allPermissionArray['admin'] = config('acl.permissions.admin');
         }
 
         if (! module_exists('purchase')) {

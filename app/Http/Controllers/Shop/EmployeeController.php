@@ -106,15 +106,6 @@ class EmployeeController extends Controller
         $allPermissionArray = [];
 
         $allPermissionArray['shop'] = config('acl.permissions.shop');
-        $allPermissionArray['shop']['withdraw'] = config('acl.permissions.shopMultiShop.withdraw');
-        $allPermissionArray['shop']['dashboard'] = config('acl.permissions.shopMultiShop.dashboard');
-        $allPermissionArray['shop']['brand'] = config('acl.permissions.shopMultiShop.brand');
-        $allPermissionArray['shop']['color'] = config('acl.permissions.shopMultiShop.color');
-        $allPermissionArray['shop']['size'] = config('acl.permissions.shopMultiShop.size');
-        $allPermissionArray['shop']['unit'] = config('acl.permissions.shopMultiShop.unit');
-        $allPermissionArray['shop']['category'] = config('acl.permissions.shopMultiShop.category');
-        $allPermissionArray['shop']['subcategory'] = config('acl.permissions.shopMultiShop.subcategory');
-        $allPermissionArray['shop']['withdraw'] = config('acl.permissions.shopMultiShop.withdraw');
 
         $userAvailablePermissions = array_diff($allPermissions, $userNonPermissions);
 

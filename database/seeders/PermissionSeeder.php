@@ -15,9 +15,7 @@ class PermissionSeeder extends Seeder
     {
         $allPermissionArray = config('acl.permissions');
 
-        foreach ($allPermissionArray as $modelType => $allPermissions) {
-            $type = $modelType == 'adminMultiShop' ? 'admin' : $modelType;
-            $type = $type == 'shopMultiShop' ? 'shop' : $type;
+        foreach ($allPermissionArray as $type => $allPermissions) {
 
             foreach ($allPermissions as $permissionName => $permissionValues) {
                 foreach ($permissionValues as $permission) {
