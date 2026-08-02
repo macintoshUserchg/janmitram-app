@@ -45,7 +45,7 @@
                                     {{ $order->prefix . $order->order_code }}
                                 </td>
                                 <td>{{ $order->created_at->format('d M Y, h:i A') }}</td>
-                                <td>{{ $order->customer?->user?->name }}</td>
+                                <td>{{ $order->customer?->user?->name ?? ($order->pos_order ? __('Walk-in Customer / POS') : __('N/A')) }}</td>
                                 <td>
                                     {{ showCurrency($order->payable_amount) }}
                                     <br>
