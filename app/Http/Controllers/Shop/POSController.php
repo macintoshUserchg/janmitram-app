@@ -32,10 +32,13 @@ class POSController extends Controller
 {
     public function index()
     {
+        $shop = generaleSetting('shop');
         $rootShop = generaleSetting('rootShop');
 
-        $categories = $rootShop->categories()->active()->get();
-        $brands = $rootShop->brands()->isActive()->get();
+        $targetShop = $shop ?? $rootShop;
+
+        $categories = $targetShop ? $targetShop->categories()->active()->get() : Category::active()->get();
+        $brands = $targetShop ? $targetShop->brands()->isActive()->get() : Brand::isActive()->get();
 
         $generaleSetting = generaleSetting('setting');
 
@@ -349,5 +352,30 @@ class POSController extends Controller
         return $this->json('Products', [
             'productDetail' => new ProductResource($product),
         ]);
+    }
+
+    public function addOrUpdateSKU(Request $request)
+    {
+        $posCartProduct = PosCartProduct::find($request->item_id);
+
+        if (! $posCartProduct) {
+            return $this->json(__('Sorry this product is not in cart'), [], 422);
+        }
+
+        $currentSkus = json_decode($posCartProduct->sku_no ?? '[]', true) ?: [];
+
+        if ($request->sku) {
+            if (! in_array($request->sku, $currentSkus)) {
+                $currentSkus[] = $request->sku;
+            }
+        }
+
+        $posCartProduct->update([
+            'sku_no' => json_encode(array_values($currentSkus)),
+        ]);
+
+        return $this->json(__('SKU updated successfully'), [
+            'skus' => $currentSkus,
+        ], 200);
     }
 }

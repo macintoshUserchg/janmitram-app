@@ -240,14 +240,15 @@ Route::prefix('shop')->name('shop.')->middleware(['web'])->group(function () {
         Route::match(['get', 'post'], 'pos/invoice', [POSController::class, 'invoice'])->name('pos.invoice');
         Route::post('pos/store-order', [POSController::class, 'storeOrder'])->name('pos.submitOrder');
         Route::post('pos/store-customer', [POSController::class, 'storeCustomer'])->name('pos.customerStore');
-        Route::get('pos/product', [POSController::class, 'getProduct'])->name('pos.product');
-        Route::post('pos/cart', [POSController::class, 'addToCart'])->name('pos.addToCart');
-        Route::get('pos/cart', [POSController::class, 'getCart'])->name('pos.getCart');
-        Route::put('pos/cart', [POSController::class, 'updateCart'])->name('pos.updateCart');
-        Route::delete('pos/cart', [POSController::class, 'removeCart'])->name('pos.removeCart');
-        Route::post('pos/coupon', [POSController::class, 'applyCoupon'])->name('pos.applyCoupon');
-        Route::delete('pos/coupon', [POSController::class, 'removeCoupon'])->name('pos.removeCoupon');
+        Route::match(['get', 'post'], 'pos/product', [POSController::class, 'getProduct'])->name('pos.product');
+        Route::post('pos/cart/add', [POSController::class, 'addToCart'])->name('pos.addToCart');
+        Route::match(['get', 'post'], 'pos/cart/get', [POSController::class, 'getCart'])->name('pos.getCart');
+        Route::match(['post', 'put'], 'pos/cart/update', [POSController::class, 'updateCart'])->name('pos.updateCart');
+        Route::match(['post', 'delete'], 'pos/cart/remove', [POSController::class, 'removeCart'])->name('pos.removeCart');
+        Route::post('pos/coupon/apply', [POSController::class, 'applyCoupon'])->name('pos.applyCoupon');
+        Route::match(['post', 'delete'], 'pos/coupon/remove', [POSController::class, 'removeCoupon'])->name('pos.removeCoupon');
         Route::post('pos/product-detail', [POSController::class, 'getProductDetail'])->name('pos.product.detail');
+        Route::post('pos/add-or-update-sku', [POSController::class, 'addOrUpdateSKU'])->name('pos.addOrUpdateSKU');
 
         Route::get('flash-sale', [FlashSaleController::class, 'index'])->name('flashSale.index');
         Route::get('flash-sale/{flashSale}', [FlashSaleController::class, 'show'])->name('flashSale.show');
