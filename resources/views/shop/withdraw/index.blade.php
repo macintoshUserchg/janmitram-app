@@ -17,108 +17,194 @@
     </div>
 </div>
 
-    <div class="container-fluid mt-3">
+<div class="container-fluid mt-3">
 
-        <div class="mb-3 card">
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table border-left-right table-responsive-md">
-                        <thead>
-                            <tr>
-                                <th>{{ __('SL') }}</th>
-                                <th>{{ __('Amount') }}</th>
-                                <th>{{ __('Request Date') }}</th>
-                                <th>{{ __('Status') }}</th>
-                                <th class="text-center">{{ __('Action') }}</th>
-                            </tr>
-                        </thead>
-                        @forelse($withdraws as $key => $withdraw)
-                            @php
-                                $serial = $withdraws->firstItem() + $key;
-                            @endphp
-                            <tr>
-                                <td>{{ $serial }}</td>
-                                <td>{{ $withdraw->amount }}</td>
-
-                                <td>
-                                    {{ $withdraw->created_at->format('F d, Y') }} <br>
-                                    <small>{{ $withdraw->created_at->diffForHumans() }}</small>
-                                </td>
-
-                                <td>
-                                    @if ($withdraw->status == 'pending')
-                                        <span class="badge badgePending">
-                                            <i class="bi bi-exclamation-triangle"></i>
-                                            {{ __($withdraw->status) }}
-                                        </span>
-                                    @elseif($withdraw->status == 'approved')
-                                        <span class="badge badgeApproved">
-                                            <i class="bi bi-check2-all"></i>
-                                            {{ __($withdraw->status) }}
-                                        </span>
-                                    @else
-                                        <span class="badge badgeDenied">
-                                            <i class="bi bi-x-octagon-fill"></i>
-                                            {{ __($withdraw->status) }}
-                                        </span>
-                                    @endif
-                                </td>
-
-                                <td class="text-center">
-                                    @if ($withdraw->status == 'pending')
-                                        <a href="{{ route('shop.withdraw.delete', $withdraw->id) }}"
-                                            class="btn btn-sm btn-primary confirm">
-                                            {{__('Cancel Withdraw')}}
-                                        </a>
-                                    @else
-                                        <button class="btn btn-sm btn-primary" disabled>
-                                           {{__(' No Action')}}
-                                        </button>
-                                    @endif
-
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td class="text-center" colspan="100%">{{ __('No Data Found') }}</td>
-                            </tr>
-                        @endforelse
-                        </tbody>
-                    </table>
+    <!-- Financial Summary Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm rounded-12 bg-white h-100">
+                <div class="card-body p-3 d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                        <i class="fas fa-wallet fa-lg"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small fw-medium">{{ __('Wallet Balance') }}</div>
+                        <div class="h5 mb-0 fw-bold text-dark">{{ showCurrency($walletBalance ?? 0) }}</div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="my-3">
-            {{ $withdraws->withQueryString()->links() }}
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm rounded-12 bg-white h-100">
+                <div class="card-body p-3 d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-success-subtle text-success d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                        <i class="fas fa-check-circle fa-lg"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small fw-medium">{{ __('Withdrawable') }}</div>
+                        <div class="h5 mb-0 fw-bold text-success">{{ showCurrency($withdrawableBalance ?? 0) }}</div>
+                    </div>
+                </div>
+            </div>
         </div>
 
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm rounded-12 bg-white h-100">
+                <div class="card-body p-3 d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-warning-subtle text-warning d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                        <i class="fas fa-hourglass-half fa-lg"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small fw-medium">{{ __('Pending Requests') }}</div>
+                        <div class="h5 mb-0 fw-bold text-warning">{{ showCurrency($pendingWithdraws ?? 0) }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm rounded-12 bg-white h-100">
+                <div class="card-body p-3 d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-info-subtle text-info d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                        <i class="fas fa-chart-line fa-lg"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small fw-medium">{{ __('Lifetime MLM Payouts') }}</div>
+                        <div class="h5 mb-0 fw-bold text-info">{{ showCurrency($lifetimePayouts ?? 0) }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Withdraw Modal -->
-    <form id="withdrawForm" method="POST">
-        @csrf
-        <div class="modal fade" id="withdrawModal" tabindex="-1">
-            <div class="modal-dialog modal-md">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h1 class="modal-title fs-5">
-                            {{__('Withdraw Request')}}
-                        </h1>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="mb-3 card border-0 shadow-sm rounded-12">
+        <div class="card-body p-3">
+            <div class="table-responsive">
+                <table class="table border-left-right align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>{{ __('SL') }}</th>
+                            <th>{{ __('Amount') }}</th>
+                            <th>{{ __('Request Date') }}</th>
+                            <th>{{ __('Status') }}</th>
+                            <th class="text-center">{{ __('Action') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @forelse($withdraws as $key => $withdraw)
+                        @php
+                            $serial = $withdraws->firstItem() + $key;
+                        @endphp
+                        <tr>
+                            <td>{{ $serial }}</td>
+                            <td class="fw-bold text-dark">{{ showCurrency($withdraw->amount) }}</td>
+
+                            <td>
+                                {{ $withdraw->created_at->format('M d, Y') }} <br>
+                                <small class="text-muted">{{ $withdraw->created_at->diffForHumans() }}</small>
+                            </td>
+
+                            <td>
+                                @if ($withdraw->status == 'pending')
+                                    <span class="badge bg-warning-subtle text-warning border border-warning px-2.5 py-1">
+                                        <i class="bi bi-exclamation-triangle me-1"></i>
+                                        {{ __('Pending') }}
+                                    </span>
+                                @elseif($withdraw->status == 'approved')
+                                    <span class="badge bg-success-subtle text-success border border-success px-2.5 py-1">
+                                        <i class="bi bi-check2-all me-1"></i>
+                                        {{ __('Approved') }}
+                                    </span>
+                                @else
+                                    <span class="badge bg-danger-subtle text-danger border border-danger px-2.5 py-1">
+                                        <i class="bi bi-x-octagon-fill me-1"></i>
+                                        {{ __('Denied') }}
+                                    </span>
+                                @endif
+                            </td>
+
+                            <td class="text-center">
+                                @if ($withdraw->status == 'pending')
+                                    <a href="{{ route('shop.withdraw.delete', $withdraw->id) }}"
+                                        class="btn btn-sm btn-outline-danger confirm">
+                                        <i class="fas fa-times me-1"></i> {{__('Cancel Request')}}
+                                    </a>
+                                @else
+                                    <span class="text-muted small">-</span>
+                                @endif
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td class="text-center py-4 text-muted" colspan="100%">
+                                <i class="fas fa-receipt fa-2x mb-2 d-block text-secondary"></i>
+                                {{ __('No withdrawal records found.') }}
+                            </td>
+                        </tr>
+                    @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="my-3">
+        {{ $withdraws->withQueryString()->links() }}
+    </div>
+
+</div>
+
+<!-- Withdraw Modal -->
+<form id="withdrawForm" method="POST">
+    @csrf
+    <div class="modal fade" id="withdrawModal" tabindex="-1">
+        <div class="modal-dialog modal-md modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title text-white fw-bold">
+                        <i class="fas fa-hand-holding-usd me-2"></i>{{__('Request Payout Withdrawal')}}
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="alert alert-light border shadow-sm rounded-12 p-3 mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="text-muted small fw-medium">{{ __('Withdrawable Balance') }}:</span>
+                            <span class="fw-bold text-success h6 mb-0">{{ showCurrency($withdrawableBalance ?? 0) }}</span>
+                        </div>
+                        @if(($generaleSetting?->min_withdraw ?? 0) > 0)
+                            <div class="d-flex justify-content-between align-items-center text-muted small">
+                                <span>{{ __('Min Withdrawal') }}:</span>
+                                <span>{{ showCurrency($generaleSetting->min_withdraw) }}</span>
+                            </div>
+                        @endif
                     </div>
-                    <div class="modal-body">
-                        <div>
-                            <label class="form-label">
-                               {{__('Withdraw Amount')}} <span class="text-danger">*</span>
-                            </label>
+
+                    <div>
+                        <label class="form-label fw-medium">
+                           {{__('Withdraw Amount')}} <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group mb-2">
+                            <span class="input-group-text">{{ $generaleSetting?->currency ?? '₹' }}</span>
                             <input type="text" name="amount" id="amount" class="form-control"
                                 placeholder="Enter amount"
                                 oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1');"
                                 required>
-
-                            <p class="text-danger" id="amount-error"></p>
                         </div>
+                        
+                        <!-- Quick Percentage Fill Buttons -->
+                        @if(($withdrawableBalance ?? 0) > 0)
+                            <div class="d-flex gap-1 mb-2">
+                                <button type="button" class="btn btn-xs btn-outline-secondary flex-fill quick-amount" data-pct="0.25">25%</button>
+                                <button type="button" class="btn btn-xs btn-outline-secondary flex-fill quick-amount" data-pct="0.50">50%</button>
+                                <button type="button" class="btn btn-xs btn-outline-secondary flex-fill quick-amount" data-pct="0.75">75%</button>
+                                <button type="button" class="btn btn-xs btn-outline-primary flex-fill quick-amount" data-pct="1.00">100%</button>
+                            </div>
+                        @endif
+
+                        <p class="text-danger small mb-0" id="amount-error"></p>
+                    </div>
 
                         <div class="mt-3">
                             <label class="form-label">
@@ -163,6 +249,16 @@
 
 @push('scripts')
     <script>
+        const withdrawableBalance = {{ (float) ($withdrawableBalance ?? 0) }};
+
+        $('.quick-amount').on('click', function() {
+            const pct = parseFloat($(this).data('pct'));
+            if (withdrawableBalance > 0 && pct > 0) {
+                const calculated = (withdrawableBalance * pct).toFixed(2);
+                $('#amount').val(calculated);
+            }
+        });
+
         $(".confirm").on("click", function(e) {
             e.preventDefault();
             const url = $(this).attr("href");

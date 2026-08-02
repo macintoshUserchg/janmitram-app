@@ -68,32 +68,39 @@
 
         </div>
 
-        <div class="row">
-            <div class="col-lg-4">
-                <div class="card mt-3">
-                    <div class="card-header d-flex align-items-center justify-content-start gap-2 py-3">
-                        <i class="bi bi-wallet2 fz-18"></i>
-                        <h4 class="fz-20 m-0"> {{ __('Others Info') }}</h4>
+        <div class="row g-3">
+            <div class="col-lg-3 col-md-6">
+                <div class="card mt-3 border-0 shadow-sm rounded-12">
+                    <div class="card-header bg-white border-bottom py-3 d-flex align-items-center gap-2">
+                        <i class="bi bi-wallet2 text-primary fz-18"></i>
+                        <h5 class="fz-16 m-0 fw-bold"> {{ __('Financial Overview') }}</h5>
                     </div>
                     <div class="card-body">
-                        <div class="mb-2">
-                            <span class="fw-medium">{{ __('Contact Number') }}:</span>
-                            <span>{{ $withdraw->contact_number }}</span>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">{{ __('Wallet Balance') }}:</span>
+                            <span class="fw-bold text-dark">{{ showCurrency($walletBalance ?? 0) }}</span>
                         </div>
-                        <div>
-                            <span class="fw-medium">{{ __('Name') }}:</span>
-                            <span>{{ $withdraw->name }}</span>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">{{ __('Lifetime MLM Payouts') }}:</span>
+                            <span class="fw-bold text-info">{{ showCurrency($lifetimePayouts ?? 0) }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">{{ __('Total Approved Withdrawals') }}:</span>
+                            <span class="fw-bold text-success">{{ showCurrency($approvedWithdraws ?? 0) }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted small">{{ __('Pending Withdrawals') }}:</span>
+                            <span class="fw-bold text-warning">{{ showCurrency($pendingWithdraws ?? 0) }}</span>
                         </div>
                     </div>
-
                 </div>
             </div>
 
-            <div class="col-lg-4">
-                <div class="card mt-3">
-                    <div class="card-header d-flex align-items-center justify-content-start gap-2 py-3">
-                        <i class="bi bi-person-circle fz-18"></i>
-                        <h4 class="fz-20 m-0"> {{ __('User Info') }}</h4>
+            <div class="col-lg-3 col-md-6">
+                <div class="card mt-3 border-0 shadow-sm rounded-12">
+                    <div class="card-header bg-white border-bottom py-3 d-flex align-items-center gap-2">
+                        <i class="bi bi-person-circle text-primary fz-18"></i>
+                        <h5 class="fz-16 m-0 fw-bold"> {{ __('User Info') }}</h5>
                     </div>
                     <div class="card-body">
                         <div>
@@ -111,15 +118,14 @@
                             <span>{{ $withdraw->shop->user->phone }}</span>
                         </div>
                     </div>
-
                 </div>
             </div>
 
-            <div class="col-lg-4">
-                <div class="card mt-3">
-                    <div class="card-header d-flex align-items-center justify-content-start gap-2 py-3">
-                        <i class="bi bi-shop fz-18"></i>
-                        <h4 class="fz-20 m-0"> {{ __('Shop Info') }}</h4>
+            <div class="col-lg-3 col-md-6">
+                <div class="card mt-3 border-0 shadow-sm rounded-12">
+                    <div class="card-header bg-white border-bottom py-3 d-flex align-items-center gap-2">
+                        <i class="bi bi-shop text-primary fz-18"></i>
+                        <h5 class="fz-16 m-0 fw-bold"> {{ __('Shop Info') }}</h5>
                     </div>
                     <div class="card-body">
                         <div>
@@ -127,16 +133,37 @@
                             <span>{{ $withdraw->shop->name }}</span>
                         </div>
 
+                        <div class="mt-2 d-flex align-items-center gap-2">
+                            <span class="fw-medium">{{ __('MLM Tier') }}:</span>
+                            <span class="badge bg-primary px-2 py-1">Level {{ $latestPayout?->level ?? 0 }}</span>
+                        </div>
+
                         <div class="mt-2">
                             <span class="fw-medium">{{ __('Logo') }}:</span>
-                            <span><img src="{{ asset($withdraw->shop->logo) }}" class="img-thumbnail" alt=""
-                                    width="40"></span>
+                            <span><img src="{{ asset($withdraw->shop->logo) }}" class="img-thumbnail" alt="" width="40"></span>
                         </div>
                     </div>
-
                 </div>
             </div>
 
+            <div class="col-lg-3 col-md-6">
+                <div class="card mt-3 border-0 shadow-sm rounded-12">
+                    <div class="card-header bg-white border-bottom py-3 d-flex align-items-center gap-2">
+                        <i class="bi bi-telephone text-primary fz-18"></i>
+                        <h5 class="fz-16 m-0 fw-bold"> {{ __('Payout Account Info') }}</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-2">
+                            <span class="fw-medium">{{ __('Contact Number') }}:</span>
+                            <span>{{ $withdraw->contact_number }}</span>
+                        </div>
+                        <div>
+                            <span class="fw-medium">{{ __('Account Holder') }}:</span>
+                            <span>{{ $withdraw->name }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 

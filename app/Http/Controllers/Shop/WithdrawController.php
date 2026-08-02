@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\WithdrawRequest;
 use App\Models\GeneraleSetting;
 use App\Models\Notification;
+use App\Models\ShopMonthlyPayout;
 use App\Models\Withdraw;
 use App\Repositories\NotificationRepository;
 use App\Repositories\WithdrawRepository;
@@ -23,7 +24,22 @@ class WithdrawController extends Controller
 
         $withdraws = $shop->withdraws()->latest('id')->paginate(20);
 
-        return view('shop.withdraw.index', compact('withdraws'));
+        $walletBalance = (float) (auth()->user()->wallet?->balance ?? 0);
+        $pendingWithdraws = (float) $shop->withdraws()->where('status', 'pending')->sum('amount');
+        $approvedWithdraws = (float) $shop->withdraws()->where('status', 'approved')->sum('amount');
+        $lifetimePayouts = (float) ShopMonthlyPayout::where('shop_id', $shop->id)->sum('total_payout');
+        $withdrawableBalance = max(0, $walletBalance - $pendingWithdraws);
+        $generaleSetting = GeneraleSetting::first();
+
+        return view('shop.withdraw.index', compact(
+            'withdraws',
+            'walletBalance',
+            'pendingWithdraws',
+            'approvedWithdraws',
+            'lifetimePayouts',
+            'withdrawableBalance',
+            'generaleSetting'
+        ));
     }
 
     /**
@@ -33,10 +49,10 @@ class WithdrawController extends Controller
     {
         $shop = generaleSetting('shop');
 
-        $pendingWithdraws = $shop->withdraws()->where('status', 0)->sum('amount');
+        $pendingWithdraws = $shop->withdraws()->where('status', 'pending')->sum('amount');
         $walletBalance = auth()->user()->wallet?->balance;
 
-        $latestPendingWithdraw = $shop->withdraws()->where('status', 0)->latest('id')->first();
+        $latestPendingWithdraw = $shop->withdraws()->where('status', 'pending')->latest('id')->first();
         $generaleSetting = GeneraleSetting::first();
 
         $minWithdrawAmount = $generaleSetting?->min_withdraw ?? 0;
@@ -57,6 +73,7 @@ class WithdrawController extends Controller
                 'errors' => [
                     'amount' => ['Insufficient balance'],
                 ],
+                'withdrawable_balance' => max(0, $walletBalance - $pendingWithdraws),
             ], 422);
         }
 

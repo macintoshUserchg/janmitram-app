@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Events\ProductApproveEvent;
 use App\Http\Controllers\Controller;
+use App\Models\ShopMonthlyPayout;
 use App\Models\Withdraw;
 use App\Repositories\NotificationRepository;
 use App\Repositories\WithdrawRepository;
@@ -29,7 +30,21 @@ class WithdrawController extends Controller
      */
     public function show(Withdraw $withdraw)
     {
-        return view('admin.withdraw.show', compact('withdraw'));
+        $shop = $withdraw->shop;
+        $walletBalance = (float) ($shop->user->wallet?->balance ?? 0);
+        $lifetimePayouts = (float) ShopMonthlyPayout::where('shop_id', $shop->id)->sum('total_payout');
+        $approvedWithdraws = (float) Withdraw::where('shop_id', $shop->id)->where('status', 'approved')->sum('amount');
+        $pendingWithdraws = (float) Withdraw::where('shop_id', $shop->id)->where('status', 'pending')->sum('amount');
+        $latestPayout = ShopMonthlyPayout::where('shop_id', $shop->id)->latest('id')->first();
+
+        return view('admin.withdraw.show', compact(
+            'withdraw',
+            'walletBalance',
+            'lifetimePayouts',
+            'approvedWithdraws',
+            'pendingWithdraws',
+            'latestPayout'
+        ));
     }
 
     /**

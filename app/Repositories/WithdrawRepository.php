@@ -46,7 +46,15 @@ class WithdrawRepository extends Repository
         ]);
 
         if ($request->status == 'approved') {
-            WalletRepository::updateByRequest($withdraw->shop->user->wallet, $withdraw->amount, 'debit');
+            TransactionRepository::storeByRequest(
+                $withdraw->shop->user->wallet,
+                $withdraw->amount,
+                'debit',
+                false,
+                false,
+                'payout_withdraw',
+                "Withdrawal disbursement for shop {$withdraw->shop->name} (#{$withdraw->id})"
+            );
         }
 
         return $withdraw;

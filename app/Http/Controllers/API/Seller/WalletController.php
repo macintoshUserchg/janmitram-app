@@ -67,7 +67,7 @@ class WalletController extends Controller
 
         $profit = $totalSales - $commission;
 
-        $pendingWithdraws = $shop->withdraws()->where('status', 0)->sum('amount');
+        $pendingWithdraws = $shop->withdraws()->where('status', 'pending')->sum('amount');
 
         $authBalance = auth()->user()->wallet->balance ?? 0;
 
@@ -77,7 +77,7 @@ class WalletController extends Controller
 
         $lifetimeSales = $totalOrders->sum('total_amount') - $totalOrders->sum('coupon_discount');
 
-        $latestPendingWithdraw = $shop->withdraws()->where('status', 0)->latest('id')->first();
+        $latestPendingWithdraw = $shop->withdraws()->where('status', 'pending')->latest('id')->first();
 
         $generaleSetting = generaleSetting('setting');
 
