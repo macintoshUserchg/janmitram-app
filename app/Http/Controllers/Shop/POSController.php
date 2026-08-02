@@ -39,7 +39,7 @@ class POSController extends Controller
 
         $generaleSetting = generaleSetting('setting');
 
-        $currency = $generaleSetting?->currency ?: '$';
+        $currency = $generaleSetting?->currency ?: '₹';
         $currencyPosition = $generaleSetting?->currency_position ?: 'prefix';
 
         $customers = Customer::whereHas('user', function ($query) {
@@ -213,7 +213,7 @@ class POSController extends Controller
 
         return $this->json('Products', [
             'total' => $total,
-            'currency' => $generaleSetting?->currency ?? '$',
+            'currency' => $generaleSetting?->currency ?? '₹',
             'currency_position' => $generaleSetting?->currency_position ?? 'prefix',
             'products' => ProductResource::collection($products),
         ]);

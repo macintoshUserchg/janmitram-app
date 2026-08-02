@@ -33,6 +33,7 @@ use App\Http\Controllers\Admin\ShopController;
 use App\Http\Controllers\Admin\SMSGatewaySetupController;
 use App\Http\Controllers\Admin\SocialAuthController;
 use App\Http\Controllers\Admin\SocialLinkController;
+use App\Http\Controllers\Admin\StockAssignmentController;
 use App\Http\Controllers\Admin\StockRequestController;
 use App\Http\Controllers\Admin\SubscriptionPlanController;
 use App\Http\Controllers\Admin\SupportController;
@@ -408,6 +409,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:root'])->group
     Route::post('stock-request/{stockRequest}/reject', [StockRequestController::class, 'reject'])->name('stock-request.reject');
 
     Route::get('invoices', [InvoiceController::class, 'index'])->name('invoice.index');
+
+    Route::get('inventory-assignment', [StockAssignmentController::class, 'index'])->name('inventory-assignment.index');
+    Route::get('inventory-assignment/create', [StockAssignmentController::class, 'create'])->name('inventory-assignment.create');
+    Route::post('inventory-assignment', [StockAssignmentController::class, 'store'])->name('inventory-assignment.store');
 
     Route::resource('warehouse-transfer', WarehouseTransferController::class)->names('warehouse-transfer');
     Route::post('warehouse-transfer/{warehouseTransfer}/complete', [WarehouseTransferController::class, 'complete'])->name('warehouse-transfer.complete');

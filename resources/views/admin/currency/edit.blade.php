@@ -30,8 +30,8 @@
                             </div>
 
                             <div class="col-12 col-md-6 mb-3">
-                                <x-input name="rate" type="text" placeholder="Currency Rate" required="true" label="Currency Rate ({{ $defaultCurrency?->name ?? 'USD'}}=1)" onlyNumber="true" :value="$currency->rate"/>
-                                <small>{{ __('Enter the amount in ').($defaultCurrency?->name ?? 'USD') . ' (1 '.($defaultCurrency?->name ?? 'USD') .' = your current rate)' }}</small>
+                                <x-input name="rate" type="text" placeholder="Currency Rate" required="true" label="Currency Rate ({{ $defaultCurrency?->name ?? 'INR'}}=1)" onlyNumber="true" :value="$currency->rate"/>
+                                <small>{{ __('Enter the amount in ').($defaultCurrency?->name ?? 'INR') . ' (1 '.($defaultCurrency?->name ?? 'INR') .' = your current rate)' }}</small>
                             </div>
                         </div>
                     </div>

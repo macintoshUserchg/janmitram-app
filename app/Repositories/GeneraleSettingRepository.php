@@ -51,7 +51,7 @@ class GeneraleSettingRepository extends Repository
                 'show_download_app' => $request->show_download_app ? true : false,
                 'google_playstore_url' => $request->google_playstore_url,
                 'app_store_url' => $request->app_store_url,
-                'currency' => $currency ? $currency->symbol : '$',
+                'currency' => $currency ? $currency->symbol : '₹',
                 'currency_id' => $currency ? $currency->id : null,
                 'currency_position' => $request->currency_position,
                 'direction' => $request->direction,

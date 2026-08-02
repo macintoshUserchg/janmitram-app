@@ -49,7 +49,7 @@ class ShopCreateRequest extends FormRequest
             'last_name' => ['nullable', 'string', 'max:255'],
             'phone' => $phoneValidate,
             'email' => ['required', 'string', 'email:rfc,dns', 'max:255', 'unique:users,email,'.$user?->id],
-            'Gender' => ['nullable', 'string'],
+            'gender' => ['nullable', 'string'],
             'password' => [$required, 'min:6', 'confirmed'],
             'password_confirmation' => [$required, 'min:6'],
             'address' => ['nullable', 'string'],

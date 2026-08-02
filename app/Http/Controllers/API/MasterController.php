@@ -109,8 +109,8 @@ class MasterController extends Controller
 
         return $this->json('Master data', [
             'currency' => [
-                'name' => $defaultCurrency?->name ?? 'USD',
-                'symbol' => $generaleSetting?->currency ?? '$',
+                'name' => $defaultCurrency?->name ?? 'INR',
+                'symbol' => $generaleSetting?->currency ?? '₹',
                 'rate' => (float) $defaultRate,
                 'position' => $generaleSetting?->currency_position ?? 'prefix',
             ],

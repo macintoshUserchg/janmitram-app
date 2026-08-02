@@ -331,9 +331,9 @@
                                         </div>
                                     </div>
                                     <input type="hidden" id="latitude" name="latitude"
-                                        value="{{ old('latitude') }}">
+                                        value="{{ old('latitude', '28.6139') }}">
                                     <input type="hidden" id="longitude" name="longitude"
-                                        value="{{ old('longitude') }}">
+                                        value="{{ old('longitude', '77.2090') }}">
                                     <div id="map" style="height:400px; border-radius: 10px;margin-top: 20px">
                                     </div>
                                 </div>
@@ -347,9 +347,12 @@
     </div>
 
     <script src="{{ asset('assets/scripts/jquery-3.6.3.min.js') }}"></script>
+    <script src="{{ asset('assets/scripts/sweetalert2.min.js') }}"></script>
     <script src="{{ asset('assets/scripts/leaflet.js') }}"></script>
     <script src="{{ asset('assets/scripts/janmitram-map-helper.js') }}"></script>
     <script>
+        let isRegistrationConfirmed = false;
+
         $(function() {
             $('#nextBtn').on('click', function() {
                 if (!validateStep()) {
@@ -369,7 +372,7 @@
 
             $('#backBtn').on('click', function() {
                 $('#step2').hide();
-                $(this).addClass('d-none');;
+                $(this).addClass('d-none');
                 $('#step1').show();
                 $('#indicator2').removeClass('active');
                 $('#indicator1').addClass('active');
@@ -380,15 +383,30 @@
                 $('#' + $(this).attr('name') + '_error').text('')
             });
 
-            @if($errors->has('shop_name') || $errors->has('shop_logo') || $errors->has('shop_banner') || $errors->has('address') || $errors->has('description'))
-                $('#step1').hide();
-                $('#step2').show();
-                $('#backBtn').removeClass('d-none');
-                $('#indicator1').removeClass('active');
-                $('#indicator2').addClass('active');
-                if (window.janmitramMapObj) {
-                    window.janmitramMapObj.invalidateSize();
-                }
+            @if($errors->any())
+                let serverErrors = `{!! implode('<br>', $errors->all()) !!}`;
+                Swal.fire({
+                    icon: 'error',
+                    title: '{{ __("Registration Failed") }}',
+                    html: serverErrors,
+                    confirmButtonColor: '#e02b1d'
+                });
+                @if($errors->has('first_name') || $errors->has('phone') || $errors->has('email') || $errors->has('password') || $errors->has('profile_photo'))
+                    $('#step2').hide();
+                    $('#step1').show();
+                    $('#backBtn').addClass('d-none');
+                    $('#indicator2').removeClass('active');
+                    $('#indicator1').addClass('active');
+                @elseif($errors->has('shop_name') || $errors->has('shop_logo') || $errors->has('shop_banner') || $errors->has('address') || $errors->has('description'))
+                    $('#step1').hide();
+                    $('#step2').show();
+                    $('#backBtn').removeClass('d-none');
+                    $('#indicator1').removeClass('active');
+                    $('#indicator2').addClass('active');
+                    if (window.janmitramMapObj) {
+                        window.janmitramMapObj.invalidateSize();
+                    }
+                @endif
             @endif
         });
 
@@ -413,7 +431,7 @@
                 input.removeClass('is-invalid');
             }
 
-            if (!profilePhoto.val()) {
+            if (!profilePhoto.val() && !$('#previewProfile').attr('src').includes('data:image') && $('#previewProfile').attr('src').includes('placehold.co')) {
                 setError(profilePhoto, '#profile_photo_error', '{{ __("Profile photo is required.") }}');
             } else {
                 clearError(profilePhoto, '#profile_photo_error');
@@ -496,13 +514,13 @@
                 clearError(shopName, '#shop_name_error');
             }
 
-            if (!shopLogo.val() && !$('#previewShopLogo').attr('src').includes('http')) {
+            if (!shopLogo.val() && !$('#previewShopLogo').attr('src').includes('data:image') && $('#previewShopLogo').attr('src').includes('placehold.co')) {
                 setError(shopLogo, '#shop_logo_error', '{{ __("Shop logo is required.") }}');
             } else {
                 clearError(shopLogo, '#shop_logo_error');
             }
 
-            if (!shopBanner.val() && !$('#shopBanner').attr('src').includes('http')) {
+            if (!shopBanner.val() && !$('#shopBanner').attr('src').includes('data:image') && $('#shopBanner').attr('src').includes('placehold.co')) {
                 setError(shopBanner, '#shop_banner_error', '{{ __("Shop banner is required.") }}');
             } else {
                 clearError(shopBanner, '#shop_banner_error');
@@ -513,16 +531,91 @@
 
         $(document).ready(function() {
             $('form').on('submit', function(e) {
+                if (isRegistrationConfirmed) {
+                    return true;
+                }
+
                 if (!validateStep() || !validateStep2()) {
                     e.preventDefault();
                     if (!validateStep()) {
                         $('#step2').hide();
                         $('#step1').show();
+                        $('#backBtn').addClass('d-none');
                         $('#indicator2').removeClass('active');
                         $('#indicator1').addClass('active');
                     }
                     return false;
                 }
+
+                e.preventDefault();
+
+                let firstName = $('input[name=first_name]').val().trim();
+                let lastName = $('input[name=last_name]').val().trim();
+                let ownerName = firstName + (lastName ? ' ' + lastName : '');
+                let phone = $('input[name=phone]').val().trim();
+                let email = $('input[name=email]').val().trim();
+                let shopName = $('input[name=shop_name]').val().trim();
+                let address = $('input[name=address]').val().trim() || '{{ __("Not provided") }}';
+                let refCode = $('#sponsor_ref_input').val().trim();
+                let sponsorBadgeText = $('#sponsor_info_badge').text().trim();
+                let sponsorInfo = sponsorBadgeText ? sponsorBadgeText : (refCode ? refCode : '{{ __("Direct Registration (No Sponsor)") }}');
+
+                let profileSrc = $('#previewProfile').attr('src');
+                let logoSrc = $('#previewShopLogo').attr('src');
+
+                let summaryHtml = `
+                    <div class="text-start fs-6 my-2" style="max-height: 400px; overflow-y: auto;">
+                        <div class="card mb-3 border-0 bg-light p-3 rounded-3 shadow-sm">
+                            <h6 class="fw-bold text-primary mb-2 border-bottom pb-1"><i class="fa fa-user me-1"></i> {{ __("Owner Information") }}</h6>
+                            <div class="d-flex align-items-center gap-3">
+                                <img src="${profileSrc}" class="rounded-circle border shadow-sm" style="width: 52px; height: 52px; object-fit: cover;">
+                                <div>
+                                    <div class="fw-bold text-dark">${ownerName}</div>
+                                    <div class="text-secondary small"><i class="fa fa-envelope me-1"></i>${email}</div>
+                                    <div class="text-secondary small"><i class="fa fa-phone me-1"></i>${phone}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card mb-3 border-0 bg-light p-3 rounded-3 shadow-sm">
+                            <h6 class="fw-bold text-primary mb-2 border-bottom pb-1"><i class="fa fa-store me-1"></i> {{ __("Shop Information") }}</h6>
+                            <div class="d-flex align-items-center gap-3">
+                                <img src="${logoSrc}" class="rounded border shadow-sm" style="width: 52px; height: 52px; object-fit: cover;">
+                                <div>
+                                    <div class="fw-bold text-dark">${shopName}</div>
+                                    <div class="text-secondary small"><i class="fa fa-map-marker me-1"></i>${address}</div>
+                                </div>
+                            </div>
+                            <div class="mt-2 pt-2 border-top small text-muted">
+                                <strong class="text-dark"><i class="fa fa-sitemap me-1 text-primary"></i> {{ __("Sponsor Network") }}:</strong> ${sponsorInfo}
+                            </div>
+                        </div>
+                        <div class="alert alert-info py-2 px-3 small mb-0 rounded-3">
+                            <i class="fa fa-info-circle me-1"></i> {{ __("Please confirm that all details are correct. Upon submission, your shop account will be submitted for admin verification.") }}
+                        </div>
+                    </div>
+                `;
+
+                Swal.fire({
+                    title: '{{ __("Confirm Shop Creation") }}',
+                    html: summaryHtml,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '<i class="fa fa-check me-1"></i> {{ __("Confirm & Submit") }}',
+                    cancelButtonText: '<i class="fa fa-edit me-1"></i> {{ __("Edit Details") }}',
+                    reverseButtons: true,
+                    width: '560px'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        isRegistrationConfirmed = true;
+                        let submitBtn = $('button[type=submit]');
+                        submitBtn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin me-1"></i> {{ __("Submitting...") }}');
+                        $('form')[0].submit();
+                    }
+                });
+
+                return false;
             });
 
             $('#sponsor_ref_input').on('input change', function() {

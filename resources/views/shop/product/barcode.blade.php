@@ -72,7 +72,7 @@
                                         <div class="siteName">{{ $generaleSetting?->name ?? 'ReadyCommerce' }}</div>
                                         <div class="name">{{ $product->name }}</div>
                                         <div class="price">
-                                            {{ $generaleSetting?->currency ?? '$' }}{{ number_format($product->discount_price > 0 ? $product->discount_price : $product->price, 2) }}
+                                            {{ $generaleSetting?->currency ?? '₹' }}{{ number_format($product->discount_price > 0 ? $product->discount_price : $product->price, 2) }}
                                         </div>
                                         <img src="data:image/png;base64,{{ DNS1D::getBarcodePNG($product->code, 'I25', 3, 28) }}"
                                             alt="barcode" />

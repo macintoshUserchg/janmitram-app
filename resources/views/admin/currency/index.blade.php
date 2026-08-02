@@ -40,7 +40,7 @@
                                                 @if ($currency->is_default)
                                                     <sub>({{ __('Default') }})</sub>
                                                 @else
-                                                    <sub>{{ __('(From ') . ($defaultCurrency?->name ?? 'USD') . ')' }}</sub>
+                                                    <sub>{{ __('(From ') . ($defaultCurrency?->name ?? 'INR') . ')' }}</sub>
                                                 @endif
                                             </td>
                                             <td>

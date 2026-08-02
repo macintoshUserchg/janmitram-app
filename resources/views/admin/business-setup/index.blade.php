@@ -78,7 +78,7 @@
                                 <input type="radio" name="currency_position" value="prefix" class="form-check-input"
                                     id="prefix" {{ $generaleSetting?->currency_position == 'prefix' ? 'checked' : '' }}>
                                 <label for="prefix" class="m-0">
-                                    ({{ $generaleSetting?->currency ?? '$' }}) {{ __('Left') }}
+                                    ({{ $generaleSetting?->currency ?? '₹' }}) {{ __('Left') }}
                                 </label>
                             </div>
 
@@ -86,7 +86,7 @@
                                 <input type="radio" name="currency_position" value="suffix" class="form-check-input"
                                     id="suffix" {{ $generaleSetting?->currency_position == 'suffix' ? 'checked' : '' }}>
                                 <label for="suffix" class="m-0">
-                                    {{ __('Right') }} ({{ $generaleSetting?->currency ?? '$' }})
+                                    {{ __('Right') }} ({{ $generaleSetting?->currency ?? '₹' }})
                                 </label>
                             </div>
                         </div>

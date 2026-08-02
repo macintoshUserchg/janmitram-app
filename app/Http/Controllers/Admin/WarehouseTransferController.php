@@ -26,7 +26,8 @@ class WarehouseTransferController extends Controller
     public function create()
     {
         $warehouses = Warehouse::all();
-        $products = Product::where('is_digital', false)
+        $products = Product::with(['warehouseStocks'])
+            ->where('is_digital', false)
             ->whereNull('master_product_id')
             ->get();
 

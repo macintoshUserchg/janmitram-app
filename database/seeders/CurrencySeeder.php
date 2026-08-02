@@ -16,11 +16,18 @@ class CurrencySeeder extends Seeder
 
         $currencies = [
             [
+                'name' => 'INR',
+                'symbol' => '₹',
+                'rate' => 1,
+                'is_active' => true,
+                'is_default' => true,
+            ],
+            [
                 'name' => 'USD',
                 'symbol' => '$',
                 'rate' => 1,
                 'is_active' => true,
-                'is_default' => true,
+                'is_default' => false,
             ],
             [
                 'name' => 'EUR',

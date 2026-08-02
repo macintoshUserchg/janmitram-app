@@ -350,7 +350,7 @@
             </div>
 
             <div class="{{ $directory == 'rtl' ? '' : 'text-right' }}">
-                <p>{{ __('Invoice of') }} ({{ $generaleSetting?->currency ?? '$' }})</p>
+                <p>{{ __('Invoice of') }} ({{ $generaleSetting?->currency ?? '₹' }})</p>
                 <h3 class="payAmount">{{ showCurrency($order->payable_amount) }}</h3>
                 <div class="pt-2">
                     <img class="qrCode" src="{{ $qrCodeImage }}" alt="">

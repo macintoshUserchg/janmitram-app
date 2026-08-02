@@ -49,7 +49,8 @@
                     <select name="items[0][product_id]" class="form-select" required>
                         <option value="">{{ __('-- Select Product --') }}</option>
                         @foreach($products as $product)
-                            <option value="{{ $product->id }}" {{ request('product_id') == $product->id ? 'selected' : '' }}>{{ $product->name }}</option>
+                            @php $whList = $product->warehouseStocks->where('quantity', '>', 0)->pluck('warehouse_id')->implode(','); @endphp
+                            <option value="{{ $product->id }}" data-warehouses="{{ $whList }}" {{ request('product_id') == $product->id ? 'selected' : '' }}>{{ $product->name }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -72,4 +73,29 @@
         </form>
     </div>
 </div>
+
+@push('scripts')
+<script>
+    $(function() {
+        const $whSelect = $('select[name="from_warehouse_id"]');
+        const $productSelect = $('select[name="items[0][product_id]"]');
+
+        function filterProducts() {
+            const selectedWh = $whSelect.val();
+            $productSelect.find('option').each(function() {
+                if (!this.value) return;
+                const warehouses = ($(this).data('warehouses') || '').toString().split(',');
+                const hasStock = selectedWh ? warehouses.includes(selectedWh) : true;
+                this.hidden = !hasStock;
+            });
+            if ($productSelect.find('option:selected').is(':hidden')) {
+                $productSelect.val('');
+            }
+        }
+
+        $whSelect.on('change', filterProducts);
+        filterProducts();
+    });
+</script>
+@endpush
 @endsection

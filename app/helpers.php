@@ -101,7 +101,7 @@ if (! function_exists('showCurrency')) {
     {
         $generaleSetting = generaleSetting('setting');
 
-        $currency = $generaleSetting?->currency ?? '$';
+        $currency = $generaleSetting?->currency ?? '₹';
 
         $amount = ($amount == 0 || $amount == null) ? 0 : $amount;
 

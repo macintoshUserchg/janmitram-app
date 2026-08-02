@@ -180,10 +180,10 @@
     </li>
 @endhasPermission
 
-@hasPermission(['admin.warehouse.index', 'admin.stock-request.index', 'admin.warehouse-transfer.index'])
+@hasPermission(['admin.warehouse.index', 'admin.stock-request.index', 'admin.warehouse-transfer.index', 'admin.inventory-assignment.index'])
     <!--- Warehouse Management --->
     <li>
-        <a class="menu {{ request()->routeIs('admin.warehouse.*', 'admin.stock-request.*', 'admin.warehouse-transfer.*') ? 'active' : '' }}"
+        <a class="menu {{ request()->routeIs('admin.warehouse.*', 'admin.stock-request.*', 'admin.warehouse-transfer.*', 'admin.inventory-assignment.*') ? 'active' : '' }}"
             data-bs-toggle="collapse" href="#warehouseMenu">
             <span>
                 <img class="menu-icon" src="{{ asset('assets/icons-admin/boxes.svg') }}" alt="icon" loading="lazy" />
@@ -191,7 +191,7 @@
             </span>
             <img src="{{ asset('assets/icons-admin/caret-down.svg') }}" alt="icon" class="downIcon">
         </a>
-        <div class="collapse dropdownMenuCollapse {{ $request->routeIs('admin.warehouse.*', 'admin.stock-request.*', 'admin.warehouse-transfer.*') ? 'show' : '' }}"
+        <div class="collapse dropdownMenuCollapse {{ $request->routeIs('admin.warehouse.*', 'admin.stock-request.*', 'admin.warehouse-transfer.*', 'admin.inventory-assignment.*') ? 'show' : '' }}"
             id="warehouseMenu">
             <div class="listBar">
                 @hasPermission('admin.warehouse.index')
@@ -210,6 +210,12 @@
                     <a href="{{ route('admin.warehouse-transfer.index') }}"
                         class="subMenu hasCount {{ request()->routeIs('admin.warehouse-transfer.*') ? 'active' : '' }}">
                         {{ __('Stock Transfers') }}
+                    </a>
+                @endhasPermission
+                @hasPermission('admin.inventory-assignment.index')
+                    <a href="{{ route('admin.inventory-assignment.create') }}"
+                        class="subMenu hasCount {{ request()->routeIs('admin.inventory-assignment.*') ? 'active' : '' }}">
+                        {{ __('Shop Inventory Assignment') }}
                     </a>
                 @endhasPermission
             </div>
