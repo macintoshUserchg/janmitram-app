@@ -200,9 +200,11 @@ class POSController extends Controller
 
         $generaleSetting = generaleSetting('setting');
 
-        $shop = generaleSetting('shop');
+        $shop = generaleSetting('shop') ?? generaleSetting('rootShop');
 
-        $products = $shop->products()->where('is_digital', 0)->when($brand, function ($query) use ($brand) {
+        $query = $shop ? $shop->products() : Product::query();
+
+        $products = $query->where('is_digital', 0)->when($brand, function ($query) use ($brand) {
             return $query->where('brand_id', $brand);
         })->when($category, function ($product) use ($category) {
             return $product->whereHas('categories', function ($query) use ($category) {
