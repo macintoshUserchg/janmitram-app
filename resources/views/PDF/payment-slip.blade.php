@@ -197,7 +197,6 @@
                     <div class="logo">
                         <img src="{{ $generaleSetting?->logo ?? asset('assets/logo.png') }}" alt="logo" />
                     </div>
-                    <p class="pt-2">{{ config('app.url') }}</p>
                 </div>
             </div>
 

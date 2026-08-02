@@ -299,10 +299,15 @@
                     <img src="{{ $generaleSetting?->favicon ?? asset('assets/favicon.png') }}" alt="logo" />
                 </div>
                 <div class="pl-3 pt-4 text-left float-left">
-                    <h2 class="site-name">{{ __($generaleSetting?->name ?? config('app.name')) }}</h2>
-                    <p class="pt-1-5">{{ config('app.url') }}</p>
-                    <p class="pt-1-5">{{ $generaleSetting?->email }}</p>
-                    <p class="pt-1-5">{{ $generaleSetting?->mobile }}</p>
+                    @if ($generaleSetting?->name && $generaleSetting->name != 'Laravel')
+                        <h2 class="site-name">{{ __($generaleSetting->name) }}</h2>
+                    @endif
+                    @if ($generaleSetting?->email)
+                        <p class="pt-1-5">{{ $generaleSetting->email }}</p>
+                    @endif
+                    @if ($generaleSetting?->mobile)
+                        <p class="pt-1-5">{{ $generaleSetting->mobile }}</p>
+                    @endif
                 </div>
             </div>
         </div>
