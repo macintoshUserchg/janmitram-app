@@ -41,7 +41,7 @@ class OrderController extends Controller
     /**
      * Display the order details.
      */
-    public function show($orderId)
+    public function show(Request $request, $orderId)
     {
         $order = Order::withoutGlobalScopes()->findOrFail($orderId);
 
@@ -50,6 +50,10 @@ class OrderController extends Controller
         $riders = Driver::whereHas('user', function ($query) {
             return $query->where('is_active', true);
         })->get();
+
+        if ($request->ajax() || $request->has('modal')) {
+            return view('shop.order.modal', compact('order', 'orderStatus', 'riders'))->render();
+        }
 
         return view('shop.order.show', compact('order', 'orderStatus', 'riders'));
     }

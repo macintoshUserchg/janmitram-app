@@ -57,11 +57,14 @@
                                 <td>{{ __($order->order_status->value) }}</td>
                                 <td>
                                     @hasPermission('shop.order.show')
-                                    <a href="{{ route('shop.order.show', $order->id) }}" data-bs-toggle="tooltip"
-                                        data-bs-placement="top" data-bs-title="{{__('view order details')}}"
-                                        class="circleIcon btn-outline-primary svg-bg">
+                                    <button type="button"
+                                        data-url="{{ route('shop.order.show', $order->id) }}?modal=1"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#orderDetailsModal"
+                                        title="{{__('view order details')}}"
+                                        class="circleIcon btn-outline-primary svg-bg border-0 btn-view-order-modal">
                                         <img src="{{ asset('assets/icons-admin/eye.svg') }}" alt="icon" loading="lazy" />
-                                    </a>
+                                    </button>
                                     @endhasPermission
                                     <a href="{{ route('shop.download-invoice', $order->id) }}" data-bs-toggle="tooltip" data-bs-placement="left"
                                         data-bs-title="{{__('Download Invoice')}}" class="circleIcon btn-outline-secondary">
@@ -81,4 +84,55 @@
     <div class="my-3">
         {{ $orders->links() }}
     </div>
+
+    <!-- Order Details AJAX Modal -->
+    <div class="modal fade" id="orderDetailsModal" tabindex="-1" aria-labelledby="orderDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content" id="orderDetailsModalContent">
+                <div class="modal-body text-center p-5">
+                    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-3 text-muted fw-semibold">{{ __('Loading Order Details...') }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
+
+@push('scripts')
+<script>
+    $(document).on('click', '.btn-view-order-modal', function() {
+        let url = $(this).data('url');
+        let modalContent = $('#orderDetailsModalContent');
+
+        modalContent.html(`
+            <div class="modal-body text-center p-5">
+                <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3 text-muted fw-semibold">{{ __('Loading Order Details...') }}</p>
+            </div>
+        `);
+
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function(response) {
+                modalContent.html(response);
+            },
+            error: function() {
+                modalContent.html(`
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title">{{ __('Error') }}</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body text-center p-4">
+                        <p class="text-danger fw-bold mb-0">{{ __('Unable to load order details. Please try again.') }}</p>
+                    </div>
+                `);
+            }
+        });
+    });
+</script>
+@endpush
