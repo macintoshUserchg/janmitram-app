@@ -429,79 +429,7 @@
                             </div>
                         @endif
 
-                        <!-- subscription warning -->
-                        @if (request()->subscription_required && !request()->routeIs('shop.subscription.index'))
-                            @if (!request()->current_subscription)
-                                <div class="alert alert-danger alert-dismissible fade show mb-3 w-100 text-center rounded-0 text-black"
-                                    role="alert" style="padding: 10px">
-                                    <strong>
-                                        <i class="fa fa-exclamation-circle" data-toggle="tooltip"
-                                            data-placement="bottom"
-                                            title='If you do not have subscription, you will not be able to sell your products.'></i>
-                                        You currently do not have an active subscription. Please purchase a plan to
-                                        start selling.
-                                    </strong>
-                                    <a href="{{ route('shop.subscription.index') }}" class="btn btn-sm common-btn">
-                                        Choose Plan
-                                    </a>
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert"
-                                        aria-label="Close" id="closeAlert"></button>
-                                </div>
-                            @endif
 
-                            @if (request()->current_subscription &&
-                                    !request()->subscription_expired &&
-                                    request()->current_subscription->remaining_sales === 0)
-                                <div class="alert alert-danger alert-dismissible fade show mb-3 w-100 text-center rounded-0 text-black"
-                                    role="alert" style="padding: 10px">
-                                    <strong>
-                                        <i class="fa fa-exclamation-circle" data-toggle="tooltip"
-                                            data-placement="bottom"
-                                            title='If you do not have subscription, you will not be able to sell your products.'></i>
-                                        You have reached the maximum number of sales for your current subscription.
-                                    </strong>
-                                    <a href="{{ route('shop.subscription.index') }}" class="btn btn-sm common-btn">
-                                        Renew Subscription
-                                    </a>
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert"
-                                        aria-label="Close" id="closeAlert"></button>
-                                </div>
-                            @endif
-
-                            @if (request()->subscription_about_to_expire)
-                                <div class="alert alert-danger alert-dismissible fade show mb-3 w-100 text-center rounded-0 text-black"
-                                    role="alert" style="padding: 10px">
-                                    <strong>
-                                        <i class="fa fa-exclamation-circle" data-toggle="tooltip"
-                                            data-placement="bottom"
-                                            title='If you do not have subscription, you will not be able to sell your products.'></i>
-                                        Your subscription will expire in {{ request()->subscription_time_left }}.
-                                    </strong>
-                                    <a href="{{ route('shop.subscription.index') }}" class="btn btn-sm common-btn">
-                                        Renew Subscription
-                                    </a>
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert"
-                                        aria-label="Close" id="closeAlert"></button>
-                                </div>
-                            @endif
-
-                            @if (request()->subscription_expired)
-                                <div class="alert alert-danger alert-dismissible fade show mb-3 w-100 text-center rounded-0 text-black"
-                                    role="alert" style="padding: 10px">
-                                    <strong>
-                                        <i class="fa fa-exclamation-circle" data-toggle="tooltip"
-                                            data-placement="bottom"
-                                            title='If you do not have subscription, you will not be able to sell your products.'></i>
-                                        Your subscription has expired.
-                                    </strong>
-                                    <a href="{{ route('shop.subscription.index') }}" class="btn btn-sm common-btn">
-                                        Renew Subscription
-                                    </a>
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert"
-                                        aria-label="Close" id="closeAlert"></button>
-                                </div>
-                            @endif
-                        @endif
 
                         <!-- Main Content -->
                         @yield('content')

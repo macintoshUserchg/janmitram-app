@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\SubscriptionStatus;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -25,11 +24,6 @@ class Shop extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
-    }
-
-    public function subscriptions(): HasMany
-    {
-        return $this->hasMany(ShopSubscription::class);
     }
 
     /**
@@ -227,24 +221,6 @@ class Shop extends Model
     public function reviews(): HasMany
     {
         return $this->hasMany(Review::class, 'shop_id');
-    }
-
-    public function currentSubscription(): Attribute
-    {
-        $subscription = $this->subscriptions()->where('status', SubscriptionStatus::ACTIVE)
-            ->where(function ($q) {
-                $q->whereNull('ends_at')
-                    ->orWhere('ends_at', '>', now());
-            })
-            ->where(function ($q) {
-                $q->whereNull('remaining_sales')
-                    ->orWhere('remaining_sales', '>', 0);
-            })
-            ->first();
-
-        return new Attribute(
-            get: fn () => $subscription,
-        );
     }
 
     /**

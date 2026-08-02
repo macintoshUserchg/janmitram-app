@@ -184,19 +184,6 @@ class OrderController extends Controller
 
         // Find the order
         $order = Order::find($request->order_id);
-        $subscription = null;
-
-        if (! $order->shop->user->hasRole('root')) {
-            $generalSetting = generaleSetting('setting');
-
-            if ($generalSetting?->business_based_on == 'subscription') {
-                $subscription = $order->shop->currentSubscription;
-
-                if (! $subscription) {
-                    return $this->json('Sorry, the shop is not available now', [], 422);
-                }
-            }
-        }
 
         if ($order->order_status->value == OrderStatus::DELIVERED->value) {
 
@@ -219,12 +206,6 @@ class OrderController extends Controller
 
             // re-order
             $order = OrderRepository::reOrder($order, $payment);
-
-            if ($subscription) {
-                $subscription->update([
-                    'remaining_sales' => $subscription->remaining_sales - 1,
-                ]);
-            }
 
             // attach payment to order
             $payment->orders()->attach($order->id);

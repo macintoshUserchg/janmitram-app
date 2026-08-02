@@ -566,47 +566,6 @@
 @endif
 
 @if ($businessModel == 'multi')
-    @hasPermission([
-        'admin.subscription-plan.index',
-        'admin.subscription-plan.create',
-        'admin.subscription-plan.subscription.list'
-    ])
-        <!--- subscription plans --->
-        <li>
-            <a class="menu {{ request()->routeIs('admin.subscription-plan.*') ? 'active' : '' }}"
-                data-bs-toggle="collapse" href="#subscriptionMenu">
-                <span>
-                    <img class="menu-icon" src="{{ asset('assets/icons-admin/crown.svg') }}" alt="icon"
-                        loading="lazy" />
-                    {{ __('Subscription Management') }}
-                </span>
-                <img src="{{ asset('assets/icons-admin/caret-down.svg') }}" alt="icon" class="downIcon">
-            </a>
-            <div class="collapse dropdownMenuCollapse {{ $request->routeIs('admin.subscription-plan.*') ? 'show' : '' }}"
-                id="subscriptionMenu">
-                <div class="listBar">
-                    @hasPermission('admin.subscription-plan.subscription.list')
-                        <a href="{{ route('admin.subscription-plan.subscription.list') }}"
-                            class="subMenu hasCount {{ request()->routeIs('admin.subscription-plan.subscription.list') ? 'active' : '' }}">
-                            {{ __('All Subscription') }}
-                        </a>
-                    @endhasPermission
-                    @hasPermission('admin.subscription-plan.index')
-                        <a href="{{ route('admin.subscription-plan.index') }}"
-                            class="subMenu hasCount {{ request()->routeIs('admin.subscription-plan.index') ? 'active' : '' }}">
-                            {{ __('Subscription Plan') }}
-                        </a>
-                    @endhasPermission
-                    @hasPermission('admin.subscription-plan.create')
-                        <a href="{{ route('admin.subscription-plan.create') }}"
-                            class="subMenu hasCount {{ request()->routeIs('admin.subscription-plan.create') ? 'active' : '' }}">
-                            {{ __('Add Subscription Plan') }}
-                        </a>
-                    @endhasPermission
-                </div>
-            </div>
-        </li>
-    @endhasPermission
 @endif
 @hasPermission(['admin.supportTicket.index', 'admin.support.index'])
     <li>

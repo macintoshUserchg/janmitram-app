@@ -9,21 +9,7 @@
     </a>
 </li>
 
-@if ($generaleSetting?->business_based_on == 'subscription')
-    @hasPermission('shop.subscription.index')
-        <!--- subscription --->
-        <li>
-            <a href="{{ route('shop.subscription.index') }}"
-                class="menu {{ request()->routeIs('shop.subscription.*') ? 'active' : '' }}">
-                <span>
-                    <img class="menu-icon" src="{{ asset('assets/icons-admin/crown.svg') }}" alt="icon"
-                        loading="lazy" />
-                    {{ __('Subscription') }}
-                </span>
-            </a>
-        </li>
-    @endhasPermission
-@endif
+
 
 @php
     use App\Enums\OrderStatus;

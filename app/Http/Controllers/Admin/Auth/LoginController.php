@@ -57,23 +57,10 @@ class LoginController extends Controller
                 return to_route('admin.dashboard.index')->withSuccess('Login successfully');
             }
 
-            $generalSetting = generaleSetting('setting');
-
-            if ($generalSetting?->business_based_on != 'subscription' && $shop) {
+            if ($shop) {
                 return to_route('shop.dashboard.index')->withSuccess('Login successfully');
             }
 
-            $subscription = $shop->currentSubscription;
-
-            if (! $subscription) {
-                return to_route('shop.subscription.index')->withSuccess('Login successfully');
-            }
-
-            if ($subscription->ends_at && $subscription->ends_at->lt(now())) {
-                return to_route('shop.subscription.index')->withSuccess('Login successfully');
-            }
-
-            // redirect to dashboard
             return to_route('admin.dashboard.index')->withSuccess('Login successfully');
         }
 

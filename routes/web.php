@@ -35,7 +35,6 @@ use App\Http\Controllers\Admin\SocialAuthController;
 use App\Http\Controllers\Admin\SocialLinkController;
 use App\Http\Controllers\Admin\StockAssignmentController;
 use App\Http\Controllers\Admin\StockRequestController;
-use App\Http\Controllers\Admin\SubscriptionPlanController;
 use App\Http\Controllers\Admin\SupportController;
 use App\Http\Controllers\Admin\SupportTicketController;
 use App\Http\Controllers\Admin\ThemeColorController;
@@ -65,7 +64,6 @@ use App\Http\Controllers\Shop\ProfileController;
 use App\Http\Controllers\Shop\ReturnOrderController;
 use App\Http\Controllers\Shop\SizeController;
 use App\Http\Controllers\Shop\SubCategoryController;
-use App\Http\Controllers\Shop\SubscriptionController;
 use App\Http\Controllers\Shop\UnitController;
 use App\Http\Controllers\Shop\VoucherController;
 use App\Http\Controllers\Shop\WithdrawController;
@@ -257,11 +255,6 @@ Route::prefix('shop')->name('shop.')->middleware(['web'])->group(function () {
         Route::post('flash-sale/{flashSale}/product', [FlashSaleController::class, 'productStore'])->name('flashSale.productStore');
         Route::delete('flash-sale/product/{flashSaleProduct}', [FlashSaleController::class, 'productRemove'])->name('flashSale.productRemove');
 
-        Route::get('subscription', [SubscriptionController::class, 'index'])->name('subscription.index');
-        Route::post('subscription/purchase', [SubscriptionController::class, 'purchase'])->name('subscription.purchase');
-        Route::get('subscription/payment-success', [SubscriptionController::class, 'paymentSuccess'])->name('subscription.payment-success');
-        Route::get('subscription/payment-cancel', [SubscriptionController::class, 'paymentCancel'])->name('subscription.payment-cancel');
-
         Route::get('payout', [App\Http\Controllers\Shop\PayoutController::class, 'index'])->name('payout.index');
         Route::get('payout/network', [App\Http\Controllers\Shop\PayoutController::class, 'network'])->name('payout.network');
         Route::get('payout/network/create', [App\Http\Controllers\Shop\PayoutController::class, 'createDownline'])->name('payout.network.create');
@@ -380,16 +373,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:root'])->group
     Route::put('business-setting/withdraw-update', [BusinessSetupController::class, 'withdrawUpdate'])->name('business-setting.withdraw-update');
     Route::get('business-setting/toggle-pos', [BusinessSetupController::class, 'togglePOS'])->name('business-setting.toggle-pos');
     Route::get('business-setting/toggle-register', [BusinessSetupController::class, 'toggleRegister'])->name('business-setting.toggle-register');
-
-    Route::get('subscription-plan', [SubscriptionPlanController::class, 'index'])->name('subscription-plan.index');
-    Route::get('subscription-plan/create', [SubscriptionPlanController::class, 'create'])->name('subscription-plan.create');
-    Route::post('subscription-plan', [SubscriptionPlanController::class, 'store'])->name('subscription-plan.store');
-    Route::get('subscription-plan/{subscriptionPlan}/edit', [SubscriptionPlanController::class, 'edit'])->name('subscription-plan.edit');
-    Route::put('subscription-plan/{subscriptionPlan}', [SubscriptionPlanController::class, 'update'])->name('subscription-plan.update');
-    Route::get('subscription-plan/{subscriptionPlan}/toggle', [SubscriptionPlanController::class, 'statusToggle'])->name('subscription-plan.toggle');
-    Route::delete('subscription-plan/{subscriptionPlan}', [SubscriptionPlanController::class, 'destroy'])->name('subscription-plan.destroy');
-    Route::get('subscription-plan/subscriptions', [SubscriptionPlanController::class, 'subscriptionList'])->name('subscription-plan.subscription.list');
-    Route::post('subscription-plan/{shopSubscription}/subscription-status', [SubscriptionPlanController::class, 'subscriptionStatus'])->name('subscription-plan.subscription.status');
 
     Route::get('product', [App\Http\Controllers\Admin\ProductController::class, 'index'])->name('product.index');
     Route::get('product/{product}', [App\Http\Controllers\Admin\ProductController::class, 'show'])->name('product.show');
