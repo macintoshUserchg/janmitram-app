@@ -94,4 +94,61 @@ class AdminShopKycTest extends TestCase
             'qualification' => 'B.Com',
         ]);
     }
+
+    public function test_admin_shop_update_persists_kyc(): void
+    {
+        $shopUser = User::factory()->create(['is_active' => true, 'phone' => '9876543210']);
+        $shop = Shop::factory()->create(['user_id' => $shopUser->id, 'status' => true]);
+
+        $response = $this->actingAs($this->admin())->put(route('admin.shop.update', $shop), [
+            'first_name' => 'John',
+            'last_name' => 'Doe',
+            'phone' => $shopUser->phone,
+            'gender' => 'male',
+            'email' => $shopUser->email,
+            'shop_name' => 'Updated KYC Shop',
+            'address' => '456 New St',
+            'aadhaar_card' => UploadedFile::fake()->image('aadhaar.jpg'),
+            'aadhaar_number' => '987654321098',
+            'pan_card' => UploadedFile::fake()->image('pan.jpg'),
+            'pan_number' => 'ZXCVB5678Y',
+            'date_of_birth' => '1985-05-20',
+            'qualification' => 'M.Com',
+            'bank_name' => 'ICICI Bank',
+            'ifsc' => 'ICIC0001234',
+            'account_number' => '998877665544',
+            'other_documents' => UploadedFile::fake()->image('doc.jpg'),
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $response->assertRedirect(route('admin.shop.index'));
+        $this->assertDatabaseHas('shop_kyc', [
+            'shop_id' => $shop->id,
+            'aadhaar_number' => '987654321098',
+            'pan_number' => 'ZXCVB5678Y',
+            'bank_name' => 'ICICI Bank',
+            'ifsc' => 'ICIC0001234',
+            'qualification' => 'M.Com',
+        ]);
+    }
+
+    public function test_admin_shop_update_without_kyc_does_not_create_empty_row(): void
+    {
+        $shopUser = User::factory()->create(['is_active' => true, 'phone' => '9876543210']);
+        $shop = Shop::factory()->create(['user_id' => $shopUser->id, 'status' => true]);
+
+        $response = $this->actingAs($this->admin())->put(route('admin.shop.update', $shop), [
+            'first_name' => 'John',
+            'last_name' => 'Doe',
+            'phone' => $shopUser->phone,
+            'gender' => 'male',
+            'email' => $shopUser->email,
+            'shop_name' => 'Legacy No KYC Shop',
+            'address' => '789 Old Rd',
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $response->assertRedirect(route('admin.shop.index'));
+        $this->assertDatabaseMissing('shop_kyc', ['shop_id' => $shop->id]);
+    }
 }

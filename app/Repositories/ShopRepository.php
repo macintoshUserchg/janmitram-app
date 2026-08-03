@@ -3,10 +3,12 @@
 namespace App\Repositories;
 
 use App\Http\Requests\ShopCreateRequest;
+use App\Models\Media;
 use App\Models\Shop;
 use App\Models\ShopKyc;
 use App\Support\Repositories\Repository;
 use Carbon\Carbon;
+use Illuminate\Http\UploadedFile;
 
 class ShopRepository extends Repository
 {
@@ -133,6 +135,29 @@ class ShopRepository extends Repository
             'warehouse_id' => $request->warehouse_id ?? $shop->warehouse_id,
         ]);
 
+        $kyc = $shop->kyc;
+
+        if ($request->filled('aadhaar_number') || $request->filled('pan_number')
+            || $request->filled('bank_name') || $request->filled('ifsc')
+            || $request->filled('account_number') || $request->filled('qualification')
+            || $request->hasFile('aadhaar_card') || $request->hasFile('pan_card')
+            || $request->hasFile('other_documents')) {
+            ShopKyc::updateOrCreate(
+                ['shop_id' => $shop->id],
+                [
+                    'aadhaar_card_id' => self::storeOrUpdateDocument($request->file('aadhaar_card'), 'shops/kyc', $kyc?->aadhaarCard)?->id,
+                    'pan_card_id' => self::storeOrUpdateDocument($request->file('pan_card'), 'shops/kyc', $kyc?->panCard)?->id,
+                    'other_documents_id' => self::storeOrUpdateDocument($request->file('other_documents'), 'shops/kyc', $kyc?->otherDocuments)?->id,
+                    'aadhaar_number' => $request->aadhaar_number,
+                    'pan_number' => $request->pan_number,
+                    'bank_name' => $request->bank_name,
+                    'ifsc' => $request->ifsc,
+                    'account_number' => $request->account_number,
+                    'qualification' => $request->qualification,
+                ]
+            );
+        }
+
         return $shop;
     }
 
@@ -219,5 +244,20 @@ class ShopRepository extends Repository
         }
 
         return $thumbnail;
+    }
+
+    /**
+     * Store a new KYC document or update an existing one. Returns null when
+     * neither a new file nor an existing document is present.
+     */
+    private static function storeOrUpdateDocument(?UploadedFile $file, string $path, ?Media $existing): ?Media
+    {
+        if (! $file) {
+            return $existing;
+        }
+
+        return $existing
+            ? MediaRepository::updateByRequest($file, $path, 'image', $existing)
+            : MediaRepository::storeByRequest($file, $path, 'image');
     }
 }
