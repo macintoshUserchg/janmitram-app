@@ -69,6 +69,8 @@ class ShopController extends Controller
         $warehouses = Warehouse::all();
         $parentShops = Shop::where('status', true)->where('id', '!=', $shop->id)->get();
 
+        $shop->load(['kyc.aadhaarCard', 'kyc.panCard', 'kyc.otherDocuments']);
+
         return view('admin.shop.edit', compact('shop', 'warehouses', 'parentShops'));
     }
 
