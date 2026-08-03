@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\Media;
 use App\Models\Shop;
+use App\Models\ShopKyc;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -130,6 +132,60 @@ class AdminShopKycTest extends TestCase
             'ifsc' => 'ICIC0001234',
             'qualification' => 'M.Com',
         ]);
+    }
+
+    public function test_admin_shop_update_replaces_kyc_document(): void
+    {
+        Storage::fake('public');
+
+        $shopUser = User::factory()->create(['phone' => '9876543210', 'is_active' => true]);
+        $shop = Shop::factory()->create(['user_id' => $shopUser->id, 'status' => true]);
+
+        // Pre-existing KYC row + an Aadhaar document on the fake disk
+        Storage::disk('public')->put('shops/kyc/original.jpg', 'old-file-bytes');
+        $oldAadhaar = Media::create([
+            'type' => 'image',
+            'name' => 'original.jpg',
+            'src' => 'shops/kyc/original.jpg',
+            'extension' => 'jpg',
+        ]);
+        ShopKyc::create([
+            'shop_id' => $shop->id,
+            'aadhaar_card_id' => $oldAadhaar->id,
+            'aadhaar_number' => '123456789012',
+            'pan_number' => 'ABCDE1234F',
+            'bank_name' => 'HDFC Bank',
+            'ifsc' => 'HDFC0001234',
+            'account_number' => '12345678901234',
+            'qualification' => 'B.Com',
+        ]);
+
+        // Re-upload the Aadhaar card while editing
+        $response = $this->actingAs($this->admin())->put(route('admin.shop.update', $shop), [
+            'first_name' => 'John',
+            'last_name' => 'Doe',
+            'phone' => $shopUser->phone,
+            'gender' => 'male',
+            'email' => $shopUser->email,
+            'shop_name' => 'Replacement Shop',
+            'aadhaar_card' => UploadedFile::fake()->image('new_aadhaar.jpg'),
+            'aadhaar_number' => '123456789012',
+            'pan_number' => 'ABCDE1234F',
+            'bank_name' => 'HDFC Bank',
+            'ifsc' => 'HDFC0001234',
+            'account_number' => '12345678901234',
+            'qualification' => 'B.Com',
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $response->assertRedirect(route('admin.shop.index'));
+
+        $this->assertDatabaseCount('shop_kyc', 1);
+
+        $updatedMedia = Media::find($oldAadhaar->id);
+        $this->assertNotNull($updatedMedia);
+        $this->assertNotEquals('shops/kyc/original.jpg', $updatedMedia->src);
+        Storage::disk('public')->assertMissing('shops/kyc/original.jpg');
     }
 
     public function test_admin_shop_update_without_kyc_does_not_create_empty_row(): void

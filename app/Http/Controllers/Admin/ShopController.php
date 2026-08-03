@@ -83,6 +83,8 @@ class ShopController extends Controller
             return back()->with('demoMode', 'You can not update the shop in demo mode');
         }
 
+        $shop->load(['kyc.aadhaarCard', 'kyc.panCard', 'kyc.otherDocuments']);
+
         // store shop from shopRepository
         ShopRepository::updateByRequest($shop, $request);
 

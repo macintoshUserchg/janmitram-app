@@ -190,7 +190,7 @@
                         <div class="mt-3">
                             <x-file name="aadhaar_card" label="Replace Aadhaar Card (JPG / PNG / PDF, max 5MB)" />
                             @if ($shop->kyc?->aadhaarCard)
-                                <a href="{{ $shop->kyc->aadhaar_card_url }}" target="_blank" class="small text-primary">
+                                <a href="{{ $shop->kyc->aadhaar_card_url }}" target="_blank" rel="noopener" class="small text-primary">
                                     <i class="fa fa-file-image me-1"></i>{{ __('Current Aadhaar card') }}
                                 </a>
                             @endif
@@ -205,7 +205,7 @@
                         <div class="mt-3">
                             <x-file name="pan_card" label="Replace PAN Card (JPG / PNG / PDF, max 5MB)" />
                             @if ($shop->kyc?->panCard)
-                                <a href="{{ $shop->kyc->pan_card_url }}" target="_blank" class="small text-primary">
+                                <a href="{{ $shop->kyc->pan_card_url }}" target="_blank" rel="noopener" class="small text-primary">
                                     <i class="fa fa-file-image me-1"></i>{{ __('Current PAN card') }}
                                 </a>
                             @endif
@@ -245,7 +245,7 @@
                         <div class="mt-3">
                             <x-file name="other_documents" label="Replace Other Documents (JPG / PNG / PDF, max 5MB)" />
                             @if ($shop->kyc?->otherDocuments)
-                                <a href="{{ $shop->kyc->other_documents_url }}" target="_blank" class="small text-primary">
+                                <a href="{{ $shop->kyc->other_documents_url }}" target="_blank" rel="noopener" class="small text-primary">
                                     <i class="fa fa-file-image me-1"></i>{{ __('Current other documents') }}
                                 </a>
                             @endif
