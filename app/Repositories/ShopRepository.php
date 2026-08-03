@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Http\Requests\ShopCreateRequest;
 use App\Models\Shop;
+use App\Models\ShopKyc;
 use App\Support\Repositories\Repository;
 use Carbon\Carbon;
 
@@ -53,7 +54,7 @@ class ShopRepository extends Repository
         }
 
         // create new shop and return
-        return self::create([
+        $shop = self::create([
             'user_id' => $user->id,
             'name' => $request->shop_name,
             'logo_id' => $thumbnail ? $thumbnail->id : null,
@@ -67,6 +68,36 @@ class ShopRepository extends Repository
             'warehouse_id' => $request->warehouse_id,
             'parent_shop_id' => $parentShopId,
         ]);
+
+        // store KYC (Aadhaar / PAN / bank) when present — shared callers
+        // (admin create, API seller register, downline create) send none.
+        if ($request->hasFile('aadhaar_card') || $request->hasFile('pan_card')
+            || $request->hasFile('other_documents') || $request->filled('aadhaar_number')) {
+            $aadhaarCard = $request->hasFile('aadhaar_card')
+                ? MediaRepository::storeByRequest($request->aadhaar_card, 'shops/kyc', 'image')
+                : null;
+            $panCard = $request->hasFile('pan_card')
+                ? MediaRepository::storeByRequest($request->pan_card, 'shops/kyc', 'image')
+                : null;
+            $otherDocs = $request->hasFile('other_documents')
+                ? MediaRepository::storeByRequest($request->other_documents, 'shops/kyc', 'image')
+                : null;
+
+            ShopKyc::create([
+                'shop_id' => $shop->id,
+                'aadhaar_card_id' => $aadhaarCard?->id,
+                'pan_card_id' => $panCard?->id,
+                'other_documents_id' => $otherDocs?->id,
+                'aadhaar_number' => $request->aadhaar_number,
+                'pan_number' => $request->pan_number,
+                'bank_name' => $request->bank_name,
+                'ifsc' => $request->ifsc,
+                'account_number' => $request->account_number,
+                'qualification' => $request->qualification,
+            ]);
+        }
+
+        return $shop;
     }
 
     /**

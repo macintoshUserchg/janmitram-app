@@ -133,11 +133,19 @@
                             <div class="indicator-devider position-absolute">
                             </div>
                         </div>
-                        <div>
+                        <div class="position-relative">
                             <div class="indicator d-flex justify-content-center align-items-center" id="indicator2">
                                 2
                             </div>
                             Shop information
+                            <div class="indicator-devider position-absolute">
+                            </div>
+                        </div>
+                        <div>
+                            <div class="indicator d-flex justify-content-center align-items-center" id="indicator3">
+                                3
+                            </div>
+                            KYC &amp; bank
                         </div>
                     </div>
                 </div>
@@ -338,6 +346,95 @@
                                     </div>
                                 </div>
                             </div>
+                            <button type="button" class="btn btn-primary py-2.5" id="nextBtn2">Next</button>
+                        </div>
+                        <div class="step" id="step3" style="display: none">
+                            <div class="information">
+                                <div class="title">
+                                    {{ __('KYC &amp; Bank Details') }}
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mt-3">
+                                            <x-file name="aadhaar_card" label="Aadhaar Card (JPG / PNG / PDF, max 5MB)"
+                                                required="true" />
+                                            <p class="text text-danger m-0" id="aadhaar_card_error"></p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mt-3">
+                                            <x-input type="text" name="aadhaar_number" label="Aadhaar Number"
+                                                placeholder="12-digit Aadhaar number" required="true" />
+                                            <p class="text text-danger m-0" id="aadhaar_number_error"></p>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="mt-3">
+                                            <x-file name="pan_card" label="PAN Card (JPG / PNG / PDF, max 5MB)"
+                                                required="true" />
+                                            <p class="text text-danger m-0" id="pan_card_error"></p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mt-3">
+                                            <x-input type="text" name="pan_number" label="PAN Number"
+                                                placeholder="e.g. ABCDE1234F" required="true" />
+                                            <p class="text text-danger m-0" id="pan_number_error"></p>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="mt-3">
+                                            <x-input type="date" name="date_of_birth" label="Date of Birth"
+                                                required="true" />
+                                            <p class="text text-danger m-0" id="date_of_birth_error"></p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mt-3">
+                                            <x-input type="text" name="qualification" label="Qualification"
+                                                placeholder="e.g. B.Com, 12th Pass" required="true" />
+                                            <p class="text text-danger m-0" id="qualification_error"></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="information">
+                                <div class="title">
+                                    {{ __('Bank Details') }}
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="mt-3">
+                                            <x-input type="text" name="bank_name" label="Bank Name"
+                                                placeholder="Enter bank name" required="true" />
+                                            <p class="text text-danger m-0" id="bank_name_error"></p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mt-3">
+                                            <x-input type="text" name="ifsc" label="Bank IFSC Code"
+                                                placeholder="e.g. HDFC0001234" required="true" />
+                                            <p class="text text-danger m-0" id="ifsc_error"></p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mt-3">
+                                            <x-input type="text" name="account_number" label="Bank Account Number"
+                                                placeholder="Enter account number" required="true" />
+                                            <p class="text text-danger m-0" id="account_number_error"></p>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-12 mt-3">
+                                        <x-file name="other_documents" label="Other Documents (JPG / PNG / PDF, max 5MB, optional)" />
+                                        <p class="form-text text-muted small mt-1">
+                                            {{ __('Optional — upload any additional document (e.g. trade licence, GST certificate).') }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
                             <button type="submit" class="btn btn-primary py-2.5">Submit</button>
                         </div>
                     </form>
@@ -370,15 +467,41 @@
                 }
             });
 
-            $('#backBtn').on('click', function() {
+            $('#nextBtn2').on('click', function() {
+                if (!validateStep2()) {
+                    return;
+                }
+
                 $('#step2').hide();
-                $(this).addClass('d-none');
-                $('#step1').show();
+                $('#step3').show();
                 $('#indicator2').removeClass('active');
-                $('#indicator1').addClass('active');
+                $('#indicator3').addClass('active');
+            });
+
+            $('#backBtn').on('click', function() {
+                if ($('#step3').is(':visible')) {
+                    $('#step3').hide();
+                    $('#step2').show();
+                    $('#indicator3').removeClass('active');
+                    $('#indicator2').addClass('active');
+                    if (window.janmitramMapObj) {
+                        window.janmitramMapObj.invalidateSize();
+                    }
+                } else {
+                    $('#step2').hide();
+                    $(this).addClass('d-none');
+                    $('#step1').show();
+                    $('#indicator2').removeClass('active');
+                    $('#indicator1').addClass('active');
+                }
             });
 
             $('#step1 input[required]').on('input', function() {
+                $(this).removeClass('is-invalid');
+                $('#' + $(this).attr('name') + '_error').text('')
+            });
+
+            $('#step3 input[required]').on('input', function() {
                 $(this).removeClass('is-invalid');
                 $('#' + $(this).attr('name') + '_error').text('')
             });
@@ -393,19 +516,31 @@
                 });
                 @if($errors->has('first_name') || $errors->has('phone') || $errors->has('email') || $errors->has('password') || $errors->has('profile_photo'))
                     $('#step2').hide();
+                    $('#step3').hide();
                     $('#step1').show();
                     $('#backBtn').addClass('d-none');
                     $('#indicator2').removeClass('active');
+                    $('#indicator3').removeClass('active');
                     $('#indicator1').addClass('active');
                 @elseif($errors->has('shop_name') || $errors->has('shop_logo') || $errors->has('shop_banner') || $errors->has('address') || $errors->has('description'))
                     $('#step1').hide();
+                    $('#step3').hide();
                     $('#step2').show();
                     $('#backBtn').removeClass('d-none');
                     $('#indicator1').removeClass('active');
+                    $('#indicator3').removeClass('active');
                     $('#indicator2').addClass('active');
                     if (window.janmitramMapObj) {
                         window.janmitramMapObj.invalidateSize();
                     }
+                @elseif($errors->has('aadhaar_card') || $errors->has('aadhaar_number') || $errors->has('pan_card') || $errors->has('pan_number') || $errors->has('date_of_birth') || $errors->has('qualification') || $errors->has('bank_name') || $errors->has('ifsc') || $errors->has('account_number') || $errors->has('other_documents'))
+                    $('#step1').hide();
+                    $('#step2').hide();
+                    $('#step3').show();
+                    $('#backBtn').removeClass('d-none');
+                    $('#indicator1').removeClass('active');
+                    $('#indicator2').removeClass('active');
+                    $('#indicator3').addClass('active');
                 @endif
             @endif
         });
@@ -529,20 +664,131 @@
             return valid;
         }
 
+        function validateStep3() {
+            let valid = true;
+
+            const aadhaarCard = $('input[name=aadhaar_card]');
+            const aadhaarNumber = $('input[name=aadhaar_number]');
+            const panCard = $('input[name=pan_card]');
+            const panNumber = $('input[name=pan_number]');
+            const dob = $('input[name=date_of_birth]');
+            const qualification = $('input[name=qualification]');
+            const bankName = $('input[name=bank_name]');
+            const ifsc = $('input[name=ifsc]');
+            const accountNumber = $('input[name=account_number]');
+
+            function setError(input, errorId, message) {
+                $(errorId).text(message);
+                input.addClass('is-invalid');
+                valid = false;
+            }
+
+            function clearError(input, errorId) {
+                $(errorId).text('');
+                input.removeClass('is-invalid');
+            }
+
+            if (!aadhaarCard.val()) {
+                setError(aadhaarCard, '#aadhaar_card_error', '{{ __("Aadhaar card document is required.") }}');
+            } else {
+                clearError(aadhaarCard, '#aadhaar_card_error');
+            }
+
+            const aadhaarVal = aadhaarNumber.val().replace(/\s+/g, '');
+            const aadhaarRegex = /^[1-9]\d{11}$/;
+            if (!aadhaarNumber.val().trim()) {
+                setError(aadhaarNumber, '#aadhaar_number_error', '{{ __("Aadhaar number is required.") }}');
+            } else if (!aadhaarRegex.test(aadhaarVal)) {
+                setError(aadhaarNumber, '#aadhaar_number_error', '{{ __("Please enter a valid 12-digit Aadhaar number.") }}');
+            } else {
+                clearError(aadhaarNumber, '#aadhaar_number_error');
+            }
+
+            if (!panCard.val()) {
+                setError(panCard, '#pan_card_error', '{{ __("PAN card document is required.") }}');
+            } else {
+                clearError(panCard, '#pan_card_error');
+            }
+
+            const panVal = panNumber.val().trim().toUpperCase();
+            const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]$/;
+            if (!panNumber.val().trim()) {
+                setError(panNumber, '#pan_number_error', '{{ __("PAN number is required.") }}');
+            } else if (!panRegex.test(panVal)) {
+                setError(panNumber, '#pan_number_error', '{{ __("Please enter a valid PAN number (e.g. ABCDE1234F).") }}');
+            } else {
+                clearError(panNumber, '#pan_number_error');
+            }
+
+            if (!dob.val()) {
+                setError(dob, '#date_of_birth_error', '{{ __("Date of birth is required.") }}');
+            } else {
+                clearError(dob, '#date_of_birth_error');
+            }
+
+            if (!qualification.val().trim()) {
+                setError(qualification, '#qualification_error', '{{ __("Qualification is required.") }}');
+            } else {
+                clearError(qualification, '#qualification_error');
+            }
+
+            if (!bankName.val().trim()) {
+                setError(bankName, '#bank_name_error', '{{ __("Bank name is required.") }}');
+            } else {
+                clearError(bankName, '#bank_name_error');
+            }
+
+            const ifscVal = ifsc.val().trim().toUpperCase();
+            const ifscRegex = /^[A-Z]{4}0[A-Z0-9]{6}$/;
+            if (!ifsc.val().trim()) {
+                setError(ifsc, '#ifsc_error', '{{ __("IFSC code is required.") }}');
+            } else if (!ifscRegex.test(ifscVal)) {
+                setError(ifsc, '#ifsc_error', '{{ __("Please enter a valid IFSC code (e.g. HDFC0001234).") }}');
+            } else {
+                clearError(ifsc, '#ifsc_error');
+            }
+
+            if (!accountNumber.val().trim()) {
+                setError(accountNumber, '#account_number_error', '{{ __("Bank account number is required.") }}');
+            } else {
+                clearError(accountNumber, '#account_number_error');
+            }
+
+            return valid;
+        }
+
         $(document).ready(function() {
             $('form').on('submit', function(e) {
                 if (isRegistrationConfirmed) {
                     return true;
                 }
 
-                if (!validateStep() || !validateStep2()) {
+                if (!validateStep() || !validateStep2() || !validateStep3()) {
                     e.preventDefault();
                     if (!validateStep()) {
                         $('#step2').hide();
+                        $('#step3').hide();
                         $('#step1').show();
                         $('#backBtn').addClass('d-none');
                         $('#indicator2').removeClass('active');
+                        $('#indicator3').removeClass('active');
                         $('#indicator1').addClass('active');
+                    } else if (!validateStep2()) {
+                        $('#step1').hide();
+                        $('#step3').hide();
+                        $('#step2').show();
+                        $('#backBtn').removeClass('d-none');
+                        $('#indicator1').removeClass('active');
+                        $('#indicator3').removeClass('active');
+                        $('#indicator2').addClass('active');
+                    } else if (!validateStep3()) {
+                        $('#step1').hide();
+                        $('#step2').hide();
+                        $('#step3').show();
+                        $('#backBtn').removeClass('d-none');
+                        $('#indicator1').removeClass('active');
+                        $('#indicator2').removeClass('active');
+                        $('#indicator3').addClass('active');
                     }
                     return false;
                 }
@@ -559,6 +805,17 @@
                 let refCode = $('#sponsor_ref_input').val().trim();
                 let sponsorBadgeText = $('#sponsor_info_badge').text().trim();
                 let sponsorInfo = sponsorBadgeText ? sponsorBadgeText : (refCode ? refCode : '{{ __("Direct Registration (No Sponsor)") }}');
+
+                let aadhaarNumber = $('input[name=aadhaar_number]').val().trim();
+                let aadhaarMasked = aadhaarNumber ? 'XXXX-XXXX-' + aadhaarNumber.slice(-4) : '';
+                let panNumber = $('input[name=pan_number]').val().trim().toUpperCase();
+                let bankName = $('input[name=bank_name]').val().trim();
+                let ifscCode = $('input[name=ifsc]').val().trim().toUpperCase();
+                let accountNumber = $('input[name=account_number]').val().trim();
+                let accountMasked = accountNumber ? 'XXXX' + accountNumber.slice(-4) : '';
+                let qualification = $('input[name=qualification]').val().trim();
+                let dob = $('input[name=date_of_birth]').val();
+                let otherDocs = $('input[name=other_documents]').val() ? '{{ __("Yes") }}' : '{{ __("None") }}';
 
                 let profileSrc = $('#previewProfile').attr('src');
                 let logoSrc = $('#previewShopLogo').attr('src');
@@ -587,6 +844,19 @@
                             </div>
                             <div class="mt-2 pt-2 border-top small text-muted">
                                 <strong class="text-dark"><i class="fa fa-sitemap me-1 text-primary"></i> {{ __("Sponsor Network") }}:</strong> ${sponsorInfo}
+                            </div>
+                        </div>
+                        <div class="card mb-3 border-0 bg-light p-3 rounded-3 shadow-sm">
+                            <h6 class="fw-bold text-primary mb-2 border-bottom pb-1"><i class="fa fa-id-card me-1"></i> {{ __("KYC & Bank Details") }}</h6>
+                            <div class="row small g-2">
+                                <div class="col-6"><strong class="text-dark">Aadhaar:</strong> ${aadhaarMasked}</div>
+                                <div class="col-6"><strong class="text-dark">PAN:</strong> ${panNumber}</div>
+                                <div class="col-6"><strong class="text-dark">DOB:</strong> ${dob}</div>
+                                <div class="col-6"><strong class="text-dark">Qualification:</strong> ${qualification}</div>
+                                <div class="col-12"><strong class="text-dark">Bank:</strong> ${bankName}</div>
+                                <div class="col-6"><strong class="text-dark">IFSC:</strong> ${ifscCode}</div>
+                                <div class="col-6"><strong class="text-dark">Account:</strong> ${accountMasked}</div>
+                                <div class="col-12"><strong class="text-dark">Other docs:</strong> ${otherDocs}</div>
                             </div>
                         </div>
                         <div class="alert alert-info py-2 px-3 small mb-0 rounded-3">

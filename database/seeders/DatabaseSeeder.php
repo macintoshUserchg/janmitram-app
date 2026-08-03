@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Shop;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Artisan;
 
@@ -32,6 +33,15 @@ class DatabaseSeeder extends Seeder
             $this->call(CustomerSeeder::class);
             $this->call(RiderSeeder::class);
             $this->call(ShopSeeder::class);
+
+            // Demo shops do not go through the registration flow, so they have no
+            // KYC submission. Create an explicit (all-null) shop_kyc row for each
+            // so the admin KYC review card renders instead of silently missing.
+            // The root platform shop is excluded — it is the platform owner.
+            Shop::whereDoesntHave('kyc')
+                ->whereHas('user', fn ($query) => $query->where('email', '!=', 'root@janmitram.com'))
+                ->get()
+                ->each(fn (Shop $shop) => $shop->kyc()->create());
             $this->call(CategorySeeder::class);
             $this->call(BrandSeeder::class);
             $this->call(SizeSeeder::class);

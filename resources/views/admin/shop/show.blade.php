@@ -96,6 +96,95 @@
                                 </table>
                             </div>
                         </div>
+
+                        @if ($shop->kyc)
+                            <div class="card mt-3">
+                                <h4 class="m-0 p-3 border-bottom d-flex align-items-center justify-content-between">
+                                    <span><i class="fa fa-id-card me-2"></i>{{ __('KYC &amp; Bank Details') }}</span>
+                                    <span class="badge bg-warning text-dark">{{ __('Pending Verification') }}</span>
+                                </h4>
+                                <div class="card-body pt-0">
+                                    <table class="table mb-0">
+                                        <tr>
+                                            <td style="width: 180px">{{ __('Aadhaar Number') }}:</td>
+                                            <td>
+                                                @if ($shop->kyc->aadhaar_number)
+                                                    XXXX-XXXX-{{ substr($shop->kyc->aadhaar_number, -4) }}
+                                                @else
+                                                    <span class="text-muted">—</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="width: 180px">{{ __('Aadhaar Card') }}:</td>
+                                            <td>
+                                                @if ($shop->kyc->aadhaarCard)
+                                                    <a href="{{ $shop->kyc->aadhaar_card_url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                        <i class="fa fa-file-image me-1"></i>{{ __('View Document') }}
+                                                    </a>
+                                                @else
+                                                    <span class="text-muted">—</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="width: 180px">{{ __('PAN Number') }}:</td>
+                                            <td>{{ $shop->kyc->pan_number ?? '—' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="width: 180px">{{ __('PAN Card') }}:</td>
+                                            <td>
+                                                @if ($shop->kyc->panCard)
+                                                    <a href="{{ $shop->kyc->pan_card_url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                        <i class="fa fa-file-image me-1"></i>{{ __('View Document') }}
+                                                    </a>
+                                                @else
+                                                    <span class="text-muted">—</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="width: 180px">{{ __('Date of Birth') }}:</td>
+                                            <td>{{ optional($shop->user)->date_of_birth ?? '—' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="width: 180px">{{ __('Qualification') }}:</td>
+                                            <td>{{ $shop->kyc->qualification ?? '—' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="width: 180px">{{ __('Bank Name') }}:</td>
+                                            <td>{{ $shop->kyc->bank_name ?? '—' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="width: 180px">{{ __('IFSC Code') }}:</td>
+                                            <td>{{ $shop->kyc->ifsc ?? '—' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="width: 180px">{{ __('Account Number') }}:</td>
+                                            <td>
+                                                @if ($shop->kyc->account_number)
+                                                    XXXX{{ substr($shop->kyc->account_number, -4) }}
+                                                @else
+                                                    <span class="text-muted">—</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="width: 180px">{{ __('Other Documents') }}:</td>
+                                            <td>
+                                                @if ($shop->kyc->otherDocuments)
+                                                    <a href="{{ $shop->kyc->other_documents_url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                        <i class="fa fa-file-image me-1"></i>{{ __('View Document') }}
+                                                    </a>
+                                                @else
+                                                    <span class="text-muted">—</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        @endif
                     </div>
                     <div class="col-lg-4 mt-3">
                         <div class="card h-100">

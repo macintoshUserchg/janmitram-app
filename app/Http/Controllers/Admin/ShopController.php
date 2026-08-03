@@ -56,6 +56,8 @@ class ShopController extends Controller
     {
         Notification::where('url', '/admin/shops/'.$shop->id)->whereNull('shop_id')->where('is_read', false)->update(['is_read' => true]);
 
+        $shop->load(['kyc.aadhaarCard', 'kyc.panCard', 'kyc.otherDocuments']);
+
         return view('admin.shop.show', compact('shop'));
     }
 
