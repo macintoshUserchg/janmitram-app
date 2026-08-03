@@ -184,8 +184,14 @@
                     <p class="text text-danger m-0" id="descriptionError"></p>
                 </div>
 
-                <input type="hidden" id="latitude" name="latitude" value="{{ old('latitude', '27.005694931660006') }}">
-                <input type="hidden" id="longitude" name="longitude" value="{{ old('longitude', '75.77754972401056') }}">
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <x-input type="text" id="latitude" name="latitude" label="Latitude (Optional)" placeholder="e.g. 27.0056949" :value="old('latitude', '27.005694931660006')" />
+                    </div>
+                    <div class="col-md-6">
+                        <x-input type="text" id="longitude" name="longitude" label="Longitude (Optional)" placeholder="e.g. 75.7775497" :value="old('longitude', '75.77754972401056')" />
+                    </div>
+                </div>
                 <div id="map" style="height:450px; border-radius: 10px;margin-top: 20px"></div>
 
                 <div class="d-flex justify-content-end mt-4">

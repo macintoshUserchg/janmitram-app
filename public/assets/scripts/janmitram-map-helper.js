@@ -90,6 +90,26 @@ window.initJanmitramMap = function(config) {
             var pos = marker.getLatLng();
             updateInputs(pos.lat, pos.lng);
         });
+
+        var latInput = document.getElementById(config.latInputId || 'latitude');
+        var lngInput = document.getElementById(config.lngInputId || 'longitude');
+
+        function onManualInputChange() {
+            if (!latInput || !lngInput) return;
+            var nLat = parseFloat(latInput.value);
+            var nLng = parseFloat(lngInput.value);
+            if (!isNaN(nLat) && !isNaN(nLng) && nLat !== 0 && nLng !== 0) {
+                map.setView([nLat, nLng], map.getZoom());
+                marker.setLatLng([nLat, nLng]);
+            }
+        }
+
+        if (latInput) {
+            latInput.addEventListener('change', onManualInputChange);
+        }
+        if (lngInput) {
+            lngInput.addEventListener('change', onManualInputChange);
+        }
     }
 
     // Inject Control UI Bar (Search Box + GPS Button) if enabled
