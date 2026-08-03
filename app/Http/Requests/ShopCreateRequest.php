@@ -31,10 +31,11 @@ class ShopCreateRequest extends FormRequest
             $required = 'nullable';
         }
 
-        // KYC / bank fields are required only on the public shop registration
-        // route. Shared callers (admin create, admin update, API seller
+        // KYC / bank fields are required only on the public shop registration and
+        // admin shop create routes. Shared callers (admin update, API seller
         // register, downline create) do not collect KYC, so resolve to nullable.
-        $kycRequired = $this->routeIs('shop.register.submit') ? 'required' : 'nullable';
+        $kycRequired = $this->routeIs('shop.register.submit') || $this->routeIs('admin.shop.store')
+            ? 'required' : 'nullable';
 
         $verifyManage = Cache::rememberForever('verify_manage', function () {
             return VerifyManage::first();

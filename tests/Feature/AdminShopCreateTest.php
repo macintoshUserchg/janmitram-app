@@ -62,6 +62,15 @@ class AdminShopCreateTest extends TestCase
             'profile_photo' => UploadedFile::fake()->image('profile.jpg'),
             'shop_logo' => UploadedFile::fake()->image('logo.jpg'),
             'shop_banner' => UploadedFile::fake()->image('banner.jpg'),
+            'aadhaar_card' => UploadedFile::fake()->image('aadhaar.jpg'),
+            'aadhaar_number' => '123456789012',
+            'pan_card' => UploadedFile::fake()->image('pan.jpg'),
+            'pan_number' => 'ABCDE1234F',
+            'date_of_birth' => '1990-01-15',
+            'qualification' => 'B.Com',
+            'bank_name' => 'HDFC Bank',
+            'ifsc' => 'HDFC0001234',
+            'account_number' => '12345678901234',
         ]);
 
         $response->assertSessionHasNoErrors();

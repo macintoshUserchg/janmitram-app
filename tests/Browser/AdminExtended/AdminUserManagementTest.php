@@ -62,6 +62,15 @@ class AdminUserManagementTest extends DuskTestCase
                 ->attach('profile_photo', $this->fakeImage())
                 ->attach('shop_logo', $this->fakeImage())
                 ->attach('shop_banner', $this->fakeImage())
+                ->attach('aadhaar_card', $this->fakeImage())
+                ->type('input[name="aadhaar_number"]', '123456789012')
+                ->attach('pan_card', $this->fakeImage())
+                ->type('input[name="pan_number"]', 'ABCDE1234F')
+                ->type('input[name="date_of_birth"]', '1990-01-15')
+                ->type('input[name="qualification"]', 'B.Com')
+                ->type('input[name="bank_name"]', 'HDFC Bank')
+                ->type('input[name="ifsc"]', 'HDFC0001234')
+                ->type('input[name="account_number"]', '12345678901234')
                 ->press('Submit')
                 ->pause(4000);
         });
