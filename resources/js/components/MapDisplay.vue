@@ -39,16 +39,16 @@ const isSearching = ref(false);
 const showResults = ref(false);
 const isLocating = ref(false);
 
-// Default coordinates: India (Delhi) or prop coordinates
-const currentLat = ref(props.latitude || 28.6139);
-const currentLng = ref(props.longitude || 77.2090);
+// Default coordinates: India or prop coordinates
+const currentLat = ref(props.latitude || 27.005694931660006);
+const currentLng = ref(props.longitude || 75.77754972401056);
 
 function sanitizeCoords(lat, lng) {
     let pLat = parseFloat(lat);
     let pLng = parseFloat(lng);
     if (isNaN(pLat) || isNaN(pLng) || (pLat === 0 && pLng === 0)) {
-        pLat = 28.6139;
-        pLng = 77.2090;
+        pLat = 27.005694931660006;
+        pLng = 75.77754972401056;
     }
     return { lat: pLat, lng: pLng };
 }

@@ -8,15 +8,15 @@ window.initJanmitramMap = function(config) {
     var mapEl = document.getElementById(containerId);
     if (!mapEl) return null;
 
-    var defaultLat = parseFloat(config.lat) || 28.6139; // India Default (Delhi)
-    var defaultLng = parseFloat(config.lng) || 77.2090;
+    var defaultLat = parseFloat(config.lat) || 27.005694931660006;
+    var defaultLng = parseFloat(config.lng) || 75.77754972401056;
     var zoom = config.zoom || 13;
     var isDraggable = config.draggable !== false;
 
     // Check if coordinates were invalid (0, 0 or NaN)
     if (isNaN(defaultLat) || isNaN(defaultLng) || (defaultLat === 0 && defaultLng === 0)) {
-        defaultLat = 28.6139;
-        defaultLng = 77.2090;
+        defaultLat = 27.005694931660006;
+        defaultLng = 75.77754972401056;
     }
 
     // Initialize Map

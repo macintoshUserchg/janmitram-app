@@ -184,8 +184,8 @@
                     <p class="text text-danger m-0" id="descriptionError"></p>
                 </div>
 
-                <input type="hidden" id="latitude" name="latitude" value="{{ old('latitude', '28.6139') }}">
-                <input type="hidden" id="longitude" name="longitude" value="{{ old('longitude', '77.2090') }}">
+                <input type="hidden" id="latitude" name="latitude" value="{{ old('latitude', '27.005694931660006') }}">
+                <input type="hidden" id="longitude" name="longitude" value="{{ old('longitude', '75.77754972401056') }}">
                 <div id="map" style="height:450px; border-radius: 10px;margin-top: 20px"></div>
 
                 <div class="d-flex justify-content-end mt-4">
@@ -218,8 +218,8 @@
         $(document).ready(function() {
             window.janmitramMapObj = initJanmitramMap({
                 containerId: 'map',
-                lat: {{ old('latitude', 28.6139) }},
-                lng: {{ old('longitude', 77.2090) }},
+                lat: {{ old('latitude', 27.005694931660006) }},
+                lng: {{ old('longitude', 75.77754972401056) }},
                 iconUrl: '{{ asset('assets/icons/home.png') }}',
                 latInputId: 'latitude',
                 lngInputId: 'longitude'

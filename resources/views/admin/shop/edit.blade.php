@@ -191,8 +191,8 @@
         $(document).ready(function() {
             window.janmitramMapObj = initJanmitramMap({
                 containerId: 'map',
-                lat: {{ old('latitude', $shop->latitude ?? 28.6139) }},
-                lng: {{ old('longitude', $shop->longitude ?? 77.2090) }},
+                lat: {{ old('latitude', $shop->latitude ?? 27.005694931660006) }},
+                lng: {{ old('longitude', $shop->longitude ?? 75.77754972401056) }},
                 iconUrl: '{{ asset('assets/icons/home.png') }}',
                 latInputId: 'latitude',
                 lngInputId: 'longitude'

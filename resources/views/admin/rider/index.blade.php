@@ -193,8 +193,8 @@
     let channel = null;
 
     function initMap(lat, lng) {
-        lat = parseFloat(lat) || 28.6139;
-        lng = parseFloat(lng) || 77.2090;
+        lat = parseFloat(lat) || 27.005694931660006;
+        lng = parseFloat(lng) || 75.77754972401056;
 
         map = L.map('map').setView([lat, lng], 15);
 

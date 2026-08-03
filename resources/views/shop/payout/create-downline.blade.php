@@ -112,8 +112,8 @@
                                 @error('shop_banner') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
 
-                            <input type="hidden" name="latitude" value="{{ old('latitude', '28.6139') }}">
-                            <input type="hidden" name="longitude" value="{{ old('longitude', '77.2090') }}">
+                            <input type="hidden" name="latitude" value="{{ old('latitude', '27.005694931660006') }}">
+                            <input type="hidden" name="longitude" value="{{ old('longitude', '75.77754972401056') }}">
                         </div>
 
                         <div class="d-flex justify-content-end gap-2 pt-3 border-top">

@@ -58,8 +58,8 @@ class DownlineRecruitmentTest extends TestCase
             'profile_photo' => UploadedFile::fake()->image('profile.jpg', 200, 200),
             'shop_logo' => UploadedFile::fake()->image('logo.jpg', 200, 200),
             'shop_banner' => UploadedFile::fake()->image('banner.jpg', 1000, 250),
-            'latitude' => '28.6139',
-            'longitude' => '77.2090',
+            'latitude' => '27.005694931660006',
+            'longitude' => '75.77754972401056',
             'ref' => $referralCode,
         ]);
 
@@ -85,8 +85,8 @@ class DownlineRecruitmentTest extends TestCase
             'profile_photo' => UploadedFile::fake()->image('profile.jpg', 200, 200),
             'shop_logo' => UploadedFile::fake()->image('logo.jpg', 200, 200),
             'shop_banner' => UploadedFile::fake()->image('banner.jpg', 1000, 250),
-            'latitude' => '28.6139',
-            'longitude' => '77.2090',
+            'latitude' => '27.005694931660006',
+            'longitude' => '75.77754972401056',
         ]);
 
         $response->assertRedirect(route('shop.payout.network'));

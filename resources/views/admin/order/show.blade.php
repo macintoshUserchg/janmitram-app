@@ -642,8 +642,8 @@
         let rawLat = parseFloat({{ $order->address->latitude ?? 0 }});
         let rawLng = parseFloat({{ $order->address->longitude ?? 0 }});
         if (isNaN(rawLat) || isNaN(rawLng) || (rawLat === 0 && rawLng === 0)) {
-            rawLat = 28.6139;
-            rawLng = 77.2090;
+            rawLat = 27.005694931660006;
+            rawLng = 75.77754972401056;
         }
         const orderLat = rawLat;
         const orderLng = rawLng;

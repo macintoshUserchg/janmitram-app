@@ -331,9 +331,9 @@
                                         </div>
                                     </div>
                                     <input type="hidden" id="latitude" name="latitude"
-                                        value="{{ old('latitude', '28.6139') }}">
+                                        value="{{ old('latitude', '27.005694931660006') }}">
                                     <input type="hidden" id="longitude" name="longitude"
-                                        value="{{ old('longitude', '77.2090') }}">
+                                        value="{{ old('longitude', '75.77754972401056') }}">
                                     <div id="map" style="height:400px; border-radius: 10px;margin-top: 20px">
                                     </div>
                                 </div>
@@ -659,8 +659,8 @@
         $(document).ready(function() {
             window.janmitramMapObj = initJanmitramMap({
                 containerId: 'map',
-                lat: {{ old('latitude', 28.6139) }},
-                lng: {{ old('longitude', 77.2090) }},
+                lat: {{ old('latitude', 27.005694931660006) }},
+                lng: {{ old('longitude', 75.77754972401056) }},
                 iconUrl: '{{ asset('assets/icons/home.png') }}',
                 latInputId: 'latitude',
                 lngInputId: 'longitude'

@@ -50,8 +50,8 @@ function initMap() {
     const rValid = isValidCoord(props.riderLocation);
     const cValid = isValidCoord(props.customerLocation);
 
-    const defaultLat = rValid ? parseFloat(props.riderLocation.lat) : (cValid ? parseFloat(props.customerLocation.lat) : 28.6139);
-    const defaultLng = rValid ? parseFloat(props.riderLocation.lng) : (cValid ? parseFloat(props.customerLocation.lng) : 77.2090);
+    const defaultLat = rValid ? parseFloat(props.riderLocation.lat) : (cValid ? parseFloat(props.customerLocation.lat) : 27.005694931660006);
+    const defaultLng = rValid ? parseFloat(props.riderLocation.lng) : (cValid ? parseFloat(props.customerLocation.lng) : 75.77754972401056);
 
     map = L.map(mapContainer.value).setView([defaultLat, defaultLng], 13);
 
