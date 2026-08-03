@@ -164,7 +164,7 @@ CREATE TABLE `banners` (
   PRIMARY KEY (`id`),
   KEY `banners_media_id_foreign` (`media_id`),
   KEY `banners_shop_id_foreign` (`shop_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -174,6 +174,8 @@ CREATE TABLE `banners` (
 LOCK TABLES `banners` WRITE;
 /*!40000 ALTER TABLE `banners` DISABLE KEYS */;
 set autocommit=0;
+INSERT INTO `banners` VALUES
+(1,NULL,4,NULL,NULL,1,'2026-08-03 11:20:28','2026-08-03 11:20:28');
 /*!40000 ALTER TABLE `banners` ENABLE KEYS */;
 UNLOCK TABLES;
 commit;
@@ -289,7 +291,7 @@ CREATE TABLE `brands` (
   PRIMARY KEY (`id`),
   KEY `brands_media_id_foreign` (`media_id`),
   KEY `brands_shop_id_foreign` (`shop_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -299,6 +301,8 @@ CREATE TABLE `brands` (
 LOCK TABLES `brands` WRITE;
 /*!40000 ALTER TABLE `brands` DISABLE KEYS */;
 set autocommit=0;
+INSERT INTO `brands` VALUES
+(1,'Janmitram',NULL,NULL,1,1,0,'2026-08-03 11:17:28','2026-08-03 11:17:28');
 /*!40000 ALTER TABLE `brands` ENABLE KEYS */;
 UNLOCK TABLES;
 commit;
@@ -389,7 +393,7 @@ CREATE TABLE `categories` (
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `categories_media_id_foreign` (`media_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -399,6 +403,8 @@ CREATE TABLE `categories` (
 LOCK TABLES `categories` WRITE;
 /*!40000 ALTER TABLE `categories` DISABLE KEYS */;
 set autocommit=0;
+INSERT INTO `categories` VALUES
+(1,'Grocery',NULL,'other',3,'Grocery and Spices',1,'2026-08-03 11:11:55','2026-08-03 11:11:55');
 /*!40000 ALTER TABLE `categories` ENABLE KEYS */;
 UNLOCK TABLES;
 commit;
@@ -447,7 +453,7 @@ CREATE TABLE `colors` (
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `colors_shop_id_foreign` (`shop_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -457,6 +463,8 @@ CREATE TABLE `colors` (
 LOCK TABLES `colors` WRITE;
 /*!40000 ALTER TABLE `colors` DISABLE KEYS */;
 set autocommit=0;
+INSERT INTO `colors` VALUES
+(1,'yellow',NULL,1,'#fbe80e',1,'2026-08-03 11:17:17','2026-08-03 11:17:17');
 /*!40000 ALTER TABLE `colors` ENABLE KEYS */;
 UNLOCK TABLES;
 commit;
@@ -1481,7 +1489,7 @@ CREATE TABLE `media` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1493,7 +1501,19 @@ LOCK TABLES `media` WRITE;
 set autocommit=0;
 INSERT INTO `media` VALUES
 (1,'image','ab',NULL,'default/dummy-profile.png','png','2026-08-03 08:41:11','2026-08-03 08:41:11'),
-(2,'image','doloremque',NULL,'default/dummy-profile.png','png','2026-08-03 08:41:11','2026-08-03 08:41:11');
+(2,'image','doloremque',NULL,'default/dummy-profile.png','png','2026-08-03 08:41:11','2026-08-03 08:41:11'),
+(3,'image','Spices-Icon.png',NULL,'categories/JEdwV1YWp2oA0HpmJJNXaUankY4CY6JgdvEqMoIe.png',NULL,'2026-08-03 11:11:55','2026-08-03 11:11:55'),
+(4,'thumbnail','JanMitra_logoNew.png',NULL,'banners/39iLmbcav4gWnNF6o1AvU7hhQt4DaaZJMPDgyvGf.png',NULL,'2026-08-03 11:20:28','2026-08-03 11:20:28'),
+(5,'thumbnail','actual_logo.png',NULL,'products/74Io38TeRfXkRiTJdX5VQ38WUlhaTVXDRdmUZo4D.png',NULL,'2026-08-03 11:23:39','2026-08-03 11:23:39'),
+(6,'image','addclass.png',NULL,'users/profile/7US5FqfzIGwOe84ppZTIOwwcyX79gYV5Z9cWvE8u.png',NULL,'2026-08-03 11:44:52','2026-08-03 11:44:52'),
+(7,'image','actual_logo.png',NULL,'shops/logo/u8JbMLLwmRobE0jPAEfHdH2SyylKYYcri0rBU0sN.png',NULL,'2026-08-03 11:44:54','2026-08-03 11:44:54'),
+(8,'image','perfet2.png',NULL,'shops/banner/JmAOKNEB0mNq8vsDoDynHs6qnU1haFxfkH8PlumF.png',NULL,'2026-08-03 11:44:54','2026-08-03 11:44:54'),
+(9,'image','actual_logo.png',NULL,'users/profile/enyNlWMiFFs3ksH9eeLUg2H5gJSOd7Q8ehe3YUID.png',NULL,'2026-08-03 11:48:49','2026-08-03 11:48:49'),
+(10,'image','gym_db - public.png',NULL,'shops/logo/5S5ksyJzYHhvJwlb3Cr7bXwjr4jHBv64N6oFWhJW.png',NULL,'2026-08-03 11:48:51','2026-08-03 11:48:51'),
+(11,'image','ChatGPT Image Dec 28, 2025, 09_28_35 AM.png',NULL,'shops/banner/8UdhG3ofCVfpbQBNUVDY2nMohwPXg4SFwLjmbMq3.png',NULL,'2026-08-03 11:48:51','2026-08-03 11:48:51'),
+(12,'image','actual_logo.png',NULL,'users/profile/F4Yn3R3zD1Ep2f7y7Qo8N2Em3bPZ20Da127OycrW.png',NULL,'2026-08-03 15:28:56','2026-08-03 15:28:56'),
+(13,'image','actual_logo.png',NULL,'shops/logo/b4OC2YTEF7biO4Jtnfjmy0ffoeJVcbDwz6xzg8rl.png',NULL,'2026-08-03 15:28:58','2026-08-03 15:28:58'),
+(14,'image','addclass.png',NULL,'shops/banner/nuoBZv3AH1Lwe3suKRUokHY9ZJbXGI4Ih0F1unfU.png',NULL,'2026-08-03 15:28:58','2026-08-03 15:28:58');
 /*!40000 ALTER TABLE `media` ENABLE KEYS */;
 UNLOCK TABLES;
 commit;
@@ -1805,7 +1825,10 @@ LOCK TABLES `model_has_roles` WRITE;
 set autocommit=0;
 INSERT INTO `model_has_roles` VALUES
 (1,'App\\Models\\User',1),
-(3,'App\\Models\\User',1);
+(3,'App\\Models\\User',1),
+(3,'App\\Models\\User',3),
+(3,'App\\Models\\User',4),
+(3,'App\\Models\\User',5);
 /*!40000 ALTER TABLE `model_has_roles` ENABLE KEYS */;
 UNLOCK TABLES;
 commit;
@@ -1925,7 +1948,7 @@ CREATE TABLE `order_products` (
   KEY `order_products_product_id_foreign` (`product_id`),
   KEY `order_products_order_id_product_id_index` (`order_id`,`product_id`),
   KEY `order_products_created_at_index` (`created_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1935,6 +1958,8 @@ CREATE TABLE `order_products` (
 LOCK TABLES `order_products` WRITE;
 /*!40000 ALTER TABLE `order_products` DISABLE KEYS */;
 set autocommit=0;
+INSERT INTO `order_products` VALUES
+(1,1,2,1,'yellow','small',NULL,100,40,'2026-08-03 11:51:37','2026-08-03 11:51:37');
 /*!40000 ALTER TABLE `order_products` ENABLE KEYS */;
 UNLOCK TABLES;
 commit;
@@ -2009,7 +2034,7 @@ CREATE TABLE `orders` (
   KEY `orders_customer_id_foreign` (`customer_id`),
   KEY `orders_coupon_id_foreign` (`coupon_id`),
   KEY `orders_address_id_foreign` (`address_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2019,6 +2044,8 @@ CREATE TABLE `orders` (
 LOCK TABLES `orders` WRITE;
 /*!40000 ALTER TABLE `orders` DISABLE KEYS */;
 set autocommit=0;
+INSERT INTO `orders` VALUES
+(1,2,1,NULL,'000002','RC',NULL,0,NULL,NULL,100,100,0,0,0,'Paid','Delivered','Cash Payment',NULL,NULL,NULL,NULL,0,'2026-08-03 11:51:37','2026-08-03 11:51:37',NULL);
 /*!40000 ALTER TABLE `orders` ENABLE KEYS */;
 UNLOCK TABLES;
 commit;
@@ -2632,7 +2659,7 @@ CREATE TABLE `pos_carts` (
   KEY `pos_carts_user_id_foreign` (`user_id`),
   KEY `pos_carts_coupon_id_foreign` (`coupon_id`),
   KEY `pos_carts_created_by_foreign` (`created_by`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2642,6 +2669,8 @@ CREATE TABLE `pos_carts` (
 LOCK TABLES `pos_carts` WRITE;
 /*!40000 ALTER TABLE `pos_carts` DISABLE KEYS */;
 set autocommit=0;
+INSERT INTO `pos_carts` VALUES
+(2,'4Q832sODOBwk','::1',2,3,0,NULL,NULL,NULL,NULL,NULL,NULL,'2026-08-03 11:51:37','2026-08-03 11:51:37');
 /*!40000 ALTER TABLE `pos_carts` ENABLE KEYS */;
 UNLOCK TABLES;
 commit;
@@ -2696,6 +2725,9 @@ CREATE TABLE `product_categories` (
 LOCK TABLES `product_categories` WRITE;
 /*!40000 ALTER TABLE `product_categories` DISABLE KEYS */;
 set autocommit=0;
+INSERT INTO `product_categories` VALUES
+(1,1),
+(2,1);
 /*!40000 ALTER TABLE `product_categories` ENABLE KEYS */;
 UNLOCK TABLES;
 commit;
@@ -2723,6 +2755,9 @@ CREATE TABLE `product_colors` (
 LOCK TABLES `product_colors` WRITE;
 /*!40000 ALTER TABLE `product_colors` DISABLE KEYS */;
 set autocommit=0;
+INSERT INTO `product_colors` VALUES
+(1,1,0),
+(2,1,0);
 /*!40000 ALTER TABLE `product_colors` ENABLE KEYS */;
 UNLOCK TABLES;
 commit;
@@ -2785,6 +2820,9 @@ CREATE TABLE `product_sizes` (
 LOCK TABLES `product_sizes` WRITE;
 /*!40000 ALTER TABLE `product_sizes` DISABLE KEYS */;
 set autocommit=0;
+INSERT INTO `product_sizes` VALUES
+(1,1,0),
+(2,1,0);
 /*!40000 ALTER TABLE `product_sizes` ENABLE KEYS */;
 UNLOCK TABLES;
 commit;
@@ -2973,7 +3011,7 @@ CREATE TABLE `products` (
   KEY `products_video_id_foreign` (`video_id`),
   KEY `products_name_index` (`name`),
   KEY `products_master_product_id_foreign` (`master_product_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2983,6 +3021,9 @@ CREATE TABLE `products` (
 LOCK TABLES `products` WRITE;
 /*!40000 ALTER TABLE `products` DISABLE KEYS */;
 set autocommit=0;
+INSERT INTO `products` VALUES
+(1,'Haldi',NULL,NULL,'750608',1,5,1,100,40,450,1,0,'haldi',NULL,'<p>haldi</p>',NULL,1,0,1,NULL,1,0,1,'2026-08-03 11:23:39','2026-08-03 11:50:48',3,NULL,NULL,NULL,NULL,NULL),
+(2,'Haldi',NULL,NULL,'750608',2,5,1,100,40,49,1,0,'haldi',NULL,'<p>haldi</p>',NULL,1,0,1,1,1,0,1,'2026-08-03 11:50:48','2026-08-03 11:51:37',3,NULL,NULL,NULL,NULL,NULL);
 /*!40000 ALTER TABLE `products` ENABLE KEYS */;
 UNLOCK TABLES;
 commit;
@@ -3245,6 +3286,8 @@ CREATE TABLE `shop_categories` (
 LOCK TABLES `shop_categories` WRITE;
 /*!40000 ALTER TABLE `shop_categories` DISABLE KEYS */;
 set autocommit=0;
+INSERT INTO `shop_categories` VALUES
+(1,1);
 /*!40000 ALTER TABLE `shop_categories` ENABLE KEYS */;
 UNLOCK TABLES;
 commit;
@@ -3394,7 +3437,7 @@ CREATE TABLE `shops` (
   KEY `shops_warehouse_id_foreign` (`warehouse_id`),
   KEY `shops_parent_shop_id_foreign` (`parent_shop_id`),
   CONSTRAINT `shops_parent_shop_id_foreign` FOREIGN KEY (`parent_shop_id`) REFERENCES `shops` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -3405,7 +3448,10 @@ LOCK TABLES `shops` WRITE;
 /*!40000 ALTER TABLE `shops` DISABLE KEYS */;
 set autocommit=0;
 INSERT INTO `shops` VALUES
-(1,'My Shop',1,NULL,1,1,2,0,1,'RC','8874 Ali Route Apt. 387\nWest Angela, AZ 67454','38.033226','162.923784','05:00:10','22:44:21',NULL,'3-4 days',1,'My Shop Description','2026-08-03 08:41:11','2026-08-03 08:41:11',NULL,NULL);
+(1,'My Shop',1,NULL,1,1,2,0,1,'RC','8874 Ali Route Apt. 387\nWest Angela, AZ 67454','38.033226','162.923784','05:00:10','22:44:21',NULL,'3-4 days',1,'My Shop Description','2026-08-03 08:41:11','2026-08-03 08:41:11',NULL,NULL),
+(2,'Sanganer Shop',3,1,2,7,8,0,0,'RC','417 Sanganer thana , Jaipur','27.005694931660006','75.77754972401056',NULL,NULL,NULL,NULL,1,NULL,'2026-08-03 11:44:54','2026-08-03 11:44:54',NULL,NULL),
+(3,'Sanganer Shop',4,2,2,10,11,0,0,'RC','417 Sanganer thana , Jaipur','27.005694931660006','75.77754972401056',NULL,NULL,NULL,NULL,1,'ok','2026-08-03 11:48:51','2026-08-03 11:48:51',NULL,NULL),
+(4,'Pratap Nagar Shop',5,1,NULL,13,14,0,0,'RC','pratap nagar jaipur','26.8808145','75.7919299',NULL,NULL,NULL,NULL,1,NULL,'2026-08-03 15:28:58','2026-08-03 15:28:58',NULL,NULL);
 /*!40000 ALTER TABLE `shops` ENABLE KEYS */;
 UNLOCK TABLES;
 commit;
@@ -3427,7 +3473,7 @@ CREATE TABLE `sizes` (
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `sizes_shop_id_foreign` (`shop_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -3437,6 +3483,10 @@ CREATE TABLE `sizes` (
 LOCK TABLES `sizes` WRITE;
 /*!40000 ALTER TABLE `sizes` DISABLE KEYS */;
 set autocommit=0;
+INSERT INTO `sizes` VALUES
+(1,'small',NULL,1,1,'2026-08-03 11:17:58','2026-08-03 11:17:58'),
+(2,'medium',NULL,1,1,'2026-08-03 11:18:07','2026-08-03 11:18:07'),
+(3,'large',NULL,1,1,'2026-08-03 11:18:16','2026-08-03 11:18:16');
 /*!40000 ALTER TABLE `sizes` ENABLE KEYS */;
 UNLOCK TABLES;
 commit;
@@ -3543,7 +3593,7 @@ CREATE TABLE `stock_ledgers` (
   KEY `stock_ledgers_product_id_foreign` (`product_id`),
   KEY `stock_ledgers_color_id_foreign` (`color_id`),
   KEY `stock_ledgers_size_id_foreign` (`size_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -3553,6 +3603,10 @@ CREATE TABLE `stock_ledgers` (
 LOCK TABLES `stock_ledgers` WRITE;
 /*!40000 ALTER TABLE `stock_ledgers` DISABLE KEYS */;
 set autocommit=0;
+INSERT INTO `stock_ledgers` VALUES
+(1,NULL,1,1,1,1,500,'admin_addition',NULL,'500','2026-08-03 11:26:09','2026-08-03 11:26:09'),
+(2,1,2,1,1,1,100,'warehouse_transfer',1,'100','2026-08-03 11:26:39','2026-08-03 11:26:39'),
+(3,2,NULL,1,NULL,NULL,50,'shop_request',1,'Fulfilled stock request #1 for shop #2','2026-08-03 11:50:48','2026-08-03 11:50:48');
 /*!40000 ALTER TABLE `stock_ledgers` ENABLE KEYS */;
 UNLOCK TABLES;
 commit;
@@ -3578,7 +3632,7 @@ CREATE TABLE `stock_request_items` (
   KEY `stock_request_items_product_id_foreign` (`product_id`),
   KEY `stock_request_items_color_id_foreign` (`color_id`),
   KEY `stock_request_items_size_id_foreign` (`size_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -3588,6 +3642,8 @@ CREATE TABLE `stock_request_items` (
 LOCK TABLES `stock_request_items` WRITE;
 /*!40000 ALTER TABLE `stock_request_items` DISABLE KEYS */;
 set autocommit=0;
+INSERT INTO `stock_request_items` VALUES
+(1,1,1,NULL,NULL,50,'2026-08-03 11:50:34','2026-08-03 11:50:34');
 /*!40000 ALTER TABLE `stock_request_items` ENABLE KEYS */;
 UNLOCK TABLES;
 commit;
@@ -3610,7 +3666,7 @@ CREATE TABLE `stock_requests` (
   PRIMARY KEY (`id`),
   KEY `stock_requests_shop_id_foreign` (`shop_id`),
   KEY `stock_requests_warehouse_id_foreign` (`warehouse_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -3620,6 +3676,8 @@ CREATE TABLE `stock_requests` (
 LOCK TABLES `stock_requests` WRITE;
 /*!40000 ALTER TABLE `stock_requests` DISABLE KEYS */;
 set autocommit=0;
+INSERT INTO `stock_requests` VALUES
+(1,2,2,'completed','50','2026-08-03 11:50:34','2026-08-03 11:50:48');
 /*!40000 ALTER TABLE `stock_requests` ENABLE KEYS */;
 UNLOCK TABLES;
 commit;
@@ -3985,7 +4043,7 @@ CREATE TABLE `units` (
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `units_shop_id_foreign` (`shop_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -3995,6 +4053,10 @@ CREATE TABLE `units` (
 LOCK TABLES `units` WRITE;
 /*!40000 ALTER TABLE `units` DISABLE KEYS */;
 set autocommit=0;
+INSERT INTO `units` VALUES
+(1,'1 KG',1,1,'2026-08-03 11:18:34','2026-08-03 11:18:34'),
+(2,'500 GM',1,1,'2026-08-03 11:18:47','2026-08-03 11:18:47'),
+(3,'250 GM',1,1,'2026-08-03 11:19:03','2026-08-03 11:19:03');
 /*!40000 ALTER TABLE `units` ENABLE KEYS */;
 UNLOCK TABLES;
 commit;
@@ -4063,7 +4125,7 @@ CREATE TABLE `users` (
   PRIMARY KEY (`id`),
   KEY `users_media_id_foreign` (`media_id`),
   KEY `users_shop_id_foreign` (`shop_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -4074,7 +4136,10 @@ LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
 set autocommit=0;
 INSERT INTO `users` VALUES
-(1,'Super Admin',NULL,'01000000001','root@janmitram.com',NULL,'$2y$12$hHv82ChVVioypklqriMuvuosPk2qygbizrBnv/Iwnpsj/.SO071Lq',NULL,NULL,1,'2026-08-03 08:41:09','2026-08-03 08:41:09',NULL,NULL,NULL,'2026-08-03 08:41:09','2026-08-03 08:41:09',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+(1,'Super Admin',NULL,'01000000001','root@janmitram.com',NULL,'$2y$12$hHv82ChVVioypklqriMuvuosPk2qygbizrBnv/Iwnpsj/.SO071Lq',NULL,NULL,1,'2026-08-03 08:41:09','2026-08-03 08:41:09',NULL,NULL,NULL,'2026-08-03 08:41:09','2026-08-03 08:41:09',NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(3,'Chandan','Gaur','9549803319','chg@janmitram.com',6,'$2y$12$8ijlsp1DRwpKSj33wA16zORdKdG/X69g7OJJssi79fmQvQu2szjN2','male',NULL,1,NULL,NULL,NULL,NULL,NULL,'2026-08-03 11:44:54','2026-08-03 11:44:54',NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(4,'Shubham','Gaur','9549803300','shg@janmitram.com',9,'$2y$12$ytIdZYyfw3yg4xl./WuEyu5HtRyUwPBttZ4qQL6I5Gbb6Qzi.6HbS','male',NULL,1,NULL,NULL,NULL,NULL,NULL,'2026-08-03 11:48:51','2026-08-03 11:48:51',NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(5,'Chandan2','Gaur','9549803311','chg2@janmitram.com',12,'$2y$12$OqEIoEjY70CwPdXLw5CvA.wIftWhG0bdcnoiDdjZibgjGmkFgmBeq','male',NULL,0,NULL,NULL,NULL,NULL,NULL,'2026-08-03 15:28:58','2026-08-03 15:28:58',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 commit;
@@ -4191,7 +4256,7 @@ CREATE TABLE `wallets` (
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `wallets_user_id_foreign` (`user_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -4203,7 +4268,10 @@ LOCK TABLES `wallets` WRITE;
 set autocommit=0;
 INSERT INTO `wallets` VALUES
 (1,1,0,'2026-08-03 08:41:11','2026-08-03 08:41:11'),
-(2,2,0,'2026-08-03 08:41:11','2026-08-03 08:41:11');
+(2,2,0,'2026-08-03 08:41:11','2026-08-03 08:41:11'),
+(3,3,0,'2026-08-03 11:44:54','2026-08-03 11:44:54'),
+(4,4,0,'2026-08-03 11:48:51','2026-08-03 11:48:51'),
+(5,5,0,'2026-08-03 15:28:58','2026-08-03 15:28:58');
 /*!40000 ALTER TABLE `wallets` ENABLE KEYS */;
 UNLOCK TABLES;
 commit;
@@ -4229,7 +4297,7 @@ CREATE TABLE `warehouse_stock` (
   KEY `warehouse_stock_product_id_foreign` (`product_id`),
   KEY `warehouse_stock_color_id_foreign` (`color_id`),
   KEY `warehouse_stock_size_id_foreign` (`size_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -4239,6 +4307,9 @@ CREATE TABLE `warehouse_stock` (
 LOCK TABLES `warehouse_stock` WRITE;
 /*!40000 ALTER TABLE `warehouse_stock` DISABLE KEYS */;
 set autocommit=0;
+INSERT INTO `warehouse_stock` VALUES
+(1,1,1,1,1,400,'2026-08-03 11:26:09','2026-08-03 11:26:39'),
+(2,2,1,1,1,50,'2026-08-03 11:26:39','2026-08-03 11:50:48');
 /*!40000 ALTER TABLE `warehouse_stock` ENABLE KEYS */;
 UNLOCK TABLES;
 commit;
@@ -4264,7 +4335,7 @@ CREATE TABLE `warehouse_transfer_items` (
   KEY `warehouse_transfer_items_product_id_foreign` (`product_id`),
   KEY `warehouse_transfer_items_color_id_foreign` (`color_id`),
   KEY `warehouse_transfer_items_size_id_foreign` (`size_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -4274,6 +4345,8 @@ CREATE TABLE `warehouse_transfer_items` (
 LOCK TABLES `warehouse_transfer_items` WRITE;
 /*!40000 ALTER TABLE `warehouse_transfer_items` DISABLE KEYS */;
 set autocommit=0;
+INSERT INTO `warehouse_transfer_items` VALUES
+(1,1,1,NULL,NULL,100,'2026-08-03 11:26:34','2026-08-03 11:26:34');
 /*!40000 ALTER TABLE `warehouse_transfer_items` ENABLE KEYS */;
 UNLOCK TABLES;
 commit;
@@ -4296,7 +4369,7 @@ CREATE TABLE `warehouse_transfers` (
   PRIMARY KEY (`id`),
   KEY `warehouse_transfers_from_warehouse_id_foreign` (`from_warehouse_id`),
   KEY `warehouse_transfers_to_warehouse_id_foreign` (`to_warehouse_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -4306,6 +4379,8 @@ CREATE TABLE `warehouse_transfers` (
 LOCK TABLES `warehouse_transfers` WRITE;
 /*!40000 ALTER TABLE `warehouse_transfers` DISABLE KEYS */;
 set autocommit=0;
+INSERT INTO `warehouse_transfers` VALUES
+(1,1,2,'completed','100','2026-08-03 11:26:34','2026-08-03 11:26:39');
 /*!40000 ALTER TABLE `warehouse_transfers` ENABLE KEYS */;
 UNLOCK TABLES;
 commit;
@@ -4325,7 +4400,7 @@ CREATE TABLE `warehouses` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -4336,7 +4411,8 @@ LOCK TABLES `warehouses` WRITE;
 /*!40000 ALTER TABLE `warehouses` DISABLE KEYS */;
 set autocommit=0;
 INSERT INTO `warehouses` VALUES
-(1,'Central Warehouse','Main Logistics Hub',1,'2026-08-03 08:41:11','2026-08-03 08:41:11');
+(1,'Central Warehouse','Main Logistics Hub',1,'2026-08-03 08:41:11','2026-08-03 08:41:11'),
+(2,'Sanganer Shop','Sanganer Jaipur',0,'2026-08-03 11:25:12','2026-08-03 11:25:12');
 /*!40000 ALTER TABLE `warehouses` ENABLE KEYS */;
 UNLOCK TABLES;
 commit;
@@ -4386,4 +4462,4 @@ commit;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
 
--- Dump completed on 2026-08-03 15:40:36
+-- Dump completed on 2026-08-03 20:53:54
