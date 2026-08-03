@@ -60,6 +60,15 @@ class DownlineRecruitmentTest extends TestCase
             'shop_banner' => UploadedFile::fake()->image('banner.jpg', 1000, 250),
             'latitude' => '27.005694931660006',
             'longitude' => '75.77754972401056',
+            'aadhaar_card' => UploadedFile::fake()->image('aadhaar.jpg', 400, 400),
+            'aadhaar_number' => '123456789012',
+            'pan_card' => UploadedFile::fake()->image('pan.jpg', 400, 400),
+            'pan_number' => 'ABCDE1234F',
+            'date_of_birth' => '1990-01-15',
+            'qualification' => 'B.Com',
+            'bank_name' => 'HDFC Bank',
+            'ifsc' => 'HDFC0001234',
+            'account_number' => '12345678901234',
             'ref' => $referralCode,
         ]);
 
