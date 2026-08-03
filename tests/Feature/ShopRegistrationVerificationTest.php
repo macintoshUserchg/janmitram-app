@@ -33,6 +33,7 @@ class ShopRegistrationVerificationTest extends TestCase
         $response->assertSee('id="map"', false);
         $response->assertSee('validateStep');
         $response->assertSee('validateStep2');
+        $response->assertSee('validateStep3');
         $response->assertSee('sponsor_ref_input');
     }
 
@@ -64,6 +65,15 @@ class ShopRegistrationVerificationTest extends TestCase
             'shop_banner' => UploadedFile::fake()->image('banner.jpg', 1000, 250),
             'latitude' => '21.2514',
             'longitude' => '81.6296',
+            'aadhaar_card' => UploadedFile::fake()->image('aadhaar.jpg', 400, 400),
+            'aadhaar_number' => '123456789012',
+            'pan_card' => UploadedFile::fake()->image('pan.jpg', 400, 400),
+            'pan_number' => 'ABCDE1234F',
+            'date_of_birth' => '1990-01-15',
+            'qualification' => 'B.Com',
+            'bank_name' => 'HDFC Bank',
+            'ifsc' => 'HDFC0001234',
+            'account_number' => '12345678901234',
         ]);
 
         $response->assertRedirect(route('shop.login'));
@@ -78,6 +88,13 @@ class ShopRegistrationVerificationTest extends TestCase
         $this->assertEquals('Janmitram Supermart', $shop->name);
         $this->assertEquals('21.2514', $shop->latitude);
         $this->assertEquals('81.6296', $shop->longitude);
+
+        $this->assertDatabaseHas('shop_kyc', [
+            'shop_id' => $shop->id,
+            'aadhaar_number' => '123456789012',
+            'pan_number' => 'ABCDE1234F',
+            'bank_name' => 'HDFC Bank',
+        ]);
     }
 
     public function test_sponsor_verification_ajax_endpoint(): void
