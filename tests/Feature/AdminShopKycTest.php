@@ -162,4 +162,17 @@ class AdminShopKycTest extends TestCase
         $response->assertSee('Bank IFSC Code');
         $response->assertSee('Other Documents');
     }
+
+    public function test_admin_shop_edit_page_shows_kyc_fields(): void
+    {
+        $shopUser = User::factory()->create(['phone' => '9876543210', 'is_active' => true]);
+        $shop = Shop::factory()->create(['user_id' => $shopUser->id, 'status' => true]);
+
+        $response = $this->actingAs($this->admin())->get(route('admin.shop.edit', $shop));
+
+        $response->assertStatus(200);
+        $response->assertSee('Aadhaar Number');
+        $response->assertSee('Bank IFSC Code');
+        $response->assertSee('Other Documents');
+    }
 }

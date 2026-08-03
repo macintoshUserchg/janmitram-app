@@ -211,7 +211,7 @@
                 <div class="d-flex gap-2 border-bottom pb-2">
                     <i class="fa-solid fa-id-card"></i>
                     <h5>
-                        {{ __('KYC &amp; Bank Details') }}
+                        {{ __('KYC & Bank Details') }}
                     </h5>
                 </div>
                 <div class="row mt-3">

@@ -174,6 +174,86 @@
 
             </div>
         </div>
+
+        <!--######## KYC & Bank Details ##########-->
+        <div class="card mt-4 mb-4">
+            <div class="card-body">
+
+                <div class="d-flex gap-2 border-bottom pb-2">
+                    <i class="fa-solid fa-id-card"></i>
+                    <h5>
+                        {{ __('KYC & Bank Details') }}
+                    </h5>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <div class="mt-3">
+                            <x-file name="aadhaar_card" label="Replace Aadhaar Card (JPG / PNG / PDF, max 5MB)" />
+                            @if ($shop->kyc?->aadhaarCard)
+                                <a href="{{ $shop->kyc->aadhaar_card_url }}" target="_blank" class="small text-primary">
+                                    <i class="fa fa-file-image me-1"></i>{{ __('Current Aadhaar card') }}
+                                </a>
+                            @endif
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mt-3">
+                            <x-input type="text" name="aadhaar_number" label="Aadhaar Number" placeholder="12-digit Aadhaar number" :value="$shop->kyc?->aadhaar_number" />
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mt-3">
+                            <x-file name="pan_card" label="Replace PAN Card (JPG / PNG / PDF, max 5MB)" />
+                            @if ($shop->kyc?->panCard)
+                                <a href="{{ $shop->kyc->pan_card_url }}" target="_blank" class="small text-primary">
+                                    <i class="fa fa-file-image me-1"></i>{{ __('Current PAN card') }}
+                                </a>
+                            @endif
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mt-3">
+                            <x-input type="text" name="pan_number" label="PAN Number" placeholder="e.g. ABCDE1234F" :value="$shop->kyc?->pan_number" />
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mt-3">
+                            <x-input type="date" name="date_of_birth" label="Date of Birth" :value="$shop->user?->date_of_birth" />
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mt-3">
+                            <x-input type="text" name="qualification" label="Qualification" placeholder="e.g. B.Com, 12th Pass" :value="$shop->kyc?->qualification" />
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mt-3">
+                            <x-input type="text" name="bank_name" label="Bank Name" placeholder="Enter bank name" :value="$shop->kyc?->bank_name" />
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mt-3">
+                            <x-input type="text" name="ifsc" label="Bank IFSC Code" placeholder="e.g. HDFC0001234" :value="$shop->kyc?->ifsc" />
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mt-3">
+                            <x-input type="text" name="account_number" label="Bank Account Number" placeholder="Enter account number" :value="$shop->kyc?->account_number" />
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mt-3">
+                            <x-file name="other_documents" label="Replace Other Documents (JPG / PNG / PDF, max 5MB)" />
+                            @if ($shop->kyc?->otherDocuments)
+                                <a href="{{ $shop->kyc->other_documents_url }}" target="_blank" class="small text-primary">
+                                    <i class="fa fa-file-image me-1"></i>{{ __('Current other documents') }}
+                                </a>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </form>
 @endsection
 @push('scripts')
