@@ -3,7 +3,7 @@
         <div class="main-container flex justify-between items-center py-2 text-white">
 
             <div class="flex sm:items-center flex-col sm:flex-row gap-1 sm:gap-4">
-                <a v-if="master.getMultiVendor" href="/shop/register"
+                <a v-if="master.getMultiVendor" :href="basePath + 'shop/register'"
                     class="text-white text-sm font-normal font-['Roboto'] leading-tight">
                     {{ $t('Become a Seller') }}
                 </a>
@@ -84,6 +84,13 @@ import localization from '../localization';
 import { useMaster } from "../stores/MasterStore";
 import { onMounted, ref, watch } from 'vue';
 const master = useMaster();
+
+// Base path for the SPA when served from a subdirectory (e.g. /janmitram-app/).
+// Same pattern as router/index.js, bootstrap.js, localization.js.
+const baseUrlMeta = document.querySelector('meta[name="base-url"]');
+const basePath = baseUrlMeta
+    ? new URL(baseUrlMeta.getAttribute('content')).pathname.replace(/\/?$/, '/')
+    : '/';
 
 const currentLanguage = ref('English');
 

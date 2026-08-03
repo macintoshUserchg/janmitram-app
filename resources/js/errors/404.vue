@@ -11,7 +11,7 @@
                     <br>
                 </p>
             </div>
-            <a href="/" class="reload_btn_404" style="text-decoration: none">
+            <a :href="basePath" class="reload_btn_404" style="text-decoration: none">
                 Return to Homepage
             </a>
         </section>
@@ -220,6 +220,13 @@ main>section {
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
+
+// Base path for the SPA when served from a subdirectory (e.g. /janmitram-app/).
+// Same pattern as router/index.js, bootstrap.js, localization.js.
+const baseUrlMeta = document.querySelector('meta[name="base-url"]');
+const basePath = baseUrlMeta
+    ? new URL(baseUrlMeta.getAttribute('content')).pathname.replace(/\/?$/, '/')
+    : '/';
 
 function goHome() {
     router.push('/')
