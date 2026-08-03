@@ -21,7 +21,7 @@
         </div>
     @endif
 
-    <form action="{{ route('admin.shop.store') }}" method="POST" enctype="multipart/form-data">
+    <form id="createShopForm" action="{{ route('admin.shop.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
         <!--######## User Information ##########-->
         <div class="card mt-3">
@@ -195,8 +195,9 @@
                 <div id="map" style="height:450px; border-radius: 10px;margin-top: 20px"></div>
 
                 <div class="d-flex justify-content-end mt-4">
-                    <button class="btn btn-primary py-2 px-5">
-                        {{ __('Submit') }}
+                    <button type="submit" id="submitBtn" class="btn btn-primary py-2.5 px-5 fw-semibold shadow-sm d-inline-flex align-items-center justify-content-center gap-2">
+                        <i class="fas fa-paper-plane me-1"></i>
+                        <span>{{ __('Submit Shop') }}</span>
                     </button>
                 </div>
 
@@ -229,6 +230,12 @@
                 iconUrl: '{{ asset('assets/icons/home.png') }}',
                 latInputId: 'latitude',
                 lngInputId: 'longitude'
+            });
+
+            $('#createShopForm').on('submit', function() {
+                if (this.checkValidity()) {
+                    $('#submitBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i> {{ __("Submitting Shop...") }}');
+                }
             });
         });
     </script>

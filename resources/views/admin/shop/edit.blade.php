@@ -9,7 +9,7 @@
         </div>
     </div>
 
-    <form action="{{ route('admin.shop.update', $shop->id) }}" method="POST" enctype="multipart/form-data">
+    <form id="editShopForm" action="{{ route('admin.shop.update', $shop->id) }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('PUT')
         <div class="card mt-3">
@@ -166,8 +166,9 @@
                 <div id="map" style="height:450px; border-radius: 10px;margin-top: 20px"></div>
 
                 <div class="d-flex justify-content-end mt-4">
-                    <button class="btn btn-primary py-2 px-5">
-                        {{ __('Update') }}
+                    <button type="submit" id="submitBtn" class="btn btn-primary py-2.5 px-5 fw-semibold shadow-sm d-inline-flex align-items-center justify-content-center gap-2">
+                        <i class="fas fa-save me-1"></i>
+                        <span>{{ __('Update Shop') }}</span>
                     </button>
                 </div>
 
@@ -200,6 +201,12 @@
                 iconUrl: '{{ asset('assets/icons/home.png') }}',
                 latInputId: 'latitude',
                 lngInputId: 'longitude'
+            });
+
+            $('#editShopForm').on('submit', function() {
+                if (this.checkValidity()) {
+                    $('#submitBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i> {{ __("Updating Shop...") }}');
+                }
             });
         });
     </script>
