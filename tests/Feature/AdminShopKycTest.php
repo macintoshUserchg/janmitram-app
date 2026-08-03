@@ -151,4 +151,15 @@ class AdminShopKycTest extends TestCase
         $response->assertRedirect(route('admin.shop.index'));
         $this->assertDatabaseMissing('shop_kyc', ['shop_id' => $shop->id]);
     }
+
+    public function test_admin_shop_create_page_shows_kyc_fields(): void
+    {
+        $response = $this->actingAs($this->admin())->get(route('admin.shop.create'));
+
+        $response->assertStatus(200);
+        $response->assertSee('Aadhaar Number');
+        $response->assertSee('PAN Number');
+        $response->assertSee('Bank IFSC Code');
+        $response->assertSee('Other Documents');
+    }
 }
