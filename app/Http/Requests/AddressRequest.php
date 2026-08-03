@@ -49,7 +49,7 @@ class AddressRequest extends FormRequest
             'is_default' => 'nullable|boolean',
             'longitude' => 'required|numeric|between:-180,180',
             'latitude' => 'required|numeric|between:-90,90',
-            'email' => [$email, 'email:rfc,dns', 'max:150'],
+            'email' => [$email, 'email:rfc', 'max:150'],
             'area_id' => 'required|exists:areas,id',
         ];
     }

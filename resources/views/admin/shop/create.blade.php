@@ -8,6 +8,19 @@
             <i class="fa-solid fa-shop"></i> {{ __('Add New Shop') }}
         </div>
     </div>
+
+    @if ($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+            <h6 class="alert-heading fw-bold mb-1"><i class="fas fa-exclamation-triangle me-2"></i>{{ __('Please correct the following errors:') }}</h6>
+            <ul class="mb-0 ps-3">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
     <form action="{{ route('admin.shop.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
         <!--######## User Information ##########-->
@@ -171,8 +184,8 @@
                     <p class="text text-danger m-0" id="descriptionError"></p>
                 </div>
 
-                <input type="hidden" id="latitude" name="latitude" value="{{ old('latitude') }}">
-                <input type="hidden" id="longitude" name="longitude" value="{{ old('longitude') }}">
+                <input type="hidden" id="latitude" name="latitude" value="{{ old('latitude', '28.6139') }}">
+                <input type="hidden" id="longitude" name="longitude" value="{{ old('longitude', '77.2090') }}">
                 <div id="map" style="height:450px; border-radius: 10px;margin-top: 20px"></div>
 
                 <div class="d-flex justify-content-end mt-4">

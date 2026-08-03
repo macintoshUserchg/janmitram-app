@@ -48,7 +48,7 @@ class RegistrationRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'min:5', 'max:100', 'regex:/^[a-zA-Z\s\.\'-]+$/', 'not_regex:/^\s*$/'],
             'phone' => $phoneValidate,
-            'email' => [$emailRequired, 'email:rfc,dns', 'max:150'],
+            'email' => [$emailRequired, 'email:rfc', 'max:150'],
             'password' => ['required', 'string', 'min:6', $confirmed],
             'password_confirmation' => [$required, 'min:6'],
             'country' => [$countryRequired, 'string', 'max:100'],
