@@ -2,15 +2,24 @@
 
 namespace Tests\Feature;
 
+use App\Enums\PaymentMethod;
+use App\Exceptions\UnfulfillableOrderException;
+use App\Http\Requests\OrderRequest;
 use App\Models\Address;
 use App\Models\Area;
 use App\Models\Brand;
+use App\Models\Cart;
 use App\Models\Customer;
+use App\Models\GeneraleSetting;
+use App\Models\Payment;
 use App\Models\Product;
 use App\Models\Shop;
 use App\Models\Unit;
+use App\Models\User;
 use App\Repositories\OrderRepository;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -99,6 +108,112 @@ class ShopAllocationTest extends TestCase
 
         $this->assertNotNull($allocated);
         $this->assertSame($farShop->id, $allocated->shop_id);
+    }
+
+    public function test_order_goes_to_allocated_shop_and_uses_its_delivery_charge(): void
+    {
+        [$master, $copy, $nearShop, $farShop] = $this->masterWithTwoCopies();
+        $this->enableMultiVendor();
+        $customerUser = User::factory()->create();
+        $customer = Customer::factory()->create(['user_id' => $customerUser->id]);
+        $address = Address::factory()->create([
+            'customer_id' => $customer->id,
+            'latitude' => 26.9,
+            'longitude' => 75.8,
+        ]);
+        Cart::create([
+            'customer_id' => $customer->id,
+            'shop_id' => $farShop->id,   // pinned to the FAR shop at add-to-cart
+            'product_id' => $master->id,
+            'quantity' => 2,
+        ]);
+
+        $payment = $this->placeOrder($customerUser, $address, $nearShop->id);
+
+        $order = $payment->orders->first();
+        $this->assertNotNull($order);
+        $this->assertSame($nearShop->id, $order->shop_id);          // allocated to NEAR shop
+        $this->assertSame(20.0, (float) $order->delivery_charge);   // near shop's charge
+        $this->assertSame(2, (int) $order->products->first()->pivot->quantity);
+    }
+
+    public function test_unfulfillable_line_throws_with_candidates(): void
+    {
+        [$master, $copy, $nearShop, $farShop] = $this->masterWithTwoCopies();
+        $this->enableMultiVendor();
+        // move the near shop copy out of stock
+        $master->update(['quantity' => 0]);
+        $customerUser = User::factory()->create();
+        $customer = Customer::factory()->create(['user_id' => $customerUser->id]);
+        $address = Address::factory()->create([
+            'customer_id' => $customer->id,
+            'latitude' => 26.9,
+            'longitude' => 75.8,
+        ]);
+        Cart::create([
+            'customer_id' => $customer->id,
+            'shop_id' => $nearShop->id,
+            'product_id' => $master->id,
+            'quantity' => 2,
+        ]);
+
+        try {
+            $this->placeOrder($customerUser, $address, $nearShop->id);
+            $this->fail('Expected UnfulfillableOrderException');
+        } catch (UnfulfillableOrderException $e) {
+            $this->assertArrayHasKey($master->id, $e->unfulfillable);
+        }
+    }
+
+    public function test_atomic_decrement_rejects_oversell(): void
+    {
+        $shop = Shop::factory()->create();
+        $shop->user->update(['is_active' => true]);
+        Brand::create(['name' => 'Test Brand', 'slug' => 'test-brand']);
+        $unit = Unit::create(['name' => 'kg', 'shop_id' => $shop->id, 'is_active' => true]);
+        $product = Product::factory()->create([
+            'shop_id' => $shop->id,
+            'unit_id' => $unit->id,
+            'quantity' => 3,
+            'is_active' => true,
+            'is_approve' => true,
+        ]);
+
+        $first = Product::query()
+            ->whereKey($product->id)->where('quantity', '>=', 3)->decrement('quantity', 3);
+        $second = Product::query()
+            ->whereKey($product->id)->where('quantity', '>=', 3)->decrement('quantity', 3);
+
+        $this->assertSame(1, $first);
+        $this->assertSame(0, $second);
+        $this->assertSame(0, (int) $product->fresh()->quantity);
+    }
+
+    private function placeOrder(User $customerUser, Address $address, int $shopId): Payment
+    {
+        $request = Request::create('/api/place-order', 'POST', [
+            'shop_ids' => [$shopId],
+            'address_id' => $address->id,
+            'payment_method' => 'cash',
+        ]);
+
+        $this->actingAs($customerUser);
+        $orderRequest = OrderRequest::createFromBase($request);
+        $this->app->instance('request', $orderRequest);
+
+        $carts = userCart($orderRequest)->get();
+
+        return OrderRepository::storeByRequestFromCart(
+            $orderRequest,
+            PaymentMethod::CASH,
+            $carts,
+        );
+    }
+
+    private function enableMultiVendor(): void
+    {
+        Cache::forget('generale_setting');
+        GeneraleSetting::create(['shop_type' => 'multi']);
     }
 
     private function invokePrivate(string $method, array $args)

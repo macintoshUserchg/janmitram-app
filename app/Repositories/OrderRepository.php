@@ -7,6 +7,7 @@ use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use App\Events\OrderMailEvent;
+use App\Exceptions\UnfulfillableOrderException;
 use App\Http\Requests\OrderRequest;
 use App\Models\Address;
 use App\Models\AdminCoupon;
@@ -56,7 +57,41 @@ class OrderRepository extends Repository
         $tokens = cartAccessToken(request());
         $customer = Customer::firstWhere('id', $tokens['customer_id']);
 
-        $shopProducts = $carts->groupBy('shop_id');
+        $isMultiVendor = generaleSetting('setting')?->shop_type === 'multi';
+        $overrides = collect($request->allocations ?? [])->keyBy('product_id');
+        $address = Address::find($request->address_id);
+
+        $shopLines = [];
+        $unfulfillable = [];
+
+        foreach ($carts as $cart) {
+            if (! $isMultiVendor) {
+                $shopLines[$cart->shop_id][] = ['cart' => $cart, 'copy' => $cart->product];
+
+                continue;
+            }
+
+            $allocated = self::allocateNearestShop(
+                $cart->product,
+                (int) $cart->quantity,
+                $address,
+                $overrides->get($cart->product_id)?->shop_id,
+            );
+
+            if (! $allocated) {
+                $unfulfillable[$cart->product_id] = self::candidateShopsForLine($cart->product, (int) $cart->quantity, $address);
+
+                continue;
+            }
+
+            $shopLines[$allocated->shop_id][] = ['cart' => $cart, 'copy' => $allocated];
+        }
+
+        if (! empty($unfulfillable)) {
+            throw new UnfulfillableOrderException($unfulfillable);
+        }
+
+        $shopProducts = $shopLines;
 
         foreach ($shopProducts as $shopId => $cartProducts) {
 
@@ -69,10 +104,19 @@ class OrderRepository extends Repository
             $totalPayableAmount += $getCartAmounts['payableAmount'];
             $payment->orders()->attach($order->id);
 
-            foreach ($cartProducts as $cart) {
-                $cart->product->decrement('quantity', $cart->quantity);
+            foreach ($cartProducts as $line) {
+                $cart = $line['cart'];
+                $product = $line['copy'];
 
-                $product = $cart->product;
+                $decremented = Product::query()
+                    ->whereKey($product->id)
+                    ->where('quantity', '>=', $cart->quantity)
+                    ->decrement('quantity', $cart->quantity);
+
+                if (! $decremented) {
+                    throw new \RuntimeException(__('Sorry, this product is no longer available in the required quantity'));
+                }
+
                 $price = $product->discount_price > 0 ? $product->discount_price : $product->price;
 
                 $flashSale = $product->flashSales?->first();
@@ -333,18 +377,18 @@ class OrderRepository extends Repository
         $coupon = null;
         $totalTaxAmount = 0;
 
-        $orderQty = $carts->sum('quantity');
-        $deliveryCharge = self::getDeliveryAmount();
+        $orderQty = $carts->sum(fn ($l) => $l['cart']->quantity);
+        $deliveryCharge = $shop->delivery_charge > 0 ? (float) $shop->delivery_charge : self::getDeliveryAmount();
 
         $allVatTaxes = [];
 
-        foreach ($carts ?? [] as $cart) {
+        foreach ($carts ?? [] as $line) {
+            $cart = $line['cart'];
+            $product = $line['copy'];
 
             if (! $cart) {
                 continue;
             }
-
-            $product = $cart->product;
             if ($product->is_digital) {
                 $deliveryCharge = 0;
             }
