@@ -418,6 +418,7 @@
 
     <script>
         let map;
+        let orderMarker;
         let riderMarker;
         let routingControl;
         let trackingInterval = null;
@@ -425,12 +426,16 @@
         let channel = null;
 
         const orderStatus = @json($order->order_status);
+        const orderAddressLine = @json($order->address?->address_line ?? '');
 
         let rawLat = parseFloat(@json($order->address?->latitude ?? 0));
         let rawLng = parseFloat(@json($order->address?->longitude ?? 0));
+        let isDefaultCoords = false;
+
         if (isNaN(rawLat) || isNaN(rawLng) || (rawLat === 0 && rawLng === 0)) {
             rawLat = 27.005694931660006;
             rawLng = 75.77754972401056;
+            isDefaultCoords = true;
         }
         const orderLat = rawLat;
         const orderLng = rawLng;
@@ -442,6 +447,15 @@
         }
 
         function initMap(riderLat, riderLng) {
+            let mapContainer = document.getElementById('map');
+            if (!mapContainer) return;
+
+            if (map) {
+                try { map.remove(); } catch(e) {}
+                map = null;
+            }
+            mapContainer._leaflet_id = null;
+
             map = L.map('map').setView([orderLat, orderLng], 14);
 
             const mainTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -453,7 +467,7 @@
             let tileErrors = 0;
             mainTiles.on('tileerror', function() {
                 tileErrors++;
-                if (tileErrors === 3) {
+                if (tileErrors >= 3) {
                     map.removeLayer(mainTiles);
                     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
                         maxZoom: 19,
@@ -470,12 +484,29 @@
                 shadowUrl: null
             });
 
-            L.marker([orderLat, orderLng], {
+            orderMarker = L.marker([orderLat, orderLng], {
                     icon: orderIcon
                 })
                 .addTo(map)
-                .bindPopup('Customer Location')
+                .bindPopup('Customer Location: ' + (orderAddressLine || 'Default'))
                 .openPopup();
+
+            if (isDefaultCoords && orderAddressLine) {
+                fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(orderAddressLine))
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data && data.length > 0) {
+                            let gLat = parseFloat(data[0].lat);
+                            let gLng = parseFloat(data[0].lon);
+                            if (!isNaN(gLat) && !isNaN(gLng) && map && orderMarker) {
+                                map.setView([gLat, gLng], 15);
+                                orderMarker.setLatLng([gLat, gLng]);
+                                orderMarker.bindPopup('Customer Location: ' + orderAddressLine).openPopup();
+                            }
+                        }
+                    })
+                    .catch(err => console.warn('Geocoding error:', err));
+            }
 
             if (!canShowRiderLocation()) {
                 return;
@@ -546,18 +577,13 @@
         }
 
         $(document).on('shown.bs.modal', '#orderLocationModal', function() {
-            if (map) {
-                map.remove();
-                map = null;
-            }
-
             initMap(orderLat, orderLng);
 
-            setTimeout(function() {
-                if (map) {
-                    map.invalidateSize();
-                }
-            }, 300);
+            [100, 300, 500].forEach(delay => {
+                setTimeout(function() {
+                    if (map) map.invalidateSize();
+                }, delay);
+            });
 
             if (!canShowRiderLocation() || !riderId) {
                 return;
@@ -592,9 +618,13 @@
                 trackingInterval = null;
             }
 
+            let mapContainer = document.getElementById('map');
             if (map) {
-                map.remove();
+                try { map.remove(); } catch(e) {}
                 map = null;
+            }
+            if (mapContainer) {
+                mapContainer._leaflet_id = null;
             }
         });
     </script>
