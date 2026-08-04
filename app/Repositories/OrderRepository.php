@@ -460,104 +460,93 @@ class OrderRepository extends Repository
     }
 
     /**
-     * Creates a new order based on the provided order, generates a new order code,
-     * and associates it with the corresponding shop orders and products.
+     * Re-order: allocate each original product line to the nearest shop and
+     * create one new order per allocated shop.
      *
-     * @param  Order  $order  The original order to be used as a base for the new order
-     * @return Order The newly created order
+     * @return Collection<int, Order>
      */
-    public static function reOrder(Order $order, $payment): Order
+    public static function reOrder(Order $order, $payment): Collection
     {
-        $lastOrderId = self::query()->max('id');
+        $tokens = cartAccessToken(request());
+        $address = Address::find($order->address_id);
+        $isMultiVendor = generaleSetting('setting')?->shop_type === 'multi';
 
-        $newOrder = self::create([
-            'shop_id' => $order->shop_id,
-            'order_code' => str_pad($lastOrderId + 1, 6, '0', STR_PAD_LEFT),
-            'prefix' => 'RC',
-            'customer_id' => $order->customer_id,
-            'coupon_id' => $order->coupon_id ?? null,
-            'delivery_charge' => $order->delivery_charge,
-            'payable_amount' => $order->payable_amount,
-            'total_amount' => $order->total_amount,
-            'tax_amount' => $order->tax_amount,
-            'coupon_discount' => $order->coupon_discount,
-            'payment_method' => $payment->payment_method ?? $order->payment_method,
-            'order_status' => OrderStatus::PENDING->value,
-            'address_id' => $order->address_id,
-            'instruction' => $order->instruction,
-            'payment_status' => PaymentStatus::PENDING->value,
-        ]);
-
+        // group the original lines by their allocated shop
+        $linesByShop = [];
         foreach ($order->products as $product) {
-
-            $qty = $product->pivot->quantity;
-
-            $product->decrement('quantity', $qty);
-
-            $newOrder->products()->attach($product->id, [
-                'quantity' => $product->pivot->quantity,
-                'color' => $product->pivot->color ?? null,
-                'size' => $product->pivot->size ?? null,
-                'unit' => $product->pivot->unit ?? null,
-                'price' => $product->pivot->price,
-            ]);
-
-            // digital product license generation
-            if ($product->is_digital == true) {
-                $userId = Auth::guard('api')->user()->id;
-                $quantity = $qty;
-
-                for ($i = 0; $i < $quantity; $i++) {
-                    $license = $product->licenses()
-                        ->whereNull('user_id')
-                        ->inRandomOrder()
-                        ->first();
-
-                    if ($license) {
-                        $license->update([
-                            'user_id' => $userId,
-                            'order_id' => $newOrder->id,
-                            'is_used' => true,
-                        ]);
-                    } else {
-                        $newLicenseKey = generateLicenseKey();
-
-                        $license = $product->licenses()->create([
-                            'user_id' => $userId,
-                            'order_id' => $newOrder->id,
-                            'is_used' => true,
-                            'product_license' => $newLicenseKey,
-                        ]);
-                    }
-                }
-
-                $newOrder->order_status = OrderStatus::DELIVERED->value;
-                $order->save();
+            $qty = (int) $product->pivot->quantity;
+            $copy = $product;
+            if ($isMultiVendor && $address?->latitude && $address?->longitude) {
+                $copy = self::allocateNearestShop($product, $qty, $address);
             }
-            // digital product license generation
+            $shopId = $copy?->shop_id ?? $product->shop_id;
+            $linesByShop[$shopId][] = ['product' => $copy ?? $product, 'qty' => $qty];
         }
 
-        foreach ($order->vatTaxes ?? [] as $vatTax) {
-            if (! $vatTax) {
-                continue;
-            }
-            OrderVatTax::create([
-                'order_id' => $newOrder->id,
-                'name' => $vatTax->name,
-                'percentage' => $vatTax->percentage,
-                'amount' => $vatTax->amount,
+        $created = collect([]);
+        foreach ($linesByShop as $shopId => $lines) {
+            $shop = Shop::find($shopId);
+            $linesForAmounts = collect($lines)->map(fn ($l) => [
+                'cart' => (object) [
+                    'quantity' => $l['qty'],
+                    'size' => null,
+                    'color' => null,
+                    'unit' => null,
+                ],
+                'copy' => $l['product'],
             ]);
+            $amounts = self::getCartWiseAmounts($shop, $linesForAmounts, null);
+
+            $newOrder = self::createNewOrder((object) [
+                'address_id' => $order->address_id,
+                'note' => $order->instruction,
+                'coupon_code' => null,
+            ], $shop, PaymentMethod::tryFrom($order->payment_method?->value ?? 'Cash Payment') ?? PaymentMethod::CASH, $amounts);
+
+            foreach ($lines as $line) {
+                $product = $line['product'];
+                $qty = $line['qty'];
+
+                $decremented = Product::query()->whereKey($product->id)->where('quantity', '>=', $qty)->decrement('quantity', $qty);
+                if (! $decremented) {
+                    throw new \RuntimeException(__('Sorry, this product is no longer available in the required quantity'));
+                }
+
+                $newOrder->products()->attach($product->id, [
+                    'quantity' => $qty,
+                    'color' => null,
+                    'size' => null,
+                    'unit' => null,
+                    'price' => (float) ($product->discount_price > 0 ? $product->discount_price : $product->price),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+                if ($product->is_digital) {
+                    $user = Auth::guard('api')->user();
+                    for ($i = 0; $i < $qty; $i++) {
+                        $license = $product->licenses()->whereNull('user_id')->inRandomOrder()->first();
+                        if ($license) {
+                            $license->update(['user_id' => $user->id, 'order_id' => $newOrder->id, 'is_used' => true]);
+                        } else {
+                            $license = $product->licenses()->create(['user_id' => $user->id, 'order_id' => $newOrder->id, 'is_used' => true, 'product_license' => generateLicenseKey()]);
+                        }
+                    }
+                }
+            }
+
+            $created->push($newOrder);
         }
 
         $user = auth()->user();
         if ($user?->email) {
             try {
-                OrderMailEvent::dispatch($user->email, $newOrder);
+                OrderMailEvent::dispatch($user->email, $created->first());
             } catch (\Throwable $th) {
             }
         }
 
-        return $order;
+        return $created;
     }
 
     /**

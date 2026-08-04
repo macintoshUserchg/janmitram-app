@@ -9,8 +9,10 @@ use App\Models\Address;
 use App\Models\Area;
 use App\Models\Brand;
 use App\Models\Cart;
+use App\Models\Coupon;
 use App\Models\Customer;
 use App\Models\GeneraleSetting;
+use App\Models\Order;
 use App\Models\Payment;
 use App\Models\Product;
 use App\Models\Shop;
@@ -245,6 +247,32 @@ class ShopAllocationTest extends TestCase
         $candidates = $response->json('data.shop_candidates.'.$master->id);
         $this->assertCount(2, $candidates);
         $this->assertSame($nearShop->id, $candidates[0]['shop_id']);
+    }
+
+    public function test_reorder_allocates_to_nearest_shop(): void
+    {
+        [$master, $copy, $nearShop, $farShop] = $this->masterWithTwoCopies();
+        $this->enableMultiVendor();
+        // OrderFactory needs at least one Coupon row to satisfy Coupon::all()->random()
+        Coupon::factory()->create(['shop_id' => $nearShop->id]);
+        $customerUser = User::factory()->create();
+        $customer = Customer::factory()->create(['user_id' => $customerUser->id]);
+        $address = Address::factory()->create(['customer_id' => $customer->id, 'latitude' => 26.9, 'longitude' => 75.8]);
+        $order = Order::factory()->create([
+            'shop_id' => $farShop->id,
+            'customer_id' => $customer->id,
+            'address_id' => $address->id,
+            'order_status' => 'Delivered',
+            'payment_status' => 'Paid',
+        ]);
+        $order->products()->attach($master->id, ['quantity' => 2, 'color' => null, 'size' => null, 'unit' => null, 'price' => 100]);
+        $payment = Payment::create(['amount' => 200, 'payment_method' => 'Cash Payment']);
+        $this->actingAs($customerUser, 'sanctum');
+
+        $orders = OrderRepository::reOrder($order, $payment);
+
+        $this->assertCount(1, $orders);
+        $this->assertSame($nearShop->id, $orders->first()->shop_id);
     }
 
     private function placeOrder(User $customerUser, Address $address, int $shopId): Payment

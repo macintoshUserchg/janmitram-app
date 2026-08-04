@@ -221,10 +221,14 @@ class OrderController extends Controller
             ]);
 
             // re-order
-            $order = OrderRepository::reOrder($order, $payment);
+            $orders = OrderRepository::reOrder($order, $payment);
 
-            // attach payment to order
-            $payment->orders()->attach($order->id);
+            // attach payment to each created order
+            foreach ($orders as $createdOrder) {
+                $payment->orders()->attach($createdOrder->id);
+            }
+
+            $order = $orders->first();
 
             // payment url
             $paymentUrl = null;
