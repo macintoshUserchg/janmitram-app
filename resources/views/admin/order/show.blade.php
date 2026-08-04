@@ -639,8 +639,8 @@
         const orderStatus = @json($order->order_status);
 
 
-        let rawLat = parseFloat({{ $order->address->latitude ?? 0 }});
-        let rawLng = parseFloat({{ $order->address->longitude ?? 0 }});
+        let rawLat = parseFloat(@json($order->address?->latitude ?? 0));
+        let rawLng = parseFloat(@json($order->address?->longitude ?? 0));
         if (isNaN(rawLat) || isNaN(rawLng) || (rawLat === 0 && rawLng === 0)) {
             rawLat = 27.005694931660006;
             rawLng = 75.77754972401056;
@@ -694,32 +694,36 @@
                 return;
             }
 
-            const riderIcon = L.icon({
-                iconUrl: '{{ asset('assets/icons/pin-map.png') }}',
-                iconSize: [35, 35],
-                iconAnchor: [17, 35],
-                popupAnchor: [0, -30],
-                shadowUrl: null
-            });
+            if (riderLat && riderLng) {
+                const riderIcon = L.icon({
+                    iconUrl: '{{ asset('assets/icons/pin-map.png') }}',
+                    iconSize: [35, 35],
+                    iconAnchor: [17, 35],
+                    popupAnchor: [0, -30],
+                    shadowUrl: null
+                });
 
-            riderMarker = L.marker([riderLat, riderLng], {
-                    icon: riderIcon
-                })
-                .addTo(map);
+                riderMarker = L.marker([riderLat, riderLng], {
+                        icon: riderIcon
+                    })
+                    .addTo(map);
 
-            routingControl = L.Routing.control({
-                waypoints: [
-                    L.latLng(riderLat, riderLng),
-                    L.latLng(orderLat, orderLng)
-                ],
-                addWaypoints: false,
-                draggableWaypoints: false,
-                fitSelectedRoutes: true,
-                show: false,
-                createMarker: function() {
-                    return null;
+                if (typeof L.Routing !== 'undefined') {
+                    routingControl = L.Routing.control({
+                        waypoints: [
+                            L.latLng(riderLat, riderLng),
+                            L.latLng(orderLat, orderLng)
+                        ],
+                        addWaypoints: false,
+                        draggableWaypoints: false,
+                        fitSelectedRoutes: true,
+                        show: false,
+                        createMarker: function() {
+                            return null;
+                        }
+                    }).addTo(map);
                 }
-            }).addTo(map);
+            }
         }
 
         function subscribeToRiderLocation(riderId) {
@@ -736,13 +740,18 @@
                 const latitude = data.location.latitude;
                 const longitude = data.location.longitude;
 
-                moveMarkerSmooth(riderMarker, latitude, longitude, 5000);
+                if (typeof moveMarkerSmooth === 'function') {
+                    moveMarkerSmooth(riderMarker, latitude, longitude, 5000);
+                } else if (riderMarker) {
+                    riderMarker.setLatLng([latitude, longitude]);
+                }
 
-                // riderMarker.setLatLng([latitude, longitude]);
-                routingControl.setWaypoints([
-                    L.latLng(latitude, longitude),
-                    L.latLng(orderLat, orderLng)
-                ]);
+                if (routingControl) {
+                    routingControl.setWaypoints([
+                        L.latLng(latitude, longitude),
+                        L.latLng(orderLat, orderLng)
+                    ]);
+                }
                 map.panTo([latitude, longitude], {
                     animate: true
                 });
@@ -755,11 +764,16 @@
 
             $('#orderLocationModal').one('shown.bs.modal', function() {
 
-                if (map) map.remove();
+                if (map) {
+                    map.remove();
+                    map = null;
+                }
 
                 initMap(orderLat, orderLng);
 
-                setTimeout(() => map.invalidateSize(), 300);
+                setTimeout(() => {
+                    if (map) map.invalidateSize();
+                }, 300);
 
 
                 if (!canShowRiderLocation() || !riderId) {
