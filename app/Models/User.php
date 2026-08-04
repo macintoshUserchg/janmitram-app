@@ -88,6 +88,17 @@ class User extends Authenticatable
         return $this->belongsTo(Customer::class, 'id', 'user_id');
     }
 
+    public function getCustomerAttribute()
+    {
+        $customer = $this->getRelationValue('customer');
+        if (! $customer && $this->exists) {
+            $customer = Customer::firstOrCreate(['user_id' => $this->id]);
+            $this->setRelation('customer', $customer);
+        }
+
+        return $customer;
+    }
+
     /**
      * get coupons model for this user.
      * */

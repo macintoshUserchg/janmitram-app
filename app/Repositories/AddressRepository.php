@@ -6,6 +6,7 @@ use App\Enums\Roles;
 use App\Http\Requests\AddressRequest;
 use App\Models\Address;
 use App\Models\CartAccessToken;
+use App\Models\Customer;
 use App\Support\Repositories\Repository;
 use Illuminate\Http\Request;
 
@@ -29,16 +30,17 @@ class AddressRepository extends Repository
     public static function storeByRequest(AddressRequest $request): Address
     {
         $isDefault = $request->is_default ? true : false;
-        $customer = auth()->user()->customer;
+        $user = auth()->user();
+        $customer = $user?->customer ?? Customer::firstOrCreate(['user_id' => $user->id]);
 
-        $addresses = $customer?->addresses;
+        $addresses = $customer->addresses;
 
         if ($isDefault && ($addresses->count() > 0)) {
             $customer->addresses()->update(['is_default' => false]);
         }
 
         return self::create([
-            'customer_id' => auth()->user()->customer->id,
+            'customer_id' => $customer->id,
             'name' => $request->name,
             'phone' => $request->phone,
             'area' => $request->area,
@@ -47,7 +49,7 @@ class AddressRepository extends Repository
             'address_line' => $request->address_line,
             'address_line2' => $request->address_line2,
             'address_type' => $request->address_type,
-            'is_default' => $customer->addresses ? $isDefault : true,
+            'is_default' => ($addresses->count() == 0) ? true : $isDefault,
             'latitude' => $request->latitude,
             'longitude' => $request->longitude,
             'area_id' => $request->area_id,

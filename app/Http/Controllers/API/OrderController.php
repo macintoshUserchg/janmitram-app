@@ -39,7 +39,8 @@ class OrderController extends Controller
         $perPage = $request->per_page;
         $skip = ($page * $perPage) - $perPage;
 
-        $customer = auth()->user()->customer;
+        $user = auth()->user();
+        $customer = $user?->customer ?? Customer::firstOrCreate(['user_id' => $user->id]);
 
         $orders = $customer->orders()->when($orderStatus, function ($query) use ($orderStatus) {
             return $query->where('order_status', $orderStatus);

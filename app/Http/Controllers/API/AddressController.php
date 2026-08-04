@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\AddressRequest;
 use App\Http\Resources\AddressResource;
 use App\Models\Address;
+use App\Models\Customer;
 use App\Repositories\AddressRepository;
 use Illuminate\Http\JsonResponse;
 
@@ -24,14 +25,17 @@ class AddressController extends Controller
         $perPage = $request->per_page;
         $skip = ($page * $perPage) - $perPage;
 
+        $user = auth()->user();
+        $customer = $user?->customer ?? Customer::firstOrCreate(['user_id' => $user->id]);
+
         // get all addresses which logged in user and order by descending
-        $addresses = auth()->user()->customer->addresses()
+        $addresses = $customer->addresses()
             ->when($perPage && $page, function ($query) use ($perPage, $skip) {
                 return $query->skip($skip)->take($perPage);
             })->orderByDesc('is_default')->orderByDesc('id')->get();
 
         return $this->json('all addresses', [
-            'total' => auth()->user()->customer->addresses->count(),
+            'total' => $customer->addresses()->count(),
             'addresses' => AddressResource::collection($addresses),
         ]);
     }
