@@ -138,6 +138,13 @@
                         </div>
                     </div>
 
+                    <div class="col-md-6">
+                        <label for="shop_allocation_radius_km" class="form-label">{{ __('Shop Allocation Radius (km)') }}</label>
+                        <input type="number" step="0.1" min="1" name="shop_allocation_radius_km" id="shop_allocation_radius_km"
+                            class="form-control" value="{{ $generaleSetting?->shop_allocation_radius_km ?? 50 }}">
+                        <div class="form-text">{{ __('Maximum distance for auto-assigning an order to a shop.') }}</div>
+                    </div>
+
                 </div>
 
             </div>

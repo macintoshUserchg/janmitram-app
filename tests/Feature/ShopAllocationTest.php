@@ -294,6 +294,18 @@ class ShopAllocationTest extends TestCase
         $this->assertSame($nearShop->id, $orders->first()->shop_id);
     }
 
+    public function test_allocation_uses_configured_radius(): void
+    {
+        [$master, $copy, $nearShop, $farShop] = $this->masterWithTwoCopies();
+        GeneraleSetting::create(['shop_allocation_radius_km' => 1]);
+        $address = Address::factory()->create(['latitude' => 26.9, 'longitude' => 75.8]);
+
+        $candidates = OrderRepository::candidateShopsForLine($master, 2, $address);
+
+        $this->assertCount(2, $candidates);
+        $this->assertFalse($candidates[0]->radius_eligible); // near shop also out of 1km radius
+    }
+
     private function placeOrder(User $customerUser, Address $address, int $shopId): Payment
     {
         $request = Request::create('/api/place-order', 'POST', [
