@@ -29,6 +29,25 @@ class ShopAllocationTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_address_store_requires_coordinates(): void
+    {
+        // CustomerFactory::definition() assigns the Spatie 'customer' role to the
+        // user it creates; under RefreshDatabase the role must exist first.
+        Role::create(['name' => 'customer']);
+        $user = User::factory()->create();
+        $customer = Customer::factory()->create(['user_id' => $user->id]);
+
+        $response = $this->actingAs($user, 'sanctum')->postJson('/api/address/store', [
+            'name' => 'Test Customer',
+            'phone' => '9800000000',
+            'address_line' => '123 Test Street, Jaipur',
+            'address_type' => 'home',
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['latitude', 'longitude']);
+    }
+
     public function test_haversine_km_returns_expected_distance(): void
     {
         $this->assertSame(0.0, haversineKm(26.9, 75.8, 26.9, 75.8));

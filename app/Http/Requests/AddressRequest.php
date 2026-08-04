@@ -47,8 +47,8 @@ class AddressRequest extends FormRequest
             'address_line2' => 'nullable|string|max:255',
             'address_type' => 'required|string|max:255',
             'is_default' => 'nullable|boolean',
-            'longitude' => 'nullable|numeric|between:-180,180',
-            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => ['required', 'numeric', 'between:-180,180'],
+            'latitude' => ['required', 'numeric', 'between:-90,90'],
             'email' => [$email, 'email:rfc', 'max:150'],
             'area_id' => 'nullable|exists:areas,id',
         ];
