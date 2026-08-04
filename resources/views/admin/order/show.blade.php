@@ -758,7 +758,7 @@
             });
         }
 
-        $('#orderLocationModal').on('shown.bs.modal', function() {
+        $(document).on('shown.bs.modal', '#orderLocationModal', function() {
             if (map) {
                 map.remove();
                 map = null;
@@ -766,9 +766,11 @@
 
             initMap(orderLat, orderLng);
 
-            setTimeout(() => {
-                if (map) map.invalidateSize();
-            }, 200);
+            setTimeout(function() {
+                if (map) {
+                    map.invalidateSize();
+                }
+            }, 300);
 
             if (!canShowRiderLocation() || !riderId) {
                 return;
@@ -797,8 +799,7 @@
             });
         });
 
-
-        $('#orderLocationModal').on('hidden.bs.modal', function() {
+        $(document).on('hidden.bs.modal', '#orderLocationModal', function() {
             if (trackingInterval) {
                 clearInterval(trackingInterval);
                 trackingInterval = null;
