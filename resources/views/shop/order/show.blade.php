@@ -545,49 +545,42 @@
             });
         }
 
-        $(document).on('click', '#orderLocation', function() {
+        $('#orderLocationModal').on('shown.bs.modal', function() {
+            if (map) {
+                map.remove();
+                map = null;
+            }
 
-            $('#orderLocationModal').modal('show');
+            initMap(orderLat, orderLng);
 
-            $('#orderLocationModal').one('shown.bs.modal', function() {
+            setTimeout(() => {
+                if (map) map.invalidateSize();
+            }, 200);
 
-                if (map) {
-                    map.remove();
-                    map = null;
+            if (!canShowRiderLocation() || !riderId) {
+                return;
+            }
+
+            // Rider exists → fetch live location
+            $.ajax({
+                url: "{{ route('shop.rider.location', ':id') }}".replace(':id', riderId),
+                success: function(res) {
+                    if (!res?.data?.location || !riderMarker || !routingControl) return;
+
+                    let {
+                        latitude,
+                        longitude
+                    } = res.data.location;
+
+                    riderMarker.setLatLng([latitude, longitude]);
+
+                    routingControl.setWaypoints([
+                        L.latLng(latitude, longitude),
+                        L.latLng(orderLat, orderLng)
+                    ]);
+                    // Live tracking
+                    subscribeToRiderLocation(riderId);
                 }
-
-                initMap(orderLat, orderLng);
-
-                setTimeout(() => {
-                    if (map) map.invalidateSize();
-                }, 300);
-
-
-                if (!canShowRiderLocation() || !riderId) {
-                    return;
-                }
-
-                // Rider exists → fetch live location
-                $.ajax({
-                    url: "{{ route('shop.rider.location', ':id') }}".replace(':id', riderId),
-                    success: function(res) {
-                        if (!res?.data?.location || !riderMarker || !routingControl) return;
-
-                        let {
-                            latitude,
-                            longitude
-                        } = res.data.location;
-
-                        riderMarker.setLatLng([latitude, longitude]);
-
-                        routingControl.setWaypoints([
-                            L.latLng(latitude, longitude),
-                            L.latLng(orderLat, orderLng)
-                        ]);
-                        // Live tracking
-                        subscribeToRiderLocation(riderId);
-                    }
-                });
             });
         });
 
