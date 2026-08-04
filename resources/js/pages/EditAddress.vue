@@ -20,23 +20,34 @@
 
 <script setup>
 import { HomeIcon } from '@heroicons/vue/24/solid';
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import AddressEditForm from '../components/AddressEditForm.vue';
 import AuthPageHeader from '../components/AuthPageHeader.vue';
 import { useAuth } from "../stores/AuthStore";
 
-import { useRoute } from 'vue-router';
-
 const route = useRoute();
-
 const authStore = useAuth();
-
 const address = ref({});
 
+const loadAddress = async () => {
+    if (!authStore.addresses || authStore.addresses.length === 0) {
+        await authStore.fetchAddresses();
+    }
+    const found = authStore.getAddressById(route.params.id);
+    if (found) {
+        address.value = { ...found };
+    }
+};
+
 onMounted(() => {
-   address.value = authStore.getAddressById(route.params.id);
+    loadAddress();
 });
 
-
-
+watch(
+    () => route.params.id,
+    () => {
+        loadAddress();
+    }
+);
 </script>

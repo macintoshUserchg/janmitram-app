@@ -366,10 +366,19 @@ const formData = ref({
 
 watch(
     () => props.address,
-    () => {
-        formData.value = props.address;
-    }
+    (newVal) => {
+        if (newVal && Object.keys(newVal).length) {
+            formData.value = { ...newVal };
+        }
+    },
+    { immediate: true, deep: true }
 );
+
+onMounted(() => {
+    if (props.address && Object.keys(props.address).length) {
+        formData.value = { ...props.address };
+    }
+});
 
 const errors = ref({});
 
