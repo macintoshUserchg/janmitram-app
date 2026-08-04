@@ -115,8 +115,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // Addresses
     Route::get('addresses', [AddressController::class, 'index']);
     Route::post('address/store', [AddressController::class, 'store']);
-    Route::post('address/update', [AddressController::class, 'update']);     // VERIFY verb (PUT?)
+    Route::post('address/update', [AddressController::class, 'update']);
+    Route::post('address/{address}/update', [AddressController::class, 'update']);
     Route::delete('address', [AddressController::class, 'destroy']);
+    Route::delete('address/{address}', [AddressController::class, 'destroy']);
+    Route::delete('address/{address}/delete', [AddressController::class, 'destroy']);
 
     // Cart
     Route::get('carts', [CartController::class, 'index']);

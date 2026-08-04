@@ -60,13 +60,22 @@ class AddressController extends Controller
      * Update the address using the given request and address.
      *
      * @param  AddressRequest  $request  The request data for updating the address
-     * @param  Address  $address  The address to be updated
+     * @param  Address|null  $address  The address to be updated
      */
-    public function update(AddressRequest $request, Address $address)
+    public function update(AddressRequest $request, ?Address $address = null)
     {
-        if ($address->customer_id != auth('sanctum')->user()->customer->id) {
+        $user = auth()->user() ?? auth('sanctum')->user();
+        $customer = $user?->customer ?? Customer::firstOrCreate(['user_id' => $user->id]);
+
+        if (! $address || ! $address->exists) {
+            $addressId = $request->route('address') ?? $request->id;
+            $address = Address::findOrFail($addressId);
+        }
+
+        if ($address->customer_id != $customer->id) {
             return $this->json('You are not allowed to access this address', [], 422);
         }
+
         // update address which he want to update
         $address = AddressRepository::updateByRequest($request, $address);
 
@@ -78,14 +87,23 @@ class AddressController extends Controller
     /**
      * Destroy an address if it has no orders, otherwise return an error.
      *
-     * @param  Address  $address  The address to be destroyed
-     * @return JSON The result of the operation
+     * @param  Address|null  $address  The address to be destroyed
+     * @return JsonResponse The result of the operation
      */
-    public function destroy(Address $address): JsonResponse
+    public function destroy(?Address $address = null): JsonResponse
     {
-        if ($address->customer_id != auth('sanctum')->user()->customer->id) {
+        $user = auth()->user() ?? auth('sanctum')->user();
+        $customer = $user?->customer ?? Customer::firstOrCreate(['user_id' => $user->id]);
+
+        if (! $address || ! $address->exists) {
+            $addressId = request()->route('address') ?? request('id');
+            $address = Address::findOrFail($addressId);
+        }
+
+        if ($address->customer_id != $customer->id) {
             return $this->json('You are not allowed to access this address', [], 422);
         }
+
         // When the user tries to delete an address check it exists
         if ($address->orders->isEmpty()) {
             $address->delete();
