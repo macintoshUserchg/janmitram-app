@@ -290,7 +290,15 @@ const buildAllocations = () =>
 const resolveUnfulfillable = async (data) => {
     unfulfillable.value = data.unfulfillable || {};
     shopCandidates.value = { ...unfulfillable.value };
-    pickedShops.value = {};
+
+    // keep picks for lines that still need one; drop stale picks for resolved lines
+    const keptPicks = {};
+    Object.keys(unfulfillable.value).forEach((pid) => {
+        if (pickedShops.value[pid] != null) {
+            keptPicks[pid] = pickedShops.value[pid];
+        }
+    });
+    pickedShops.value = keptPicks;
 
     const qtyByProduct = {};
     (basketStore.buyNowProduct?.products || []).forEach((p) => {
@@ -302,13 +310,16 @@ const resolveUnfulfillable = async (data) => {
         quantity: qtyByProduct[product_id] || 1,
     }));
 
-    if (!lines.length) return;
+    // guests have no saved address_id to refresh candidates with;
+    // the unfulfillable seed already contains the candidate lists
+    const addressId = basketStore.address?.id;
+    if (!lines.length || !addressId) return;
 
     try {
         const res = await axios.post(
             "/shop-candidates",
             {
-                address_id: basketStore.address.id,
+                address_id: addressId,
                 products: lines,
             },
             {
@@ -577,6 +588,7 @@ const processGuestOrderConfirm = () => {
                     address_type: guestAddressStore.address_type,
                     latitude: guestAddressStore.latitude,
                     longitude: guestAddressStore.longitude,
+                    allocations: buildAllocations(),
                 },
                 {
                     headers: {
@@ -586,6 +598,9 @@ const processGuestOrderConfirm = () => {
                 }
             )
             .then((response) => {
+                unfulfillable.value = {};
+                shopCandidates.value = {};
+                pickedShops.value = {};
                 isProcessing.value = false;
                 toast(content, {
                     type: "default",
@@ -615,6 +630,15 @@ const processGuestOrderConfirm = () => {
                 }
             })
             .catch((error) => {
+                if (
+                    error.response?.status === 422 &&
+                    error.response.data?.data?.unfulfillable
+                ) {
+                    resolveUnfulfillable(error.response.data.data);
+                    isProcessing.value = false;
+                    return;
+                }
+
                 guestAddressStore.errors = error.response.data.errors;
                 toast.error(error.response.data.message, {
                     position:
