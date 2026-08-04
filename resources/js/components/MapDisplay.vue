@@ -43,6 +43,9 @@ const isLocating = ref(false);
 const currentLat = ref(props.latitude || 27.005694931660006);
 const currentLng = ref(props.longitude || 75.77754972401056);
 
+const inputLat = ref(currentLat.value);
+const inputLng = ref(currentLng.value);
+
 function sanitizeCoords(lat, lng) {
     let pLat = parseFloat(lat);
     let pLng = parseFloat(lng);
@@ -64,6 +67,8 @@ function updateLocation(lat, lng, triggerEmit = true) {
     const coords = sanitizeCoords(lat, lng);
     currentLat.value = coords.lat;
     currentLng.value = coords.lng;
+    inputLat.value = coords.lat;
+    inputLng.value = coords.lng;
 
     if (marker) {
         marker.setLatLng([coords.lat, coords.lng]);
@@ -75,6 +80,28 @@ function updateLocation(lat, lng, triggerEmit = true) {
     if (triggerEmit) {
         emit("location-updated", { lat: coords.lat, lng: coords.lng });
     }
+}
+
+function applyCustomCoordinates() {
+    let pLat = parseFloat(inputLat.value);
+    let pLng = parseFloat(inputLng.value);
+
+    if (isNaN(pLat) || isNaN(pLng)) {
+        alert("Please enter valid numeric latitude and longitude values.");
+        return;
+    }
+
+    if (pLat < -90 || pLat > 90) {
+        alert("Latitude must be between -90 and 90.");
+        return;
+    }
+
+    if (pLng < -180 || pLng > 180) {
+        alert("Longitude must be between -180 and 180.");
+        return;
+    }
+
+    updateLocation(pLat, pLng, true);
 }
 
 function initMap() {
@@ -272,5 +299,47 @@ watch(
             :style="{ width: width, height: height }"
             class="rounded-xl border shadow-inner overflow-hidden z-10"
         ></div>
+
+        <!-- Interactive Latitude & Longitude Input Bar -->
+        <div v-if="enableSetLocation" class="mt-2 p-3 bg-slate-50 border rounded-lg shadow-sm flex flex-col sm:flex-row items-center gap-3">
+            <div class="flex-1 w-full">
+                <label class="block text-xs font-semibold text-gray-600 mb-1">
+                    📍 Latitude
+                </label>
+                <input
+                    v-model="inputLat"
+                    type="number"
+                    step="any"
+                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary text-xs px-3 py-2 border bg-white"
+                    placeholder="e.g. 21.251384"
+                    @keyup.enter="applyCustomCoordinates"
+                />
+            </div>
+
+            <div class="flex-1 w-full">
+                <label class="block text-xs font-semibold text-gray-600 mb-1">
+                    📍 Longitude
+                </label>
+                <input
+                    v-model="inputLng"
+                    type="number"
+                    step="any"
+                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary text-xs px-3 py-2 border bg-white"
+                    placeholder="e.g. 81.629641"
+                    @keyup.enter="applyCustomCoordinates"
+                />
+            </div>
+
+            <div class="w-full sm:w-auto sm:self-end">
+                <button
+                    type="button"
+                    class="w-full inline-flex items-center justify-center gap-1 text-xs font-medium px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark shadow-sm"
+                    @click="applyCustomCoordinates"
+                >
+                    <span>📍</span>
+                    <span>Locate on Map</span>
+                </button>
+            </div>
+        </div>
     </div>
 </template>
