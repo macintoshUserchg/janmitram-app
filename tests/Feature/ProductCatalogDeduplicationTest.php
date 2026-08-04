@@ -93,4 +93,45 @@ class ProductCatalogDeduplicationTest extends TestCase
         $response->assertStatus(200);
         $response->assertJsonPath('data.total', 2);
     }
+
+    public function test_home_page_sections_deduplicate_products_with_same_name(): void
+    {
+        GeneraleSetting::create(['shop_type' => 'multi', 'name' => 'Janmitram']);
+
+        $user1 = User::factory()->create(['is_active' => true]);
+        $shop1 = Shop::factory()->create(['user_id' => $user1->id, 'status' => true]);
+
+        $user2 = User::factory()->create(['is_active' => true]);
+        $shop2 = Shop::factory()->create(['user_id' => $user2->id, 'status' => true]);
+
+        $brand = Brand::create(['name' => 'Test Brand', 'slug' => 'test-brand']);
+        $unit = Unit::create(['name' => 'kg', 'shop_id' => $shop1->id, 'is_active' => true]);
+
+        Product::factory()->create([
+            'name' => 'Popular Tea 250g',
+            'shop_id' => $shop1->id,
+            'unit_id' => $unit->id,
+            'is_active' => true,
+            'is_approve' => true,
+        ]);
+
+        Product::factory()->create([
+            'name' => 'Popular Tea 250g',
+            'shop_id' => $shop2->id,
+            'unit_id' => $unit->id,
+            'is_active' => true,
+            'is_approve' => true,
+        ]);
+
+        $response = $this->getJson('/api/home');
+
+        $response->assertStatus(200);
+
+        $popularProductNames = collect($response->json('data.popular_products'))->pluck('name');
+        $this->assertEquals(1, $popularProductNames->count());
+        $this->assertContains('Popular Tea 250g', $popularProductNames);
+
+        $justForYouTotal = $response->json('data.just_for_you.total');
+        $this->assertEquals(1, $justForYouTotal);
+    }
 }

@@ -42,8 +42,10 @@ class HomeController extends Controller
         $banners = BannerRepository::query()->whereNull('shop_id')->active()->get();
 
         $categories = CategoryRepository::query()->active()
-            ->whereHas('shops', function ($query) use ($rootShop) {
-                return $query->where('shop_id', $rootShop->id);
+            ->when($rootShop, function ($q) use ($rootShop) {
+                return $q->whereHas('shops', function ($query) use ($rootShop) {
+                    return $query->where('shop_id', $rootShop->id);
+                });
             })->whereHas('products', function ($product) {
                 return $product->where('is_active', true);
             })->withCount('products')->orderByDesc('products_count')->take(10)->get();
@@ -51,15 +53,34 @@ class HomeController extends Controller
         $popularProducts = ProductRepository::query()->isActive()
             ->when($shop, function ($query) use ($shop) {
                 return $query->where('shop_id', $shop->id);
+            })->when(! $shop, function ($query) {
+                return $query->whereIn('id', function ($subQuery) {
+                    $subQuery->selectRaw('MAX(id)')
+                        ->from('products')
+                        ->where('is_active', true)
+                        ->where('is_approve', true)
+                        ->whereNull('deleted_at')
+                        ->groupBy('name');
+                });
             })->withCount('orders as orders_count')
             ->withAvg('reviews as average_rating', 'rating')
             ->orderByDesc('average_rating')
             ->orderByDesc('orders_count')
             ->take(6)->get();
 
-        $justForYou = ProductRepository::query()->isActive()->latest('id')->when($shop, function ($query) use ($shop) {
-            return $query->where('shop_id', $shop->id);
-        });
+        $justForYou = ProductRepository::query()->isActive()->latest('id')
+            ->when($shop, function ($query) use ($shop) {
+                return $query->where('shop_id', $shop->id);
+            })->when(! $shop, function ($query) {
+                return $query->whereIn('id', function ($subQuery) {
+                    $subQuery->selectRaw('MAX(id)')
+                        ->from('products')
+                        ->where('is_active', true)
+                        ->where('is_approve', true)
+                        ->whereNull('deleted_at')
+                        ->groupBy('name');
+                });
+            });
         $total = $justForYou->count();
         $justForYou = $justForYou->skip($skip)->take($perPage)->get();
 
