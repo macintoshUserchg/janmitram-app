@@ -87,6 +87,15 @@ class ProductController extends Controller
                 return $query->where('shop_id', $shop->id);
             })->when($shopID && ! $shop, function ($query) use ($shopID) {
                 return $query->where('shop_id', $shopID);
+            })->when(! $shopID, function ($query) {
+                return $query->whereIn('id', function ($subQuery) {
+                    $subQuery->selectRaw('MAX(id)')
+                        ->from('products')
+                        ->where('is_active', true)
+                        ->where('is_approve', true)
+                        ->whereNull('deleted_at')
+                        ->groupBy('name');
+                });
             })
             ->when($search, function ($query) use ($search) {
                 return $query->where(function ($query) use ($search) {
