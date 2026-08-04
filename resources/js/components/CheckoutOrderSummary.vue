@@ -166,6 +166,22 @@
             </div>
         </div>
 
+        <!-- Unfulfillable lines: manual shop picker -->
+        <div v-if="Object.keys(unfulfillable).length"
+            class="p-4 mt-4 bg-white rounded-2xl border border-slate-200">
+            <div class="text-slate-950 text-lg font-medium leading-7 mb-2">
+                {{ $t("Choose delivery shop") }}
+            </div>
+            <div v-for="(cands, pid) in shopCandidates" :key="pid" class="mb-3">
+                <p class="mb-1 text-sm text-slate-600">{{ $t("Product") }} #{{ pid }}</p>
+                <label v-for="c in cands" :key="c.shop_id"
+                    class="flex items-center gap-2 border rounded-lg p-2 mb-1 cursor-pointer has-[:checked]:border-primary">
+                    <input type="radio" :name="'shop_' + pid" :value="c.shop_id" v-model="pickedShops[pid]" />
+                    <span class="text-sm text-slate-700">{{ c.name }} — {{ c.distance_km }} km · {{ $t("Delivery") }} {{ master.showCurrency(c.delivery_charge) }}</span>
+                </label>
+            </div>
+        </div>
+
         <div
             v-if="
                 authStore.user &&
@@ -263,6 +279,54 @@ const hasCoupon = ref(false);
 const coupon = ref("");
 const showVerifyOtpModal = ref(false);
 
+const unfulfillable = ref({});
+const shopCandidates = ref({});
+const pickedShops = ref({});
+
+const buildAllocations = () =>
+    Object.entries(pickedShops.value).map(([product_id, shop_id]) => ({
+        product_id: Number(product_id),
+        shop_id,
+    }));
+
+const resolveUnfulfillable = async (data) => {
+    unfulfillable.value = data.unfulfillable || {};
+    shopCandidates.value = { ...unfulfillable.value };
+    pickedShops.value = {};
+
+    const qtyByProduct = {};
+    basketStore.checkoutProducts.forEach((shop) =>
+        (shop.products || []).forEach((p) => {
+            qtyByProduct[p.id] = (qtyByProduct[p.id] || 0) + p.quantity;
+        })
+    );
+
+    const lines = Object.keys(unfulfillable.value).map((product_id) => ({
+        product_id: Number(product_id),
+        quantity: qtyByProduct[product_id] || 1,
+    }));
+
+    if (!lines.length) return;
+
+    try {
+        const res = await axios.post(
+            "/shop-candidates",
+            {
+                address_id: basketStore.address.id,
+                products: lines,
+            },
+            {
+                headers: {
+                    Authorization: authStore.token,
+                },
+            }
+        );
+        shopCandidates.value = res.data.data.shop_candidates;
+    } catch (error) {
+        // keep the unfulfillable seed so the picker still renders
+    }
+};
+
 const props = defineProps({
     note: String,
     paymentMethod: String,
@@ -311,6 +375,19 @@ const processOrderConfirm = () => {
         });
         return;
     }
+    if (!basketStore.address?.latitude || !basketStore.address?.longitude) {
+        toast.error(
+            "Please set your delivery location on the map before placing the order",
+            {
+                position:
+                    master.langDirection === "rtl"
+                        ? "bottom-right"
+                        : "bottom-left",
+            }
+        );
+        router.push({ name: "manage-address" });
+        return;
+    }
     if (props.paymentMethod == null || props.paymentMethod == "card") {
         toast.error("Please select payment method", {
             position:
@@ -330,6 +407,7 @@ const processOrderConfirm = () => {
                     payment_method: props.paymentMethod,
                     coupon_code: coupon.value,
                     note: props.note,
+                    allocations: buildAllocations(),
                 },
                 {
                     headers: {
@@ -339,6 +417,9 @@ const processOrderConfirm = () => {
                 }
             )
             .then((response) => {
+                unfulfillable.value = {};
+                shopCandidates.value = {};
+                pickedShops.value = {};
                 basketStore.checkoutProducts = [];
                 basketStore.selectedShopIds = [];
                 basketStore.coupon_code = "";
@@ -372,6 +453,15 @@ const processOrderConfirm = () => {
                 }
             })
             .catch((error) => {
+                if (
+                    error.response?.status === 422 &&
+                    error.response.data?.data?.unfulfillable
+                ) {
+                    resolveUnfulfillable(error.response.data.data);
+                    isProcessing.value = false;
+                    return;
+                }
+
                 toast.error(error.response.data.message, {
                     position:
                         master.langDirection === "rtl"

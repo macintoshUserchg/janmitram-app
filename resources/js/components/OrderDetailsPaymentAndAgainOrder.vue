@@ -95,11 +95,13 @@ import OrderConfirmModal from './OrderConfirmModal.vue';
 import LoadingSpin from './LoadingSpin.vue';
 
 import { useToast } from 'vue-toastification';
+import { useRouter } from 'vue-router';
 import { useAuth } from '../stores/AuthStore';
 import { useMaster } from '../stores/MasterStore';
 import { useBasketStore } from '../stores/BasketStore';
 
 const toast = useToast();
+const router = useRouter();
 const authStore = useAuth();
 const master = useMaster();
 const basketStore = useBasketStore();
@@ -183,6 +185,16 @@ const orderProcessing = () => {
         });
         return;
     }
+    if (!props.order?.address?.latitude || !props.order?.address?.longitude) {
+        toast.error("Please set your delivery location on the map before re-ordering", {
+            position: master.langDirection === 'rtl' ? "bottom-right" : "bottom-left",
+        });
+        showPaymentModal.value = false;
+        emit('update:orderAgain', false);
+        emit('update:makePayment', false);
+        router.push({ name: 'manage-address' });
+        return;
+    }
     isLoadingOrder.value = true;
     axios.post('/place-order/again', {
         order_id: props.order.id,
@@ -213,6 +225,15 @@ const orderProcessing = () => {
     }).catch((error) => {
         isLoadingOrder.value = false;
         showPaymentModal.value = false;
+        if (error.response?.status === 422 && error.response.data?.data?.unfulfillable) {
+            toast.error(error.response.data.message, {
+                position: master.langDirection === 'rtl' ? "bottom-right" : "bottom-left",
+            });
+            emit('update:orderAgain', false);
+            emit('update:makePayment', false);
+            router.push({ name: 'checkout' });
+            return;
+        }
         toast.error(error.response.data.message, {
             position: master.langDirection === 'rtl' ? "bottom-right" : "bottom-left",
         });
