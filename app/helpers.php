@@ -340,3 +340,19 @@ if (! function_exists('warehouse')) {
         return $shop?->warehouse;
     }
 }
+
+if (! function_exists('haversineKm')) {
+    /**
+     * Great-circle distance between two coordinates, in kilometres.
+     */
+    function haversineKm($lat1, $lng1, $lat2, $lng2): float
+    {
+        $earthRadiusKm = 6371.0;
+        $dLat = deg2rad((float) $lat2 - (float) $lat1);
+        $dLng = deg2rad((float) $lng2 - (float) $lng1);
+        $a = sin($dLat / 2) ** 2
+            + cos(deg2rad((float) $lat1)) * cos(deg2rad((float) $lat2)) * sin($dLng / 2) ** 2;
+
+        return $earthRadiusKm * 2 * atan2(sqrt($a), sqrt(1 - $a));
+    }
+}
