@@ -630,24 +630,20 @@
 
     <script>
         let map;
-        let orderMarker;
         let riderMarker;
         let routingControl;
         let trackingInterval = null;
         let riderId = @json($order->driverOrder->driver_id ?? null);
-        let channel = null;
+        let riderChannel = null;
 
         const orderStatus = @json($order->order_status);
-        const orderAddressLine = @json($order->address?->address_line ?? '');
 
-        let rawLat = parseFloat(@json($order->address?->latitude ?? 0));
-        let rawLng = parseFloat(@json($order->address?->longitude ?? 0));
-        let isDefaultCoords = false;
 
+        let rawLat = parseFloat({{ $order->address->latitude ?? 0 }});
+        let rawLng = parseFloat({{ $order->address->longitude ?? 0 }});
         if (isNaN(rawLat) || isNaN(rawLng) || (rawLat === 0 && rawLng === 0)) {
             rawLat = 27.005694931660006;
             rawLng = 75.77754972401056;
-            isDefaultCoords = true;
         }
         const orderLat = rawLat;
         const orderLng = rawLng;
@@ -659,15 +655,6 @@
         }
 
         function initMap(riderLat, riderLng) {
-            let mapContainer = document.getElementById('map');
-            if (!mapContainer) return;
-
-            if (map) {
-                try { map.remove(); } catch(e) {}
-                map = null;
-            }
-            mapContainer._leaflet_id = null;
-
             map = L.map('map').setView([orderLat, orderLng], 14);
 
             const mainTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -679,7 +666,7 @@
             let tileErrors = 0;
             mainTiles.on('tileerror', function() {
                 tileErrors++;
-                if (tileErrors >= 3) {
+                if (tileErrors === 3) {
                     map.removeLayer(mainTiles);
                     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
                         maxZoom: 19,
@@ -696,72 +683,51 @@
                 shadowUrl: null
             });
 
-            orderMarker = L.marker([orderLat, orderLng], {
+            L.marker([orderLat, orderLng], {
                     icon: orderIcon
                 })
                 .addTo(map)
-                .bindPopup('Customer Location: ' + (orderAddressLine || 'Default'))
+                .bindPopup('Customer Location')
                 .openPopup();
-
-            if (isDefaultCoords && orderAddressLine) {
-                fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(orderAddressLine))
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data && data.length > 0) {
-                            let gLat = parseFloat(data[0].lat);
-                            let gLng = parseFloat(data[0].lon);
-                            if (!isNaN(gLat) && !isNaN(gLng) && map && orderMarker) {
-                                map.setView([gLat, gLng], 15);
-                                orderMarker.setLatLng([gLat, gLng]);
-                                orderMarker.bindPopup('Customer Location: ' + orderAddressLine).openPopup();
-                            }
-                        }
-                    })
-                    .catch(err => console.warn('Geocoding error:', err));
-            }
 
             if (!canShowRiderLocation()) {
                 return;
             }
 
-            if (riderLat && riderLng) {
-                const riderIcon = L.icon({
-                    iconUrl: '{{ asset('assets/icons/pin-map.png') }}',
-                    iconSize: [35, 35],
-                    iconAnchor: [17, 35],
-                    popupAnchor: [0, -30],
-                    shadowUrl: null
-                });
+            const riderIcon = L.icon({
+                iconUrl: '{{ asset('assets/icons/pin-map.png') }}',
+                iconSize: [35, 35],
+                iconAnchor: [17, 35],
+                popupAnchor: [0, -30],
+                shadowUrl: null
+            });
 
-                riderMarker = L.marker([riderLat, riderLng], {
-                        icon: riderIcon
-                    })
-                    .addTo(map);
+            riderMarker = L.marker([riderLat, riderLng], {
+                    icon: riderIcon
+                })
+                .addTo(map);
 
-                if (typeof L.Routing !== 'undefined') {
-                    routingControl = L.Routing.control({
-                        waypoints: [
-                            L.latLng(riderLat, riderLng),
-                            L.latLng(orderLat, orderLng)
-                        ],
-                        addWaypoints: false,
-                        draggableWaypoints: false,
-                        fitSelectedRoutes: true,
-                        show: false,
-                        createMarker: function() {
-                            return null;
-                        }
-                    }).addTo(map);
+            routingControl = L.Routing.control({
+                waypoints: [
+                    L.latLng(riderLat, riderLng),
+                    L.latLng(orderLat, orderLng)
+                ],
+                addWaypoints: false,
+                draggableWaypoints: false,
+                fitSelectedRoutes: true,
+                show: false,
+                createMarker: function() {
+                    return null;
                 }
-            }
+            }).addTo(map);
         }
 
         function subscribeToRiderLocation(riderId) {
 
             if (!canShowRiderLocation() || !riderMarker) return;
-            channel = pusher.subscribe('rider-location.' + riderId);
+            riderChannel = pusher.subscribe('rider-location.' + riderId);
 
-            channel.bind('rider.location.updated', function(data) {
+            riderChannel.bind('rider.location.updated', function(data) {
 
                 if (!riderMarker || data.location.driver_id !== riderId) {
                     return;
@@ -770,73 +736,70 @@
                 const latitude = data.location.latitude;
                 const longitude = data.location.longitude;
 
-                if (typeof moveMarkerSmooth === 'function') {
-                    moveMarkerSmooth(riderMarker, latitude, longitude, 5000);
-                } else if (riderMarker) {
-                    riderMarker.setLatLng([latitude, longitude]);
-                }
+                moveMarkerSmooth(riderMarker, latitude, longitude, 5000);
 
-                if (routingControl) {
-                    routingControl.setWaypoints([
-                        L.latLng(latitude, longitude),
-                        L.latLng(orderLat, orderLng)
-                    ]);
-                }
+                // riderMarker.setLatLng([latitude, longitude]);
+                routingControl.setWaypoints([
+                    L.latLng(latitude, longitude),
+                    L.latLng(orderLat, orderLng)
+                ]);
                 map.panTo([latitude, longitude], {
                     animate: true
                 });
             });
         }
 
-        $(document).on('shown.bs.modal', '#orderLocationModal', function() {
-            initMap(orderLat, orderLng);
+        $(document).on('click', '#orderLocation', function() {
 
-            [100, 300, 500].forEach(delay => {
-                setTimeout(function() {
-                    if (map) map.invalidateSize();
-                }, delay);
-            });
+            $('#orderLocationModal').modal('show');
 
-            if (!canShowRiderLocation() || !riderId) {
-                return;
-            }
+            $('#orderLocationModal').one('shown.bs.modal', function() {
 
-            // Rider exists → fetch live location
-            $.ajax({
-                url: "{{ route('admin.rider.location', ':id') }}".replace(':id', riderId),
-                success: function(res) {
-                    if (!res?.data?.location || !riderMarker || !routingControl) return;
+                if (map) map.remove();
 
-                    let {
-                        latitude,
-                        longitude
-                    } = res.data.location;
+                initMap(orderLat, orderLng);
 
-                    riderMarker.setLatLng([latitude, longitude]);
+                setTimeout(() => map.invalidateSize(), 300);
 
-                    routingControl.setWaypoints([
-                        L.latLng(latitude, longitude),
-                        L.latLng(orderLat, orderLng)
-                    ]);
-                    // Live tracking
-                    subscribeToRiderLocation(riderId);
+
+                if (!canShowRiderLocation() || !riderId) {
+                    return;
                 }
+
+                // Rider exists → fetch live location
+                $.ajax({
+                    url: "{{ route('admin.rider.location', ':id') }}".replace(':id', riderId),
+                    success: function(res) {
+                        if (!res?.data?.location || !riderMarker || !routingControl) return;
+
+                        let {
+                            latitude,
+                            longitude
+                        } = res.data.location;
+
+                        riderMarker.setLatLng([latitude, longitude]);
+
+                        routingControl.setWaypoints([
+                            L.latLng(latitude, longitude),
+                            L.latLng(orderLat, orderLng)
+                        ]);
+                        // Live tracking
+                        subscribeToRiderLocation(riderId);
+                    }
+                });
             });
         });
 
-        $(document).on('hidden.bs.modal', '#orderLocationModal', function() {
+
+        $('#orderLocationModal').on('hidden.bs.modal', function() {
             if (trackingInterval) {
                 clearInterval(trackingInterval);
                 trackingInterval = null;
             }
 
-            let mapContainer = document.getElementById('map');
             if (map) {
-                try { map.remove(); } catch(e) {}
+                map.remove();
                 map = null;
-            }
-            if (mapContainer) {
-                mapContainer._leaflet_id = null;
             }
         });
     </script>

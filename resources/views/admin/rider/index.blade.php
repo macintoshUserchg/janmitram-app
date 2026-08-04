@@ -190,7 +190,7 @@
     let map = null;
     let riderMarker = null;
     let riderId = null;
-    let channel = null;
+    let riderChannel = null;
 
     function initMap(lat, lng) {
         lat = parseFloat(lat) || 27.005694931660006;
@@ -228,9 +228,9 @@
     function subscribeToRiderLocation(riderId) {
 
 
-        channel = pusher.subscribe('rider-location.' + riderId);
+        riderChannel = pusher.subscribe('rider-location.' + riderId);
 
-        channel.bind('rider.location.updated', function (data) {
+        riderChannel.bind('rider.location.updated', function (data) {
 
             if (!riderMarker || data.location.driver_id !== riderId) {
                 return;
@@ -273,9 +273,9 @@
 
     $('#riderLocationModal').on('hidden.bs.modal', function () {
 
-        if (channel) {
+        if (riderChannel) {
             pusher.unsubscribe('rider-location.' + riderId);
-            channel = null;
+            riderChannel = null;
         }
 
         if (map) {
