@@ -365,4 +365,27 @@ class OrderController extends Controller
 
         return $this->json('Sorry, You can not  re-payment because payment is CASH', [], 422);
     }
+
+    /**
+     * Candidate shops (ranked by distance) for each requested product line.
+     */
+    public function shopCandidates(Request $request)
+    {
+        $request->validate([
+            'address_id' => 'required|exists:addresses,id',
+            'products' => 'required|array',
+            'products.*.product_id' => 'required|integer|exists:products,id',
+            'products.*.quantity' => 'required|integer|min:1',
+        ]);
+
+        $address = Address::find($request->address_id);
+        $candidates = [];
+
+        foreach ($request->products as $line) {
+            $product = Product::find($line['product_id']);
+            $candidates[$product->id] = OrderRepository::candidateShopsForLine($product, (int) $line['quantity'], $address)->all();
+        }
+
+        return $this->json('shop candidates', ['shop_candidates' => $candidates]);
+    }
 }

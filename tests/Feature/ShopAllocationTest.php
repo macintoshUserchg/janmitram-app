@@ -229,6 +229,24 @@ class ShopAllocationTest extends TestCase
         $this->assertSame($farShop->id, $unfulfillable[(string) $master->id][0]['shop_id']);
     }
 
+    public function test_shop_candidates_endpoint_returns_ranked_shops(): void
+    {
+        [$master, $copy, $nearShop, $farShop] = $this->masterWithTwoCopies();
+        $customerUser = User::factory()->create();
+        $customer = Customer::factory()->create(['user_id' => $customerUser->id]);
+        $address = Address::factory()->create(['customer_id' => $customer->id, 'latitude' => 26.9, 'longitude' => 75.8]);
+
+        $response = $this->actingAs($customerUser, 'sanctum')->postJson('/api/shop-candidates', [
+            'address_id' => $address->id,
+            'products' => [['product_id' => $master->id, 'quantity' => 2]],
+        ]);
+
+        $response->assertOk();
+        $candidates = $response->json('data.shop_candidates.'.$master->id);
+        $this->assertCount(2, $candidates);
+        $this->assertSame($nearShop->id, $candidates[0]['shop_id']);
+    }
+
     private function placeOrder(User $customerUser, Address $address, int $shopId): Payment
     {
         $request = Request::create('/api/place-order', 'POST', [
