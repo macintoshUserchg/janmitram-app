@@ -4,11 +4,13 @@ namespace App\Http\Controllers\API;
 
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
+use App\Exceptions\UnfulfillableOrderException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AddressRequest;
 use App\Http\Requests\OrderRequest;
 use App\Http\Resources\OrderDetailsResource;
 use App\Http\Resources\OrderResource;
+use App\Models\Address;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Payment;
@@ -121,6 +123,11 @@ class OrderController extends Controller
             return $this->json('You are not allowed to access this address', [], 422);
         }
 
+        $address = Address::find($request->address_id);
+        if (! $address || ! $address->latitude || ! $address->longitude) {
+            return $this->json('Please set your delivery location on the map before placing the order', [], 422);
+        }
+
         $verifyManage = Cache::rememberForever('verify_manage', function () {
             return VerifyManage::first();
         });
@@ -146,7 +153,15 @@ class OrderController extends Controller
         $paymentMethod = $paymentMethods[array_search($toUpper, array_column(PaymentMethod::cases(), 'name'))];
 
         // Store the order
-        $payment = OrderRepository::storeByRequestFromCart($request, $paymentMethod, $carts);
+        try {
+            $payment = OrderRepository::storeByRequestFromCart($request, $paymentMethod, $carts);
+        } catch (UnfulfillableOrderException $e) {
+            return $this->json($e->getMessage(), [
+                'unfulfillable' => $e->unfulfillable,
+            ], 422);
+        } catch (\RuntimeException $e) {
+            return $this->json($e->getMessage(), [], 422);
+        }
 
         $paymentUrl = null;
         if ($paymentMethod->name != 'CASH') {

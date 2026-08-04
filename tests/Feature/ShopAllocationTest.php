@@ -189,6 +189,46 @@ class ShopAllocationTest extends TestCase
         $this->assertSame(0, (int) $product->fresh()->quantity);
     }
 
+    public function test_place_order_requires_address_coordinates(): void
+    {
+        [$master, $copy, $nearShop, $farShop] = $this->masterWithTwoCopies();
+        $customerUser = User::factory()->create();
+        $customer = Customer::factory()->create(['user_id' => $customerUser->id]);
+        $address = Address::factory()->create(['customer_id' => $customer->id, 'latitude' => null, 'longitude' => null]);
+        Cart::create(['customer_id' => $customer->id, 'shop_id' => $nearShop->id, 'product_id' => $master->id, 'quantity' => 2]);
+
+        $response = $this->actingAs($customerUser, 'sanctum')->postJson('/api/place-order', [
+            'shop_ids' => [$nearShop->id],
+            'address_id' => $address->id,
+            'payment_method' => 'Cash Payment',
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonPath('message', 'Please set your delivery location on the map before placing the order');
+    }
+
+    public function test_place_order_returns_candidates_for_unfulfillable_line(): void
+    {
+        [$master, $copy, $nearShop, $farShop] = $this->masterWithTwoCopies();
+        $this->enableMultiVendor(); // must be multi-vendor for per-line shop allocation
+        $master->update(['quantity' => 0]); // near shop out of stock; far shop has stock but out of radius
+        $customerUser = User::factory()->create();
+        $customer = Customer::factory()->create(['user_id' => $customerUser->id]);
+        $address = Address::factory()->create(['customer_id' => $customer->id, 'latitude' => 26.9, 'longitude' => 75.8]);
+        Cart::create(['customer_id' => $customer->id, 'shop_id' => $nearShop->id, 'product_id' => $master->id, 'quantity' => 2]);
+
+        $response = $this->actingAs($customerUser, 'sanctum')->postJson('/api/place-order', [
+            'shop_ids' => [$nearShop->id],
+            'address_id' => $address->id,
+            'payment_method' => 'Cash Payment',
+        ]);
+
+        $response->assertStatus(422);
+        $unfulfillable = $response->json('data.unfulfillable');
+        $this->assertArrayHasKey((string) $master->id, $unfulfillable);
+        $this->assertSame($farShop->id, $unfulfillable[(string) $master->id][0]['shop_id']);
+    }
+
     private function placeOrder(User $customerUser, Address $address, int $shopId): Payment
     {
         $request = Request::create('/api/place-order', 'POST', [
