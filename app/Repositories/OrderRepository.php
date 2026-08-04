@@ -16,10 +16,12 @@ use App\Models\GeneraleSetting;
 use App\Models\Order;
 use App\Models\OrderVatTax;
 use App\Models\Payment;
+use App\Models\Product;
 use App\Models\Shop;
 use App\Services\NotificationServices;
 use App\Services\WarehouseService;
 use App\Support\Repositories\Repository;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 
 class OrderRepository extends Repository
@@ -219,6 +221,68 @@ class OrderRepository extends Repository
         CartAccessToken::where('access_token', $tokens['access_token'])->delete();
 
         return $payment;
+    }
+
+    /**
+     * Eligible shops for a product line, ranked by haversine distance from the
+     * delivery address. Only shop copies of the same master product with enough
+     * stock are considered.
+     *
+     * @return Collection<int, object> candidate objects (see candidateForCopy)
+     */
+    public static function candidateShopsForLine(Product $product, int $qty, Address $address): Collection
+    {
+        $masterId = $product->master_product_id ?? $product->id;
+        $radius = (float) (GeneraleSetting::first()?->shop_allocation_radius_km ?? 50.0);
+
+        return Product::query()
+            ->where(fn ($q) => $q->where('id', $masterId)->orWhere('master_product_id', $masterId))
+            ->isActive()
+            ->where('quantity', '>=', $qty)
+            ->with('shop')
+            ->get()
+            ->map(fn (Product $copy) => self::candidateForCopy($copy, $address, $radius))
+            ->filter()
+            ->sortBy('distance_km')
+            ->values();
+    }
+
+    private static function candidateForCopy(Product $copy, Address $address, float $radius): ?object
+    {
+        $shop = $copy->shop;
+
+        if (! $shop || ! $shop->latitude || ! $shop->longitude) {
+            return null;
+        }
+
+        $distance = haversineKm($address->latitude, $address->longitude, $shop->latitude, $shop->longitude);
+
+        return (object) [
+            'product_id' => (int) $copy->id,
+            'shop_id' => (int) $shop->id,
+            'name' => $shop->name,
+            'logo' => $shop->logo,
+            'distance_km' => round($distance, 2),
+            'available_quantity' => (int) $copy->quantity,
+            'price' => (float) ($copy->discount_price > 0 ? $copy->discount_price : $copy->price),
+            'delivery_charge' => (float) ($shop->delivery_charge ?? 0),
+            'radius_eligible' => $distance <= $radius,
+        ];
+    }
+
+    private static function allocateNearestShop(Product $product, int $qty, Address $address, ?int $overrideShopId = null): ?Product
+    {
+        $candidates = self::candidateShopsForLine($product, $qty, $address);
+
+        if ($overrideShopId) {
+            $pick = $candidates->first(fn ($c) => (int) $c->shop_id === (int) $overrideShopId);
+
+            return $pick ? Product::find($pick->product_id) : null;
+        }
+
+        $nearest = $candidates->firstWhere('radius_eligible', true);
+
+        return $nearest ? Product::find($nearest->product_id) : null;
     }
 
     private static function createNewOrder($request, $shop, $paymentMethod, $getCartAmounts)
@@ -456,7 +520,7 @@ class OrderRepository extends Repository
      * Get applied coupon orders
      *
      * @param  mixed  $coupon
-     * @return collection
+     * @return Collection
      */
     public static function getAppliedCouponOrders($coupon)
     {
