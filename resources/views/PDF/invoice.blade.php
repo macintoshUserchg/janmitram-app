@@ -299,8 +299,10 @@
                     <img src="{{ $generaleSetting?->favicon ?? asset('assets/favicon.png') }}" alt="logo" />
                 </div>
                 <div class="pl-3 pt-4 text-left float-left">
-                    @if ($generaleSetting?->name && $generaleSetting->name != 'Laravel')
+                    @if ($generaleSetting?->name)
                         <h2 class="site-name">{{ __($generaleSetting->name) }}</h2>
+                    @else
+                        <h2 class="site-name">Janmitram</h2>
                     @endif
                     @if ($generaleSetting?->email)
                         <p class="pt-1-5">{{ $generaleSetting->email }}</p>

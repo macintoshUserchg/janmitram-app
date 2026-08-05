@@ -58,7 +58,7 @@
                     <p class="pagePera my-3">
                         Welcome to
                         <span
-                            class="fw-bold text-primary">{{ $generaleSetting?->name ?? config('app.name', 'Laravel') }}</span>
+                            class="fw-bold text-primary">{{ $generaleSetting?->name ?? config('app.name', 'Janmitram') }}</span>
                     </p>
 
                     <h2 class="pageTitle">Login To Shop</h2>

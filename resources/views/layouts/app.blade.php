@@ -12,7 +12,7 @@
     <link rel="shortcut icon" type="image/png" href="{{ $generaleSetting?->favicon ?? asset('assets/favicon.png') }}" />
 
     <!-- App title -->
-    <title>{{ $generaleSetting?->title ?? config('app.name', 'Laravel') }}</title>
+    <title>{{ $generaleSetting?->title ?? config('app.name', 'Janmitram') }}</title>
 
     <!-- Meta -->
     <meta name="description" content="">

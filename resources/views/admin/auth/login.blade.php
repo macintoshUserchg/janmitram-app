@@ -17,7 +17,7 @@
     <link rel="shortcut icon" type="image/png" href="{{ $generaleSetting?->favicon ?? asset('assets/favicon.png') }}" />
 
     <!-- App title -->
-    <title>{{ $generaleSetting?->title ?? config('app.name', 'Laravel') }} Admin Login</title>
+    <title>{{ $generaleSetting?->title ?? config('app.name', 'Janmitram') }} Admin Login</title>
     <meta name="viewport"
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no" />
     <meta name="description" content="">
@@ -93,7 +93,7 @@
                     <p class="pagePera my-3">
                         Welcome to
                         <span class="fw-bold text-primary text-capitalize">
-                            {{ $generaleSetting?->name ?? config('app.name', 'Laravel') }}
+                            {{ $generaleSetting?->name ?? config('app.name', 'Janmitram') }}
                         </span>
                     </p>
 

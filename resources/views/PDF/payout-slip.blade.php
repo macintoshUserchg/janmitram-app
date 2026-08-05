@@ -1,9 +1,6 @@
 @php
     $generaleSetting = function_exists('generaleSetting') ? generaleSetting('setting') : null;
-    $siteName = 'Janmitram';
-    if ($generaleSetting && !empty($generaleSetting->name) && $generaleSetting->name !== 'Laravel') {
-        $siteName = $generaleSetting->name;
-    }
+    $siteName = ($generaleSetting && !empty($generaleSetting->name)) ? $generaleSetting->name : 'Janmitram';
 @endphp
 <!DOCTYPE html>
 <html lang="en">
