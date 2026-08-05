@@ -3,10 +3,15 @@
 @section('title', __('Admin Settings'))
 
 @section('content')
-    <div class="page-title">
+    <div class="page-title d-flex justify-content-between align-items-center flex-wrap gap-2">
         <div class="d-flex gap-2 align-items-center">
             <i class="bi bi-gear-fill"></i> {{ __('Admin Settings') }}
         </div>
+        @hasPermission('admin.project-guide.index')
+            <a href="{{ route('admin.project-guide.index') }}" class="btn btn-primary d-flex align-items-center gap-2">
+                <i class="bi bi-book-half"></i> {{ __('Project Guide') }}
+            </a>
+        @endhasPermission
     </div>
     <form action="{{ route('admin.generale-setting.update') }}" method="POST" enctype="multipart/form-data">
         @csrf
