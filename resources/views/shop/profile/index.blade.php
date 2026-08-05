@@ -87,6 +87,36 @@
                             <td>{{ $shop->name }}</td>
                         </tr>
                         <tr>
+                            <td style="width: 180px">{{ __('Referral Code') }}:</td>
+                            <td>
+                                <span class="badge bg-primary text-white font-monospace fs-6 me-2">{{ $shop->referral_code }}</span>
+                                <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="navigator.clipboard.writeText('{{ $shop->referral_code }}'); alert('{{ __('Referral code copied!') }}');">
+                                    <i class="fa-regular fa-copy me-1"></i>{{ __('Copy Code') }}
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="width: 180px">{{ __('Referral Link') }}:</td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    <a href="{{ $shop->referral_url }}" target="_blank" class="text-truncate" style="max-width: 320px;">
+                                        {{ $shop->referral_url }}
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="navigator.clipboard.writeText('{{ $shop->referral_url }}'); alert('{{ __('Referral link copied!') }}');">
+                                        <i class="fa-regular fa-copy me-1"></i>{{ __('Copy Link') }}
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        @if ($shop->parent)
+                            <tr>
+                                <td style="width: 180px">{{ __('Sponsor / Parent Shop') }}:</td>
+                                <td>
+                                    <span class="fw-bold">{{ $shop->parent->name }} ({{ $shop->parent->referral_code }})</span>
+                                </td>
+                            </tr>
+                        @endif
+                        <tr>
                             <td style="width: 180px">{{ __('Estimated Delivery') }}:</td>
                             <td>{{ $shop->estimated_delivery_time }}</td>
                         </tr>
