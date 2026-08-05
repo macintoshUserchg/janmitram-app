@@ -5,9 +5,14 @@
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-    <div>
-        <h4 class="fw-bold mb-1 text-dark">{{ __('Janmitram Master Project Guide') }}</h4>
-        <p class="text-muted small mb-0">{{ __('Complete technical documentation, module specifications, and system administration protocols.') }}</p>
+    <div class="d-flex align-items-center gap-3">
+        <a href="{{ route('admin.generale-setting.index') }}" class="btn btn-outline-secondary shadow-sm d-flex align-items-center gap-1">
+            <i class="fas fa-arrow-left"></i> {{ __('Back') }}
+        </a>
+        <div>
+            <h4 class="fw-bold mb-1 text-dark">{{ __('Janmitram Master Project Guide') }}</h4>
+            <p class="text-muted small mb-0">{{ __('Complete technical documentation, module specifications, and system administration protocols.') }}</p>
+        </div>
     </div>
     <div class="d-flex gap-2">
         @hasPermission('admin.payout.network')
@@ -176,30 +181,36 @@
     </div>
 </div>
 
-<!-- Deployment & Server Synchronization Guide -->
+<!-- Deployment & Server Synchronization Guide (Collapsible) -->
 <div class="card border-0 shadow-sm rounded-12 mb-4">
-    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-        <h5 class="card-title mb-0 fw-bold"><i class="fas fa-server me-2 text-warning"></i>{{ __('Production Server Synchronization Protocol') }}</h5>
-        <span class="badge bg-light text-dark border">Hostinger Live Environment</span>
+    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center" data-bs-toggle="collapse" data-bs-target="#prodSyncProtocol" aria-expanded="false" aria-controls="prodSyncProtocol" style="cursor: pointer;">
+        <h5 class="card-title mb-0 fw-bold d-flex align-items-center gap-2">
+            <i class="fas fa-server text-warning"></i>
+            <span>{{ __('Production Server Synchronization Protocol') }}</span>
+            <i class="fas fa-chevron-down text-muted fs-6 ms-2"></i>
+        </h5>
+        <span class="badge bg-light text-dark border">{{ __('Hostinger Live Environment') }}</span>
     </div>
-    <div class="card-body p-4">
-        <div class="row g-4">
-            <div class="col-lg-6">
-                <h6 class="fw-bold text-dark mb-2">{{ __('SSH Connection Details') }}</h6>
-                <div class="bg-dark text-light p-3 rounded-12 font-monospace small mb-3">
-                    ssh -p 65002 u939461333@195.35.44.154<br>
-                    # App Directory: /home/u939461333/domains/janmitram.com/public_html/app<br>
-                    # PHP 8.2 Binary: /opt/alt/php82/usr/bin/php
+    <div class="collapse" id="prodSyncProtocol">
+        <div class="card-body p-4">
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <h6 class="fw-bold text-dark mb-2">{{ __('SSH Connection Details') }}</h6>
+                    <div class="bg-dark text-light p-3 rounded-12 font-monospace small mb-3">
+                        ssh -p 65002 u939461333@195.35.44.154<br>
+                        # App Directory: /home/u939461333/domains/janmitram.com/public_html/app<br>
+                        # PHP 8.2 Binary: /opt/alt/php82/usr/bin/php
+                    </div>
                 </div>
-            </div>
-            <div class="col-lg-6">
-                <h6 class="fw-bold text-dark mb-2">{{ __('Standard Deployment Commands') }}</h6>
-                <div class="bg-dark text-light p-3 rounded-12 font-monospace small mb-3">
-                    cd /home/u939461333/domains/janmitram.com/public_html/app<br>
-                    git pull origin main<br>
-                    /opt/alt/php82/usr/bin/php artisan migrate --force<br>
-                    /opt/alt/php82/usr/bin/php artisan db:seed --class=PermissionSeeder --force<br>
-                    /opt/alt/php82/usr/bin/php artisan cache:clear && /opt/alt/php82/usr/bin/php artisan config:clear
+                <div class="col-lg-6">
+                    <h6 class="fw-bold text-dark mb-2">{{ __('Standard Deployment Commands') }}</h6>
+                    <div class="bg-dark text-light p-3 rounded-12 font-monospace small mb-3">
+                        cd /home/u939461333/domains/janmitram.com/public_html/app<br>
+                        git pull origin main<br>
+                        /opt/alt/php82/usr/bin/php artisan migrate --force<br>
+                        /opt/alt/php82/usr/bin/php artisan db:seed --class=PermissionSeeder --force<br>
+                        /opt/alt/php82/usr/bin/php artisan cache:clear && /opt/alt/php82/usr/bin/php artisan config:clear
+                    </div>
                 </div>
             </div>
         </div>
