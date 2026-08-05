@@ -11,7 +11,7 @@
         </a>
         <div>
             <h4 class="fw-bold mb-1 text-dark">{{ __('Janmitram Master Project Guide') }}</h4>
-            <p class="text-muted small mb-0">{{ __('Complete technical documentation, module specifications, and system administration protocols.') }}</p>
+            <p class="text-muted small mb-0">{{ __('Complete technical documentation, architectural specifications, and administration protocols.') }}</p>
         </div>
     </div>
     <div class="d-flex gap-2">
@@ -33,10 +33,10 @@
     <div class="card-body p-4">
         <div class="row align-items-center">
             <div class="col-lg-8">
-                <span class="badge bg-primary text-white px-3 py-2 rounded-pill fw-bold mb-2">{{ __('System Architecture v2.0') }}</span>
-                <h3 class="fw-bold mb-2 text-white">{{ __('Janmitram E-Commerce & MLM Platform') }}</h3>
+                <span class="badge bg-primary text-white px-3 py-2 rounded-pill fw-bold mb-2">{{ __('System Architecture v2.5') }}</span>
+                <h3 class="fw-bold mb-2 text-white">{{ __('Janmitram E-Commerce, MLM & Logistics Platform') }}</h3>
                 <p class="mb-0 text-white-50 leading-relaxed">
-                    {{ __('Janmitram is a high-performance multi-vendor e-commerce ecosystem integrated with a multi-tier MLM shop compensation engine, central warehouse logistics, real-time stock transfers, and automated wallet payout ledgers.') }}
+                    {{ __('Janmitram is a multi-vendor e-commerce platform integrated with automated nearest-shop fulfillment routing (Haversine formula), a multi-tier MLM compensation engine, central warehouse logistics hubs, and real-time stock transfers.') }}
                 </p>
             </div>
             <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
@@ -82,7 +82,7 @@
                 </div>
                 <div>
                     <div class="text-muted small fw-semibold">{{ __('Frontend Bundle') }}</div>
-                    <h5 class="fw-bold mb-0 text-dark">Vue 3 + Vite</h5>
+                    <h5 class="fw-bold mb-0 text-dark">Vue 3 + Vite SPA</h5>
                 </div>
             </div>
         </div>
@@ -102,9 +102,43 @@
     </div>
 </div>
 
-<!-- Core System Modules Overview -->
+<!-- Core Architectural Modules -->
 <div class="row g-4 mb-4">
-    <!-- Module 1: Payout Management -->
+    <!-- Module 1: Nearest Shop Order Fulfillment Routing -->
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm rounded-12 h-100">
+            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="p-2 bg-primary-subtle text-primary rounded-3">
+                        <i class="fas fa-route fs-5"></i>
+                    </div>
+                    <h5 class="card-title mb-0 fw-bold">{{ __('Nearest Shop Fulfillment Routing Engine') }}</h5>
+                </div>
+                <span class="badge bg-primary text-white">{{ __('Smart Fulfillment') }}</span>
+            </div>
+            <div class="card-body p-4">
+                <p class="text-muted small mb-3">
+                    {{ __('Automatically routes customer orders to the geographically closest active shop with sufficient stock using spherical distance calculations.') }}
+                </p>
+                <ul class="list-group list-group-flush small">
+                    <li class="list-group-item px-0 py-2 border-0 d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-check-circle text-primary me-2"></i><strong>{{ __('Haversine Distance Formula') }}:</strong> {{ __('Calculates exact kilometer distance between customer delivery (lat, lng) and active shop coordinates.') }}</span>
+                    </li>
+                    <li class="list-group-item px-0 py-2 border-0 d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-check-circle text-primary me-2"></i><strong>{{ __('Configurable Max Radius') }}:</strong> {{ __('Configurable via shop_allocation_max_radius setting (default: 25 km).') }}</span>
+                    </li>
+                    <li class="list-group-item px-0 py-2 border-0 d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-check-circle text-primary me-2"></i><strong>{{ __('Order Splitting') }}:</strong> {{ __('Splits multi-item cart items across optimal fulfilling shops when items are closest to different locations.') }}</span>
+                    </li>
+                    <li class="list-group-item px-0 py-2 border-0 d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-check-circle text-primary me-2"></i><strong>{{ __('Manual Shop Picker Override') }}:</strong> {{ __('Allows customers to manually select a fulfilling shop if preferred.') }}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Module 2: MLM Payout & Commission Engine -->
     <div class="col-md-6">
         <div class="card border-0 shadow-sm rounded-12 h-100">
             <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
@@ -112,7 +146,7 @@
                     <div class="p-2 bg-success-subtle text-success rounded-3">
                         <i class="fas fa-wallet fs-5"></i>
                     </div>
-                    <h5 class="card-title mb-0 fw-bold">{{ __('MLM Payout Management Engine') }}</h5>
+                    <h5 class="card-title mb-0 fw-bold">{{ __('MLM Payout & Compensation Engine') }}</h5>
                 </div>
                 @hasPermission('admin.payout.guide')
                     <a href="{{ route('admin.payout.guide') }}" class="btn btn-sm btn-outline-success">
@@ -129,51 +163,85 @@
                         <span><i class="fas fa-check-circle text-success me-2"></i><strong>{{ __('Phase 1 (Personal Sales)') }}:</strong> {{ __('10% commission on Delivered personal shop sales.') }}</span>
                     </li>
                     <li class="list-group-item px-0 py-2 border-0 d-flex justify-content-between align-items-center">
-                        <span><i class="fas fa-check-circle text-success me-2"></i><strong>{{ __('Phase 2 (Group Tiers)') }}:</strong> {{ __('5 Achievement Tiers (Level 0 through Level 4).') }}</span>
+                        <span><i class="fas fa-check-circle text-success me-2"></i><strong>{{ __('Phase 2 (Group Tiers)') }}:</strong> {{ __('5 Achievement Tiers (Level 0 through Level 4 based on group sales).') }}</span>
                     </li>
                     <li class="list-group-item px-0 py-2 border-0 d-flex justify-content-between align-items-center">
-                        <span><i class="fas fa-check-circle text-success me-2"></i><strong>{{ __('Hierarchical Tree') }}:</strong> {{ __('Interactive visual tree with connecting guide lines and node search.') }}</span>
+                        <span><i class="fas fa-check-circle text-success me-2"></i><strong>{{ __('Hierarchical Tree') }}:</strong> {{ __('Interactive visual downline tree with node search and sponsor referral links.') }}</span>
                     </li>
                     <li class="list-group-item px-0 py-2 border-0 d-flex justify-content-between align-items-center">
-                        <span><i class="fas fa-check-circle text-success me-2"></i><strong>{{ __('Atomic Wallet Credits') }}:</strong> {{ __('Credited directly with is_commission = false flag.') }}</span>
+                        <span><i class="fas fa-check-circle text-success me-2"></i><strong>{{ __('Atomic Wallet Credits') }}:</strong> {{ __('Payouts credited directly to shop wallet ledger with is_commission = false flag.') }}</span>
                     </li>
                 </ul>
             </div>
         </div>
     </div>
 
-    <!-- Module 2: Warehouse Logistics -->
+    <!-- Module 3: Central Warehouse Logistics -->
     <div class="col-md-6">
         <div class="card border-0 shadow-sm rounded-12 h-100">
             <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
                 <div class="d-flex align-items-center gap-2">
-                    <div class="p-2 bg-primary-subtle text-primary rounded-3">
+                    <div class="p-2 bg-info-subtle text-info rounded-3">
                         <i class="fas fa-warehouse fs-5"></i>
                     </div>
-                    <h5 class="card-title mb-0 fw-bold">{{ __('Central Warehouse & Stock Dispatch Control') }}</h5>
+                    <h5 class="card-title mb-0 fw-bold">{{ __('Central Warehouse & Stock Dispatch') }}</h5>
                 </div>
                 @hasPermission('admin.warehouse.index')
-                    <a href="{{ route('admin.warehouse.index') }}" class="btn btn-sm btn-outline-primary">
+                    <a href="{{ route('admin.warehouse.index') }}" class="btn btn-sm btn-outline-info">
                         {{ __('Manage Warehouses') }}
                     </a>
                 @endhasPermission
             </div>
             <div class="card-body p-4">
                 <p class="text-muted small mb-3">
-                    {{ __('Controls central inventory logistics hubs, stock requests from shops, and multi-warehouse transfers with full audit tracking.') }}
+                    {{ __('Controls central inventory hubs, shop stock requests, inter-warehouse transfers, and audit ledgers.') }}
                 </p>
                 <ul class="list-group list-group-flush small">
                     <li class="list-group-item px-0 py-2 border-0 d-flex justify-content-between align-items-center">
-                        <span><i class="fas fa-check-circle text-primary me-2"></i><strong>{{ __('Central Hubs') }}:</strong> {{ __('Centralized stock repositories with product quantity tracking.') }}</span>
+                        <span><i class="fas fa-check-circle text-info me-2"></i><strong>{{ __('Central Hubs') }}:</strong> {{ __('Centralized stock repositories managing master product inventory.') }}</span>
                     </li>
                     <li class="list-group-item px-0 py-2 border-0 d-flex justify-content-between align-items-center">
-                        <span><i class="fas fa-check-circle text-primary me-2"></i><strong>{{ __('Stock Requests') }}:</strong> {{ __('Review, approve, or reject shop stock requests.') }}</span>
+                        <span><i class="fas fa-check-circle text-info me-2"></i><strong>{{ __('Stock Requests') }}:</strong> {{ __('Shops request inventory dispatches from central warehouses.') }}</span>
                     </li>
                     <li class="list-group-item px-0 py-2 border-0 d-flex justify-content-between align-items-center">
-                        <span><i class="fas fa-check-circle text-primary me-2"></i><strong>{{ __('Warehouse Transfers') }}:</strong> {{ __('Inter-warehouse stock dispatching and completion logs.') }}</span>
+                        <span><i class="fas fa-check-circle text-info me-2"></i><strong>{{ __('Inter-Warehouse Transfers') }}:</strong> {{ __('Dispatch and transfer stock between central hubs.') }}</span>
                     </li>
                     <li class="list-group-item px-0 py-2 border-0 d-flex justify-content-between align-items-center">
-                        <span><i class="fas fa-check-circle text-primary me-2"></i><strong>{{ __('Audit Trail') }}:</strong> {{ __('Tracks inventory dispatches across central logistics nodes.') }}</span>
+                        <span><i class="fas fa-check-circle text-info me-2"></i><strong>{{ __('Stock Audit Ledger') }}:</strong> {{ __('Complete ledger tracking for every stock movement.') }}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Module 4: Interactive Geolocation & Map Controls -->
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm rounded-12 h-100">
+            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="p-2 bg-warning-subtle text-warning rounded-3">
+                        <i class="fas fa-map-marked-alt fs-5"></i>
+                    </div>
+                    <h5 class="card-title mb-0 fw-bold">{{ __('Interactive Map & Geolocation Controls') }}</h5>
+                </div>
+                <span class="badge bg-warning text-dark">{{ __('Leaflet + GPS') }}</span>
+            </div>
+            <div class="card-body p-4">
+                <p class="text-muted small mb-3">
+                    {{ __('Provides precise coordinate detection and manual Latitude/Longitude editing across all address forms.') }}
+                </p>
+                <ul class="list-group list-group-flush small">
+                    <li class="list-group-item px-0 py-2 border-0 d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-check-circle text-warning me-2"></i><strong>{{ __('Leaflet OpenStreetMap') }}:</strong> {{ __('Interactive map with marker drag, click pin placement, and Nominatim search.') }}</span>
+                    </li>
+                    <li class="list-group-item px-0 py-2 border-0 d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-check-circle text-warning me-2"></i><strong>{{ __('GPS Auto-Location') }}:</strong> {{ __('1-click browser geolocation ("Use My Location") filling Lat/Lng fields.') }}</span>
+                    </li>
+                    <li class="list-group-item px-0 py-2 border-0 d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-check-circle text-warning me-2"></i><strong>{{ __('Bi-Directional Input Sync') }}:</strong> {{ __('Pasting or typing coordinates moves the map marker; dragging the marker updates Lat/Lng inputs.') }}</span>
+                    </li>
+                    <li class="list-group-item px-0 py-2 border-0 d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-check-circle text-warning me-2"></i><strong>{{ __('Address Management') }}:</strong> {{ __('Fully integrated across Vue SPA checkout, address edit, and modal forms.') }}</span>
                     </li>
                 </ul>
             </div>
