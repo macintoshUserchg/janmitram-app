@@ -1,0 +1,122 @@
+# Significance Issues
+
+Notable issues surfaced from a codegraph (codebase-memory MCP) analysis of the
+Janmitram Laravel 11 multi-vendor ecommerce platform, plus a deep trace of the
+**consumer order placement workflow**. Dates range from a structural review on
+2026-08-05. Sections are ordered roughly by severity/criticality.
+
+---
+
+## Critical / data-integrity
+
+### 1. Order placement is not wrapped in a DB transaction
+`OrderRepository::storeByRequestFromCart()` performs many independent writes:
+the `Payment` row, one `Order` per shop, `order_product` attaches, per-line
+`Product::decrement()`, `WarehouseService::deductStock()`, `OrderVatTax` rows,
+and digital-license assignments — but **none of it runs inside
+`DB::transaction()`**. A failure part-way leaves orphaned payments and partially
+created orders with already-decremented stock.
+
+**Files:** `app/Repositories/OrderRepository.php` (`storeByRequestFromCart`)
+
+### 2. Warehouse stock deduction failures are silently swallowed
+For physical products the code calls `WarehouseService::deductStock(...)` inside
+a `try { ... } catch (\Throwable $th) {}` that **ignores all errors**. An order
+can be confirmed and `products.quantity` decremented while the immutable
+`warehouse_stock` ledger fails to record the sale, leaving warehouse inventory
+out of sync with the real catalog quantity.
+
+**Files:** `app/Repositories/OrderRepository.php` (line ~169-181)
+
+### 3. Stock is decremented at placement, before payment completes
+Orders are created with `order_status = PENDING` and `payment_status = PENDING`
+**before** the payment gateway callback runs, yet `products.quantity` and
+warehouse stock are already deducted at placement time. Abandoned or failed
+payments leave stock consumed with no automatic restore. This is a
+reserve-on-placement rather than debit-on-paid model, with no compensating
+rollback for unpaid orders.
+
+**Files:** `app/Repositories/OrderRepository.php` (`createNewOrder`)
+
+---
+
+## High / correctness
+
+### 4. Client-trusted shop allocation override
+In multi-vendor checkout, `collect($request->allocations ?? [])->keyBy('product_id')`
+is used verbatim to force a specific shop per line. There is no server-side
+validation that the requested shop is eligible, within radius, or holds the
+required stock. A malicious/buggy client can pin lines to any shop.
+
+**Files:** `app/Repositories/OrderRepository.php` (`allocateNearestShop`,
+`storeByRequestFromCart`)
+
+### 5. Duplicated order-placement logic in `reOrder()`
+`OrderRepository::reOrder()` re-implements the same allocation, pricing, stock
+decrement, and digital-license flow as `storeByRequestFromCart()` with slight
+divergences (e.g. no size/color handling, null coupon). The two paths can drift,
+and fixes in one may not reach the other.
+
+**Files:** `app/Repositories/OrderRepository.php` (`reOrder`)
+
+### 6. Config-defined RBAC (acl.php / CheckPermission) is not wired in
+The `CheckPermission` middleware is registered and aliased as `checkPermission`
+in `app/Http/Kernel.php`, and `config/acl.php` defines a full permission tree
+(admin / shop / shopMultiShop), **but no route uses the middleware or the tree**.
+The admin panel effectively runs as role-root-only, so the documented permission
+system is dead configuration.
+
+**Files:** `app/Http/Kernel.php`, `config/acl.php`, all route files
+
+---
+
+## Medium / maintainability & architecture
+
+### 7. Three gateway callback named routes referenced but not registered
+`app/Http/Controllers/Gateway/PayPal/ProcessController.php` calls
+`route('paypal.payment.success', ...)` (and similarly Bkash / PayTabs reference
+`bkash.payment.execute` / `paytabs.payment.callback`), but `grep` confirms none
+of these routes are registered in `routes/web.php` or `routes/api.php`. At
+runtime this throws `RouteNotFoundException` during payment redirect.
+
+**Files:** `app/Http/Controllers/Gateway/{PayPal,Bkash,PayTabs}/ProcessController.php`,
+`routes/*.php`
+
+### 8. Inverted dependency: Repositories → Http
+The codegraph boundary analysis shows `Repositories → Http = 143 calls`, i.e.
+repository code (the intended stable core) imports back into controllers /
+request classes. `Http → Repositories` is 181 calls, but the reverse edge makes
+the repository layer unstable and hard to test in isolation.
+
+### 9. Fat shared `Repository` god-base class
+`app/Support/Repositories/Repository.php` is the single most-coupled symbol in
+the codebase: `Repository::first` has **287 callers**, `Repository::query` 122.
+All 55+ repositories inherit this base, concentrating generic behavior in one
+class and driving the weak de-facto module cohesion (clusters 0.35–0.70).
+
+### 10. Thick `Http` controller mediation layer
+`Http` has fan-in 337 / fan-out 825 — the fat-middle layer responsible for
+routing, validation orchestration, pricing, stock, and mailing despite the
+repository abstraction. Controllers duplicate pricing/allocation logic rather
+than delegating it.
+
+### 11. `purchase`/`report` nwidart modules are asset-only stubs
+`Modules/purchase` and `Modules/report` contain only CSS/icons/JS — **no PHP**.
+`module_exists('Purchase')` returns false, so the
+`if (module_exists('Purchase')) productStockOuts()...` branch in order placement
+is dead code, and the guard passes silently.
+
+### 12. `warehouse_stock` table name is singular
+Migrations create the table as `warehouse_stock` (singular) in
+`2026_07_27_000001_create_warehouses_tables.php`, which mismatches plural table
+conventions used elsewhere and any code expecting `warehouse_stocks`.
+
+---
+
+## Notes
+
+- Many correctness issues trace to a single overloaded method,
+  `OrderRepository::storeByRequestFromCart()` (~220 lines) that mixes
+  allocation, pricing, stock, licensing, and mailing.
+- Findings marked "verified against code" in this file were re-checked against
+  the on-disk routes, migrations, and source during 2026-08-05.
