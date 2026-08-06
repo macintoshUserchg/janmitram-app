@@ -129,13 +129,28 @@
                             </td>
                             <td class="small text-muted">{{ $stock->updated_at?->diffForHumans() }}</td>
                             <td class="text-center pe-4">
-                                <form action="{{ route('admin.warehouse-stock.destroy', $stock->id) }}" method="POST" class="d-inline" onsubmit="return confirm('{{ __('Remove this item from warehouse stock?') }}')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle p-2" style="width:34px; height:34px;" data-bs-toggle="tooltip" title="{{ __('Remove Item') }}">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
+                                <div class="d-flex justify-content-center gap-1">
+                                    @if($warehouse->isCentralHub())
+                                        <button type="button"
+                                            class="btn btn-sm btn-outline-primary rounded-circle p-2"
+                                            style="width:34px; height:34px;"
+                                            data-bs-toggle="modal" data-bs-target="#updateStockModal"
+                                            data-stock-id="{{ $stock->id }}"
+                                            data-stock-name="{{ $stock->product?->name }}"
+                                            data-stock-qty="{{ $stock->quantity }}"
+                                            data-stock-color="{{ $stock->color?->name }}" data-stock-size="{{ $stock->size?->name }}"
+                                            data-bs-tooltip="tooltip" title="{{ __('Update Quantity') }}">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    @endif
+                                    <form action="{{ route('admin.warehouse-stock.destroy', $stock->id) }}" method="POST" class="d-inline" onsubmit="return confirm('{{ __('Remove this item from warehouse stock?') }}')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle p-2" style="width:34px; height:34px;" data-bs-toggle="tooltip" title="{{ __('Remove Item') }}">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     @empty
@@ -154,4 +169,68 @@
         @include('admin.partials.pagination', ['paginator' => $stocks])
     </div>
 </div>
+
+<!-- Update Stock Quantity Modal -->
+<div class="modal fade" id="updateStockModal" tabindex="-1" aria-labelledby="updateStockModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="updateStockForm" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="modal-header">
+                    <h5 class="modal-title" id="updateStockModalLabel"><i class="fas fa-edit text-primary me-2"></i>{{ __('Update Stock Quantity') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small mb-3">
+                        <span id="updateStockProduct"></span>
+                        <span id="updateStockVariant" class="badge bg-light text-dark border ms-1"></span>
+                    </p>
+                    <div class="mb-3">
+                        <label for="updateStockQty" class="form-label fw-semibold">{{ __('Quantity') }}</label>
+                        <input type="number" class="form-control" id="updateStockQty" name="quantity" min="0" value="0" required>
+                    </div>
+                    <label for="updateStockNotes" class="form-label fw-semibold">{{ __('Notes / Reason') }} <span class="text-muted">({{ __('optional') }})</span></label>
+                    <textarea name="notes" id="updateStockNotes" class="form-control" rows="2" placeholder="{{ __('Reason for this quantity change...') }}"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>{{ __('Update Quantity') }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var modal = document.getElementById('updateStockModal');
+        if (!modal) return;
+
+        modal.addEventListener('show.bs.modal', function (event) {
+            var btn = event.relatedTarget;
+            if (!btn) return;
+
+            var id = btn.getAttribute('data-stock-id');
+            var name = btn.getAttribute('data-stock-name');
+            var qty = btn.getAttribute('data-stock-qty');
+            var color = btn.getAttribute('data-stock-color');
+            var size = btn.getAttribute('data-stock-size');
+
+            var form = document.getElementById('updateStockForm');
+            form.setAttribute('action', "{{ url('admin/warehouse-stock') }}/" + id + "/quantity");
+
+            document.getElementById('updateStockProduct').textContent = name || '';
+            var label = [];
+            if (color && color !== 'null') label.push(color);
+            if (size && size !== 'null') label.push(size);
+            document.getElementById('updateStockVariant').textContent = label.length ? label.join(' / ') : '';
+
+            document.getElementById('updateStockQty').value = qty;
+            document.getElementById('updateStockNotes').value = '';
+        });
+    });
+</script>
+@endpush
 @endsection

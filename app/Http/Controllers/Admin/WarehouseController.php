@@ -9,9 +9,11 @@ use App\Http\Requests\WarehouseRequest;
 use App\Models\Color;
 use App\Models\Product;
 use App\Models\Size;
+use App\Models\StockLedger;
 use App\Models\Warehouse;
 use App\Models\WarehouseStock;
 use App\Services\WarehouseService;
+use Illuminate\Support\Facades\DB;
 
 class WarehouseController extends Controller
 {
@@ -148,5 +150,49 @@ class WarehouseController extends Controller
         $stock->delete();
 
         return redirect()->route('admin.warehouse.show', $warehouseId)->with('success', __('Stock item removed successfully.'));
+    }
+
+    /**
+     * Set a stock row's quantity directly (correction), keeping the master
+     * product count and ledger in sync with the delta.
+     */
+    public function updateStockQuantity(WarehouseStock $stock)
+    {
+        // Update-quantity is only offered for the single Central hub warehouse.
+        abort_unless($stock->warehouse->isCentralHub(), 403);
+
+        request()->validate([
+            'quantity' => 'required|integer|min:0',
+            'notes' => 'nullable|string',
+        ]);
+
+        $newQty = (int) request('quantity');
+        $delta = $newQty - $stock->quantity;
+
+        DB::transaction(function () use ($stock, $newQty, $delta) {
+            $stock->update(['quantity' => $newQty]);
+
+            if ($delta !== 0) {
+                $product = $stock->product;
+                if ($product && ! $product->is_digital) {
+                    $product->increment('quantity', $delta);
+                }
+
+                StockLedger::create([
+                    'from_warehouse_id' => $stock->warehouse_id,
+                    'to_warehouse_id' => null,
+                    'product_id' => $stock->product_id,
+                    'color_id' => $stock->color_id,
+                    'size_id' => $stock->size_id,
+                    'quantity' => $newQty,
+                    'reference_type' => 'manual_adjustment',
+                    'reference_id' => null,
+                    'notes' => request('notes'),
+                ]);
+            }
+        });
+
+        return redirect()->route('admin.warehouse.show', $stock->warehouse_id)
+            ->with('success', __('Stock quantity updated to :qty units.', ['qty' => $newQty]));
     }
 }

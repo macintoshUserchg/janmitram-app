@@ -18,6 +18,24 @@ class Warehouse extends Model
         'is_default' => 'boolean',
     ];
 
+    /**
+     * Whether this warehouse is the single Central hub.
+     *
+     * Resolved from one stable source (the default warehouse, else the earliest
+     * created) and memoized per request so view + controller guards never drift.
+     */
+    public function isCentralHub(): bool
+    {
+        static $centralId = null;
+
+        if ($centralId === null) {
+            $centralId = static::where('is_default', true)->value('id')
+                ?? static::query()->min('id');
+        }
+
+        return $this->id === $centralId;
+    }
+
     public function shops(): HasMany
     {
         return $this->hasMany(Shop::class);

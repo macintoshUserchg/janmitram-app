@@ -385,6 +385,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:root'])->group
     Route::post('warehouse/{warehouse}/stock/add', [WarehouseController::class, 'addStock'])->name('warehouse.stock.add');
     Route::delete('warehouse/{warehouse}/stock/clear', [WarehouseController::class, 'clearStock'])->name('warehouse.stock.clear');
     Route::delete('warehouse-stock/{stock}', [WarehouseController::class, 'destroyStock'])->name('warehouse-stock.destroy');
+    Route::put('warehouse-stock/{stock}/quantity', [WarehouseController::class, 'updateStockQuantity'])->name('warehouse-stock.update');
 
     Route::get('stock-request', [StockRequestController::class, 'index'])->name('stock-request.index');
     Route::get('stock-request/{stockRequest}', [StockRequestController::class, 'show'])->name('stock-request.show');
