@@ -80,19 +80,23 @@
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th class="ps-4" style="width: 70px;">{{ __('SL') }}</th>
+                        <th class="ps-4" style="width: 70px;">
+                            @include('admin.partials.sortable-header', ['label' => '#ID', 'column' => 'id', 'route' => 'admin.warehouse.show', 'routeParam' => $warehouse->id, 'sort' => $sort, 'direction' => $direction])
+                        </th>
                         <th>{{ __('Product Specification') }}</th>
                         <th>{{ __('Color Variant') }}</th>
                         <th>{{ __('Size Variant') }}</th>
                         <th class="text-center">{{ __('Available Stock') }}</th>
-                        <th>{{ __('Last Updated') }}</th>
+                        <th>
+                            @include('admin.partials.sortable-header', ['label' => __('Last Updated'), 'column' => 'updated_at', 'route' => 'admin.warehouse.show', 'routeParam' => $warehouse->id, 'sort' => $sort, 'direction' => $direction])
+                        </th>
                         <th class="text-center pe-4">{{ __('Action') }}</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($stocks as $key => $stock)
                         <tr>
-                            <td class="ps-4 text-muted fw-bold">{{ $key + 1 }}</td>
+                            <td class="ps-4 text-muted fw-bold">#{{ $stock->id }}</td>
                             <td>
                                 <div class="d-flex align-items-center gap-3">
                                     @if($stock->product?->thumbnail)
@@ -146,10 +150,8 @@
             </table>
         </div>
     </div>
-    @if($stocks->hasPages())
-        <div class="card-footer bg-white border-top py-3">
-            {{ $stocks->links() }}
-        </div>
-    @endif
+    <div class="card-footer bg-white border-top py-0 px-0">
+        @include('admin.partials.pagination', ['paginator' => $stocks])
+    </div>
 </div>
 @endsection

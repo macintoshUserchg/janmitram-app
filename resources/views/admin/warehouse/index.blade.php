@@ -79,11 +79,16 @@
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th class="ps-4">{{ __('ID') }}</th>
+                        <th class="ps-4">
+                            @include('admin.partials.sortable-header', ['label' => __('ID'), 'column' => 'id', 'route' => 'admin.warehouse.index', 'sort' => $sort, 'direction' => $direction])
+                        </th>
                         <th>{{ __('Warehouse Details') }}</th>
                         <th>{{ __('Owner / Shop') }}</th>
                         <th>{{ __('Classification') }}</th>
                         <th class="text-center">{{ __('Physical Stock Items') }}</th>
+                        <th>
+                            @include('admin.partials.sortable-header', ['label' => __('Created'), 'column' => 'created_at', 'route' => 'admin.warehouse.index', 'sort' => $sort, 'direction' => $direction])
+                        </th>
                         <th class="text-center pe-4">{{ __('Actions') }}</th>
                     </tr>
                 </thead>
@@ -122,6 +127,9 @@
                                     {{ $warehouse->stocks_count ?? $warehouse->stocks->count() }} {{ __('skus') }}
                                 </span>
                             </td>
+                            <td class="text-nowrap text-muted small">
+                                <i class="fas fa-calendar-alt me-1 text-secondary"></i>{{ $warehouse->created_at?->format('d M Y') ?? __('—') }}
+                            </td>
                             <td class="text-center pe-4">
                                 <div class="d-flex justify-content-center gap-1">
                                     <a href="{{ route('admin.warehouse.show', $warehouse->id) }}" class="btn btn-sm btn-outline-info rounded-circle p-2" style="width:34px; height:34px;" data-bs-toggle="tooltip" title="{{ __('View Stock Inventory') }}">
@@ -144,7 +152,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="text-center py-5 text-muted">
+                            <td colspan="7" class="text-center py-5 text-muted">
                                 <i class="fas fa-warehouse fs-1 mb-3 d-block text-secondary"></i>
                                 {{ __('No warehouses found. Click "Add New Warehouse" to create one.') }}
                             </td>
@@ -154,10 +162,8 @@
             </table>
         </div>
     </div>
-    @if($warehouses->hasPages())
-        <div class="card-footer bg-white border-top py-3">
-            {{ $warehouses->links() }}
-        </div>
-    @endif
+    <div class="card-footer bg-white border-top py-0 px-0">
+        @include('admin.partials.pagination', ['paginator' => $warehouses])
+    </div>
 </div>
 @endsection

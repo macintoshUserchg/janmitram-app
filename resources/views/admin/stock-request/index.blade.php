@@ -74,12 +74,16 @@
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th class="ps-4">{{ __('Request ID') }}</th>
+                        <th class="ps-4">
+                            @include('admin.partials.sortable-header', ['label' => __('Request ID'), 'column' => 'id', 'route' => 'admin.stock-request.index', 'sort' => $sort, 'direction' => $direction])
+                        </th>
                         <th>{{ __('Requesting Shop') }}</th>
                         <th>{{ __('Source Warehouse') }}</th>
                         <th class="text-center">{{ __('Items Count') }}</th>
                         <th>{{ __('Status') }}</th>
-                        <th>{{ __('Date Submitted') }}</th>
+                        <th>
+                            @include('admin.partials.sortable-header', ['label' => __('Date Submitted'), 'column' => 'created_at', 'route' => 'admin.stock-request.index', 'sort' => $sort, 'direction' => $direction])
+                        </th>
                         <th class="text-center pe-4">{{ __('Action') }}</th>
                     </tr>
                 </thead>
@@ -135,10 +139,8 @@
             </table>
         </div>
     </div>
-    @if($requests->hasPages())
-        <div class="card-footer bg-white border-top py-3">
-            {{ $requests->links() }}
-        </div>
-    @endif
+    <div class="card-footer bg-white border-top py-0 px-0">
+        @include('admin.partials.pagination', ['paginator' => $requests])
+    </div>
 </div>
 @endsection

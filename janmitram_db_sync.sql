@@ -437,7 +437,7 @@ INSERT INTO `categories` VALUES
 (2,'HEALTH CARE',NULL,'other',18,NULL,1,'2026-08-05 20:40:03','2026-08-05 20:40:03'),
 (3,'HOME CARE',NULL,'other',19,NULL,1,'2026-08-05 20:40:30','2026-08-05 20:40:30'),
 (4,'PERSONAL CARE',NULL,'other',20,NULL,1,'2026-08-05 20:41:02','2026-08-05 20:41:02'),
-(5,'EDIBLE OIL',NULL,'other',27,'kachchi gani and cold press natural oil',1,'2026-08-05 20:49:16','2026-08-05 20:49:16');
+(5,'OTHERS',NULL,'other',27,'DOMESTIC ITEMS',1,'2026-08-05 20:49:16','2026-08-06 20:10:42');
 /*!40000 ALTER TABLE `categories` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -465,6 +465,15 @@ CREATE TABLE `category_subcategories` (
 SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
 LOCK TABLES `category_subcategories` WRITE;
 /*!40000 ALTER TABLE `category_subcategories` DISABLE KEYS */;
+INSERT INTO `category_subcategories` VALUES
+(1,1),
+(1,2),
+(1,3),
+(1,4),
+(2,5),
+(2,6),
+(1,7),
+(1,8);
 /*!40000 ALTER TABLE `category_subcategories` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -932,7 +941,7 @@ CREATE TABLE `customers` (
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `customers_user_id_foreign` (`user_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -944,7 +953,8 @@ LOCK TABLES `customers` WRITE;
 /*!40000 ALTER TABLE `customers` DISABLE KEYS */;
 INSERT INTO `customers` VALUES
 (1,6,'2026-08-05 18:18:12','2026-08-05 18:18:12'),
-(2,1,'2026-08-06 18:21:21','2026-08-06 18:21:21');
+(2,1,'2026-08-06 18:21:21','2026-08-06 18:21:21'),
+(3,5,'2026-08-06 19:12:55','2026-08-06 19:12:55');
 /*!40000 ALTER TABLE `customers` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -1558,7 +1568,7 @@ CREATE TABLE `media` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=51 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=68 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1569,8 +1579,8 @@ SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
 LOCK TABLES `media` WRITE;
 /*!40000 ALTER TABLE `media` DISABLE KEYS */;
 INSERT INTO `media` VALUES
-(1,'image','ab',NULL,'default/dummy-profile.png','png','2026-08-03 08:41:11','2026-08-03 08:41:11'),
-(2,'image','doloremque',NULL,'default/dummy-profile.png','png','2026-08-03 08:41:11','2026-08-03 08:41:11'),
+(1,'image','logo.png',NULL,'shops/logo/EV3KaPJgR67q6fOTJlB8rsqy6NPoe0Guzl7utcry.png','png','2026-08-03 08:41:11','2026-08-06 21:38:39'),
+(2,'image','bottom.png',NULL,'shops/banner/kWYJiUFmRRlRxYmwkqOEeMAE8n1IRAivEqsfEV94.png','png','2026-08-03 08:41:11','2026-08-06 21:38:39'),
 (3,'image','logo.png',NULL,'categories/g4KK0NPay60E6ye9P5VFFeB6BucQN4mlJefc7o1T.png',NULL,'2026-08-03 11:11:55','2026-08-05 20:38:55'),
 (4,'thumbnail','JanMitra_logoNew.png',NULL,'banners/39iLmbcav4gWnNF6o1AvU7hhQt4DaaZJMPDgyvGf.png',NULL,'2026-08-03 11:20:28','2026-08-03 11:20:28'),
 (5,'image','FINAL JANMITRAM MASALE TURMERIC POWDER 200G.jpg',NULL,'products/d2OSxqIlfhCxbTnPdfpAEH43Uk1TYlKsg0RSvf1e.jpg',NULL,'2026-08-03 11:23:39','2026-08-05 21:51:15'),
@@ -1585,7 +1595,7 @@ INSERT INTO `media` VALUES
 (14,'image','addclass.png',NULL,'shops/banner/nuoBZv3AH1Lwe3suKRUokHY9ZJbXGI4Ih0F1unfU.png',NULL,'2026-08-03 15:28:58','2026-08-03 15:28:58'),
 (15,'image','WhatsApp Image 2026-07-12 at 7.46.36 PM.jpeg',NULL,'users/profile/CpF8Tilz6mwyqFNrs8RRha4j0HhPaD3anrImAYo1.jpg',NULL,'2026-08-03 21:32:31','2026-08-03 21:32:31'),
 (16,'image','natural.png',NULL,'shops/logo/RPVZOyX37XYO0Oq1bUIWesbXU1EjZhbCvxGPq9Dx.png',NULL,'2026-08-03 21:32:31','2026-08-03 21:32:31'),
-(17,'image','WhatsApp Image 2026-02-06 at 3.53.03 PM.jpeg',NULL,'shops/banner/I67Qr1pU6griHaoqcvHEvLM1YoKk6I0wFosxXjHv.jpg',NULL,'2026-08-03 21:32:31','2026-08-03 21:32:31'),
+(17,'image','bottom.png',NULL,'shops/banner/ZJFiEveCwGMSAYUCQx67zfAVGy92vKW6DGHmLyGy.png',NULL,'2026-08-03 21:32:31','2026-08-06 21:57:26'),
 (18,'image','logo.png',NULL,'categories/kySwCpg2Y5clo5h5kpnGH0JUPVKq7oFZFt6bt5Il.png',NULL,'2026-08-05 20:40:03','2026-08-05 20:40:03'),
 (19,'image','logo.png',NULL,'categories/em3W5s54VRailzI2WPzThO2tEHi5WLEuA08hYjEx.png',NULL,'2026-08-05 20:40:30','2026-08-05 20:40:30'),
 (20,'image','logo.png',NULL,'categories/FOASiijWHGkoAKohHjuKVKR4Ybx0Zr2egvuC7Q8K.png',NULL,'2026-08-05 20:41:02','2026-08-05 20:41:02'),
@@ -1618,7 +1628,24 @@ INSERT INTO `media` VALUES
 (47,'image','logo.png',NULL,'categories/6olafC30sLFfJIgNx39sLFcUxy1HqBcfCO5yA3Yd.png',NULL,'2026-08-05 21:11:29','2026-08-05 21:11:29'),
 (48,'image','logo.png',NULL,'categories/MeSavWNpDephCXnUniQE62cbxcn0yBMSEZHO4ifa.png',NULL,'2026-08-05 21:13:18','2026-08-05 21:13:18'),
 (49,'thumbnail','FINAL JANMITRAM MASALE CORIANDER 200G.jpg',NULL,'products/gcBSJCz6XA1mLcP0EAc91MPy3TOz1a8AE5Umkntb.jpg',NULL,'2026-08-05 21:48:44','2026-08-05 21:48:44'),
-(50,'thumbnail','FINAL JANMITRAM MASALE CHILLI POWDER 200G.jpg',NULL,'products/8ZkcGL437VBsuJZpqPm8g8viTse1og5dK4KhiAXQ.jpg',NULL,'2026-08-05 21:55:16','2026-08-05 21:55:16');
+(50,'thumbnail','FINAL JANMITRAM MASALE CHILLI POWDER 200G.jpg',NULL,'products/8ZkcGL437VBsuJZpqPm8g8viTse1og5dK4KhiAXQ.jpg',NULL,'2026-08-05 21:55:16','2026-08-05 21:55:16'),
+(51,'image','logo.png',NULL,'categories/0jmYahGZENHCYfYI3l303oTOYr8y2IpQvja8VWf8.png',NULL,'2026-08-06 20:04:04','2026-08-06 20:04:04'),
+(52,'image','logo.png',NULL,'categories/Na8LcRmK4orIrRJqcSqgKJFBnOs8LtIm2UlEk1TW.png',NULL,'2026-08-06 20:06:30','2026-08-06 20:06:30'),
+(53,'image','logo.png',NULL,'categories/9ZBnQYz9qrBElPt5PtKYMb9pf0bITUA67Q8KsrZd.png',NULL,'2026-08-06 20:11:32','2026-08-06 20:11:32'),
+(54,'image','logo.png',NULL,'categories/4tdq6JyA5r3fmwNdatLAs92ye5obZPDkZkzg2ai7.png',NULL,'2026-08-06 20:14:25','2026-08-06 20:14:25'),
+(55,'image','logo.png',NULL,'categories/FYBE66FKl2SZ9hvQzrr1fMzyDV6tXJQRYeMxAUeT.png',NULL,'2026-08-06 20:31:58','2026-08-06 20:31:58'),
+(56,'image','logo.png',NULL,'categories/oepWWjv4ttvTAjnUcMXgJmZt7uWuhrppKUHaRUhl.png',NULL,'2026-08-06 20:34:04','2026-08-06 20:34:04'),
+(57,'image','logo.png',NULL,'products/JeVRocFlKYqzw5CiZubS9Dp16eS0tGbTtYYZXMqF.png',NULL,'2026-08-06 20:41:22','2026-08-06 21:11:11'),
+(58,'thumbnail','logo.png',NULL,'products/RR3pYheIeBR6wR7IadSqo4mZeU2NHHyLEChbdgRf.png',NULL,'2026-08-06 20:49:53','2026-08-06 20:49:53'),
+(59,'thumbnail','logo.png',NULL,'products/m3zNwckxyLf40udosHsQgRdufdryMhbD7GH8wat5.png',NULL,'2026-08-06 20:52:57','2026-08-06 20:52:57'),
+(60,'thumbnail','logo.png',NULL,'products/13vUfuKLvTOVI5Dtr0La373QM5BP4v7WN7h1muvT.png',NULL,'2026-08-06 20:55:20','2026-08-06 20:55:20'),
+(61,'image','logo.png',NULL,'categories/JOCal9HE9SSOypFwfV7wzGRPNVmJwAJKbiVDehue.png',NULL,'2026-08-06 21:01:00','2026-08-06 21:01:00'),
+(62,'thumbnail','logo.png',NULL,'products/5gtKGGb6H3UqscTploOhhVJBv9GpOAVbDPUk3xWl.png',NULL,'2026-08-06 21:04:43','2026-08-06 21:04:43'),
+(63,'image','logo.png',NULL,'categories/SbjT6Nb7EE0JjLy3H4RVB55YLVGQG2F3TsGc1nay.png',NULL,'2026-08-06 21:07:50','2026-08-06 21:07:50'),
+(64,'thumbnail','FINAL JANMITRAM JAGGERY 1kg.jpg',NULL,'products/qTAqiSk7HLRVnOo3M5tmzwQDJFzt3ka0Ut10R9Fc.jpg',NULL,'2026-08-06 21:10:03','2026-08-06 21:10:03'),
+(65,'thumbnail','logo.png',NULL,'products/3RypXOZG8KDqf7UVR4dTA2ScSPLGFwOXNdCMoA63.png',NULL,'2026-08-06 21:14:37','2026-08-06 21:14:37'),
+(66,'thumbnail','FINAL JANMITRAM PULSES 1kg.jpg',NULL,'products/2eYXioocApYLkyolvrutExBe5pO4sgericDKhDQZ.jpg',NULL,'2026-08-06 21:16:14','2026-08-06 21:16:14'),
+(67,'image','logo.png',NULL,'users/profile/tg7FesPPyqS03oJEBPz85s9pXvgsTfbHntrqJczl.png',NULL,'2026-08-06 21:38:39','2026-08-06 21:38:39');
 /*!40000 ALTER TABLE `media` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -2068,7 +2095,7 @@ CREATE TABLE `order_products` (
   KEY `order_products_product_id_foreign` (`product_id`),
   KEY `order_products_order_id_product_id_index` (`order_id`,`product_id`),
   KEY `order_products_created_at_index` (`created_at`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2081,7 +2108,8 @@ LOCK TABLES `order_products` WRITE;
 INSERT INTO `order_products` VALUES
 (1,1,2,1,'yellow','small',NULL,100,40,'2026-08-03 11:51:37','2026-08-03 11:51:37'),
 (2,2,2,1,NULL,NULL,'250 GM',100,40,'2026-08-05 18:21:26','2026-08-05 18:21:26'),
-(3,3,2,1,'yellow','small','250 GM',100,40,'2026-08-05 18:25:18','2026-08-05 18:25:18');
+(3,3,2,1,'yellow','small','250 GM',100,40,'2026-08-05 18:25:18','2026-08-05 18:25:18'),
+(4,4,5,100,'DHANIYA POWDER','Small',NULL,60,50,'2026-08-06 19:13:50','2026-08-06 19:13:50');
 /*!40000 ALTER TABLE `order_products` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -2104,7 +2132,7 @@ CREATE TABLE `order_vat_taxes` (
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `order_vat_taxes_order_id_foreign` (`order_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2114,6 +2142,8 @@ CREATE TABLE `order_vat_taxes` (
 SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
 LOCK TABLES `order_vat_taxes` WRITE;
 /*!40000 ALTER TABLE `order_vat_taxes` DISABLE KEYS */;
+INSERT INTO `order_vat_taxes` VALUES
+(1,4,'GST',5,300,'2026-08-06 19:13:50','2026-08-06 19:13:50');
 /*!40000 ALTER TABLE `order_vat_taxes` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -2158,7 +2188,7 @@ CREATE TABLE `orders` (
   KEY `orders_customer_id_foreign` (`customer_id`),
   KEY `orders_coupon_id_foreign` (`coupon_id`),
   KEY `orders_address_id_foreign` (`address_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2171,7 +2201,8 @@ LOCK TABLES `orders` WRITE;
 INSERT INTO `orders` VALUES
 (1,2,1,NULL,'000002','RC',NULL,0,NULL,NULL,100,100,0,0,0,'Paid','Delivered','Cash Payment',NULL,NULL,NULL,NULL,0,'2026-08-03 11:51:37','2026-08-03 11:51:37',NULL),
 (2,2,0,1,'000002','RC',NULL,0,NULL,NULL,100,100,0,0,0,'Pending','Pending','Cash Payment',1,NULL,NULL,NULL,0,'2026-08-05 18:21:26','2026-08-05 18:21:26',NULL),
-(3,2,0,1,'000003','RC',NULL,0,NULL,NULL,100,100,0,0,0,'Pending','Pending','Cash Payment',2,NULL,NULL,NULL,0,'2026-08-05 18:25:18','2026-08-05 18:25:18',NULL);
+(3,2,0,1,'000003','RC',NULL,0,NULL,NULL,100,100,0,0,0,'Pending','Pending','Cash Payment',2,NULL,NULL,NULL,0,'2026-08-05 18:25:18','2026-08-05 18:25:18',NULL),
+(4,4,1,NULL,'000004','RC',NULL,0,NULL,NULL,6300,6000,300,0,0,'Paid','Delivered','Cash Payment',NULL,NULL,NULL,NULL,0,'2026-08-06 19:13:50','2026-08-06 19:13:50',NULL);
 /*!40000 ALTER TABLE `orders` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -2758,7 +2789,7 @@ CREATE TABLE `pos_cart_products` (
   PRIMARY KEY (`id`),
   KEY `pos_cart_products_pos_cart_id_foreign` (`pos_cart_id`),
   KEY `pos_cart_products_product_id_foreign` (`product_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2768,6 +2799,8 @@ CREATE TABLE `pos_cart_products` (
 SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
 LOCK TABLES `pos_cart_products` WRITE;
 /*!40000 ALTER TABLE `pos_cart_products` DISABLE KEYS */;
+INSERT INTO `pos_cart_products` VALUES
+(2,4,6,1,NULL,'1','1',NULL,'2026-08-06 19:25:46','2026-08-06 19:25:46');
 /*!40000 ALTER TABLE `pos_cart_products` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -2800,7 +2833,7 @@ CREATE TABLE `pos_carts` (
   KEY `pos_carts_user_id_foreign` (`user_id`),
   KEY `pos_carts_coupon_id_foreign` (`coupon_id`),
   KEY `pos_carts_created_by_foreign` (`created_by`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2811,7 +2844,8 @@ SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
 LOCK TABLES `pos_carts` WRITE;
 /*!40000 ALTER TABLE `pos_carts` DISABLE KEYS */;
 INSERT INTO `pos_carts` VALUES
-(2,'4Q832sODOBwk','::1',2,3,0,NULL,NULL,NULL,NULL,NULL,NULL,'2026-08-03 11:51:37','2026-08-03 11:51:37');
+(2,'4Q832sODOBwk','::1',2,3,0,NULL,NULL,NULL,NULL,NULL,NULL,'2026-08-03 11:51:37','2026-08-03 11:51:37'),
+(4,'NqkvEWNEq2sV','2401:4900:7eee:a408:70fb:ede2:dc80:aa0a',4,5,0,NULL,NULL,0,20,20,NULL,'2026-08-06 19:13:50','2026-08-06 19:25:46');
 /*!40000 ALTER TABLE `pos_carts` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -2872,7 +2906,17 @@ INSERT INTO `product_categories` VALUES
 (1,1),
 (2,1),
 (3,1),
-(4,1);
+(4,1),
+(5,1),
+(6,1),
+(7,1),
+(8,1),
+(9,1),
+(10,1),
+(11,1),
+(12,1),
+(13,1),
+(14,1);
 /*!40000 ALTER TABLE `product_categories` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -2904,7 +2948,12 @@ LOCK TABLES `product_colors` WRITE;
 INSERT INTO `product_colors` VALUES
 (2,1,0),
 (3,3,0),
-(1,1,0);
+(5,3,0),
+(6,1,0),
+(1,1,0),
+(9,6,0),
+(10,2,0),
+(11,2,0);
 /*!40000 ALTER TABLE `product_colors` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -2931,7 +2980,7 @@ CREATE TABLE `product_licenses` (
   KEY `product_licenses_product_id_foreign` (`product_id`),
   KEY `product_licenses_user_id_foreign` (`user_id`),
   KEY `product_licenses_order_id_foreign` (`order_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2944,7 +2993,9 @@ LOCK TABLES `product_licenses` WRITE;
 INSERT INTO `product_licenses` VALUES
 (1,3,NULL,NULL,NULL,0,0,'2026-08-05 21:49:31','2026-08-05 21:49:31'),
 (2,1,NULL,NULL,NULL,0,0,'2026-08-05 21:51:15','2026-08-05 21:51:15'),
-(3,4,NULL,NULL,NULL,0,0,'2026-08-05 21:55:47','2026-08-05 21:55:47');
+(3,4,NULL,NULL,NULL,0,0,'2026-08-05 21:55:47','2026-08-05 21:55:47'),
+(4,10,NULL,NULL,NULL,0,0,'2026-08-06 20:56:12','2026-08-06 20:56:12'),
+(5,7,NULL,NULL,NULL,0,0,'2026-08-06 21:11:11','2026-08-06 21:11:11');
 /*!40000 ALTER TABLE `product_licenses` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -2976,7 +3027,17 @@ LOCK TABLES `product_sizes` WRITE;
 INSERT INTO `product_sizes` VALUES
 (2,1,0),
 (3,1,0),
-(1,1,0);
+(5,1,0),
+(6,1,0),
+(1,1,0),
+(8,1,0),
+(9,1,0),
+(10,1,0),
+(11,2,0),
+(12,1,0),
+(7,1,0),
+(13,1,0),
+(14,1,0);
 /*!40000 ALTER TABLE `product_sizes` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -3004,6 +3065,15 @@ CREATE TABLE `product_subcategories` (
 SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
 LOCK TABLES `product_subcategories` WRITE;
 /*!40000 ALTER TABLE `product_subcategories` DISABLE KEYS */;
+INSERT INTO `product_subcategories` VALUES
+(1,7),
+(3,8),
+(3,9),
+(3,10),
+(7,11),
+(8,12),
+(4,13),
+(2,14);
 /*!40000 ALTER TABLE `product_subcategories` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -3171,7 +3241,7 @@ CREATE TABLE `products` (
   KEY `products_video_id_foreign` (`video_id`),
   KEY `products_name_index` (`name`),
   KEY `products_master_product_id_foreign` (`master_product_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -3182,10 +3252,20 @@ SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
 LOCK TABLES `products` WRITE;
 /*!40000 ALTER TABLE `products` DISABLE KEYS */;
 INSERT INTO `products` VALUES
-(1,'HALDI POWDER',NULL,NULL,'750608',1,5,1,90,70,450,1,0,'NATURTAL   A GRADE',NULL,'<p>haldi</p>',NULL,1,0,1,NULL,0,0,1,'2026-08-03 11:23:39','2026-08-05 21:51:15',3,NULL,NULL,NULL,NULL,NULL),
+(1,'HALDI POWDER',NULL,NULL,'750608',1,5,1,100,100,401,1,5,'NATURTAL   A GRADE',NULL,'<p>haldi</p>',NULL,1,0,1,NULL,0,0,1,'2026-08-03 11:23:39','2026-08-06 21:20:49',3,NULL,NULL,NULL,NULL,NULL),
 (2,'Haldi',NULL,NULL,'750608',2,5,1,100,40,47,1,0,'haldi',NULL,'<p>haldi</p>',NULL,0,0,1,1,1,0,1,'2026-08-03 11:50:48','2026-08-05 18:25:18',3,NULL,NULL,NULL,NULL,'2026-08-06 18:27:22'),
-(3,'DHANIYA POWDER',NULL,NULL,'881264',1,49,1,60,50,500,1,0,'NATURAL',NULL,'<p><br></p>',NULL,1,0,1,NULL,0,0,1,'2026-08-05 21:48:44','2026-08-05 22:03:47',3,NULL,NULL,NULL,NULL,NULL),
-(4,'LAL MIRCH POWDER',NULL,NULL,'442016',1,50,1,72,50,500,1,0,'NATURAL',NULL,'<p>NATURAL   A GRADE QUALITY</p>',NULL,1,0,1,NULL,0,0,1,'2026-08-05 21:55:16','2026-08-05 22:04:33',NULL,NULL,NULL,NULL,NULL,NULL);
+(3,'DHANIYA POWDER',NULL,NULL,'881264',1,49,1,60,50,400,1,0,'NATURAL',NULL,'<p><br></p>',NULL,1,0,1,NULL,0,0,1,'2026-08-05 21:48:44','2026-08-06 19:12:36',3,NULL,NULL,NULL,NULL,NULL),
+(4,'LAL MIRCH POWDER',NULL,NULL,'442016',1,50,1,72,50,500,1,0,'NATURAL',NULL,'<p>NATURAL   A GRADE QUALITY</p>',NULL,1,0,1,NULL,0,0,1,'2026-08-05 21:55:16','2026-08-05 22:04:33',NULL,NULL,NULL,NULL,NULL,NULL),
+(5,'DHANIYA POWDER',NULL,NULL,'881264',4,49,1,60,50,0,1,0,'NATURAL',NULL,'<p><br></p>',NULL,1,0,1,3,0,0,1,'2026-08-06 19:12:36','2026-08-06 19:13:50',3,NULL,NULL,NULL,NULL,NULL),
+(6,'HALDI POWDER',NULL,NULL,'750608',4,5,1,90,70,99,1,20,'NATURTAL   A GRADE',NULL,'<p>haldi</p>',NULL,1,0,1,1,0,0,1,'2026-08-06 19:25:21','2026-08-06 19:28:55',3,NULL,NULL,NULL,NULL,NULL),
+(7,'GARAM MASALA',NULL,NULL,'505930',1,57,1,180,150,500,1,0,'NATURAL',NULL,'<p>NATURAL</p>',NULL,1,0,1,NULL,0,0,1,'2026-08-06 20:41:22','2026-08-06 21:11:11',3,NULL,NULL,NULL,NULL,NULL),
+(8,'SARSON TEL',NULL,NULL,'308386',1,58,1,230,200,500,1,0,'NATURAL',NULL,'<p>NATURAL</p>',NULL,1,0,1,NULL,1,0,1,'2026-08-06 20:49:53','2026-08-06 21:17:07',4,NULL,NULL,NULL,NULL,NULL),
+(9,'MUNGFALI TEL',NULL,NULL,'158742',1,59,1,290,250,500,1,0,'NATURAL',NULL,'<p>NATURAL</p>',NULL,1,0,1,NULL,1,0,1,'2026-08-06 20:52:57','2026-08-06 21:17:54',4,NULL,NULL,NULL,NULL,NULL),
+(10,'NARIYAL TEL',NULL,NULL,'539349',1,60,1,150,100,500,1,0,'NATURAL',NULL,'<p>NATURAL</p>',NULL,1,0,1,NULL,0,0,1,'2026-08-06 20:55:20','2026-08-06 21:18:17',7,NULL,NULL,NULL,NULL,NULL),
+(11,'ATTA (WHEAT)',NULL,NULL,'816243',1,62,1,450,400,500,1,0,'NATURAL',NULL,'<p>NATURAL</p>',NULL,1,0,1,NULL,1,0,1,'2026-08-06 21:04:43','2026-08-06 21:18:34',8,NULL,NULL,NULL,NULL,NULL),
+(12,'DESHI KHAND (KHANDSARI)',NULL,NULL,'901163',1,64,1,70,50,500,1,0,'NATURAL',NULL,'<p>NATURAL</p>',NULL,1,0,1,NULL,1,0,1,'2026-08-06 21:10:03','2026-08-06 21:18:46',1,NULL,NULL,NULL,NULL,NULL),
+(13,'BASMATI RICE',NULL,NULL,'729166',1,65,1,120,100,500,1,0,'NATURAL',NULL,'<p>NATURAL</p>',NULL,1,0,1,NULL,1,0,1,'2026-08-06 21:14:37','2026-08-06 21:19:01',1,NULL,NULL,NULL,NULL,NULL),
+(14,'ARHAR DAL',NULL,NULL,'776461',1,66,1,140,100,500,1,0,'NATURAL',NULL,'<p>NATURAL</p>',NULL,1,0,1,NULL,1,0,1,'2026-08-06 21:16:14','2026-08-06 21:19:31',1,NULL,NULL,NULL,NULL,NULL);
 /*!40000 ALTER TABLE `products` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -3499,7 +3579,7 @@ CREATE TABLE `shop_kyc` (
   CONSTRAINT `shop_kyc_other_documents_id_foreign` FOREIGN KEY (`other_documents_id`) REFERENCES `media` (`id`) ON DELETE SET NULL,
   CONSTRAINT `shop_kyc_pan_card_id_foreign` FOREIGN KEY (`pan_card_id`) REFERENCES `media` (`id`) ON DELETE SET NULL,
   CONSTRAINT `shop_kyc_shop_id_foreign` FOREIGN KEY (`shop_id`) REFERENCES `shops` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -3509,6 +3589,8 @@ CREATE TABLE `shop_kyc` (
 SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
 LOCK TABLES `shop_kyc` WRITE;
 /*!40000 ALTER TABLE `shop_kyc` DISABLE KEYS */;
+INSERT INTO `shop_kyc` VALUES
+(1,1,NULL,NULL,NULL,'','',NULL,'',NULL,'M.A.','2026-08-06 21:38:39','2026-08-06 21:38:39');
 /*!40000 ALTER TABLE `shop_kyc` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -3677,7 +3759,7 @@ SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
 LOCK TABLES `shops` WRITE;
 /*!40000 ALTER TABLE `shops` DISABLE KEYS */;
 INSERT INTO `shops` VALUES
-(1,'My Shop',1,NULL,1,1,2,0,1,'RC','8874 Ali Route Apt. 387\nWest Angela, AZ 67454','38.033226','162.923784','05:00:10','22:44:21',NULL,'3-4 days',1,'My Shop Description','2026-08-03 08:41:11','2026-08-03 08:41:11',NULL,NULL),
+(1,'janmitram vdn jaipur',1,NULL,1,1,2,0,1,'RC','shiv mandir ke samne badharna road harmada jaipur','26.9985869','75.7680702','05:00:10','22:44:21',NULL,'3-4 days',1,'JANMITRAM -MART','2026-08-03 08:41:11','2026-08-06 21:38:39',NULL,NULL),
 (2,'Sanganer Shop',3,1,2,7,8,0,0,'RC','417 Sanganer thana , Jaipur','27.0057641','75.7777408',NULL,NULL,NULL,NULL,1,NULL,'2026-08-03 11:44:54','2026-08-05 18:30:54',NULL,NULL),
 (4,'Pratap Nagar Shop',5,1,NULL,13,14,0,0,'RC','pratap nagar jaipur','26.8808145','75.7919299',NULL,NULL,NULL,NULL,1,NULL,'2026-08-03 15:28:58','2026-08-03 15:28:58',NULL,NULL),
 (5,'Mansarover Shop',6,1,2,16,17,0,0,'RC','Mansarover','27.0057209','75.7777997',NULL,NULL,NULL,NULL,1,NULL,'2026-08-03 21:32:31','2026-08-03 21:37:20',NULL,NULL);
@@ -3826,7 +3908,7 @@ CREATE TABLE `stock_ledgers` (
   KEY `stock_ledgers_product_id_foreign` (`product_id`),
   KEY `stock_ledgers_color_id_foreign` (`color_id`),
   KEY `stock_ledgers_size_id_foreign` (`size_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -3841,7 +3923,19 @@ INSERT INTO `stock_ledgers` VALUES
 (2,1,2,1,1,1,100,'warehouse_transfer',1,'100','2026-08-03 11:26:39','2026-08-03 11:26:39'),
 (3,2,NULL,1,NULL,NULL,50,'shop_request',1,'Fulfilled stock request #1 for shop #2','2026-08-03 11:50:48','2026-08-03 11:50:48'),
 (4,NULL,1,3,3,1,500,'admin_addition',NULL,NULL,'2026-08-05 22:03:47','2026-08-05 22:03:47'),
-(5,NULL,1,4,4,1,500,'admin_addition',NULL,NULL,'2026-08-05 22:04:33','2026-08-05 22:04:33');
+(5,NULL,1,4,4,1,500,'admin_addition',NULL,NULL,'2026-08-05 22:04:33','2026-08-05 22:04:33'),
+(6,1,NULL,3,NULL,NULL,100,'shop_request',2,'Fulfilled stock request #2 for shop #4','2026-08-06 19:12:36','2026-08-06 19:12:36'),
+(7,1,NULL,1,NULL,NULL,98,'shop_request',3,'Fulfilled stock request #3 for shop #4','2026-08-06 19:25:21','2026-08-06 19:25:21'),
+(8,1,NULL,1,NULL,NULL,1,'shop_request',4,'Fulfilled stock request #4 for shop #4','2026-08-06 19:28:55','2026-08-06 19:28:55'),
+(9,NULL,1,7,NULL,1,500,'admin_addition',NULL,NULL,'2026-08-06 20:45:54','2026-08-06 20:45:54'),
+(10,NULL,1,8,NULL,NULL,500,'admin_addition',NULL,NULL,'2026-08-06 21:17:07','2026-08-06 21:17:07'),
+(11,NULL,1,9,NULL,NULL,500,'admin_addition',NULL,NULL,'2026-08-06 21:17:54','2026-08-06 21:17:54'),
+(12,NULL,1,10,NULL,NULL,500,'admin_addition',NULL,NULL,'2026-08-06 21:18:17','2026-08-06 21:18:17'),
+(13,NULL,1,11,NULL,NULL,500,'admin_addition',NULL,NULL,'2026-08-06 21:18:34','2026-08-06 21:18:34'),
+(14,NULL,1,12,NULL,NULL,500,'admin_addition',NULL,NULL,'2026-08-06 21:18:46','2026-08-06 21:18:46'),
+(15,NULL,1,13,NULL,NULL,500,'admin_addition',NULL,NULL,'2026-08-06 21:19:01','2026-08-06 21:19:01'),
+(16,NULL,1,14,NULL,NULL,500,'admin_addition',NULL,NULL,'2026-08-06 21:19:31','2026-08-06 21:19:31'),
+(17,NULL,1,1,NULL,NULL,50,'admin_addition',NULL,NULL,'2026-08-06 21:20:49','2026-08-06 21:20:49');
 /*!40000 ALTER TABLE `stock_ledgers` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -3868,7 +3962,7 @@ CREATE TABLE `stock_request_items` (
   KEY `stock_request_items_product_id_foreign` (`product_id`),
   KEY `stock_request_items_color_id_foreign` (`color_id`),
   KEY `stock_request_items_size_id_foreign` (`size_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -3879,7 +3973,11 @@ SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
 LOCK TABLES `stock_request_items` WRITE;
 /*!40000 ALTER TABLE `stock_request_items` DISABLE KEYS */;
 INSERT INTO `stock_request_items` VALUES
-(1,1,1,NULL,NULL,50,'2026-08-03 11:50:34','2026-08-03 11:50:34');
+(1,1,1,NULL,NULL,50,'2026-08-03 11:50:34','2026-08-03 11:50:34'),
+(2,2,3,NULL,NULL,100,'2026-08-06 19:11:33','2026-08-06 19:11:33'),
+(3,3,1,NULL,NULL,98,'2026-08-06 19:25:03','2026-08-06 19:25:03'),
+(4,4,1,NULL,NULL,1,'2026-08-06 19:28:32','2026-08-06 19:28:32'),
+(5,5,1,NULL,NULL,7,'2026-08-06 19:29:57','2026-08-06 19:29:57');
 /*!40000 ALTER TABLE `stock_request_items` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -3903,7 +4001,7 @@ CREATE TABLE `stock_requests` (
   PRIMARY KEY (`id`),
   KEY `stock_requests_shop_id_foreign` (`shop_id`),
   KEY `stock_requests_warehouse_id_foreign` (`warehouse_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -3914,7 +4012,11 @@ SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
 LOCK TABLES `stock_requests` WRITE;
 /*!40000 ALTER TABLE `stock_requests` DISABLE KEYS */;
 INSERT INTO `stock_requests` VALUES
-(1,2,2,'completed','50','2026-08-03 11:50:34','2026-08-03 11:50:48');
+(1,2,2,'completed','50','2026-08-03 11:50:34','2026-08-03 11:50:48'),
+(2,4,1,'completed',NULL,'2026-08-06 19:11:33','2026-08-06 19:12:36'),
+(3,4,1,'completed',NULL,'2026-08-06 19:25:03','2026-08-06 19:25:21'),
+(4,4,1,'completed',NULL,'2026-08-06 19:28:32','2026-08-06 19:28:55'),
+(5,4,1,'pending',NULL,'2026-08-06 19:29:57','2026-08-06 19:29:57');
 /*!40000 ALTER TABLE `stock_requests` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -3940,7 +4042,7 @@ CREATE TABLE `sub_categories` (
   PRIMARY KEY (`id`),
   KEY `sub_categories_media_id_foreign` (`media_id`),
   KEY `sub_categories_shop_id_foreign` (`shop_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -3950,6 +4052,15 @@ CREATE TABLE `sub_categories` (
 SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
 LOCK TABLES `sub_categories` WRITE;
 /*!40000 ALTER TABLE `sub_categories` DISABLE KEYS */;
+INSERT INTO `sub_categories` VALUES
+(1,51,1,'Spices',NULL,'spices',1,'2026-08-06 20:04:04','2026-08-06 20:04:04'),
+(2,52,1,'Pulses',NULL,'pulses',1,'2026-08-06 20:06:30','2026-08-06 20:06:30'),
+(3,53,1,'Edible Oil',NULL,'edible-oil',1,'2026-08-06 20:11:32','2026-08-06 20:12:32'),
+(4,54,1,'Rice',NULL,'rice',1,'2026-08-06 20:14:25','2026-08-06 20:14:25'),
+(5,55,1,'Tulsi chay',NULL,'tulsi-chay',1,'2026-08-06 20:31:58','2026-08-06 20:31:58'),
+(6,56,1,'Dry Fruits',NULL,'dry-fruits',1,'2026-08-06 20:34:04','2026-08-06 20:34:04'),
+(7,61,1,'ATTA',NULL,'atta',1,'2026-08-06 21:01:00','2026-08-06 21:01:00'),
+(8,63,1,'SUGAR',NULL,'sugar',1,'2026-08-06 21:07:50','2026-08-06 21:07:50');
 /*!40000 ALTER TABLE `sub_categories` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -4305,7 +4416,7 @@ INSERT INTO `units` VALUES
 (1,'1 KG',1,1,'2026-08-03 11:18:34','2026-08-03 11:18:34'),
 (2,'500 GM',1,1,'2026-08-03 11:18:47','2026-08-03 11:18:47'),
 (3,'200GM',1,1,'2026-08-03 11:19:03','2026-08-05 21:24:54'),
-(4,'Ltr',1,1,'2026-08-05 21:27:31','2026-08-05 21:27:31'),
+(4,'1 Ltr',1,1,'2026-08-05 21:27:31','2026-08-06 20:50:31'),
 (5,'5ltr',1,1,'2026-08-05 21:28:33','2026-08-05 21:28:33'),
 (6,'15ltr',1,1,'2026-08-05 21:28:49','2026-08-05 21:28:49'),
 (7,'200ml',1,1,'2026-08-05 21:29:27','2026-08-05 21:29:27'),
@@ -4392,11 +4503,11 @@ SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
 INSERT INTO `users` VALUES
-(1,'Super Admin',NULL,'01000000001','root@janmitram.com',NULL,'$2y$12$hHv82ChVVioypklqriMuvuosPk2qygbizrBnv/Iwnpsj/.SO071Lq',NULL,NULL,1,'2026-08-03 08:41:09','2026-08-03 08:41:09',NULL,NULL,NULL,'2026-08-03 08:41:09','2026-08-06 18:41:22',NULL,NULL,NULL,NULL,NULL,NULL,'2026-08-06 18:41:22'),
-(3,'Chandan Gaur',NULL,'9549803319','chandangaurjecrc@gmail.com',6,'$2y$12$BCvawwHqr3sTTTPkIu/ulu53Y8Z4Hh.HeIGIv1Us/rXVrs.WECSlS','male',NULL,1,NULL,NULL,NULL,NULL,NULL,'2026-08-03 11:44:54','2026-08-05 18:30:54',NULL,'India','91',NULL,NULL,NULL,'2026-08-04 13:02:08'),
+(1,'DR. APARNA KUMARI','Super admin','9571523516','root@janmitram.com',67,'$2y$12$hHv82ChVVioypklqriMuvuosPk2qygbizrBnv/Iwnpsj/.SO071Lq','female','1980-08-15',1,'2026-08-03 08:41:09','2026-08-03 08:41:09',NULL,NULL,NULL,'2026-08-03 08:41:09','2026-08-06 21:38:39',NULL,NULL,NULL,NULL,NULL,NULL,'2026-08-06 18:41:22'),
+(3,'Chandan Gaur','SHUBHAM','9549803319','chandangaurjecrc@gmail.com',6,'$2y$12$BCvawwHqr3sTTTPkIu/ulu53Y8Z4Hh.HeIGIv1Us/rXVrs.WECSlS','male',NULL,1,NULL,NULL,NULL,NULL,NULL,'2026-08-03 11:44:54','2026-08-06 21:56:10',NULL,'India','91',NULL,NULL,NULL,'2026-08-04 13:02:08'),
 (4,'Shubham','Gaur','9549803300','shg@janmitram.com',9,'$2y$12$ytIdZYyfw3yg4xl./WuEyu5HtRyUwPBttZ4qQL6I5Gbb6Qzi.6HbS','male',NULL,1,NULL,NULL,NULL,NULL,NULL,'2026-08-03 11:48:51','2026-08-06 18:33:49','2026-08-06 18:33:49',NULL,NULL,NULL,NULL,NULL,NULL),
 (5,'Chandan2','Gaur','9549803311','chg2@janmitram.com',12,'$2y$12$OqEIoEjY70CwPdXLw5CvA.wIftWhG0bdcnoiDdjZibgjGmkFgmBeq','male',NULL,1,NULL,NULL,NULL,NULL,NULL,'2026-08-03 15:28:58','2026-08-05 18:45:04',NULL,NULL,NULL,NULL,NULL,NULL,NULL),
-(6,'ramesh',NULL,'9414057690','ramesh@gmail.com',15,'$2y$12$EFdZX2Qt7YvlnCcfZg5O6.sWi7O7GLHaUyJd/sMBorGdirhwPOCrG',NULL,NULL,1,NULL,NULL,NULL,NULL,NULL,'2026-08-03 21:32:31','2026-08-05 20:31:49',NULL,'India','91',NULL,NULL,NULL,'2026-08-05 20:31:49');
+(6,'ramesh',NULL,'9414057690','ramesh@gmail.com',15,'$2y$12$EFdZX2Qt7YvlnCcfZg5O6.sWi7O7GLHaUyJd/sMBorGdirhwPOCrG','male',NULL,1,NULL,NULL,NULL,NULL,NULL,'2026-08-03 21:32:31','2026-08-06 21:57:26',NULL,'India','91',NULL,NULL,NULL,'2026-08-05 20:31:49');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -4562,7 +4673,7 @@ CREATE TABLE `warehouse_stock` (
   KEY `warehouse_stock_product_id_foreign` (`product_id`),
   KEY `warehouse_stock_color_id_foreign` (`color_id`),
   KEY `warehouse_stock_size_id_foreign` (`size_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -4573,10 +4684,18 @@ SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
 LOCK TABLES `warehouse_stock` WRITE;
 /*!40000 ALTER TABLE `warehouse_stock` DISABLE KEYS */;
 INSERT INTO `warehouse_stock` VALUES
-(1,1,1,1,1,400,'2026-08-03 11:26:09','2026-08-03 11:26:39'),
+(1,1,1,1,1,301,'2026-08-03 11:26:09','2026-08-06 19:28:55'),
 (2,2,1,1,1,50,'2026-08-03 11:26:39','2026-08-03 11:50:48'),
-(3,1,3,3,1,500,'2026-08-05 22:03:47','2026-08-05 22:03:47'),
-(4,1,4,4,1,500,'2026-08-05 22:04:33','2026-08-05 22:04:33');
+(3,1,3,3,1,400,'2026-08-05 22:03:47','2026-08-06 19:12:36'),
+(4,1,4,4,1,500,'2026-08-05 22:04:33','2026-08-05 22:04:33'),
+(5,1,7,NULL,1,500,'2026-08-06 20:45:54','2026-08-06 20:45:54'),
+(6,1,8,NULL,NULL,500,'2026-08-06 21:17:07','2026-08-06 21:17:07'),
+(7,1,9,NULL,NULL,500,'2026-08-06 21:17:54','2026-08-06 21:17:54'),
+(8,1,10,NULL,NULL,500,'2026-08-06 21:18:17','2026-08-06 21:18:17'),
+(9,1,11,NULL,NULL,500,'2026-08-06 21:18:34','2026-08-06 21:18:34'),
+(10,1,12,NULL,NULL,500,'2026-08-06 21:18:46','2026-08-06 21:18:46'),
+(11,1,13,NULL,NULL,500,'2026-08-06 21:19:01','2026-08-06 21:19:01'),
+(12,1,14,NULL,NULL,500,'2026-08-06 21:19:31','2026-08-06 21:19:31');
 /*!40000 ALTER TABLE `warehouse_stock` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -4724,6 +4843,10 @@ LOCK TABLES `withdraws` WRITE;
 UNLOCK TABLES;
 COMMIT;
 SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
+
+--
+-- Dumping routines for database 'u939461333_app_janmitram'
+--
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -4734,4 +4857,4 @@ SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
 
--- Dump completed on 2026-08-06 12:42:27
+-- Dump completed on 2026-08-06 15:58:03

@@ -15,17 +15,22 @@ use Illuminate\Support\Facades\DB;
 
 class StockAssignmentController extends Controller
 {
+    use SortableIndex;
+
     /**
      * List past shop-inventory assignments (marked in notes by this controller).
      */
     public function index()
     {
-        $assignments = StockRequest::where('notes', 'like', '%[inventory-assignment]%')
-            ->with(['shop', 'warehouse', 'items.product'])
-            ->latest()
-            ->paginate(15);
+        [$sort, $direction] = $this->resolveSort();
 
-        return view('admin.inventory-assignment.index', compact('assignments'));
+        $assignments = $this->applySort(
+            StockRequest::where('notes', 'like', '%[inventory-assignment]%')->with(['shop', 'warehouse', 'items.product']),
+            $sort,
+            $direction
+        )->paginate($this->resolvePerPage())->withQueryString();
+
+        return view('admin.inventory-assignment.index', compact('assignments', 'sort', 'direction'));
     }
 
     public function create()

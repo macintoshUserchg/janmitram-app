@@ -12,13 +12,17 @@ use Mpdf\Mpdf;
 
 class StockRequestController extends Controller
 {
+    use SortableIndex;
+
     public function index()
     {
-        $requests = StockRequest::with(['shop', 'warehouse', 'items.product'])
-            ->latest()
-            ->paginate(15);
+        [$sort, $direction] = $this->resolveSort();
 
-        return view('admin.stock-request.index', compact('requests'));
+        $requests = $this->applySort(StockRequest::with(['shop', 'warehouse', 'items.product']), $sort, $direction)
+            ->paginate($this->resolvePerPage())
+            ->withQueryString();
+
+        return view('admin.stock-request.index', compact('requests', 'sort', 'direction'));
     }
 
     public function show(StockRequest $stockRequest)

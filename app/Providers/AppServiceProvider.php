@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Enums\OrderStatus;
 use App\Models\Language;
 use App\Models\Order;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -20,6 +21,10 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Schema::defaultStringLength(191);
+
+        // Bootstrap admin theme -> render pagination with Bootstrap 5 markup
+        // (Laravel's default is Tailwind, which clashes with the admin layout).
+        Paginator::useBootstrapFive();
 
         // ponytail: Apache under CGI/FastCGI strips the Authorization header.
         // Sanctum's callback escape hatch reads $_SERVER directly as a fallback.

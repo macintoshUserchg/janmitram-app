@@ -14,13 +14,17 @@ use App\Services\WarehouseService;
 
 class WarehouseTransferController extends Controller
 {
+    use SortableIndex;
+
     public function index()
     {
-        $transfers = WarehouseTransfer::with(['fromWarehouse', 'toWarehouse', 'items.product'])
-            ->latest()
-            ->paginate(15);
+        [$sort, $direction] = $this->resolveSort();
 
-        return view('admin.warehouse-transfer.index', compact('transfers'));
+        $transfers = $this->applySort(WarehouseTransfer::with(['fromWarehouse', 'toWarehouse', 'items.product']), $sort, $direction)
+            ->paginate($this->resolvePerPage())
+            ->withQueryString();
+
+        return view('admin.warehouse-transfer.index', compact('transfers', 'sort', 'direction'));
     }
 
     public function create()

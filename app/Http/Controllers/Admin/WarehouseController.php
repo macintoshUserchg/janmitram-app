@@ -15,6 +15,8 @@ use App\Services\WarehouseService;
 
 class WarehouseController extends Controller
 {
+    use SortableIndex;
+
     private static function getCentralWarehouse(): ?Warehouse
     {
         return Warehouse::where('is_default', true)->first() ?? Warehouse::first();
@@ -22,9 +24,13 @@ class WarehouseController extends Controller
 
     public function index()
     {
-        $warehouses = Warehouse::with('stocks')->latest()->paginate(15);
+        [$sort, $direction] = $this->resolveSort();
 
-        return view('admin.warehouse.index', compact('warehouses'));
+        $warehouses = $this->applySort(Warehouse::with('stocks'), $sort, $direction)
+            ->paginate($this->resolvePerPage())
+            ->withQueryString();
+
+        return view('admin.warehouse.index', compact('warehouses', 'sort', 'direction'));
     }
 
     public function create()
@@ -45,11 +51,15 @@ class WarehouseController extends Controller
 
     public function show(Warehouse $warehouse)
     {
-        $stocks = WarehouseStock::where('warehouse_id', $warehouse->id)
-            ->with(['product', 'color', 'size'])
-            ->paginate(20);
+        [$sort, $direction] = $this->resolveSort();
 
-        return view('admin.warehouse.show', compact('warehouse', 'stocks'));
+        $stocks = $this->applySort(
+            WarehouseStock::where('warehouse_id', $warehouse->id)->with(['product', 'color', 'size']),
+            $sort,
+            $direction
+        )->paginate($this->resolvePerPage())->withQueryString();
+
+        return view('admin.warehouse.show', compact('warehouse', 'stocks', 'sort', 'direction'));
     }
 
     public function edit(Warehouse $warehouse)

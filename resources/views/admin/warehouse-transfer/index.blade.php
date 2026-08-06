@@ -23,12 +23,16 @@
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th>{{ __('ID') }}</th>
+                        <th>
+                            @include('admin.partials.sortable-header', ['label' => __('ID'), 'column' => 'id', 'route' => 'admin.warehouse-transfer.index', 'sort' => $sort, 'direction' => $direction])
+                        </th>
                         <th>{{ __('From Source') }}</th>
                         <th>{{ __('To Destination') }}</th>
                         <th>{{ __('Items Count') }}</th>
                         <th>{{ __('Status') }}</th>
-                        <th>{{ __('Date') }}</th>
+                        <th>
+                            @include('admin.partials.sortable-header', ['label' => __('Date'), 'column' => 'created_at', 'route' => 'admin.warehouse-transfer.index', 'sort' => $sort, 'direction' => $direction])
+                        </th>
                         <th>{{ __('Action') }}</th>
                     </tr>
                 </thead>
@@ -64,10 +68,8 @@
             </table>
         </div>
     </div>
-    @if($transfers->hasPages())
-        <div class="card-footer">
-            {{ $transfers->links() }}
-        </div>
-    @endif
+    <div class="card-footer py-0 px-0">
+        @include('admin.partials.pagination', ['paginator' => $transfers])
+    </div>
 </div>
 @endsection

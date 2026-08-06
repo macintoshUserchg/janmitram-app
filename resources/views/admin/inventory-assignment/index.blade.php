@@ -31,12 +31,16 @@
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th class="ps-4">{{ __('Assignment') }}</th>
+                        <th class="ps-4">
+                            @include('admin.partials.sortable-header', ['label' => __('Assignment'), 'column' => 'id', 'route' => 'admin.inventory-assignment.index', 'sort' => $sort, 'direction' => $direction])
+                        </th>
                         <th>{{ __('Target Shop') }}</th>
                         <th>{{ __('Source Warehouse') }}</th>
                         <th class="text-center">{{ __('Items') }}</th>
                         <th>{{ __('Status') }}</th>
-                        <th>{{ __('Date') }}</th>
+                        <th>
+                            @include('admin.partials.sortable-header', ['label' => __('Date'), 'column' => 'created_at', 'route' => 'admin.inventory-assignment.index', 'sort' => $sort, 'direction' => $direction])
+                        </th>
                         <th class="text-center pe-4">{{ __('Invoice') }}</th>
                     </tr>
                 </thead>
@@ -80,10 +84,8 @@
             </table>
         </div>
     </div>
-    @if($assignments->hasPages())
-        <div class="card-footer bg-white border-top py-3">
-            {{ $assignments->links() }}
-        </div>
-    @endif
+    <div class="card-footer bg-white border-top py-0 px-0">
+        @include('admin.partials.pagination', ['paginator' => $assignments])
+    </div>
 </div>
 @endsection
