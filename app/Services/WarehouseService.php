@@ -364,23 +364,10 @@ class WarehouseService
         ?int $colorId = null,
         ?int $sizeId = null
     ): bool {
-        $query = WarehouseStock::where('warehouse_id', $warehouse->id)
-            ->where('product_id', $product->id);
+        // Delegate to findStock so the pre-check agrees with what fulfillStockRequest
+        // actually picks: exact variant first, then any sufficient row.
+        $stock = self::findStock($warehouse, $product, $qty, $colorId, $sizeId);
 
-        if ($colorId) {
-            $query->where('color_id', $colorId);
-        } else {
-            $query->whereNull('color_id');
-        }
-
-        if ($sizeId) {
-            $query->where('size_id', $sizeId);
-        } else {
-            $query->whereNull('size_id');
-        }
-
-        $stock = $query->first();
-
-        return $stock && $stock->quantity >= $qty;
+        return $stock !== null && $stock->quantity >= $qty;
     }
 }

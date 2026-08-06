@@ -32,19 +32,26 @@ class StockRequestController extends Controller
             $query = WarehouseStock::where('warehouse_id', $stockRequest->warehouse_id)
                 ->where('product_id', $item->product_id);
 
-            if ($item->color_id) {
-                $query->where('color_id', $item->color_id);
+            // Only constrain to a specific variant when one was requested; otherwise fall
+            // back to any stock row (across variants), matching what fulfillStockRequest picks.
+            if ($item->color_id !== null || $item->size_id !== null) {
+                if ($item->color_id) {
+                    $query->where('color_id', $item->color_id);
+                } else {
+                    $query->whereNull('color_id');
+                }
+
+                if ($item->size_id) {
+                    $query->where('size_id', $item->size_id);
+                } else {
+                    $query->whereNull('size_id');
+                }
+
+                $available = $query->first()?->quantity ?? 0;
             } else {
-                $query->whereNull('color_id');
+                $available = $query->orderByDesc('quantity')->first()?->quantity ?? 0;
             }
 
-            if ($item->size_id) {
-                $query->where('size_id', $item->size_id);
-            } else {
-                $query->whereNull('size_id');
-            }
-
-            $available = $query->first()?->quantity ?? 0;
             $shortfall = max(0, $item->quantity - $available);
 
             if ($shortfall > 0) {

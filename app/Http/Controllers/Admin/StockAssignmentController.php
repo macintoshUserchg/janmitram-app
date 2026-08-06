@@ -33,9 +33,19 @@ class StockAssignmentController extends Controller
         $warehouses = Warehouse::all();
         $shops = Shop::with('user')->get();
         $products = Product::where('is_digital', false)
+            ->where('is_active', true)
             ->whereNull('master_product_id')
             ->with('warehouseStocks')
-            ->get();
+            ->orderBy('name')
+            ->get()
+            ->map(function ($product) {
+                $product->stock_map = $product->warehouseStocks
+                    ->groupBy('warehouse_id')
+                    ->map(fn ($group) => (int) $group->sum('quantity'))
+                    ->toArray();
+
+                return $product;
+            });
 
         return view('admin.inventory-assignment.create', compact('warehouses', 'shops', 'products'));
     }
