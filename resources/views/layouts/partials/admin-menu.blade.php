@@ -143,10 +143,10 @@
         </div>
     </li>
 @endhasPermission
-@hasPermission(['admin.product.index', 'admin.product.show'])
+@hasPermission(['shop.product.index', 'shop.product.create'])
     <!--- Products--->
     <li>
-        <a class="menu {{ request()->routeIs('admin.product.*') ? 'active' : '' }}"
+        <a class="menu {{ request()->routeIs('shop.product.*', 'shop.digital.product.*') ? 'active' : '' }}"
             data-bs-toggle="collapse" href="#productMenu">
             <span>
                 <img class="menu-icon" src="{{ asset('assets/icons-admin/product.svg') }}" alt="icon" loading="lazy" />
@@ -154,13 +154,25 @@
             </span>
             <img src="{{ asset('assets/icons-admin/caret-down.svg') }}" alt="icon" class="downIcon">
         </a>
-        <div class="collapse dropdownMenuCollapse {{ $request->routeIs('admin.product.*') ? 'show' : '' }}"
+        <div class="collapse dropdownMenuCollapse {{ $request->routeIs('shop.product.*', 'shop.digital.product.*') ? 'show' : '' }}"
             id="productMenu">
             <div class="listBar">
-                @hasPermission('admin.product.index')
-                    <a href="{{ route('admin.product.index') }}"
-                        class="subMenu hasCount {{ request()->routeIs('admin.product.index') ? 'active' : '' }}">
+                @hasPermission('shop.product.index')
+                    <a href="{{ route('shop.product.index') }}"
+                        class="subMenu hasCount {{ request()->routeIs('shop.product.index') ? 'active' : '' }}">
                         {{ __('All Product') }}
+                    </a>
+                @endhasPermission
+                @hasPermission('shop.product.create')
+                    <a href="{{ route('shop.product.create') }}"
+                        class="subMenu hasCount {{ request()->routeIs('shop.product.create') ? 'active' : '' }}">
+                        {{ __('Add Product') }}
+                    </a>
+                @endhasPermission
+                @hasPermission('shop.product.create')
+                    <a href="{{ route('shop.digital.product.create') }}"
+                        class="subMenu hasCount {{ request()->routeIs('shop.digital.product.create') ? 'active' : '' }}">
+                        {{ __('Add Digital Product') }}
                     </a>
                 @endhasPermission
             </div>
