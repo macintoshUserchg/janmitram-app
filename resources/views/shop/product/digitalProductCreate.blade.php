@@ -109,6 +109,24 @@
                                 </x-select>
                             </div>
 
+                            @if ($isRootShop && $vatTaxes->isNotEmpty())
+                                <div class="col-md-6 col-lg-4 mt-4">
+                                    <label class="form-label">{{ __('VAT & Tax') }}</label>
+                                    <div class="border rounded p-3">
+                                        @foreach ($vatTaxes as $vatTax)
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="vat_tax_ids[]"
+                                                    value="{{ $vatTax->id }}" id="vatTax{{ $vatTax->id }}"
+                                                    @checked(in_array($vatTax->id, old('vat_tax_ids', [])))>
+                                                <label class="form-check-label" for="vatTax{{ $vatTax->id }}">
+                                                    {{ $vatTax->name }} ({{ $vatTax->percentage }}%)
+                                                </label>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
+
                             <div class="col-md-6 col-lg-4 mt-4">
                                 <label class="form-label d-flex align-items-center gap-2 justify-content-between flex-wrap">
                                     <div class="d-flex align-items-center gap-2">

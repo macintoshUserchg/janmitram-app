@@ -13,6 +13,7 @@ use App\Repositories\FlashSaleRepository;
 use App\Repositories\NotificationRepository;
 use App\Repositories\ProductLicenseRepository;
 use App\Repositories\ProductRepository;
+use App\Repositories\VatTaxRepository;
 use App\Services\Chat;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -86,7 +87,10 @@ class ProductController extends Controller
         $units = $shop?->units()->isActive()->get();
         $sizes = $shop?->sizes()->isActive()->get();
 
-        return view('shop.product.create', compact('brands', 'colors', 'categories', 'units', 'sizes'));
+        $vatTaxes = VatTaxRepository::getActiveVatTaxes();
+        $isRootShop = generaleSetting('shop')?->id === $shop?->id;
+
+        return view('shop.product.create', compact('brands', 'colors', 'categories', 'units', 'sizes', 'vatTaxes', 'isRootShop'));
     }
 
     public function digitalProductCreate()
@@ -100,7 +104,10 @@ class ProductController extends Controller
         $units = $shop?->units()->isActive()->get();
         $sizes = $shop?->sizes()->isActive()->get();
 
-        return view('shop.product.digitalProductCreate', compact('brands', 'colors', 'categories', 'units', 'sizes'));
+        $vatTaxes = VatTaxRepository::getActiveVatTaxes();
+        $isRootShop = generaleSetting('shop')?->id === $shop?->id;
+
+        return view('shop.product.digitalProductCreate', compact('brands', 'colors', 'categories', 'units', 'sizes', 'vatTaxes', 'isRootShop'));
     }
 
     /**
@@ -167,7 +174,11 @@ class ProductController extends Controller
 
         $metaKeywords = explode(',', $product->meta_keywords) ?: [];
 
-        return view('shop.product.edit', compact('product', 'brands', 'colors', 'categories', 'units', 'sizes', 'subCategories', 'metaKeywords'));
+        $vatTaxes = VatTaxRepository::getActiveVatTaxes();
+        $isRootShop = $shop?->id === $rootShop?->id;
+        $productVatTaxIds = $product->vatTaxes()->pluck('vat_taxes.id')->toArray();
+
+        return view('shop.product.edit', compact('product', 'brands', 'colors', 'categories', 'units', 'sizes', 'subCategories', 'metaKeywords', 'vatTaxes', 'isRootShop', 'productVatTaxIds'));
     }
 
     /**

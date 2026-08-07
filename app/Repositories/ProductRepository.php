@@ -175,6 +175,11 @@ class ProductRepository extends Repository
             }
         }
 
+        // vat tax assignment is root-shop only (admin operates the root shop via the shop forms)
+        if ($shop?->id === generaleSetting('rootShop')?->id && $request->filled('vat_tax_ids')) {
+            $product->vatTaxes()->sync($request->vat_tax_ids ?? []);
+        }
+
         return $product;
     }
 
@@ -322,6 +327,11 @@ class ProductRepository extends Repository
             foreach ($request->previous_license_key ?? [] as $key => $license) {
                 ProductLicenseRepository::updateByRequest($product->id, $license, $key);
             }
+        }
+
+        // vat tax assignment is root-shop only (admin operates the root shop via the shop forms)
+        if ($shop?->id === generaleSetting('rootShop')?->id && $request->filled('vat_tax_ids')) {
+            $product->vatTaxes()->sync($request->vat_tax_ids ?? []);
         }
 
         return $product;
