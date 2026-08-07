@@ -1584,17 +1584,17 @@ INSERT INTO `media` VALUES
 (3,'image','logo.png',NULL,'categories/g4KK0NPay60E6ye9P5VFFeB6BucQN4mlJefc7o1T.png',NULL,'2026-08-03 11:11:55','2026-08-05 20:38:55'),
 (4,'thumbnail','JanMitra_logoNew.png',NULL,'banners/39iLmbcav4gWnNF6o1AvU7hhQt4DaaZJMPDgyvGf.png',NULL,'2026-08-03 11:20:28','2026-08-03 11:20:28'),
 (5,'image','FINAL JANMITRAM MASALE TURMERIC POWDER 200G.jpg',NULL,'products/d2OSxqIlfhCxbTnPdfpAEH43Uk1TYlKsg0RSvf1e.jpg',NULL,'2026-08-03 11:23:39','2026-08-05 21:51:15'),
-(6,'image','addclass.png',NULL,'users/profile/7US5FqfzIGwOe84ppZTIOwwcyX79gYV5Z9cWvE8u.png',NULL,'2026-08-03 11:44:52','2026-08-03 11:44:52'),
-(7,'image','actual_logo.png',NULL,'shops/logo/u8JbMLLwmRobE0jPAEfHdH2SyylKYYcri0rBU0sN.png',NULL,'2026-08-03 11:44:54','2026-08-03 11:44:54'),
-(8,'image','perfet2.png',NULL,'shops/banner/JmAOKNEB0mNq8vsDoDynHs6qnU1haFxfkH8PlumF.png',NULL,'2026-08-03 11:44:54','2026-08-03 11:44:54'),
+(6,'image','logo.png',NULL,'users/profile/KSVpFwLnecF2ljE1stFBTpTKJsKQNqviH8r2uLry.png',NULL,'2026-08-03 11:44:52','2026-08-06 21:59:56'),
+(7,'image','logo.png',NULL,'shops/logo/db93YkbGfvbHv3I4IHRXL1m4q8fUf0QqI13OhkBP.png',NULL,'2026-08-03 11:44:54','2026-08-06 21:59:56'),
+(8,'image','bottom.png',NULL,'shops/banner/2VltxFFx380KRFCWujyYX80KQhWGnCQ99HWHcgSF.png',NULL,'2026-08-03 11:44:54','2026-08-06 21:59:56'),
 (9,'image','actual_logo.png',NULL,'users/profile/enyNlWMiFFs3ksH9eeLUg2H5gJSOd7Q8ehe3YUID.png',NULL,'2026-08-03 11:48:49','2026-08-03 11:48:49'),
 (10,'image','gym_db - public.png',NULL,'shops/logo/5S5ksyJzYHhvJwlb3Cr7bXwjr4jHBv64N6oFWhJW.png',NULL,'2026-08-03 11:48:51','2026-08-03 11:48:51'),
 (11,'image','ChatGPT Image Dec 28, 2025, 09_28_35 AM.png',NULL,'shops/banner/8UdhG3ofCVfpbQBNUVDY2nMohwPXg4SFwLjmbMq3.png',NULL,'2026-08-03 11:48:51','2026-08-03 11:48:51'),
-(12,'image','actual_logo.png',NULL,'users/profile/F4Yn3R3zD1Ep2f7y7Qo8N2Em3bPZ20Da127OycrW.png',NULL,'2026-08-03 15:28:56','2026-08-03 15:28:56'),
-(13,'image','actual_logo.png',NULL,'shops/logo/b4OC2YTEF7biO4Jtnfjmy0ffoeJVcbDwz6xzg8rl.png',NULL,'2026-08-03 15:28:58','2026-08-03 15:28:58'),
-(14,'image','addclass.png',NULL,'shops/banner/nuoBZv3AH1Lwe3suKRUokHY9ZJbXGI4Ih0F1unfU.png',NULL,'2026-08-03 15:28:58','2026-08-03 15:28:58'),
-(15,'image','WhatsApp Image 2026-07-12 at 7.46.36 PM.jpeg',NULL,'users/profile/CpF8Tilz6mwyqFNrs8RRha4j0HhPaD3anrImAYo1.jpg',NULL,'2026-08-03 21:32:31','2026-08-03 21:32:31'),
-(16,'image','natural.png',NULL,'shops/logo/RPVZOyX37XYO0Oq1bUIWesbXU1EjZhbCvxGPq9Dx.png',NULL,'2026-08-03 21:32:31','2026-08-03 21:32:31'),
+(12,'image','logo.png',NULL,'users/profile/Lrz323nuZXdgoM8WjZJTQSjXK3fkxmZnjAQGjqpE.png',NULL,'2026-08-03 15:28:56','2026-08-06 22:00:46'),
+(13,'image','logo.png',NULL,'shops/logo/a9V0bv53ToG8MXrj3W9oW4FwHz5wzuKRHpH5xh8P.png',NULL,'2026-08-03 15:28:58','2026-08-06 22:00:46'),
+(14,'image','bottom.png',NULL,'shops/banner/PB452SpYT0U4MutcwEXAj2uBdZH3fAqvxGLHR33N.png',NULL,'2026-08-03 15:28:58','2026-08-06 22:00:46'),
+(15,'image','logo.png',NULL,'users/profile/u4Qrubo4WrZod14rBsurjSJzdFcbqulUjXf7AjMf.png',NULL,'2026-08-03 21:32:31','2026-08-06 21:58:51'),
+(16,'image','logo.png',NULL,'shops/logo/OL3LoI8fXoK32eXHhlt3Rneh96T1uwUN7f2kGYiR.png',NULL,'2026-08-03 21:32:31','2026-08-06 21:58:51'),
 (17,'image','bottom.png',NULL,'shops/banner/ZJFiEveCwGMSAYUCQx67zfAVGy92vKW6DGHmLyGy.png',NULL,'2026-08-03 21:32:31','2026-08-06 21:57:26'),
 (18,'image','logo.png',NULL,'categories/kySwCpg2Y5clo5h5kpnGH0JUPVKq7oFZFt6bt5Il.png',NULL,'2026-08-05 20:40:03','2026-08-05 20:40:03'),
 (19,'image','logo.png',NULL,'categories/em3W5s54VRailzI2WPzThO2tEHi5WLEuA08hYjEx.png',NULL,'2026-08-05 20:40:30','2026-08-05 20:40:30'),
@@ -4857,4 +4857,4 @@ SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
 
--- Dump completed on 2026-08-06 15:58:03
+-- Dump completed on 2026-08-06 18:30:25
