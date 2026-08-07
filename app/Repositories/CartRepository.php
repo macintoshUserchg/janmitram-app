@@ -76,19 +76,6 @@ class CartRepository extends Repository
 
                 $mainPrice = $product->price + $extraPrice;
 
-                // calculate vat taxes
-                $priceTaxAmount = 0;
-                $discountTaxAmount = 0;
-                foreach ($product->vatTaxes ?? [] as $tax) {
-                    if ($tax->percentage > 0) {
-                        $priceTaxAmount += $mainPrice * ($tax->percentage / 100);
-                        $discountPrice > 0 ? $discountTaxAmount += $discountPrice * ($tax->percentage / 100) : null;
-                    }
-                }
-
-                $mainPrice += $priceTaxAmount;
-                $discountPrice > 0 ? $discountPrice += $discountTaxAmount : null;
-
                 if ($discountPrice > 0) {
                     $discountPercentage = ($mainPrice - $discountPrice) / $mainPrice * 100;
                 }
@@ -198,7 +185,8 @@ class CartRepository extends Repository
         $couponDiscount = 0;
         $payableAmount = 0;
 
-        $shopWiseTotalAmount = [];
+        $globalBase = 0;
+        $perProduct = [];
         $totalOrderTaxAmount = 0;
         $vatTaxesArray = [];
         $tokens = cartAccessToken(request());
@@ -235,16 +223,18 @@ class CartRepository extends Repository
             $colorPrice = $product->colors()?->where('id', $cart->color)->first()?->pivot?->price ?? 0;
             $price = $price + $colorPrice;
 
-            // get shop wise total amount
-            $shop = $product->shop;
-            if (array_key_exists($shop->id, $shopWiseTotalAmount)) {
-                $currentAmount = $shopWiseTotalAmount[$shop->id];
-                $shopWiseTotalAmount[$shop->id] = $currentAmount + ($price * $cart->quantity);
-            } else {
-                $shopWiseTotalAmount[$shop->id] = $price * $cart->quantity;
-            }
+            $lineTotal = $price * $cart->quantity;
+            $totalAmount += $lineTotal;
 
-            $totalAmount += $price * $cart->quantity;
+            $assignedActive = $product->vatTaxes()->where('is_active', true)->get();
+
+            if ($assignedActive->isNotEmpty()) {
+                foreach ($assignedActive as $rate) {
+                    $perProduct[$rate->id] = ($perProduct[$rate->id] ?? 0) + round($lineTotal * ($rate->percentage / 100), 2);
+                }
+            } else {
+                $globalBase += $lineTotal;
+            }
         }
 
         $groupCarts = $carts->groupBy('shop_id');
@@ -292,34 +282,24 @@ class CartRepository extends Repository
         // get order base tax
         $vatTaxes = VatTaxRepository::getActiveVatTaxes();
 
-        foreach ($shopWiseTotalAmount as $shopId => $subtotal) {
+        foreach ($vatTaxes ?? [] as $vatTax) {
+            if ($vatTax->name && $vatTax->percentage > 0) {
+                $amount = round($globalBase * ($vatTax->percentage / 100), 2) + ($perProduct[$vatTax->id] ?? 0);
 
-            $thisFinalTax = [];
-
-            foreach ($vatTaxes as $vatTax) {
-                if ($vatTax->name && $vatTax->percentage > 0) {
-
-                    $totalTaxAmount = round($subtotal * ($vatTax->percentage / 100), 2);
-
-                    if (array_key_exists($vatTax->id, $thisFinalTax)) {
-                        $currentAmount = $thisFinalTax[$vatTax->id];
-                        $thisFinalTax[$vatTax->id] = $currentAmount + $totalTaxAmount;
-                    } else {
-                        $thisFinalTax[$vatTax->id] = $totalTaxAmount;
-                    }
-                    $totalOrderTaxAmount += $totalTaxAmount;
+                if ($amount <= 0) {
+                    continue;
                 }
-            }
 
-            $vatTaxesArray = $vatTaxes->map(function ($vatTax) use ($thisFinalTax) {
-                return [
+                $vatTaxesArray[] = [
                     'id' => $vatTax->id,
                     'name' => $vatTax->name,
                     'percentage' => $vatTax->percentage,
-                    'amount' => $thisFinalTax[$vatTax->id] ?? 0,
+                    'amount' => round($amount, 2),
                 ];
-            })->toArray();
+            }
         }
+
+        $totalOrderTaxAmount = array_sum(array_column($vatTaxesArray, 'amount'));
 
         $payableAmount += $totalOrderTaxAmount;
 

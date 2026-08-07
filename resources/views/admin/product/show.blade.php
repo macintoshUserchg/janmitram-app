@@ -175,6 +175,48 @@
 
         </div>
     </div>
+
+    @if (isset($vatTaxes))
+        <div class="card mt-3 shadow-sm">
+            <div class="card-body">
+                <h5 class="text-dark fw-bold">
+                    {{ __('Taxes') }}
+                </h5>
+
+                @if ($vatTaxes->isEmpty())
+                    <p class="text-muted mb-0">
+                        {{ __('No active tax rates configured.') }}
+                        <a href="{{ route('admin.vatTax.index') }}">{{ __('VAT & Tax') }}</a>
+                    </p>
+                @else
+                    <form action="{{ route('admin.product.tax.update', $product) }}" method="POST">
+                        @csrf
+
+                        <div class="row">
+                            @foreach ($vatTaxes as $vatTax)
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox"
+                                               name="vat_tax_ids[]"
+                                               value="{{ $vatTax->id }}"
+                                               id="vatTax{{ $vatTax->id }}"
+                                               @checked(in_array($vatTax->id, $productVatTaxIds))>
+                                        <label class="form-check-label" for="vatTax{{ $vatTax->id }}">
+                                            {{ $vatTax->name }} ({{ $vatTax->percentage }}%)
+                                        </label>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        <button type="submit" class="btn btn-primary mt-3">
+                            {{ __('Save') }}
+                        </button>
+                    </form>
+                @endif
+            </div>
+        </div>
+    @endif
 @endsection
 
 @push('css')

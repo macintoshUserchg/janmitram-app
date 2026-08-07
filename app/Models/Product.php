@@ -294,6 +294,14 @@ class Product extends Model
     }
 
     /**
+     * Get the vat taxes assigned to the product.
+     */
+    public function vatTaxes(): BelongsToMany
+    {
+        return $this->belongsToMany(VatTax::class, 'product_vat_taxes');
+    }
+
+    /**
      * get the unit that owns the product.
      */
     public function unit(): BelongsTo

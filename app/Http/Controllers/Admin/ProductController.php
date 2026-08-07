@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Repositories\NotificationRepository;
 use App\Repositories\ShopRepository;
+use App\Repositories\VatTaxRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -38,8 +39,22 @@ class ProductController extends Controller
 
     public function show(Product $product)
     {
+        $vatTaxes = VatTaxRepository::getActiveVatTaxes();
+        $productVatTaxIds = $product->vatTaxes()->pluck('vat_taxes.id')->toArray();
 
-        return view('admin.product.show', compact('product'));
+        return view('admin.product.show', compact('product', 'vatTaxes', 'productVatTaxIds'));
+    }
+
+    /**
+     * Update the tax rates assigned to the product.
+     */
+    public function updateTax(Product $product, Request $request)
+    {
+        $request->validate(['vat_tax_ids' => 'nullable|array|exists:vat_taxes,id']);
+
+        $product->vatTaxes()->sync($request->vat_tax_ids ?? []);
+
+        return back()->withSuccess(__('Taxes updated successfully'));
     }
 
     /**

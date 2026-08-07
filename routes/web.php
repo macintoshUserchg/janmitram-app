@@ -379,6 +379,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:root'])->group
     Route::get('product/{product}', [App\Http\Controllers\Admin\ProductController::class, 'show'])->name('product.show');
     Route::get('product/{product}/approve', [App\Http\Controllers\Admin\ProductController::class, 'approve'])->name('product.approve');
     Route::delete('product/{product}', [App\Http\Controllers\Admin\ProductController::class, 'destroy'])->name('product.destroy');
+    Route::post('product/{product}/tax', [App\Http\Controllers\Admin\ProductController::class, 'updateTax'])->name('product.tax.update');
 
     Route::resource('warehouse', WarehouseController::class);
     Route::get('warehouse/{warehouse}/stock', [WarehouseController::class, 'stock'])->name('warehouse.stock');

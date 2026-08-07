@@ -252,22 +252,48 @@ class POSController extends Controller
         $postCart = PosCartRepository::getLatestCart($request);
 
         $vatTaxes = VatTaxRepository::getActiveVatTaxes();
-        $subtotal = $postCart?->subtotal ?? 0;
 
         $allVatTaxes = [];
         $totalTaxAmount = 0;
+        $globalBase = 0;
+        $perProduct = [];
+
+        foreach ($postCart?->products ?? [] as $product) {
+            $price = $product->discount_price > 0 ? $product->discount_price : $product->price;
+
+            $size = $product->sizes()?->where('id', $product->pivot->size)->first();
+            $color = $product->colors()?->where('id', $product->pivot->color)->first();
+
+            $price += ($color?->pivot?->price ?? 0) + ($size?->pivot?->price ?? 0);
+
+            $lineTotal = $price * $product->pivot->quantity;
+
+            $assignedActive = $product->vatTaxes()->where('is_active', true)->get();
+
+            if ($assignedActive->isNotEmpty()) {
+                foreach ($assignedActive as $rate) {
+                    $perProduct[$rate->id] = ($perProduct[$rate->id] ?? 0) + round($lineTotal * ($rate->percentage / 100), 2);
+                }
+            } else {
+                $globalBase += $lineTotal;
+            }
+        }
 
         foreach ($vatTaxes ?? [] as $vatTax) {
-            if ($vatTax?->name && $vatTax?->percentage > 0 && $subtotal > 0) {
-                $taxAmount = round($subtotal * ($vatTax->percentage / 100), 2);
+            if ($vatTax?->name && $vatTax?->percentage > 0) {
+                $amount = round($globalBase * ($vatTax->percentage / 100), 2) + ($perProduct[$vatTax->id] ?? 0);
+
+                if ($amount <= 0) {
+                    continue;
+                }
 
                 $allVatTaxes[] = (object) [
                     'name' => $vatTax->name,
                     'percentage' => $vatTax->percentage,
-                    'amount' => $taxAmount,
+                    'amount' => round($amount, 2),
                 ];
 
-                $totalTaxAmount += $taxAmount;
+                $totalTaxAmount += $amount;
             }
         }
         $total = $postCart?->total ?? 0;

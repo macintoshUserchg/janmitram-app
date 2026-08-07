@@ -376,6 +376,8 @@ class OrderRepository extends Repository
         $discount = 0;
         $coupon = null;
         $totalTaxAmount = 0;
+        $globalBase = 0;
+        $perProduct = [];
 
         $orderQty = $carts->sum(fn ($l) => $l['cart']->quantity);
         $deliveryCharge = $shop->delivery_charge > 0 ? (float) $shop->delivery_charge : self::getDeliveryAmount();
@@ -415,7 +417,18 @@ class OrderRepository extends Repository
             $colorPrice = $product->colors()?->where('id', $cart->color)->first()->pivot?->price ?? 0;
             $price = $price + $colorPrice;
 
-            $totalAmount += ($price * $cart->quantity);
+            $lineTotal = $price * $cart->quantity;
+            $totalAmount += $lineTotal;
+
+            $assignedActive = $product->vatTaxes()->where('is_active', true)->get();
+
+            if ($assignedActive->isNotEmpty()) {
+                foreach ($assignedActive as $rate) {
+                    $perProduct[$rate->id] = ($perProduct[$rate->id] ?? 0) + round($lineTotal * ($rate->percentage / 100), 2);
+                }
+            } else {
+                $globalBase += $lineTotal;
+            }
         }
 
         // order vat taxes
@@ -423,15 +436,19 @@ class OrderRepository extends Repository
 
         foreach ($vatTaxes ?? [] as $vatTax) {
             if ($vatTax?->name && $vatTax?->percentage > 0) {
-                $taxAmount = round($totalAmount * ($vatTax->percentage / 100), 2);
+                $amount = round($globalBase * ($vatTax->percentage / 100), 2) + ($perProduct[$vatTax->id] ?? 0);
+
+                if ($amount <= 0) {
+                    continue;
+                }
 
                 $allVatTaxes[] = (object) [
                     'name' => $vatTax->name,
                     'percentage' => $vatTax->percentage,
-                    'amount' => $taxAmount,
+                    'amount' => round($amount, 2),
                 ];
 
-                $totalTaxAmount += $taxAmount;
+                $totalTaxAmount += $amount;
             }
         }
 
