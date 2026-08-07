@@ -57,6 +57,14 @@
                                 @endhasPermission
                                 <td class="text-center">
                                     <div class="d-flex gap-2 justify-content-center">
+                                        @hasPermission('admin.vatTax.toggle')
+                                            @if ($vatTax->is_default)
+                                                <span class="btn btn-outline-success btn-sm">{{ __('Default') }}</span>
+                                            @else
+                                                <a href="{{ route('admin.vatTax.setDefault', $vatTax->id) }}"
+                                                    class="btn btn-outline-success btn-sm">{{ __('Set Default') }}</a>
+                                            @endif
+                                        @endhasPermission
                                         @hasPermission('admin.vatTax.edit')
                                             <button type="button" class="btn btn-outline-info btn-sm circleIcon"
                                                 onclick="openColorUpdateModal({{ $vatTax }})">

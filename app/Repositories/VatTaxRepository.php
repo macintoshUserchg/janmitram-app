@@ -18,6 +18,17 @@ class VatTaxRepository extends Repository
         return self::query()->where('is_active', true)->get();
     }
 
+    public static function getDefaultVatTax(): ?VatTax
+    {
+        return self::query()->where('is_active', true)->where('is_default', true)->first();
+    }
+
+    public static function setDefault(VatTax $vatTax): void
+    {
+        self::query()->where('is_default', true)->update(['is_default' => false]);
+        $vatTax->update(['is_default' => true]);
+    }
+
     public static function storeByRequest(VatTaxRequest $request)
     {
         return self::create([

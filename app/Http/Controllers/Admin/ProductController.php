@@ -50,9 +50,9 @@ class ProductController extends Controller
      */
     public function updateTax(Product $product, Request $request)
     {
-        $request->validate(['vat_tax_ids' => 'nullable|array|exists:vat_taxes,id']);
+        $request->validate(['vat_tax_id' => 'nullable|exists:vat_taxes,id']);
 
-        $product->vatTaxes()->sync($request->vat_tax_ids ?? []);
+        $product->vatTaxes()->sync($request->filled('vat_tax_id') ? [$request->vat_tax_id] : []);
 
         return back()->withSuccess(__('Taxes updated successfully'));
     }

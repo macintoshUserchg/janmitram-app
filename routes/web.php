@@ -554,6 +554,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:root'])->group
     Route::post('vat-tax', [VatTaxController::class, 'store'])->name('vatTax.store');
     Route::put('vat-tax/{vatTax}', [VatTaxController::class, 'update'])->name('vatTax.update');
     Route::get('vat-tax/{vatTax}/toggle', [VatTaxController::class, 'toggle'])->name('vatTax.toggle');
+    Route::get('vat-tax/{vatTax}/default', [VatTaxController::class, 'setDefault'])->name('vatTax.setDefault');
     Route::delete('vat-tax/{vatTax}', [VatTaxController::class, 'destroy'])->name('vatTax.destroy');
 
     Route::get('notification', [App\Http\Controllers\Admin\NotificationController::class, 'index'])->name('notification.index');

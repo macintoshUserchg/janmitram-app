@@ -45,11 +45,12 @@ class ProductVatTaxTest extends TestCase
         ], $overrides));
     }
 
-    public function test_override_isolation_assigns_rate_specific_and_global_slices(): void
+    public function test_default_rate_applies_to_unassigned_and_override_to_assigned(): void
     {
         $this->bindBareRequest();
 
-        $vat5 = VatTax::create(['name' => 'VAT 5%', 'percentage' => 5, 'is_active' => 1]);
+        // VAT 5% is the platform default; VAT 12% is a per-product override.
+        $vat5 = VatTax::create(['name' => 'VAT 5%', 'percentage' => 5, 'is_active' => 1, 'is_default' => 1]);
         $vat12 = VatTax::create(['name' => 'VAT 12%', 'percentage' => 12, 'is_active' => 1]);
 
         $shop = Shop::factory()->create();
@@ -78,10 +79,12 @@ class ProductVatTaxTest extends TestCase
 
         $taxByName = collect($result['all_vat_taxes'])->keyBy('name');
 
+        // Only the default rate is applied to the unassigned product's subtotal.
         $this->assertEquals(5.00, $taxByName['VAT 5%']['amount']);
-        $this->assertEquals(24.00, $taxByName['VAT 12%']['amount']);
-        $this->assertEquals(29.00, $result['order_tax_amount']);
-        $this->assertEquals(229.00, $result['payable_amount']);
+        // The overridden product pays exactly its assigned rate, not the default stack.
+        $this->assertEquals(12.00, $taxByName['VAT 12%']['amount']);
+        $this->assertEquals(17.00, $result['order_tax_amount']);
+        $this->assertEquals(217.00, $result['payable_amount']);
     }
 
     public function test_discount_and_variant_pricing_are_taxed(): void
@@ -125,7 +128,7 @@ class ProductVatTaxTest extends TestCase
         $this->bindBareRequest();
 
         $vat0 = VatTax::create(['name' => 'VAT 0%', 'percentage' => 0, 'is_active' => 1]);
-        $vat5 = VatTax::create(['name' => 'VAT 5%', 'percentage' => 5, 'is_active' => 1]);
+        $vat5 = VatTax::create(['name' => 'VAT 5%', 'percentage' => 5, 'is_active' => 1, 'is_default' => 1]);
 
         $shop = Shop::factory()->create();
 
@@ -171,7 +174,7 @@ class ProductVatTaxTest extends TestCase
         $tax = VatTax::create(['name' => 'VAT 12%', 'percentage' => 12, 'is_active' => 1]);
 
         $response = $this->post(route('admin.product.tax.update', $product), [
-            'vat_tax_ids' => [$tax->id],
+            'vat_tax_id' => $tax->id,
         ]);
 
         $response->assertStatus(302);

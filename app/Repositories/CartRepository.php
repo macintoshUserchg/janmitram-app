@@ -9,6 +9,7 @@ use App\Models\Address;
 use App\Models\Area;
 use App\Models\Cart;
 use App\Models\Product;
+use App\Models\VatTax;
 use App\Support\Repositories\Repository;
 use Illuminate\Support\Number;
 
@@ -279,21 +280,34 @@ class CartRepository extends Repository
 
         $payableAmount = $totalAmount + $deliveryCharge - $couponDiscount;
 
-        // get order base tax
-        $vatTaxes = VatTaxRepository::getActiveVatTaxes();
+        // get order base tax: one default rate on the global base, plus per-product overrides
+        $defaultVatTax = VatTaxRepository::getDefaultVatTax();
 
-        foreach ($vatTaxes ?? [] as $vatTax) {
-            if ($vatTax->name && $vatTax->percentage > 0) {
-                $amount = round($globalBase * ($vatTax->percentage / 100), 2) + ($perProduct[$vatTax->id] ?? 0);
+        if ($defaultVatTax && $defaultVatTax->name && $defaultVatTax->percentage > 0) {
+            $amount = round($globalBase * ($defaultVatTax->percentage / 100), 2) + ($perProduct[$defaultVatTax->id] ?? 0);
 
-                if ($amount <= 0) {
-                    continue;
-                }
-
+            if ($amount > 0) {
                 $vatTaxesArray[] = [
-                    'id' => $vatTax->id,
-                    'name' => $vatTax->name,
-                    'percentage' => $vatTax->percentage,
+                    'id' => $defaultVatTax->id,
+                    'name' => $defaultVatTax->name,
+                    'percentage' => $defaultVatTax->percentage,
+                    'amount' => round($amount, 2),
+                ];
+            }
+        }
+
+        foreach ($perProduct as $rateId => $amount) {
+            if ($rateId == $defaultVatTax?->id || $amount <= 0) {
+                continue;
+            }
+
+            $rate = VatTax::find($rateId);
+
+            if ($rate?->name && $rate->percentage > 0) {
+                $vatTaxesArray[] = [
+                    'id' => $rate->id,
+                    'name' => $rate->name,
+                    'percentage' => $rate->percentage,
                     'amount' => round($amount, 2),
                 ];
             }

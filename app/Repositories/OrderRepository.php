@@ -19,6 +19,7 @@ use App\Models\OrderVatTax;
 use App\Models\Payment;
 use App\Models\Product;
 use App\Models\Shop;
+use App\Models\VatTax;
 use App\Services\NotificationServices;
 use App\Services\WarehouseService;
 use App\Support\Repositories\Repository;
@@ -431,20 +432,34 @@ class OrderRepository extends Repository
             }
         }
 
-        // order vat taxes
-        $vatTaxes = VatTaxRepository::getActiveVatTaxes();
+        // order vat taxes: one default rate on the global base, plus per-product overrides
+        $defaultVatTax = VatTaxRepository::getDefaultVatTax();
 
-        foreach ($vatTaxes ?? [] as $vatTax) {
-            if ($vatTax?->name && $vatTax?->percentage > 0) {
-                $amount = round($globalBase * ($vatTax->percentage / 100), 2) + ($perProduct[$vatTax->id] ?? 0);
+        if ($defaultVatTax?->name && $defaultVatTax->percentage > 0) {
+            $amount = round($globalBase * ($defaultVatTax->percentage / 100), 2) + ($perProduct[$defaultVatTax->id] ?? 0);
 
-                if ($amount <= 0) {
-                    continue;
-                }
-
+            if ($amount > 0) {
                 $allVatTaxes[] = (object) [
-                    'name' => $vatTax->name,
-                    'percentage' => $vatTax->percentage,
+                    'name' => $defaultVatTax->name,
+                    'percentage' => $defaultVatTax->percentage,
+                    'amount' => round($amount, 2),
+                ];
+
+                $totalTaxAmount += $amount;
+            }
+        }
+
+        foreach ($perProduct as $rateId => $amount) {
+            if ($rateId == $defaultVatTax?->id || $amount <= 0) {
+                continue;
+            }
+
+            $rate = VatTax::find($rateId);
+
+            if ($rate?->name && $rate->percentage > 0) {
+                $allVatTaxes[] = (object) [
+                    'name' => $rate->name,
+                    'percentage' => $rate->percentage,
                     'amount' => round($amount, 2),
                 ];
 

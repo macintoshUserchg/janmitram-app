@@ -61,7 +61,7 @@ class ProductRequest extends FormRequest
             'is_stock_managed' => 'nullable|boolean',
             'warehouse_id' => 'nullable|exists:warehouses,id',
             'initial_warehouse_stock' => 'nullable|integer|min:0',
-            'vat_tax_ids' => 'nullable|array|exists:vat_taxes,id',
+            'vat_tax_id' => 'nullable|exists:vat_taxes,id',
         ];
     }
 

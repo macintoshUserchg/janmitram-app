@@ -192,22 +192,14 @@
                     <form action="{{ route('admin.product.tax.update', $product) }}" method="POST">
                         @csrf
 
-                        <div class="row">
+                        <select name="vat_tax_id" class="form-control">
+                            <option value="">{{ __('Default (no specific rate)') }}</option>
                             @foreach ($vatTaxes as $vatTax)
-                                <div class="col-md-4">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox"
-                                               name="vat_tax_ids[]"
-                                               value="{{ $vatTax->id }}"
-                                               id="vatTax{{ $vatTax->id }}"
-                                               @checked(in_array($vatTax->id, $productVatTaxIds))>
-                                        <label class="form-check-label" for="vatTax{{ $vatTax->id }}">
-                                            {{ $vatTax->name }} ({{ $vatTax->percentage }}%)
-                                        </label>
-                                    </div>
-                                </div>
+                                <option value="{{ $vatTax->id }}" @selected(($productVatTaxIds[0] ?? null) == $vatTax->id)>
+                                    {{ $vatTax->name }} ({{ $vatTax->percentage }}%)
+                                </option>
                             @endforeach
-                        </div>
+                        </select>
 
                         <button type="submit" class="btn btn-primary mt-3">
                             {{ __('Save') }}

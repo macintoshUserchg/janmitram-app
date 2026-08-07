@@ -14,6 +14,7 @@ use App\Models\Customer;
 use App\Models\Order;
 use App\Models\PosCart;
 use App\Models\PosCartProduct;
+use App\Models\VatTax;
 use App\Repositories\CustomerRepository;
 use App\Repositories\OrderRepository;
 use App\Repositories\PosCartRepository;
@@ -251,7 +252,7 @@ class POSController extends Controller
     {
         $postCart = PosCartRepository::getLatestCart($request);
 
-        $vatTaxes = VatTaxRepository::getActiveVatTaxes();
+        $defaultVatTax = VatTaxRepository::getDefaultVatTax();
 
         $allVatTaxes = [];
         $totalTaxAmount = 0;
@@ -279,17 +280,31 @@ class POSController extends Controller
             }
         }
 
-        foreach ($vatTaxes ?? [] as $vatTax) {
-            if ($vatTax?->name && $vatTax?->percentage > 0) {
-                $amount = round($globalBase * ($vatTax->percentage / 100), 2) + ($perProduct[$vatTax->id] ?? 0);
+        if ($defaultVatTax?->name && $defaultVatTax->percentage > 0) {
+            $amount = round($globalBase * ($defaultVatTax->percentage / 100), 2) + ($perProduct[$defaultVatTax->id] ?? 0);
 
-                if ($amount <= 0) {
-                    continue;
-                }
-
+            if ($amount > 0) {
                 $allVatTaxes[] = (object) [
-                    'name' => $vatTax->name,
-                    'percentage' => $vatTax->percentage,
+                    'name' => $defaultVatTax->name,
+                    'percentage' => $defaultVatTax->percentage,
+                    'amount' => round($amount, 2),
+                ];
+
+                $totalTaxAmount += $amount;
+            }
+        }
+
+        foreach ($perProduct as $rateId => $amount) {
+            if ($rateId == $defaultVatTax?->id || $amount <= 0) {
+                continue;
+            }
+
+            $rate = VatTax::find($rateId);
+
+            if ($rate?->name && $rate->percentage > 0) {
+                $allVatTaxes[] = (object) [
+                    'name' => $rate->name,
+                    'percentage' => $rate->percentage,
                     'amount' => round($amount, 2),
                 ];
 

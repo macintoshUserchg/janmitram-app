@@ -176,8 +176,8 @@ class ProductRepository extends Repository
         }
 
         // vat tax assignment is root-shop only (admin operates the root shop via the shop forms)
-        if ($shop?->id === generaleSetting('rootShop')?->id && $request->filled('vat_tax_ids')) {
-            $product->vatTaxes()->sync($request->vat_tax_ids ?? []);
+        if ($shop?->id === generaleSetting('rootShop')?->id && $request->filled('vat_tax_id')) {
+            $product->vatTaxes()->sync($request->filled('vat_tax_id') ? [$request->vat_tax_id] : []);
         }
 
         return $product;
@@ -330,8 +330,8 @@ class ProductRepository extends Repository
         }
 
         // vat tax assignment is root-shop only (admin operates the root shop via the shop forms)
-        if ($shop?->id === generaleSetting('rootShop')?->id && $request->filled('vat_tax_ids')) {
-            $product->vatTaxes()->sync($request->vat_tax_ids ?? []);
+        if (generaleSetting('shop')?->id === generaleSetting('rootShop')?->id && $request->filled('vat_tax_id')) {
+            $product->vatTaxes()->sync($request->filled('vat_tax_id') ? [$request->vat_tax_id] : []);
         }
 
         return $product;

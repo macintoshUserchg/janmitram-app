@@ -37,6 +37,13 @@ class VatTaxController extends Controller
         return to_route('admin.vatTax.index')->withSuccess(__('Status Updated Successfully'));
     }
 
+    public function setDefault(VatTax $vatTax)
+    {
+        VatTaxRepository::setDefault($vatTax);
+
+        return to_route('admin.vatTax.index')->withSuccess(__('Default tax updated successfully'));
+    }
+
     public function destroy(VatTax $vatTax)
     {
         $vatTax->delete();
