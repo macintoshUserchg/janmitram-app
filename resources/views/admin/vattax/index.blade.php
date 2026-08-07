@@ -11,6 +11,36 @@
             </p>
         </div>
 
+        <!-- Platform Default Tax -->
+        <div class="my-3 card">
+            <div class="d-flex align-items-center flex-wrap gap-3 justify-content-between px-3 p-3 border-bottom">
+                <h4 class="mb-0">{{ __('Platform Default Tax') }}</h4>
+            </div>
+            <div class="card-body">
+                @if ($activeVatTaxes->isEmpty())
+                    <p class="text-muted mb-0">{{ __('No active tax rates configured.') }}</p>
+                @else
+                    <form action="{{ route('admin.vatTax.setDefaultForm') }}" method="POST"
+                        class="d-flex align-items-end gap-3 flex-wrap">
+                        @csrf
+                        <div class="flex-grow-1" style="min-width: 240px;">
+                            <label class="form-label mb-1">
+                                {{ __('Applied to products with no specific rate') }}
+                            </label>
+                            <select name="vat_tax_id" class="form-control">
+                                @foreach ($activeVatTaxes as $vatTax)
+                                    <option value="{{ $vatTax->id }}" @selected($defaultVatTax?->id == $vatTax->id)>
+                                        {{ $vatTax->name }} ({{ $vatTax->percentage }}%)
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">{{ __('Save Default') }}</button>
+                    </form>
+                @endif
+            </div>
+        </div>
+
         <!-- All Taxes -->
         <div class="my-3 card">
             <div class="d-flex align-items-center flex-wrap gap-3 justify-content-between px-3 p-3 border-bottom">

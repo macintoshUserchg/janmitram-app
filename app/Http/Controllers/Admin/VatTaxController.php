@@ -6,14 +6,17 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\VatTaxRequest;
 use App\Models\VatTax;
 use App\Repositories\VatTaxRepository;
+use Illuminate\Http\Request;
 
 class VatTaxController extends Controller
 {
     public function index()
     {
         $vatTaxes = VatTaxRepository::query()->latest('id')->paginate(20);
+        $activeVatTaxes = VatTaxRepository::getActiveVatTaxes();
+        $defaultVatTax = VatTaxRepository::getDefaultVatTax();
 
-        return view('admin.vattax.index', compact('vatTaxes'));
+        return view('admin.vattax.index', compact('vatTaxes', 'activeVatTaxes', 'defaultVatTax'));
     }
 
     public function store(VatTaxRequest $request)
@@ -42,6 +45,15 @@ class VatTaxController extends Controller
         VatTaxRepository::setDefault($vatTax);
 
         return to_route('admin.vatTax.index')->withSuccess(__('Default tax updated successfully'));
+    }
+
+    public function setDefaultFromForm(Request $request)
+    {
+        $request->validate(['vat_tax_id' => 'required|exists:vat_taxes,id']);
+
+        VatTaxRepository::setDefault(VatTax::findOrFail($request->vat_tax_id));
+
+        return back()->withSuccess(__('Default tax updated successfully'));
     }
 
     public function destroy(VatTax $vatTax)
