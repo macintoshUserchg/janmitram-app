@@ -267,9 +267,8 @@ Route::prefix('shop')->name('shop.')->middleware(['web'])->group(function () {
         Route::post('bulk-product-export/export', [BulkProductExportController::class, 'export'])->name('bulk-product-export.export');
         Route::get('bulk-product-export/demo', [BulkProductExportController::class, 'demoExport'])->name('bulk-product-export.demo');
         Route::get('bulk-product-import', [BulkProductImportController::class, 'index'])->name('bulk-product-import.index');
-        Route::get('bulk-product-import/format', [BulkProductImportController::class, 'formatExport'])->name('bulk-product-import.formatExport');
-        Route::post('bulk-product-import/export', [BulkProductImportController::class, 'export'])->name('bulk-product-import.export');
         Route::post('bulk-product-import', [BulkProductImportController::class, 'store'])->name('bulk-product-import.store');
+        Route::get('bulk-product-import/errors/{file}', [BulkProductImportController::class, 'downloadErrors'])->name('bulk-product-import.errors');
 
         Route::get('brand', [BrandController::class, 'index'])->name('brand.index');
         Route::get('category', [CategoryController::class, 'index'])->name('category.index');
