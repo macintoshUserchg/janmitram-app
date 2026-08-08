@@ -28,7 +28,7 @@ class BulkProductExportController extends Controller
         }
 
         $rows = $rootShop->products()
-            ->with(['brand', 'unit', 'categories', 'subcategories', 'colors', 'sizes'])
+            ->with(['brand', 'unit', 'categories', 'subcategories', 'colors', 'sizes', 'vatTaxes'])
             ->get()
             ->map(fn (Product $product) => $this->productRow($product));
 
