@@ -7,16 +7,49 @@ use App\Models\Media;
 use App\Models\Product;
 use App\Models\ProductTranslation;
 use App\Models\RecentView;
+use App\Models\Shop;
 use App\Models\User;
+use App\Models\VatTax;
 use App\Support\Repositories\Repository;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use InvalidArgumentException;
 use Mews\Purifier\Facades\Purifier;
 
 class ProductRepository extends Repository
 {
+    /**
+     * Spreadsheet column name → 0-based index (exact import/export column order).
+     */
+    private const IMPORT_COLUMNS = [
+        'id' => 0,
+        'name' => 1,
+        'short_description' => 2,
+        'description' => 3,
+        'brand' => 4,
+        'unit' => 5,
+        'category' => 6,
+        'sub_category' => 7,
+        'colors' => 8,
+        'sizes' => 9,
+        'price' => 10,
+        'discount_price' => 11,
+        'buy_price' => 12,
+        'sku' => 13,
+        'quantity' => 14,
+        'min_order_quantity' => 15,
+        'is_digital' => 16,
+        'vat_rate' => 17,
+        'meta_title' => 18,
+        'meta_description' => 19,
+        'meta_keywords' => 20,
+    ];
+
     /**
      * base method
      *
@@ -390,6 +423,204 @@ class ProductRepository extends Repository
         }
 
         return $media;
+    }
+
+    /**
+     * Import spreadsheet rows into root-shop products (upsert by SKU/code).
+     *
+     * The caller is expected to pass the raw rows with the header already
+     * stripped, so index 0 is the first data row. Rows are reported as
+     * 1-based spreadsheet row numbers (index + 1).
+     *
+     * @param  array<int, array<int, mixed>>  $rows
+     * @return array{imported: int, updated: int, failed: int, errors: array<int, array{row: int, reason: string}>}
+     */
+    public static function importRows(array $rows): array
+    {
+        $rootShop = generaleSetting('rootShop');
+
+        $result = ['imported' => 0, 'updated' => 0, 'failed' => 0, 'errors' => []];
+
+        foreach (array_values($rows) as $index => $row) {
+            $rowNumber = $index + 1;
+
+            try {
+                $outcome = self::importRow($row, $rootShop);
+            } catch (\Throwable $e) {
+                $result['failed']++;
+                $result['errors'][$rowNumber] = ['row' => $rowNumber, 'reason' => $e->getMessage()];
+
+                continue;
+            }
+
+            $result[$outcome]++;
+        }
+
+        return $result;
+    }
+
+    /**
+     * Map and persist a single import row. Throws on validation failure so the
+     * caller can record it as a failed row; returns 'imported' or 'updated'.
+     *
+     * @param  array<int, mixed>  $row
+     * @return 'imported'|'updated'
+     */
+    private static function importRow(array $row, Shop $rootShop): string
+    {
+        $cell = fn (string $column) => $row[self::IMPORT_COLUMNS[$column]] ?? null;
+
+        $sku = trim((string) $cell('sku'));
+        if ($sku === '') {
+            throw new InvalidArgumentException('Missing or empty SKU');
+        }
+
+        $name = trim((string) $cell('name'));
+        if ($name === '') {
+            throw new InvalidArgumentException('Missing product name');
+        }
+
+        $price = $cell('price');
+        if ($price === null || $price === '' || ! is_numeric($price)) {
+            throw new InvalidArgumentException('Price must be numeric');
+        }
+        $price = (float) $price;
+
+        $categoryIds = self::resolveNames($rootShop->categories()->active()->get(), $cell('category'));
+        if ($categoryIds === []) {
+            throw new InvalidArgumentException('No valid category');
+        }
+
+        $subCategoryIds = self::resolveNames($rootShop->subCategories()->isActive()->get(), $cell('sub_category'));
+        $colorIds = self::resolveNames($rootShop->colors()->isActive()->get(), $cell('colors'));
+        $sizeIds = self::resolveNames($rootShop->sizes()->isActive()->get(), $cell('sizes'));
+
+        $brand = $rootShop->brands()->isActive()->where('name', trim((string) $cell('brand')))->first();
+        $unit = $rootShop->units()->isActive()->where('name', trim((string) $cell('unit')))->first();
+
+        $isDigital = self::parseIsDigital($cell('is_digital'));
+
+        $vatRateName = trim((string) $cell('vat_rate'));
+        $vatTaxId = null;
+        if ($vatRateName !== '') {
+            $vatTax = VatTax::where('is_active', true)->where('name', $vatRateName)->first();
+            if (! $vatTax) {
+                throw new InvalidArgumentException('Unknown VAT rate');
+            }
+            $vatTaxId = $vatTax->id;
+        }
+
+        $quantity = self::nonNegativeNumber($cell('quantity'), 1);
+        $minOrderQuantity = self::nonNegativeNumber($cell('min_order_quantity'), 1);
+        $buyPrice = self::nonNegativeNumber($cell('buy_price'), 0);
+
+        $discountPrice = $cell('discount_price');
+        if ($discountPrice === null || $discountPrice === '' || ! is_numeric($discountPrice)) {
+            $discountPrice = null;
+        } else {
+            $discountPrice = (float) $discountPrice;
+            if ($discountPrice > $price) {
+                $discountPrice = $price;
+            }
+        }
+
+        $description = trim((string) $cell('description'));
+        $shortDescription = trim((string) $cell('short_description'));
+        $metaTitle = trim((string) $cell('meta_title'));
+        $metaDescription = trim((string) $cell('meta_description'));
+        $metaKeywords = trim((string) $cell('meta_keywords'));
+
+        $data = [
+            'name' => $name,
+            'short_description' => $shortDescription !== '' ? $shortDescription : null,
+            'description' => $description !== '' ? $description : 'description',
+            'brand_id' => $brand?->id,
+            'unit_id' => $unit?->id,
+            'price' => $price,
+            'discount_price' => $discountPrice,
+            'buy_price' => $buyPrice,
+            'quantity' => $quantity,
+            'min_order_quantity' => $minOrderQuantity,
+            'is_digital' => $isDigital,
+            'meta_title' => $metaTitle !== '' ? $metaTitle : null,
+            'meta_description' => $metaDescription !== '' ? $metaDescription : null,
+            'meta_keywords' => $metaKeywords !== '' ? Str::limit($metaKeywords, 200, '') : null,
+        ];
+
+        return DB::transaction(function () use ($rootShop, $sku, $data, $categoryIds, $subCategoryIds, $colorIds, $sizeIds, $vatTaxId) {
+            $product = $rootShop->products()->where('code', $sku)->first();
+
+            if ($product) {
+                self::update($product, $data);
+            } else {
+                $data['shop_id'] = $rootShop->id;
+                $data['code'] = $sku;
+                $data['is_active'] = true;
+                $data['is_approve'] = true;
+                $data['is_new'] = true;
+                $data['is_stock_managed'] = ! $data['is_digital'];
+                $product = self::create($data);
+            }
+
+            $product->categories()->sync($categoryIds);
+            $product->subcategories()->sync($subCategoryIds);
+            $product->colors()->sync($colorIds);
+            $product->sizes()->sync($sizeIds);
+            $product->vatTaxes()->sync($vatTaxId ? [$vatTaxId] : []);
+
+            return $product->wasRecentlyCreated ? 'imported' : 'updated';
+        });
+    }
+
+    /**
+     * Match a comma-separated list of names against a model collection and
+     * return the matching ids. Unmatched names are dropped (not an error).
+     *
+     * @param  Collection<int, Model>  $models
+     * @return array<int, int>
+     */
+    private static function resolveNames($models, $value): array
+    {
+        $ids = [];
+
+        foreach (explode(',', (string) $value) as $name) {
+            $name = trim($name);
+            if ($name === '') {
+                continue;
+            }
+
+            $match = $models->firstWhere('name', $name);
+            if ($match) {
+                $ids[] = $match->id;
+            }
+        }
+
+        return array_values(array_unique($ids));
+    }
+
+    /**
+     * Parse an is_digital cell: 1/Y (case-insensitive) are true.
+     *
+     * @param  mixed  $value
+     */
+    private static function parseIsDigital($value): bool
+    {
+        return in_array(strtoupper(trim((string) $value)), ['1', 'Y', 'YES', 'TRUE'], true);
+    }
+
+    /**
+     * Parse an optional non-negative number, falling back to $default for
+     * blank or non-numeric cells.
+     *
+     * @param  mixed  $value
+     */
+    private static function nonNegativeNumber($value, float $default): float
+    {
+        if ($value === null || trim((string) $value) === '' || ! is_numeric($value)) {
+            return $default;
+        }
+
+        return max(0, (float) $value);
     }
 
     /**
