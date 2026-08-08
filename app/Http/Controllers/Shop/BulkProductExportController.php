@@ -4,156 +4,108 @@ namespace App\Http\Controllers\Shop;
 
 use App\Exports\TemplateExport;
 use App\Http\Controllers\Controller;
+use App\Models\Product;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 
 class BulkProductExportController extends Controller
 {
     public function index()
     {
-        return view('shop.bulk-product.export');
+        $this->abortUnlessRootShop();
+
+        return view('shop.bulk-product.export', ['isRootShop' => true]);
     }
 
     public function export(Request $request)
     {
-        $request->validate([
-            'type' => 'required',
-        ]);
+        $this->abortUnlessRootShop();
 
-        $type = $request->type;
-        $shop = generaleSetting('shop');
-        $products = $shop?->products;
+        $rootShop = generaleSetting('rootShop');
 
-        $exportData = collect(
-            [
-                [
-                    'id',
-                    'name',
-                    'thumbnails',
-                    'category',
-                    'sub category',
-                    'brand',
-                    'colors',
-                    'sizes',
-                    'price',
-                    'discount price',
-                    'product sku',
-                    'stock qty',
-                    'short description',
-                    'description',
-                ],
-            ]
-        );
-
-        foreach ($products as $product) {
-            $thumbnails = [];
-
-            if ($product->media && Storage::exists($product->media->src)) {
-                $thumbnails[] = $product->media->original_name;
-            }
-
-            foreach ($product->medias as $media) {
-                if (Storage::exists($media->src)) {
-                    $thumbnails[] = $media->original_name;
-                }
-            }
-
-            $categories = $product->categories->pluck('name')->toArray();
-            $colors = $product->colors->pluck('name')->toArray();
-            $sizes = $product->sizes->pluck('name')->toArray();
-            $subCategories = $product->subcategories->pluck('name')->toArray();
-
-            $exportData[] = [
-                $product->id,
-                $product->name,
-                implode(',', $thumbnails),
-                implode(',', $categories),
-                implode(',', $subCategories),
-                $product->brand?->name,
-                implode(',', $colors),
-                implode(',', $sizes),
-                $product->price,
-                $product->discount_price ?? 0,
-                $product->code,
-                $product->quantity ?? 0,
-                $product->short_description,
-                $product->description,
-            ];
+        if (! $rootShop) {
+            return back()->with('error', __('Root shop not found.'));
         }
 
-        return Excel::download(new TemplateExport($exportData), 'products.xlsx');
+        $rows = $rootShop->products->map(fn (Product $product) => $this->productRow($product));
+
+        return Excel::download(new TemplateExport(collect([$this->headers()])->concat($rows)), 'products.xlsx');
     }
 
     // export for demo
     public function demoExport(Request $request)
     {
-        $shop = generaleSetting('shop');
+        $this->abortUnlessRootShop();
 
-        $exportData = collect(
-            [
-                [
-                    'id',
-                    'name',
-                    'thumbnails',
-                    'category',
-                    'sub category',
-                    'brand',
-                    'colors',
-                    'sizes',
-                    'price',
-                    'discount price',
-                    'product sku',
-                    'stock qty',
-                    'short description',
-                    'description',
-                ],
-            ]
-        );
+        $rootShop = generaleSetting('rootShop');
 
-        $thumbnails = [];
-
-        // get first product
-        $product = $shop?->products()?->first();
-
-        // check if product exists
-        if ($product) {
-
-            // check if media exists
-            if ($product->media && Storage::exists($product->media->src)) {
-                $thumbnails[] = $product->media->original_name;
-            }
-
-            // check if media exists
-            foreach ($product->medias as $media) {
-                if (Storage::exists($media->src)) {
-                    $thumbnails[] = $media->original_name;
-                }
-            }
-
-            $categories = $product->categories->pluck('name')->toArray();
-            $colors = $product->colors->pluck('name')->toArray();
-            $sizes = $product->sizes->pluck('name')->toArray();
-            $subCategories = $product->subcategories->pluck('name')->toArray();
-
-            $exportData[] = [
-                0,
-                $product->name,
-                implode(',', $thumbnails),
-                implode(',', $categories),
-                implode(',', $subCategories),
-                $product->brand?->name,
-                implode(',', $colors),
-                implode(',', $sizes),
-                $product->price,
-                $product->discount_price ?? 0,
-                $product->code,
-                $product->quantity ?? 0,
-                $product->short_description,
-                $product->description,
-            ];
+        if (! $rootShop) {
+            return back()->with('error', __('Root shop not found.'));
         }
 
-        return Excel::download(new TemplateExport($exportData), 'demo-template.xlsx');
+        $sample = $this->productRow(new Product);
+
+        return Excel::download(new TemplateExport(collect([$this->headers()])->concat([$sample])), 'demo-template.xlsx');
+    }
+
+    private function abortUnlessRootShop(): void
+    {
+        if (generaleSetting('shop')?->id !== generaleSetting('rootShop')?->id) {
+            abort(403);
+        }
+    }
+
+    private function headers(): array
+    {
+        return [
+            'id',
+            'name',
+            'short_description',
+            'description',
+            'brand',
+            'unit',
+            'category',
+            'sub_category',
+            'colors',
+            'sizes',
+            'price',
+            'discount_price',
+            'buy_price',
+            'sku',
+            'quantity',
+            'min_order_quantity',
+            'is_digital',
+            'vat_rate',
+            'meta_title',
+            'meta_description',
+            'meta_keywords',
+        ];
+    }
+
+    private function productRow(Product $product): array
+    {
+        return [
+            $product->id,
+            $product->name,
+            $product->short_description,
+            $product->description,
+            $product->brand?->name,
+            $product->unit?->name,
+            $product->categories->pluck('name')->implode(','),
+            $product->subcategories->pluck('name')->implode(','),
+            $product->colors->pluck('name')->implode(','),
+            $product->sizes->pluck('name')->implode(','),
+            $product->price,
+            $product->discount_price ?? 0,
+            $product->buy_price ?? 0,
+            $product->code,
+            $product->quantity ?? 0,
+            $product->min_order_quantity ?? 1,
+            $product->is_digital ? 1 : 0,
+            $product->vatTaxes()->pluck('name')->first() ?? '',
+            $product->meta_title,
+            $product->meta_description,
+            $product->meta_keywords,
+        ];
     }
 }
