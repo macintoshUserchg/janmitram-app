@@ -27,7 +27,10 @@ class BulkProductExportController extends Controller
             return back()->with('error', __('Root shop not found.'));
         }
 
-        $rows = $rootShop->products->map(fn (Product $product) => $this->productRow($product));
+        $rows = $rootShop->products()
+            ->with(['brand', 'unit', 'categories', 'subcategories', 'colors', 'sizes'])
+            ->get()
+            ->map(fn (Product $product) => $this->productRow($product));
 
         return Excel::download(new TemplateExport(collect([$this->headers()])->concat($rows)), 'products.xlsx');
     }
@@ -102,7 +105,7 @@ class BulkProductExportController extends Controller
             $product->quantity ?? 0,
             $product->min_order_quantity ?? 1,
             $product->is_digital ? 1 : 0,
-            $product->vatTaxes()->pluck('name')->first() ?? '',
+            $product->vatTaxes->pluck('name')->first() ?? '',
             $product->meta_title,
             $product->meta_description,
             $product->meta_keywords,
