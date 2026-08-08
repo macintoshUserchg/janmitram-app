@@ -61,8 +61,9 @@ class ProductController extends Controller
         $categories = $rootShop?->categories()->get();
 
         $flashSale = FlashSaleRepository::getIncoming();
+        $isRootShop = generaleSetting('shop')?->id === generaleSetting('rootShop')?->id;
 
-        return view('shop.product.index', compact('products', 'brands', 'colors', 'categories', 'flashSale'));
+        return view('shop.product.index', compact('products', 'brands', 'colors', 'categories', 'flashSale', 'isRootShop'));
     }
 
     /**

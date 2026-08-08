@@ -15,6 +15,16 @@
                     class="btn  {{ request('view_type', 'list') == 'list' ? 'btn-primary' : 'btn-secondary' }}"><i
                         class="bi bi-list-ul"></i></a>
             </div>
+            @if ($isRootShop)
+                <a href="{{ route('shop.bulk-product-import.index') }}" class="btn btn-primary">
+                    <i class="fa-solid fa-file-import me-2"></i>
+                    {{ __('Import') }}
+                </a>
+                <a href="{{ route('shop.bulk-product-export.index') }}" class="btn btn-primary">
+                    <i class="fa-solid fa-file-export me-2"></i>
+                    {{ __('Export') }}
+                </a>
+            @endif
             @hasPermission('shop.product.create')
                 <div class="custom-dropdown">
                     <button class="custom-dropdown-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">

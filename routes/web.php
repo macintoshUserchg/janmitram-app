@@ -268,7 +268,7 @@ Route::prefix('shop')->name('shop.')->middleware(['web'])->group(function () {
         Route::get('bulk-product-export/demo', [BulkProductExportController::class, 'demoExport'])->name('bulk-product-export.demo');
         Route::get('bulk-product-import', [BulkProductImportController::class, 'index'])->name('bulk-product-import.index');
         Route::post('bulk-product-import', [BulkProductImportController::class, 'store'])->name('bulk-product-import.store');
-        Route::get('bulk-product-import/errors/{file}', [BulkProductImportController::class, 'downloadErrors'])->name('bulk-product-import.errors');
+        Route::get('bulk-product-import/errors/{file}', [BulkProductImportController::class, 'downloadErrors'])->name('bulk-product-import.errors')->where('file', '[A-Za-z0-9_.-]+\.xlsx');
 
         Route::get('brand', [BrandController::class, 'index'])->name('brand.index');
         Route::get('category', [CategoryController::class, 'index'])->name('category.index');
