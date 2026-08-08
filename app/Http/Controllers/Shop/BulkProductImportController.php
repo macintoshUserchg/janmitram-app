@@ -34,6 +34,13 @@ class BulkProductImportController extends Controller
         $all = $sheet->toArray();
         $header = array_shift($all);
 
+        $expectedHeaders = ProductRepository::importHeaders();
+        $uploadedHeaders = array_map(fn ($h) => strtolower(trim((string) $h)), $header);
+
+        if ($uploadedHeaders !== $expectedHeaders) {
+            return back()->with('error', __('Invalid file format. The header row must be the standard product template ('.implode(', ', $expectedHeaders).').'));
+        }
+
         if (count($all) <= 0) {
             return back()->with('error', __('Sorry! File is empty.'));
         }

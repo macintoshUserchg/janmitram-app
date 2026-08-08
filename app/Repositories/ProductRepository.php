@@ -15,7 +15,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
@@ -49,6 +48,16 @@ class ProductRepository extends Repository
         'meta_description' => 19,
         'meta_keywords' => 20,
     ];
+
+    /**
+     * The expected import/export header row, in column order.
+     *
+     * @return array<int, string>
+     */
+    public static function importHeaders(): array
+    {
+        return array_keys(self::IMPORT_COLUMNS);
+    }
 
     /**
      * base method
@@ -621,216 +630,6 @@ class ProductRepository extends Repository
         }
 
         return max(0, (float) $value);
-    }
-
-    /**
-     * store new product from bulk import.
-     */
-    public static function bulkItemStore($rows, $folders = null)
-    {
-        $invalidRows = [];
-
-        $shop = generaleSetting('shop');
-        $rootShop = generaleSetting('rootShop');
-
-        $total = 0;
-
-        $folders = $folders !== null ? array_keys($folders) : [];
-
-        $galleryPath = 'gallery/shop'.$shop->id;
-
-        foreach ($rows as $row) {
-
-            $createData = [];
-
-            for ($i = 0; $i <= 13; $i++) {
-
-                if ($i == 1) {
-                    $createData['name'] = $row[$i];
-                } elseif ($i == 2) {
-
-                    $explodeThumbnails = explode(',', $row[$i]);
-
-                    $thumbnails = [];
-                    foreach ($explodeThumbnails as $thumbnail) {
-                        $storeFile = null;
-                        foreach ($folders as $folder) {
-                            if (Storage::disk('public')->exists($galleryPath.'/'.$folder)) {
-                                $files = File::files(Storage::disk('public')->path($galleryPath.'/'.$folder));
-                                foreach ($files as $file) {
-                                    if (basename($file) == $thumbnail) {
-                                        $storeFile = $file;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-
-                        if ($storeFile) {
-                            $thumbnails[] = $storeFile;
-                        }
-                    }
-                    $createData['thumbnails'] = $thumbnails;
-                } elseif ($i == 3) {
-                    $selectCategories = explode(',', $row[$i]);
-                    $categories = [];
-                    foreach ($selectCategories as $categoryName) {
-
-                        $category = $rootShop->categories()->where('name', $categoryName)->first();
-
-                        if ($category) {
-                            $categories[] = $category->id;
-                        }
-                    }
-                    $createData['categories'] = $categories;
-                } elseif ($i == 4) {
-                    $selectedSubCategories = explode(',', $row[$i]);
-                    $subCategories = [];
-                    foreach ($selectedSubCategories as $subCategoryName) {
-                        $subCategory = $rootShop->subcategories()->where('name', $subCategoryName)->first();
-                        if ($subCategory) {
-                            $subCategories[] = $subCategory->id;
-                        }
-                    }
-                    $createData['subCategories'] = $subCategories;
-                } elseif ($i == 5) {
-                    $brand = $rootShop->brands()->where('name', $row[$i])->first();
-                    $createData['brand'] = $brand ? $brand->id : null;
-                } elseif ($i == 6) {
-                    $selectColors = explode(',', $row[$i]);
-                    $colors = [];
-                    foreach ($selectColors as $colorName) {
-                        $color = $rootShop->colors()->where('name', $colorName)->first();
-                        if ($color) {
-                            $colors[] = $color->id;
-                        }
-                    }
-                    $createData['colors'] = $colors;
-                } elseif ($i == 7) {
-                    $selectSizes = explode(',', $row[$i]);
-                    $sizes = [];
-                    foreach ($selectSizes as $sizeName) {
-                        $size = $rootShop->sizes()->where('name', $sizeName)->first();
-                        if ($size) {
-                            $sizes[] = $size->id;
-                        }
-                    }
-                    $createData['sizes'] = $sizes;
-                } elseif ($i == 8) {
-                    $createData['price'] = $row[$i];
-                } elseif ($i == 9) {
-                    $createData['discount_price'] = $row[$i];
-                } elseif ($i == 10) {
-                    $createData['sku'] = $row[$i];
-                } elseif ($i == 11) {
-                    $createData['stock_quantity'] = $row[$i];
-                } elseif ($i == 12) {
-                    $createData['short_description'] = $row[$i];
-                } elseif ($i == 13) {
-                    $createData['description'] = $row[$i];
-                }
-            }
-
-            if ($createData['name'] != null && $createData['price'] != null && count($createData['categories']) != 0) {
-
-                if ($createData['price'] < $createData['discount_price']) {
-                    $createData['discount_price'] = $createData['price'];
-                }
-
-                self::storeBulkProduct($createData);
-
-                $total = $total + 1;
-            }
-        }
-
-        return $total;
-    }
-
-    /**
-     * store new product from bulk import.
-     *
-     * @return Product
-     */
-    private static function storeBulkProduct($data)
-    {
-        $shop = generaleSetting('shop');
-        $generaleSetting = generaleSetting('setting');
-        $approve = $generaleSetting?->new_product_approval ? false : true;
-
-        /**
-         * @var User $user
-         */
-        $user = auth()->user();
-        $isAdmin = false;
-        if ($user->hasRole('root') || ($generaleSetting?->shop_type == 'single')) {
-            $isAdmin = true;
-        }
-
-        $thumbnail = $data['thumbnails'] ? $data['thumbnails'][0] : null;
-
-        $media = self::storeMedia($thumbnail);
-
-        $additionalThumbnails = $data['thumbnails'] ? array_slice($data['thumbnails'], 1) : [];
-
-        $medias = [];
-        foreach ($additionalThumbnails as $thumbnail) {
-            $hasMedia = self::storeMedia($thumbnail);
-            if ($hasMedia) {
-                $medias[] = $hasMedia;
-            }
-        }
-
-        $product = self::create([
-            'shop_id' => $shop?->id,
-            'name' => $data['name'],
-            'description' => $data['description'] ?? 'description',
-            'short_description' => $data['short_description'] ?? 'short description',
-            'brand_id' => $data['brand'] ?? null,
-            'price' => $data['price'] ?? 0,
-            'discount_price' => $data['discount_price'] ?? 0,
-            'quantity' => $data['stock_quantity'] ?? 1,
-            'min_order_quantity' => 1,
-            'media_id' => $media,
-            'is_active' => $isAdmin ? true : $approve,
-            'is_new' => true,
-            'is_approve' => $isAdmin ? true : $approve,
-            'code' => $data['sku'] ?? random_int(100000, 999999),
-        ]);
-
-        $product->categories()->sync($data['categories'] ?? []);
-        $product->subCategories()->sync($data['subCategories'] ?? []);
-        $product->colors()->sync($data['colors'], []);
-        $product->sizes()->sync($data['sizes'], []);
-
-        $product->medias()->attach($medias);
-
-        return $product;
-    }
-
-    public static function storeMedia($thumbnail)
-    {
-        if ($thumbnail != null) {
-
-            $realPath = $thumbnail->getRealPath();
-
-            $path = 'thumbnails';
-
-            $fileName = random_int(100000, 999999).date('YmdHis').'.'.pathinfo($realPath, PATHINFO_EXTENSION);
-
-            $storagePath = Storage::disk('public')->putFileAs($path, $thumbnail, $fileName);
-
-            $media = Media::create([
-                'name' => pathinfo($storagePath, PATHINFO_FILENAME),
-                'src' => $storagePath,
-                'type' => 'image',
-                'original_name' => basename($realPath),
-                'extension' => pathinfo($storagePath, PATHINFO_EXTENSION),
-            ]);
-
-            return $media->id;
-        }
-
-        return null;
     }
 
     /**

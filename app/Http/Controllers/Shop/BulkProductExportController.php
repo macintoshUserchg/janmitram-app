@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Shop;
 use App\Exports\TemplateExport;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Repositories\ProductRepository;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -60,29 +61,7 @@ class BulkProductExportController extends Controller
 
     private function headers(): array
     {
-        return [
-            'id',
-            'name',
-            'short_description',
-            'description',
-            'brand',
-            'unit',
-            'category',
-            'sub_category',
-            'colors',
-            'sizes',
-            'price',
-            'discount_price',
-            'buy_price',
-            'sku',
-            'quantity',
-            'min_order_quantity',
-            'is_digital',
-            'vat_rate',
-            'meta_title',
-            'meta_description',
-            'meta_keywords',
-        ];
+        return ProductRepository::importHeaders();
     }
 
     private function productRow(Product $product): array
