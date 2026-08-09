@@ -46,7 +46,7 @@ class CartRepository extends Repository
 
                 $totalSold = $product->orders->sum('pivot.quantity');
 
-                $flashSale = $product->flashSales?->first();
+                $flashSale = $product->flashSales()->isActive()->first();
                 $flashSaleProduct = null;
                 $quantity = null;
 
@@ -199,7 +199,7 @@ class CartRepository extends Repository
             }
 
             $product = $cart->product;
-            $flashSale = $product->flashSales?->first();
+            $flashSale = $product->flashSales()->isActive()->first();
             $flashSaleProduct = null;
             $quantity = null;
 

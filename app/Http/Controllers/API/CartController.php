@@ -118,7 +118,7 @@ class CartController extends Controller
 
         $quantity = $cart->quantity;
 
-        $flashSale = $product->flashSales?->first();
+        $flashSale = $product->flashSales()->isActive()->first();
 
         $flashSaleProduct = $flashSale?->products()->where('id', $product->id)->first();
 

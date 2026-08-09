@@ -290,7 +290,7 @@ class OrderController extends Controller
 
                 $product->update(['quantity' => $product->quantity + $qty]);
 
-                $flashSale = $product->flashSales?->first();
+                $flashSale = $product->flashSales()->isActive()->first();
                 $flashSaleProduct = null;
 
                 if ($flashSale) {

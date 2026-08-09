@@ -15,7 +15,7 @@ class ChatProductResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $flashSale = $this->flashSales?->first();
+        $flashSale = $this->flashSales()->isActive()->first();
         $flashSaleProduct = null;
         $quantity = null;
 
