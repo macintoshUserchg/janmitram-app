@@ -146,6 +146,7 @@ Under this architecture:
    - Customer orders product from Shop via Vue SPA or Mobile App.
    - `OrderRepository` decrements `$shopProduct->quantity` (the Shop Copy Product) inside a `DB::transaction`; any mid-way failure rolls back all writes.
    - No `StockLedger` entry is written for the sale — sales draw from shop inventory only; warehouse stock was already consumed when the shop's stock request was dispatched (Phase 4).
+   - **Reorder** (`OrderRepository::reOrder`) runs through the same `createOrderForShop()`/`groupLinesByShop()` processor as checkout — it re-prices at current prices (variants, active flash sale, size/color), re-allocates like a fresh checkout, persists VAT, and links the payment. Flash-sale pricing uses the `isActive()` scope, so an ended flash sale never applies its old price.
 2. **In-Person Vendor POS Sale**:
    - Vendor processes POS transaction in Shop Panel (`/shop/pos`).
    - `PosCartRepository` decrements `$shopProduct->quantity` (the Shop Copy Product) inside a `DB::transaction`.

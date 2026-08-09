@@ -345,7 +345,8 @@ Controllers should orchestrate, not compute. Push logic down:
 - **Warehouse & Inventory operations** → `App\Services\WarehouseService`.
   - Helper methods: `findStock()` (smart color/size fallback), `resolveWarehouseShopId()`, `createWarehouse()`.
   - `fulfillStockRequest()` uses `findStock()` and caps the shop increment to the actual dispatched quantity (no phantom stock on shortfall).
-  - **⚠️ Online-sale caveat:** in `OrderRepository::storeByRequestFromCart`, the `WarehouseService::deductStock(..., 'order_sale', ...)` call is wrapped in `catch (\Throwable $th) {}` — an `InsufficientStockException` is **silently swallowed** and the order still completes, so an online sale can succeed even when warehouse stock is short. This contradicts the strict-ledger philosophy above; decide whether to enforce strict stock on online sales or keep the current permissive behaviour intentionally.
+  - **Sales draw from shop inventory only** (2026-08-10): online checkout and POS no longer call `WarehouseService::deductStock()` at sale time — warehouse stock is consumed when the shop's stock request is dispatched (`fulfillStockRequest`), and a sale decrements the Shop Copy Product's `products.quantity` directly inside a `DB::transaction`. No `order_sale`/`pos_sale` `StockLedger` rows are written. (This replaced the old sale-time `deductStock` call, which double-decremented shop inventory and drained an already-dispatched warehouse.)
+  - **Order creation is one shared processor** (2026-08-10): `OrderRepository::createOrderForShop()` + `groupLinesByShop()` build every order — cart checkout, POS, and **reorder** — wrapped in `DB::transaction`. A reorder re-prices at current prices (variants, active flash sale, size/color), re-allocates like a fresh checkout, persists VAT, and links the payment. Flash-sale pricing everywhere (orders and cart/product display) uses the `isActive()` scope, so an ended flash sale never leaks its old price.
 - **MLM / network payouts** → `App\Services\PayoutService` (referral tree, monthly payouts, 90-day deactivation) + the `CalculateMonthlyPayouts` / `DeactivateInactiveMembers` commands.
 - **Complex queries** → Eloquent scopes (`app/Models/Scopes/`) or `Repository` classes.
 - **Business logic** → `app/Services/` (e.g. `SmsGatewayService`, `NotificationServices`).
@@ -476,14 +477,7 @@ source:
    guard, `! $driver->driverLocation()->exists()`.) Reachable via the AJAX
    location endpoint with a bad id.
 
-10. **Online-sale stock-shortfall is silently swallowed** —
-    `OrderRepository::storeByRequestFromCart` wraps
-    `WarehouseService::deductStock(..., 'order_sale', ...)` in
-    `catch (\Throwable $th) {}`, so an `InsufficientStockException` is swallowed
-    and the order completes even when warehouse stock is short. (See Structural
-    Guidelines §1.)
-
-11. **MLM payout engine is real but underdocumented** — `PayoutService`,
+10. **MLM payout engine is real but underdocumented** — `PayoutService`,
     `ShopMonthlyPayout`, `shops.parent_shop_id`, referral codes, 90-day
     deactivation, tiered group-sales bonuses, and the
     `CalculateMonthlyPayouts`/`DeactivateInactiveMembers` commands. Added
