@@ -13,9 +13,9 @@ use App\Models\PosCart;
 use App\Models\PosCartProduct;
 use App\Models\Product;
 use App\Models\VatTax;
-use App\Services\WarehouseService;
 use App\Support\Repositories\Repository;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Modules\Purchase\App\Models\ProductSku;
 
 class PosCartRepository extends Repository
@@ -237,6 +237,13 @@ class PosCartRepository extends Repository
 
     public static function storeOrder(PosCart $posCart, $request)
     {
+        return DB::transaction(function () use ($posCart, $request) {
+            return self::storeOrderInTransaction($posCart, $request);
+        });
+    }
+
+    private static function storeOrderInTransaction(PosCart $posCart, $request)
+    {
         $shop = generaleSetting('shop');
 
         if ($request->order_type == 'draft') {
@@ -339,26 +346,6 @@ class PosCartRepository extends Repository
             $product->update([
                 'quantity' => ($quantity > 0) ? $quantity : 0,
             ]);
-
-            // Sync warehouse stock for physical products
-            if (! $product->is_digital) {
-                $shopWarehouse = $shop?->warehouse ?? WarehouseRepository::getCentralWarehouse();
-                if ($shopWarehouse) {
-                    try {
-                        WarehouseService::deductStock(
-                            $shopWarehouse,
-                            $product,
-                            (int) $product->pivot->quantity,
-                            $product->pivot->color,
-                            $product->pivot->size,
-                            'pos_sale',
-                            $order->id,
-                            "POS Order #{$order->id} sale"
-                        );
-                    } catch (\Throwable $th) {
-                    }
-                }
-            }
 
             $sku = $product->pivot->sku_no ? collect(json_decode($product->pivot->sku_no, true))->implode(', ') : null;
 

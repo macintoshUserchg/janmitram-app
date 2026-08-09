@@ -18,10 +18,13 @@ use App\Models\Product;
 use App\Models\Shop;
 use App\Models\Unit;
 use App\Models\User;
+use App\Models\Warehouse;
+use App\Models\WarehouseStock;
 use App\Repositories\OrderRepository;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -304,6 +307,111 @@ class ShopAllocationTest extends TestCase
 
         $this->assertCount(2, $candidates);
         $this->assertFalse($candidates[0]->radius_eligible); // near shop also out of 1km radius
+    }
+
+    public function test_order_placement_rolls_back_all_writes_on_failure(): void
+    {
+        Cache::forget('generale_setting'); // single-vendor
+        Role::create(['name' => 'customer']);
+        Area::factory()->create();
+        $shop = Shop::factory()->create();
+        $shop->user->update(['is_active' => true]);
+        Brand::create(['name' => 'Test Brand', 'slug' => 'test-brand']);
+        $unit = Unit::create(['name' => 'kg', 'shop_id' => $shop->id, 'is_active' => true]);
+
+        $inStock = Product::factory()->create(['shop_id' => $shop->id, 'unit_id' => $unit->id, 'quantity' => 5, 'is_active' => true, 'is_approve' => true]);
+        $outOfStock = Product::factory()->create(['shop_id' => $shop->id, 'unit_id' => $unit->id, 'quantity' => 1, 'is_active' => true, 'is_approve' => true]);
+
+        $customerUser = User::factory()->create();
+        $customer = Customer::factory()->create(['user_id' => $customerUser->id]);
+        $address = Address::factory()->create(['customer_id' => $customer->id, 'latitude' => 26.9, 'longitude' => 75.8]);
+
+        Cart::create(['customer_id' => $customer->id, 'shop_id' => $shop->id, 'product_id' => $inStock->id, 'quantity' => 2]);
+        Cart::create(['customer_id' => $customer->id, 'shop_id' => $shop->id, 'product_id' => $outOfStock->id, 'quantity' => 3]);
+
+        try {
+            $this->placeOrder($customerUser, $address, $shop->id);
+            $this->fail('Expected RuntimeException for out-of-stock line');
+        } catch (\RuntimeException $e) {
+            $this->assertStringContainsString('no longer available', $e->getMessage());
+        }
+
+        $this->assertSame(0, Payment::count());
+        $this->assertSame(0, Order::count());
+        $this->assertSame(0, DB::table('order_products')->count());
+        $this->assertSame(5, (int) $inStock->fresh()->quantity);
+        $this->assertSame(1, (int) $outOfStock->fresh()->quantity);
+        $this->assertSame(2, Cart::where('customer_id', $customer->id)->count());
+    }
+
+    public function test_sale_decrements_shop_inventory_not_warehouse(): void
+    {
+        Cache::forget('generale_setting');
+        Role::create(['name' => 'customer']);
+        Area::factory()->create();
+        $shop = Shop::factory()->create();
+        $shop->user->update(['is_active' => true]);
+        Brand::create(['name' => 'Test Brand', 'slug' => 'test-brand']);
+        $unit = Unit::create(['name' => 'kg', 'shop_id' => $shop->id, 'is_active' => true]);
+        $product = Product::factory()->create(['shop_id' => $shop->id, 'unit_id' => $unit->id, 'quantity' => 5, 'is_active' => true, 'is_approve' => true]);
+
+        $warehouse = Warehouse::create(['name' => 'Central', 'is_default' => true]);
+        $shop->update(['warehouse_id' => $warehouse->id]);
+        WarehouseStock::create(['warehouse_id' => $warehouse->id, 'product_id' => $product->id, 'quantity' => 5]);
+
+        $customerUser = User::factory()->create();
+        $customer = Customer::factory()->create(['user_id' => $customerUser->id]);
+        $address = Address::factory()->create(['customer_id' => $customer->id, 'latitude' => 26.9, 'longitude' => 75.8]);
+        Cart::create(['customer_id' => $customer->id, 'shop_id' => $shop->id, 'product_id' => $product->id, 'quantity' => 2]);
+
+        $this->placeOrder($customerUser, $address, $shop->id);
+
+        $this->assertSame(1, Order::count());
+        $this->assertSame(1, Payment::count());
+        $this->assertSame(1, DB::table('order_products')->count());
+        $this->assertSame(3, (int) $product->fresh()->quantity); // shop inventory decremented once
+        $this->assertSame(5, (int) WarehouseStock::where('product_id', $product->id)->first()->fresh()->quantity); // warehouse untouched
+        $this->assertSame(0, DB::table('stock_ledgers')->count()); // no sale-time ledger rows
+        $this->assertSame(0, Cart::where('customer_id', $customer->id)->count()); // cart consumed on success
+    }
+
+    public function test_reorder_rolls_back_writes_on_oversell(): void
+    {
+        Role::create(['name' => 'customer']);
+        Area::factory()->create();
+        $shop = Shop::factory()->create();
+        $shop->user->update(['is_active' => true]);
+        Brand::create(['name' => 'Test Brand', 'slug' => 'test-brand']);
+        $unit = Unit::create(['name' => 'kg', 'shop_id' => $shop->id, 'is_active' => true]);
+        Coupon::factory()->create(['shop_id' => $shop->id]); // OrderFactory requires a Coupon row
+
+        $productA = Product::factory()->create(['shop_id' => $shop->id, 'unit_id' => $unit->id, 'quantity' => 5, 'is_active' => true, 'is_approve' => true]);
+        $productB = Product::factory()->create(['shop_id' => $shop->id, 'unit_id' => $unit->id, 'quantity' => 1, 'is_active' => true, 'is_approve' => true]);
+
+        $customerUser = User::factory()->create();
+        $customer = Customer::factory()->create(['user_id' => $customerUser->id]);
+        $address = Address::factory()->create(['customer_id' => $customer->id, 'latitude' => 26.9, 'longitude' => 75.8]);
+
+        $original = Order::factory()->create([
+            'shop_id' => $shop->id, 'customer_id' => $customer->id, 'address_id' => $address->id,
+            'order_status' => 'Delivered', 'payment_status' => 'Paid',
+        ]);
+        $original->products()->attach($productA->id, ['quantity' => 2, 'color' => null, 'size' => null, 'unit' => null, 'price' => 100]);
+        $original->products()->attach($productB->id, ['quantity' => 3, 'color' => null, 'size' => null, 'unit' => null, 'price' => 100]);
+        Payment::create(['amount' => 200, 'payment_method' => 'Cash Payment']);
+        $this->actingAs($customerUser, 'sanctum');
+
+        try {
+            OrderRepository::reOrder($original, Payment::first());
+            $this->fail('Expected RuntimeException for out-of-stock line');
+        } catch (\RuntimeException $e) {
+            $this->assertStringContainsString('no longer available', $e->getMessage());
+        }
+
+        $this->assertSame(1, Order::count()); // only the original remains
+        $this->assertSame(2, DB::table('order_products')->count()); // both original attachments remain
+        $this->assertSame(5, (int) $productA->fresh()->quantity);
+        $this->assertSame(1, (int) $productB->fresh()->quantity);
     }
 
     private function placeOrder(User $customerUser, Address $address, int $shopId): Payment

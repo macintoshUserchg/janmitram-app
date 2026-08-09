@@ -21,10 +21,10 @@ use App\Models\Product;
 use App\Models\Shop;
 use App\Models\VatTax;
 use App\Services\NotificationServices;
-use App\Services\WarehouseService;
 use App\Support\Repositories\Repository;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class OrderRepository extends Repository
 {
@@ -47,6 +47,13 @@ class OrderRepository extends Repository
      * Store new order from cart
      */
     public static function storeByRequestFromCart(OrderRequest $request, $paymentMethod, $carts): Payment
+    {
+        return DB::transaction(function () use ($request, $paymentMethod, $carts) {
+            return self::storeByRequestFromCartInTransaction($request, $paymentMethod, $carts);
+        });
+    }
+
+    private static function storeByRequestFromCartInTransaction(OrderRequest $request, $paymentMethod, $carts): Payment
     {
         $totalPayableAmount = 0;
 
@@ -129,7 +136,7 @@ class OrderRepository extends Repository
                 if ($flashSale) {
                     $flashSaleProduct = $flashSale?->products()->where('id', $product->id)->first();
 
-                    $quantity = $flashSaleProduct?->pivot->quantity - $flashSaleProduct->pivot->sale_quantity;
+                    $quantity = $flashSaleProduct?->pivot->quantity - $flashSaleProduct?->pivot->sale_quantity;
 
                     if ($quantity == 0) {
                         $flashSaleProduct = null;
@@ -162,26 +169,6 @@ class OrderRepository extends Repository
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
-
-                // Sync warehouse stock for physical products
-                if (! $product->is_digital) {
-                    $shopWarehouse = $order->shop?->warehouse ?? WarehouseRepository::getCentralWarehouse();
-                    if ($shopWarehouse) {
-                        try {
-                            WarehouseService::deductStock(
-                                $shopWarehouse,
-                                $product,
-                                (int) $cart->quantity,
-                                $color?->id,
-                                $size?->id,
-                                'order_sale',
-                                $order->id,
-                                "Order #{$order->id} sale"
-                            );
-                        } catch (\Throwable $th) {
-                        }
-                    }
-                }
 
                 if (function_exists('module_exists') && module_exists('Purchase')) {
                     $order->productStockOuts()->create([
@@ -498,6 +485,13 @@ class OrderRepository extends Repository
      * @return Collection<int, Order>
      */
     public static function reOrder(Order $order, $payment): Collection
+    {
+        return DB::transaction(function () use ($order, $payment) {
+            return self::reOrderInTransaction($order, $payment);
+        });
+    }
+
+    private static function reOrderInTransaction(Order $order, $payment): Collection
     {
         $tokens = cartAccessToken(request());
         $address = Address::find($order->address_id);
