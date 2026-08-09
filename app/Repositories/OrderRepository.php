@@ -63,16 +63,58 @@ class OrderRepository extends Repository
         ]);
 
         $tokens = cartAccessToken(request());
-        $customer = Customer::firstWhere('id', $tokens['customer_id']);
 
         $isMultiVendor = generaleSetting('setting')?->shop_type === 'multi';
         $overrides = collect($request->allocations ?? [])->keyBy('product_id');
         $address = Address::find($request->address_id);
 
+        $lines = collect($carts)->map(fn ($cart) => ['cart' => $cart]);
+
+        $shopLines = self::groupLinesByShop($lines, $address, $isMultiVendor, $overrides);
+
+        foreach ($shopLines as $shopId => $cartProducts) {
+            $shop = Shop::find($shopId);
+
+            $created = self::createOrderForShop(
+                $shop,
+                collect($cartProducts),
+                $payment,
+                $paymentMethod,
+                $request,
+                $request->coupon_code,
+            );
+
+            $totalPayableAmount += $created['payableAmount'];
+        }
+
+        $payment->update([
+            'amount' => $totalPayableAmount,
+        ]);
+
+        $isBuyNow = $request->is_buy_now ?? false;
+        userCart(request())->whereIn('shop_id', $request->shop_ids)->where('is_buy_now', $isBuyNow)->delete();
+
+        CartAccessToken::where('access_token', $tokens['access_token'])->delete();
+
+        return $payment;
+    }
+
+    /**
+     * Group cart lines by the shop that will fulfil them. In multi-vendor mode
+     * each line is allocated to the nearest shop with enough stock; lines that
+     * no shop can fulfil are collected and throw UnfulfillableOrderException.
+     *
+     * @param  Collection  $lines  collection of ['cart' => $cart]
+     * @return array<string, array<int, array{cart: mixed, copy: Product}>>
+     */
+    private static function groupLinesByShop(Collection $lines, Address $address, bool $isMultiVendor, ?Collection $overrides = null): array
+    {
         $shopLines = [];
         $unfulfillable = [];
 
-        foreach ($carts as $cart) {
+        foreach ($lines as $line) {
+            $cart = $line['cart'];
+
             if (! $isMultiVendor) {
                 $shopLines[$cart->shop_id][] = ['cart' => $cart, 'copy' => $cart->product];
 
@@ -83,7 +125,7 @@ class OrderRepository extends Repository
                 $cart->product,
                 (int) $cart->quantity,
                 $address,
-                $overrides->get($cart->product_id)?->shop_id,
+                $overrides?->get($cart->product_id)?->shop_id,
             );
 
             if (! $allocated) {
@@ -99,160 +141,162 @@ class OrderRepository extends Repository
             throw new UnfulfillableOrderException($unfulfillable);
         }
 
-        $shopProducts = $shopLines;
+        return $shopLines;
+    }
 
-        foreach ($shopProducts as $shopId => $cartProducts) {
+    /**
+     * Create one order for a single shop from its allocated lines: compute the
+     * amounts, create the order, link the payment, then process each line
+     * (stock decrement, pricing including active flash sales, attach, digital
+     * licenses). Persist VAT and dispatch the order email.
+     *
+     * @param  Collection  $lines  collection of ['cart' => $cart, 'copy' => Product]
+     * @return array{order: Order, payableAmount: mixed}
+     */
+    private static function createOrderForShop(
+        Shop $shop,
+        Collection $lines,
+        Payment $payment,
+        PaymentMethod $paymentMethod,
+        object $orderData,
+        ?string $couponCode = null,
+    ): array {
+        $getCartAmounts = self::getCartWiseAmounts($shop, $lines, $couponCode);
 
-            $shop = Shop::find($shopId);
+        $order = self::createNewOrder($orderData, $shop, $paymentMethod, $getCartAmounts);
 
-            $getCartAmounts = self::getCartWiseAmounts($shop, collect($cartProducts), $request->coupon_code);
+        $payment->orders()->attach($order->id);
 
-            $order = self::createNewOrder($request, $shop, $paymentMethod, $getCartAmounts);
+        foreach ($lines as $line) {
+            $cart = $line['cart'];
+            $product = $line['copy'];
 
-            $totalPayableAmount += $getCartAmounts['payableAmount'];
-            $payment->orders()->attach($order->id);
+            $decremented = Product::query()
+                ->whereKey($product->id)
+                ->where('quantity', '>=', $cart->quantity)
+                ->decrement('quantity', $cart->quantity);
 
-            foreach ($cartProducts as $line) {
-                $cart = $line['cart'];
-                $product = $line['copy'];
+            if (! $decremented) {
+                throw new \RuntimeException(__('Sorry, this product is no longer available in the required quantity'));
+            }
 
-                $decremented = Product::query()
-                    ->whereKey($product->id)
-                    ->where('quantity', '>=', $cart->quantity)
-                    ->decrement('quantity', $cart->quantity);
+            $price = $product->discount_price > 0 ? $product->discount_price : $product->price;
 
-                if (! $decremented) {
-                    throw new \RuntimeException(__('Sorry, this product is no longer available in the required quantity'));
+            $flashSale = $product->flashSales()->isActive()->first();
+            $flashSaleProduct = null;
+            $quantity = 0;
+
+            $saleQty = $cart->quantity;
+
+            if ($flashSale) {
+                $flashSaleProduct = $flashSale?->products()->where('id', $product->id)->first();
+
+                $quantity = $flashSaleProduct?->pivot->quantity - $flashSaleProduct?->pivot->sale_quantity;
+
+                if ($quantity == 0) {
+                    $flashSaleProduct = null;
+                } else {
+                    $price = $flashSaleProduct->pivot->price;
+                    $saleQty += $flashSaleProduct->pivot->sale_quantity;
+
+                    $flashSale->products()->updateExistingPivot($product->id, [
+                        'sale_quantity' => $saleQty,
+                    ]);
                 }
+            }
 
-                $price = $product->discount_price > 0 ? $product->discount_price : $product->price;
+            $sizePrice = $product->sizes()?->where('id', $cart->size)->first()?->pivot?->price ?? 0;
+            $price = $price + $sizePrice;
 
-                $flashSale = $product->flashSales?->first();
-                $flashSaleProduct = null;
-                $quantity = 0;
+            $colorPrice = $product->colors()?->where('id', $cart->color)->first()?->pivot?->price ?? 0;
+            $price = $price + $colorPrice;
 
-                $saleQty = $cart->quantity;
+            $size = $product->sizes()?->where('id', $cart->size)->first();
+            $color = $product->colors()?->where('id', $cart->color)->first();
 
-                if ($flashSale) {
-                    $flashSaleProduct = $flashSale?->products()->where('id', $product->id)->first();
+            $order->products()->attach($product->id, [
+                'quantity' => $cart->quantity,
+                'color' => $color?->name,
+                'size' => $size?->name,
+                'unit' => $cart->unit,
+                'price' => $price,
+                'buying_price' => $product->buyingPrice() ?? 0,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
 
-                    $quantity = $flashSaleProduct?->pivot->quantity - $flashSaleProduct?->pivot->sale_quantity;
+            if (function_exists('module_exists') && module_exists('Purchase')) {
+                $order->productStockOuts()->create([
+                    'order_id' => $order->id,
+                    'product_id' => $product->id,
+                    'quantity' => $cart->quantity,
+                ]);
+            }
 
-                    if ($quantity == 0) {
-                        $flashSaleProduct = null;
+            // digital product license generation
+            if ($product->is_digital == true) {
+                $userId = Auth::guard('api')->user()->id;
+                $quantity = $cart->quantity;
+
+                for ($i = 0; $i < $quantity; $i++) {
+                    $license = $product->licenses()
+                        ->whereNull('user_id')
+                        ->inRandomOrder()
+                        ->first();
+
+                    if ($license) {
+                        $license->update([
+                            'user_id' => $userId,
+                            'order_id' => $order->id,
+                            'is_used' => true,
+                        ]);
                     } else {
-                        $price = $flashSaleProduct->pivot->price;
-                        $saleQty += $flashSaleProduct->pivot->sale_quantity;
+                        $newLicenseKey = generateLicenseKey();
 
-                        $flashSale->products()->updateExistingPivot($product->id, [
-                            'sale_quantity' => $saleQty,
+                        $license = $product->licenses()->create([
+                            'user_id' => $userId,
+                            'order_id' => $order->id,
+                            'is_used' => true,
+                            'product_license' => $newLicenseKey,
                         ]);
                     }
                 }
 
-                $sizePrice = $product->sizes()?->where('id', $cart->size)->first()?->pivot?->price ?? 0;
-                $price = $price + $sizePrice;
-
-                $colorPrice = $product->colors()?->where('id', $cart->color)->first()?->pivot?->price ?? 0;
-                $price = $price + $colorPrice;
-
-                $size = $product->sizes()?->where('id', $cart->size)->first();
-                $color = $product->colors()?->where('id', $cart->color)->first();
-
-                $order->products()->attach($product->id, [
-                    'quantity' => $cart->quantity,
-                    'color' => $color?->name,
-                    'size' => $size?->name,
-                    'unit' => $cart->unit,
-                    'price' => $price,
-                    'buying_price' => $product->buyingPrice() ?? 0,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-
-                if (function_exists('module_exists') && module_exists('Purchase')) {
-                    $order->productStockOuts()->create([
-                        'order_id' => $order->id,
-                        'product_id' => $product->id,
-                        'quantity' => $cart->quantity,
-                    ]);
+                if ($order->payment_status == PaymentStatus::PENDING->value) {
+                    $order->order_status = OrderStatus::PENDING->value;
+                } else {
+                    $order->order_status = OrderStatus::DELIVERED->value;
                 }
 
-                // digital product license generation
-                if ($product->is_digital == true) {
-                    $userId = Auth::guard('api')->user()->id;
-                    $quantity = $cart->quantity;
+                $order->save();
+            }
+            // digital product license generation
+        }
 
-                    for ($i = 0; $i < $quantity; $i++) {
-                        $license = $product->licenses()
-                            ->whereNull('user_id')
-                            ->inRandomOrder()
-                            ->first();
-
-                        if ($license) {
-                            $license->update([
-                                'user_id' => $userId,
-                                'order_id' => $order->id,
-                                'is_used' => true,
-                            ]);
-                        } else {
-                            $newLicenseKey = generateLicenseKey();
-
-                            $license = $product->licenses()->create([
-                                'user_id' => $userId,
-                                'order_id' => $order->id,
-                                'is_used' => true,
-                                'product_license' => $newLicenseKey,
-                            ]);
-                        }
-                    }
-
-                    if ($order->payment_status == PaymentStatus::PENDING->value) {
-                        $order->order_status = OrderStatus::PENDING->value;
-                    } else {
-                        $order->order_status = OrderStatus::DELIVERED->value;
-                    }
-
-                    $order->save();
-                }
-                // digital product license generation
+        foreach ($getCartAmounts['allVatTaxes'] ?? [] as $vatTax) {
+            if (! $vatTax) {
+                continue;
             }
 
-            foreach ($getCartAmounts['allVatTaxes'] ?? [] as $vatTax) {
-                if (! $vatTax) {
-                    continue;
-                }
+            OrderVatTax::create([
+                'order_id' => $order->id,
+                'name' => $vatTax->name,
+                'percentage' => $vatTax->percentage,
+                'amount' => $vatTax->amount,
+            ]);
+        }
 
-                OrderVatTax::create([
-                    'order_id' => $order->id,
-                    'name' => $vatTax->name,
-                    'percentage' => $vatTax->percentage,
-                    'amount' => $vatTax->amount,
-                ]);
-            }
-
-            // $user = auth()->user();
-            $user = $customer->user ?? null;
-            if ($user?->email) {
-                try {
-                    OrderMailEvent::dispatch($user->email, $order);
-                } catch (\Throwable $th) {
-                }
+        $tokens = cartAccessToken(request());
+        $customerId = $orderData->customer_id ?? $tokens['customer_id'] ?? null;
+        $user = Customer::find($customerId)?->user ?? null;
+        if ($user?->email) {
+            try {
+                OrderMailEvent::dispatch($user->email, $order);
+            } catch (\Throwable $th) {
             }
         }
 
-        $payment->update([
-            'amount' => $totalPayableAmount,
-        ]);
-
-        $isBuyNow = $request->is_buy_now ?? false;
-        // $customer = auth()->user()->customer;
-        // $customer->carts()->whereIn('shop_id', $request->shop_ids)->where('is_buy_now', $isBuyNow)->delete();
-        userCart(request())->whereIn('shop_id', $request->shop_ids)->where('is_buy_now', $isBuyNow)->delete();
-
-        CartAccessToken::where('access_token', $tokens['access_token'])->delete();
-
-        return $payment;
+        return ['order' => $order, 'payableAmount' => $getCartAmounts['payableAmount']];
     }
 
     /**
@@ -330,7 +374,7 @@ class OrderRepository extends Repository
             'order_code' => str_pad($lastOrderId + 1, 6, '0', STR_PAD_LEFT),
             'prefix' => $shop->prefix ?? 'RC',
             // 'customer_id' => auth()->user()->customer->id,
-            'customer_id' => $tokens['customer_id'] ?? null,
+            'customer_id' => $request->customer_id ?? $tokens['customer_id'] ?? null,
             'coupon_id' => $getCartAmounts['coupon'],
             'delivery_charge' => $getCartAmounts['deliveryCharge'],
             'payable_amount' => $getCartAmounts['payableAmount'],
@@ -384,14 +428,14 @@ class OrderRepository extends Repository
             }
             $price = $product->discount_price > 0 ? $product->discount_price : $product->price;
 
-            $flashSale = $product->flashSales?->first();
+            $flashSale = $product->flashSales()->isActive()->first();
             $flashSaleProduct = null;
             $quantity = 0;
 
             if ($flashSale) {
                 $flashSaleProduct = $flashSale?->products()->where('id', $product->id)->first();
 
-                $quantity = $flashSaleProduct?->pivot->quantity - $flashSaleProduct->pivot->sale_quantity;
+                $quantity = $flashSaleProduct?->pivot->quantity - $flashSaleProduct?->pivot->sale_quantity;
 
                 if ($quantity == 0) {
                     $flashSaleProduct = null;
@@ -493,84 +537,51 @@ class OrderRepository extends Repository
 
     private static function reOrderInTransaction(Order $order, $payment): Collection
     {
-        $tokens = cartAccessToken(request());
         $address = Address::find($order->address_id);
         $isMultiVendor = generaleSetting('setting')?->shop_type === 'multi';
 
-        // group the original lines by their allocated shop
-        $linesByShop = [];
-        foreach ($order->products as $product) {
-            $qty = (int) $product->pivot->quantity;
-            $copy = $product;
-            if ($isMultiVendor && $address?->latitude && $address?->longitude) {
-                $copy = self::allocateNearestShop($product, $qty, $address);
-            }
-            $shopId = $copy?->shop_id ?? $product->shop_id;
-            $linesByShop[$shopId][] = ['product' => $copy ?? $product, 'qty' => $qty];
-        }
+        // rebuild the original lines as cart-like objects so a reorder re-prices
+        // and re-allocates exactly like a fresh checkout of the same items
+        $lines = collect($order->products)->map(function ($product) {
+            $sizeId = $product->sizes()->where('name', $product->pivot->size)->value('id');
+            $colorId = $product->colors()->where('name', $product->pivot->color)->value('id');
+
+            return ['cart' => (object) [
+                'product_id' => $product->id,
+                'quantity' => (int) $product->pivot->quantity,
+                'shop_id' => $product->shop_id,
+                'product' => $product,
+                'size' => $sizeId,
+                'color' => $colorId,
+                'unit' => $product->pivot->unit,
+            ]];
+        });
+
+        $shopLines = self::groupLinesByShop($lines, $address, $isMultiVendor);
+
+        $orderData = (object) [
+            'address_id' => $order->address_id,
+            'note' => $order->instruction,
+            'customer_id' => $order->customer_id,
+        ];
+
+        $paymentMethod = PaymentMethod::tryFrom($order->payment_method?->value ?? 'Cash Payment') ?? PaymentMethod::CASH;
 
         $created = collect([]);
-        foreach ($linesByShop as $shopId => $lines) {
+        $totalPayableAmount = 0;
+
+        foreach ($shopLines as $shopId => $cartProducts) {
             $shop = Shop::find($shopId);
-            $linesForAmounts = collect($lines)->map(fn ($l) => [
-                'cart' => (object) [
-                    'quantity' => $l['qty'],
-                    'size' => null,
-                    'color' => null,
-                    'unit' => null,
-                ],
-                'copy' => $l['product'],
-            ]);
-            $amounts = self::getCartWiseAmounts($shop, $linesForAmounts, null);
 
-            $newOrder = self::createNewOrder((object) [
-                'address_id' => $order->address_id,
-                'note' => $order->instruction,
-                'coupon_code' => null,
-            ], $shop, PaymentMethod::tryFrom($order->payment_method?->value ?? 'Cash Payment') ?? PaymentMethod::CASH, $amounts);
+            $result = self::createOrderForShop($shop, collect($cartProducts), $payment, $paymentMethod, $orderData);
 
-            foreach ($lines as $line) {
-                $product = $line['product'];
-                $qty = $line['qty'];
-
-                $decremented = Product::query()->whereKey($product->id)->where('quantity', '>=', $qty)->decrement('quantity', $qty);
-                if (! $decremented) {
-                    throw new \RuntimeException(__('Sorry, this product is no longer available in the required quantity'));
-                }
-
-                $newOrder->products()->attach($product->id, [
-                    'quantity' => $qty,
-                    'color' => null,
-                    'size' => null,
-                    'unit' => null,
-                    'price' => (float) ($product->discount_price > 0 ? $product->discount_price : $product->price),
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-
-                if ($product->is_digital) {
-                    $user = Auth::guard('api')->user();
-                    for ($i = 0; $i < $qty; $i++) {
-                        $license = $product->licenses()->whereNull('user_id')->inRandomOrder()->first();
-                        if ($license) {
-                            $license->update(['user_id' => $user->id, 'order_id' => $newOrder->id, 'is_used' => true]);
-                        } else {
-                            $license = $product->licenses()->create(['user_id' => $user->id, 'order_id' => $newOrder->id, 'is_used' => true, 'product_license' => generateLicenseKey()]);
-                        }
-                    }
-                }
-            }
-
-            $created->push($newOrder);
+            $created->push($result['order']);
+            $totalPayableAmount += $result['payableAmount'];
         }
 
-        $user = auth()->user();
-        if ($user?->email) {
-            try {
-                OrderMailEvent::dispatch($user->email, $created->first());
-            } catch (\Throwable $th) {
-            }
-        }
+        $payment->update([
+            'amount' => $totalPayableAmount,
+        ]);
 
         return $created;
     }

@@ -220,13 +220,8 @@ class OrderController extends Controller
                 'payment_method' => $paymentMethod?->value,
             ]);
 
-            // re-order
+            // re-order (creates the orders, links them to the payment, and sets the payment amount)
             $orders = OrderRepository::reOrder($order, $payment);
-
-            // attach payment to each created order
-            foreach ($orders as $createdOrder) {
-                $payment->orders()->attach($createdOrder->id);
-            }
 
             $order = $orders->first();
 

@@ -11,6 +11,7 @@ use App\Models\Brand;
 use App\Models\Cart;
 use App\Models\Coupon;
 use App\Models\Customer;
+use App\Models\FlashSale;
 use App\Models\GeneraleSetting;
 use App\Models\Order;
 use App\Models\Payment;
@@ -412,6 +413,105 @@ class ShopAllocationTest extends TestCase
         $this->assertSame(2, DB::table('order_products')->count()); // both original attachments remain
         $this->assertSame(5, (int) $productA->fresh()->quantity);
         $this->assertSame(1, (int) $productB->fresh()->quantity);
+    }
+
+    public function test_reorder_uses_current_price_when_flash_sale_ended(): void
+    {
+        Role::create(['name' => 'customer']);
+        Area::factory()->create();
+        $shop = Shop::factory()->create(['delivery_charge' => 0]);
+        $shop->user->update(['is_active' => true]);
+        Brand::create(['name' => 'Test Brand', 'slug' => 'test-brand']);
+        $unit = Unit::create(['name' => 'kg', 'shop_id' => $shop->id, 'is_active' => true]);
+
+        $product = Product::factory()->create([
+            'shop_id' => $shop->id, 'unit_id' => $unit->id,
+            'price' => 500, 'discount_price' => 400, 'quantity' => 10, 'is_active' => true, 'is_approve' => true,
+        ]);
+
+        Coupon::factory()->create(['shop_id' => $shop->id]); // OrderFactory requires a Coupon row
+
+        // an ended flash sale that used to discount the product to 100
+        $flashSale = FlashSale::create([
+            'status' => 1,
+            'start_date' => now()->subDays(3)->toDateString(),
+            'end_date' => now()->subDay()->toDateString(),
+            'start_time' => now()->subDays(3),
+            'end_time' => now()->subDay(),
+        ]);
+        $flashSale->products()->attach($product->id, ['price' => 100, 'quantity' => 10, 'discount' => 0, 'sale_quantity' => 0]);
+
+        $customerUser = User::factory()->create();
+        $customer = Customer::factory()->create(['user_id' => $customerUser->id]);
+        $address = Address::factory()->create(['customer_id' => $customer->id, 'latitude' => 26.9, 'longitude' => 75.8]);
+
+        $original = Order::factory()->create([
+            'shop_id' => $shop->id, 'customer_id' => $customer->id, 'address_id' => $address->id,
+            'order_status' => 'Delivered', 'payment_status' => 'Paid',
+        ]);
+        $original->products()->attach($product->id, ['quantity' => 1, 'color' => null, 'size' => null, 'unit' => null, 'price' => 100]);
+
+        $payment = Payment::create(['amount' => 100, 'payment_method' => 'Cash Payment']);
+        $this->actingAs($customerUser, 'sanctum');
+
+        $reordered = OrderRepository::reOrder($original, $payment)->first();
+
+        // the ended flash sale must NOT apply: the item is priced at the current discount price
+        $this->assertSame(400, (int) DB::table('order_products')->where('order_id', $reordered->id)->value('price'));
+        // the order summary reflects the current price (not the old flash price)
+        $this->assertSame(400, (int) $reordered->fresh()->payable_amount);
+        // the payment is linked and carries the reordered total
+        $this->assertTrue($payment->orders()->whereKey($reordered->id)->exists());
+        $this->assertSame(400, (int) $payment->fresh()->amount);
+        // the ended flash-sale allocation was not consumed
+        $this->assertSame(0, (int) DB::table('flash_sale_products')->where('product_id', $product->id)->value('sale_quantity'));
+    }
+
+    public function test_reorder_applies_active_flash_sale_and_consumes_allocation(): void
+    {
+        Role::create(['name' => 'customer']);
+        Area::factory()->create();
+        $shop = Shop::factory()->create(['delivery_charge' => 0]);
+        $shop->user->update(['is_active' => true]);
+        Brand::create(['name' => 'Test Brand', 'slug' => 'test-brand']);
+        $unit = Unit::create(['name' => 'kg', 'shop_id' => $shop->id, 'is_active' => true]);
+
+        $product = Product::factory()->create([
+            'shop_id' => $shop->id, 'unit_id' => $unit->id,
+            'price' => 500, 'discount_price' => 400, 'quantity' => 10, 'is_active' => true, 'is_approve' => true,
+        ]);
+
+        Coupon::factory()->create(['shop_id' => $shop->id]); // OrderFactory requires a Coupon row
+
+        $flashSale = FlashSale::create([
+            'status' => 1,
+            'start_date' => now()->toDateString(),
+            'end_date' => now()->addDay()->toDateString(),
+            'start_time' => now()->subHour(),
+            'end_time' => now()->addHours(23),
+        ]);
+        $flashSale->products()->attach($product->id, ['price' => 100, 'quantity' => 10, 'discount' => 0, 'sale_quantity' => 0]);
+
+        $customerUser = User::factory()->create();
+        $customer = Customer::factory()->create(['user_id' => $customerUser->id]);
+        $address = Address::factory()->create(['customer_id' => $customer->id, 'latitude' => 26.9, 'longitude' => 75.8]);
+
+        $original = Order::factory()->create([
+            'shop_id' => $shop->id, 'customer_id' => $customer->id, 'address_id' => $address->id,
+            'order_status' => 'Delivered', 'payment_status' => 'Paid',
+        ]);
+        $original->products()->attach($product->id, ['quantity' => 2, 'color' => null, 'size' => null, 'unit' => null, 'price' => 100]);
+
+        $payment = Payment::create(['amount' => 200, 'payment_method' => 'Cash Payment']);
+        $this->actingAs($customerUser, 'sanctum');
+
+        $reordered = OrderRepository::reOrder($original, $payment)->first();
+
+        // the running flash sale price applies and its allocation is consumed
+        $this->assertSame(100, (int) DB::table('order_products')->where('order_id', $reordered->id)->value('price'));
+        $this->assertSame(200, (int) $reordered->fresh()->payable_amount);
+        $this->assertSame(2, (int) DB::table('flash_sale_products')->where('product_id', $product->id)->value('sale_quantity'));
+        $this->assertTrue($payment->orders()->whereKey($reordered->id)->exists());
     }
 
     private function placeOrder(User $customerUser, Address $address, int $shopId): Payment

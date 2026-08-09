@@ -11,7 +11,7 @@ Under this architecture:
 - **Centralized Master Catalog**: All physical products (`is_digital = false`) are created and managed centrally by Admin as Master Products (`master_product_id = null`).
 - **Warehouse Centralized Stocking**: Physical inventory is deposited directly into Central or Regional Logistics Hubs (`WarehouseStock`) rather than individual vendor shops.
 - **Master-Copy Cloning Pattern (`cloneMasterToShop`)**: Vendor shops do not create physical inventory from scratch. Instead, shops request stock dispatches from their **Linked Warehouse** (`warehouse_id`). Upon Admin fulfillment, physical stock is dispatched and cloned/updated into a **Shop Copy Product** (`master_product_id = masterProduct->id`, `shop_id = shop->id`) carrying full category, subcategory, brand, variant (colors/sizes), media, and translation attributes.
-- **Strict Ledger Auditing**: Every stock movement (initial addition, warehouse transfer, shop request dispatch, customer order sale, POS sale) is immutably logged in `StockLedger`.
+- **Strict Ledger Auditing**: Warehouse-level stock movements (initial addition, warehouse transfer, shop request dispatch, manual adjustment) are immutably logged in `StockLedger`. Sales (online orders and POS) draw from the Shop Copy Product's inventory only — they decrement `products.quantity` and are **not** written to `StockLedger` (warehouse stock is consumed at stocking/dispatch time, not at sale time).
 - **Stock Dispatch & Invoice Registry**: Official Janmitram PDF and printable invoices are generated for all completed stock requests and orders.
 
 ---
@@ -23,7 +23,7 @@ Under this architecture:
 │ PHASE 1: MASTER PRODUCT CREATION & BULK WAREHOUSE SEEDING                               │
 │ Admin creates Master Product (master_product_id = null, is_stock_managed = true).       │
 │ → Initial stock quantity is allocated directly into Central/Regional Warehouse.         │
-│ → StockLedger entry created (reference_type = 'admin_addition' / 'initial_create').    │
+│ → StockLedger entry created (reference_type = 'admin_addition').                        │
 └─────────────────────────────────────────────────────────────────────────────────────────┘
                                            │
                                            ▼
@@ -72,7 +72,7 @@ Under this architecture:
 │ Customer places online order OR Vendor processes POS sale at Shop.                      │
 │ → Sale processes against local Shop Copy Product ($shopProduct->id).                   │
 │ → OrderRepository / PosCartRepository decrements $shopProduct->quantity.               │
-│ → WarehouseService::deductStock() logs ledger entries ('order_sale' / 'pos_sale').    │
+│ → No StockLedger entry is written for the sale (see §1 Strict Ledger Auditing).         │
 └─────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -89,7 +89,7 @@ Under this architecture:
 | `StockRequestItem` (`stock_request_items`) | `id`, `stock_request_id`, `product_id`, `color_id`, `size_id`, `quantity` | Line items attached to a StockRequest. |
 | `WarehouseTransfer` (`warehouse_transfers`) | `id`, `transfer_no`, `from_warehouse_id`, `to_warehouse_id`, `status`, `notes` | Tracks inventory transfers between two central/regional warehouses. |
 | `WarehouseTransferItem` (`warehouse_transfer_items`) | `id`, `warehouse_transfer_id`, `product_id`, `color_id`, `size_id`, `quantity` | Line items attached to an inter-warehouse transfer. |
-| `StockLedger` (`stock_ledgers`) | `id`, `from_warehouse_id`, `to_warehouse_id`, `product_id`, `quantity`, `reference_type` | Immutable audit log (`admin_addition`, `warehouse_transfer`, `shop_request`, `order_sale`, `pos_sale`). |
+| `StockLedger` (`stock_ledgers`) | `id`, `from_warehouse_id`, `to_warehouse_id`, `product_id`, `quantity`, `reference_type` | Immutable audit log of warehouse-level movements only (`admin_addition`, `warehouse_transfer`, `shop_request`, `manual_adjustment`). Sales are **not** ledgered — they decrement Shop Copy Product inventory. |
 | `Shop` (`shops`) | `id`, `name`, `user_id`, `warehouse_id` | Vendor shop profile bound to a specific Linked Warehouse. |
 
 ---
@@ -144,13 +144,12 @@ Under this architecture:
 #### Phase 6: Customer Online Orders & Vendor POS Sales
 1. **Online Customer Order**:
    - Customer orders product from Shop via Vue SPA or Mobile App.
-   - `OrderRepository` decrements `$shopProduct->quantity`.
-   - `WarehouseService::deductStock()` records `StockLedger` entry (`reference_type = 'order_sale'`).
-   - **⚠️ Known caveat:** in `OrderRepository::storeByRequestFromCart` the warehouse deduction is wrapped in `catch (\Throwable $th) {}`, so an `InsufficientStockException` is **silently swallowed** and the order still completes. Unlike Phase 4 (which caps dispatch to available qty and never creates phantom stock), an online sale can therefore succeed even when warehouse stock is short. Decide whether to enforce strict stock here or keep the permissive behaviour intentionally.
+   - `OrderRepository` decrements `$shopProduct->quantity` (the Shop Copy Product) inside a `DB::transaction`; any mid-way failure rolls back all writes.
+   - No `StockLedger` entry is written for the sale — sales draw from shop inventory only; warehouse stock was already consumed when the shop's stock request was dispatched (Phase 4).
 2. **In-Person Vendor POS Sale**:
    - Vendor processes POS transaction in Shop Panel (`/shop/pos`).
-   - `PosCartRepository` decrements `$shopProduct->quantity`.
-   - `WarehouseService::deductStock()` records `StockLedger` entry (`reference_type = 'pos_sale'`).
+   - `PosCartRepository` decrements `$shopProduct->quantity` (the Shop Copy Product) inside a `DB::transaction`.
+   - No `StockLedger` entry is written for the sale — same semantics as the online order above.
 
 ---
 
