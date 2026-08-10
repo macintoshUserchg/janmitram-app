@@ -222,7 +222,7 @@ class ImportCI3Products extends Command
                         'buy_price' => 0,
                         'quantity' => $firstVariant->quantity,
                         'min_order_quantity' => 1,
-                        'discount_price' => $firstVariant->discount_price > 0 ? $firstVariant->discount_price : null,
+                        'discount_price' => $firstVariant->discount_price > 0 && $firstVariant->discount_price <= $firstVariant->ProductPrice ? $firstVariant->discount_price : null,
                         'short_description' => null,
                         'short_description_ar' => null,
                         'description' => $oldProduct->product_description,

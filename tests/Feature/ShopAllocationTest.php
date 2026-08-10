@@ -514,6 +514,49 @@ class ShopAllocationTest extends TestCase
         $this->assertTrue($payment->orders()->whereKey($reordered->id)->exists());
     }
 
+    public function test_order_charges_list_price_when_discount_exceeds_price(): void
+    {
+        Role::create(['name' => 'customer']);
+        Area::factory()->create();
+        $shop = Shop::factory()->create(['delivery_charge' => 0]);
+        $shop->user->update(['is_active' => true]);
+        Brand::create(['name' => 'Test Brand', 'slug' => 'test-brand']);
+        $unit = Unit::create(['name' => 'kg', 'shop_id' => $shop->id, 'is_active' => true]);
+
+        // bad data: discount price above the list price (reachable via import paths)
+        $product = Product::factory()->create([
+            'shop_id' => $shop->id, 'unit_id' => $unit->id,
+            'price' => 500, 'discount_price' => 600, 'quantity' => 10, 'is_active' => true, 'is_approve' => true,
+        ]);
+
+        $customerUser = User::factory()->create();
+        $customer = Customer::factory()->create(['user_id' => $customerUser->id]);
+        $address = Address::factory()->create(['customer_id' => $customer->id, 'latitude' => 26.9, 'longitude' => 75.8]);
+        Cart::create(['customer_id' => $customer->id, 'shop_id' => $shop->id, 'product_id' => $product->id, 'quantity' => 1]);
+
+        $this->placeOrder($customerUser, $address, $shop->id);
+
+        $order = Order::latest('id')->first();
+        // the "discount" never overcharges: the order line charges the list price, not the bad discount
+        $this->assertSame(500, (int) DB::table('order_products')->where('order_id', $order->id)->value('price'));
+        // the total (list + delivery/tax) is never inflated by the bad discount
+        $this->assertLessThan(600, (int) $order->fresh()->payable_amount);
+    }
+
+    public function test_get_discount_percentage_is_defensive(): void
+    {
+        // valid discount
+        $this->assertSame(20.0, Product::getDiscountPercentage(500, 400));
+        // discount == price -> zero discount, not a crash
+        $this->assertSame(0, Product::getDiscountPercentage(500, 500));
+        // discount > price (bad data) -> 0, never negative
+        $this->assertSame(0, Product::getDiscountPercentage(500, 600));
+        // negative discount -> 0
+        $this->assertSame(0, Product::getDiscountPercentage(500, -10));
+        // price <= 0 -> 0, never division-by-zero
+        $this->assertSame(0, Product::getDiscountPercentage(0, 100));
+    }
+
     private function placeOrder(User $customerUser, Address $address, int $shopId): Payment
     {
         $request = Request::create('/api/place-order', 'POST', [

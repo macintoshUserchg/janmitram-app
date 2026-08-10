@@ -337,7 +337,14 @@ class Product extends Model
      */
     public static function getDiscountPercentage($price, $discountPrice)
     {
-        return $discountPrice ? ($price - $discountPrice) * 100 / $price : 0;
+        $price = (float) $price;
+        $discountPrice = (float) $discountPrice;
+
+        if ($price <= 0 || $discountPrice <= 0 || $discountPrice >= $price) {
+            return 0;
+        }
+
+        return ($price - $discountPrice) * 100 / $price;
     }
 
     /**

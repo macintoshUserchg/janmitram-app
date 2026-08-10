@@ -203,6 +203,7 @@
                             <div class="col-lg-4 col-md-6 mt-3 mt-md-0">
                                 <x-input type="text" name="discount_price" label="Discount Price"
                                     placeholder="Discount Price" onlyNumber="true" value="0" />
+                                <small id="discountInfo" class="form-text d-block"></small>
                             </div>
 
                             {{-- <div class="col-lg-4 col-md-6 mt-3">
@@ -544,6 +545,30 @@
                 var mainPrice = productDiscountPrice > 0 ? productDiscountPrice : productPrice;
                 $('.mainProductPrice').text(mainPrice);
             });
+
+            var discountCurrency = @json(generaleSetting('setting')?->currency ?? '₹');
+
+            function updateDiscountInfo() {
+                var price = parseFloat($('#price').val()) || 0;
+                var discount = parseFloat($('#discount_price').val()) || 0;
+                var $info = $('#discountInfo');
+
+                if (discount > 0 && price > 0 && discount < price) {
+                    var pct = Math.round((price - discount) * 100 / price);
+                    $info.text('Discount: ' + pct + '% (' + discountCurrency + (price - discount).toFixed(2) + ' off)')
+                        .removeClass('text-danger').addClass('text-success');
+                } else if (discount > price) {
+                    $info.text('Discount price can\'t be more than the selling price')
+                        .removeClass('text-success').addClass('text-danger');
+                } else {
+                    $info.text('').removeClass('text-success text-danger');
+                }
+
+                $('button[type="submit"]').prop('disabled', discount > price);
+            }
+            $('#price').on('input', updateDiscountInfo);
+            $('#discount_price').on('input', updateDiscountInfo);
+            updateDiscountInfo();
 
             $('.sizeSelector').on('change', function() {
 

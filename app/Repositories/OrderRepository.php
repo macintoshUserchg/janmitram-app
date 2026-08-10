@@ -180,7 +180,7 @@ class OrderRepository extends Repository
                 throw new \RuntimeException(__('Sorry, this product is no longer available in the required quantity'));
             }
 
-            $price = $product->discount_price > 0 ? $product->discount_price : $product->price;
+            $price = $product->discount_price > 0 ? min($product->discount_price, $product->price) : $product->price;
 
             $flashSale = $product->flashSales()->isActive()->first();
             $flashSaleProduct = null;
@@ -340,7 +340,7 @@ class OrderRepository extends Repository
             'logo' => $shop->logo,
             'distance_km' => round($distance, 2),
             'available_quantity' => (int) $copy->quantity,
-            'price' => (float) ($copy->discount_price > 0 ? $copy->discount_price : $copy->price),
+            'price' => (float) ($copy->discount_price > 0 ? min($copy->discount_price, $copy->price) : $copy->price),
             'delivery_charge' => (float) ($shop->delivery_charge ?? 0),
             'radius_eligible' => $distance <= $radius,
         ];
@@ -426,7 +426,7 @@ class OrderRepository extends Repository
             if ($product->is_digital) {
                 $deliveryCharge = 0;
             }
-            $price = $product->discount_price > 0 ? $product->discount_price : $product->price;
+            $price = $product->discount_price > 0 ? min($product->discount_price, $product->price) : $product->price;
 
             $flashSale = $product->flashSales()->isActive()->first();
             $flashSaleProduct = null;

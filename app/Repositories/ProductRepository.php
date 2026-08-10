@@ -528,7 +528,9 @@ class ProductRepository extends Repository
             $discountPrice = null;
         } else {
             $discountPrice = (float) $discountPrice;
-            if ($discountPrice > $price) {
+            if ($discountPrice < 0) {
+                $discountPrice = 0;
+            } elseif ($discountPrice > $price) {
                 $discountPrice = $price;
             }
         }
