@@ -37,13 +37,19 @@
                     <table class="table border-left-right table-responsive-lg order-index-table">
                         <thead>
                             <tr>
-                                <th style="min-width: 85px">{{ __('Order ID') }}</th>
-                                <th>{{ __('Order Date') }}</th>
+                                <th style="min-width: 120px">
+                                    @include('admin.partials.sortable-header', ['label' => __('Order ID'), 'column' => 'id', 'route' => 'admin.order.index', 'routeParam' => $status, 'sort' => $sort ?? 'id', 'direction' => $direction ?? 'desc'])
+                                </th>
+                                <th style="min-width: 150px">
+                                    @include('admin.partials.sortable-header', ['label' => __('Order Date'), 'column' => 'created_at', 'route' => 'admin.order.index', 'routeParam' => $status, 'sort' => $sort ?? 'id', 'direction' => $direction ?? 'desc'])
+                                </th>
                                 <th>{{ __('Customer') }}</th>
                                 @if ($businessModel == 'multi')
                                     <th>{{ __('Shop') }}</th>
                                 @endif
-                                <th>{{ __('Total Amount') }}</th>
+                                <th style="min-width: 140px">
+                                    @include('admin.partials.sortable-header', ['label' => __('Total Amount'), 'column' => 'payable_amount', 'route' => 'admin.order.index', 'routeParam' => $status, 'sort' => $sort ?? 'id', 'direction' => $direction ?? 'desc'])
+                                </th>
                                 <th>{{ __('Payment Method') }}</th>
                                 <th>{{ __('Action') }}</th>
                             </tr>
@@ -51,7 +57,7 @@
                         <tbody>
                             @forelse ($orders as $order)
                                 <tr>
-                                    <td class="w-auto order-code-cell">{{ $order->prefix . $order->order_code }}</td>
+                                    <td class="w-auto order-code-cell fw-semibold text-dark">{{ $order->prefix . $order->order_code }}</td>
                                     <td class="w-min order-date-cell">{{ $order->created_at->format('d M Y, h:i A') }}</td>
                                     <td class="w-min order-customer-cell">{{ $order->customer?->user?->name }}</td>
 
@@ -61,7 +67,7 @@
                                         </td>
                                     @endif
                                     <td class="w-min order-amount-cell">
-                                        {{ showCurrency($order->payable_amount) }}
+                                        <span class="fw-bold text-dark">{{ showCurrency($order->payable_amount) }}</span>
                                         <br>
                                         <span class="badge rounded-pill text-bg-primary order-payment-badge">{{ $order->payment_status }}</span>
                                     </td>
@@ -85,7 +91,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="100%" class="text-center">
+                                    <td colspan="100%" class="text-center text-muted py-5">
                                         {{ __('No order found') }}
                                     </td>
                                 </tr>
@@ -96,10 +102,9 @@
                 </div>
 
             </div>
-        </div>
-
-        <div class="my-3 order-pagination">
-            {{ $orders->links() }}
+            <div class="card-footer bg-white border-top py-0 px-0">
+                @include('admin.partials.pagination', ['paginator' => $orders])
+            </div>
         </div>
     </div>
 

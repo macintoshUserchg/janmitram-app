@@ -17,12 +17,18 @@ use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
+    use SortableIndex;
+
+    /** @var array<int, string> */
+    protected array $sortableColumns = ['id', 'created_at', 'payable_amount', 'order_status', 'payment_status'];
+
     /**
      * Display a order list with filter status.
      */
     public function index($status = null)
     {
-        $status = $status ? str_replace('_', ' ', $status) : '';
+        $rawStatus = $status;
+        $statusStr = $status ? str_replace('_', ' ', $status) : '';
 
         $generaleSetting = GeneraleSetting::first();
         $shop = null;
@@ -30,15 +36,21 @@ class OrderController extends Controller
             $shop = User::role(Roles::ROOT->value)->first()?->shop;
         }
 
-        $orders = OrderRepository::query()
+        [$sort, $direction] = $this->resolveSort();
+
+        $query = OrderRepository::query()
             ->when($shop, function ($query) use ($shop) {
                 return $query->where('shop_id', $shop->id);
             })
-            ->when($status, function ($query) use ($status) {
-                $query->where('order_status', $status);
-            })->latest('id')->paginate(20);
+            ->when($statusStr, function ($query) use ($statusStr) {
+                $query->where('order_status', $statusStr);
+            });
 
-        return view('admin.order.index', compact('orders', 'status'));
+        $orders = $this->applySort($query, $sort, $direction)
+            ->paginate($this->resolvePerPage(20))
+            ->withQueryString();
+
+        return view('admin.order.index', compact('orders', 'status', 'rawStatus', 'sort', 'direction'));
     }
 
     /**
