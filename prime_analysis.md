@@ -2,6 +2,13 @@
 
 *Generated: 2026-08-09 · Rechecked: 2026-08-10 (commits `2468392` "Make order placement atomic and stop double-deducting stock", `51a47ac` "Unify reorder with checkout via shared order processor", `166a8ce` "Align flash-sale display reads with order pricing"). Based on full reindexed graph data (codegraph: 1,338 files / 19,655 nodes; codebase-memory MCP: 33,146 nodes / 100,201 edges), source verification, and a live test run. All claims verified against the code on disk, not just docs.*
 
+*Further recheck 2026-08-11:* `87f74ee` (discount-price hardening — order charge
+`min()` guard, defensive `getDiscountPercentage`, import clamps) and `b12c180`
+(membership **card system** — `cards` table, flat 10%-instead-of-coupon discount at
+online/buy-now/POS, admin Cards section, removed the dead `coupon_collects` /
+collect-voucher scheme) landed after the table above. Neither fixes a
+previously-flagged finding; they add a new discount path and remove a broken one.
+
 ---
 
 ## Recheck summary (2026-08-10)

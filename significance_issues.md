@@ -5,6 +5,11 @@ Janmitram Laravel 11 multi-vendor ecommerce platform, plus a deep trace of the
 **consumer order placement workflow**. Dates range from a structural review on
 2026-08-05. Sections are ordered roughly by severity/criticality.
 
+> **Update (2026-08-10/11):** issues **#1**, **#2**, and **#5** are now resolved
+> (commits `2468392` and `51a47ac`). Since this analysis a **membership card system**
+> (`b12c180`) and **discount-price hardening** (`87f74ee`) were also added; the dead
+> `coupon_collects` / collected-voucher scheme was removed.
+
 ---
 
 ## Critical / data-integrity
@@ -17,6 +22,9 @@ and digital-license assignments — but **none of it runs inside
 `DB::transaction()`**. A failure part-way leaves orphaned payments and partially
 created orders with already-decremented stock.
 
+**Status:** ✅ **Resolved 2026-08-10** (`2468392`) — checkout, reorder, and POS
+order creation now wrap all writes in `DB::transaction`; rollback tests added.
+
 **Files:** `app/Repositories/OrderRepository.php` (`storeByRequestFromCart`)
 
 ### 2. Warehouse stock deduction failures are silently swallowed
@@ -25,6 +33,10 @@ a `try { ... } catch (\Throwable $th) {}` that **ignores all errors**. An order
 can be confirmed and `products.quantity` decremented while the immutable
 `warehouse_stock` ledger fails to record the sale, leaving warehouse inventory
 out of sync with the real catalog quantity.
+
+**Status:** ✅ **Resolved by redesign 2026-08-10** (`2468392`) — the sale-time
+`deductStock` call (and its empty catch) was **removed entirely**; sales draw from
+shop inventory only, warehouse stock is consumed at stocking time.
 
 **Files:** `app/Repositories/OrderRepository.php` (line ~169-181)
 
@@ -56,6 +68,9 @@ required stock. A malicious/buggy client can pin lines to any shop.
 decrement, and digital-license flow as `storeByRequestFromCart()` with slight
 divergences (e.g. no size/color handling, null coupon). The two paths can drift,
 and fixes in one may not reach the other.
+
+**Status:** ✅ **Resolved 2026-08-10** (`51a47ac`) — checkout and reorder now share
+`createOrderForShop()`/`groupLinesByShop()`; reorder re-prices at current prices.
 
 **Files:** `app/Repositories/OrderRepository.php` (`reOrder`)
 

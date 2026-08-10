@@ -171,6 +171,34 @@ Janmitram operates on **Option A: Strict Warehouse-Only Architecture**, which ce
 
 ---
 
+## Card System (10% membership discount)
+
+A membership **card** grants a flat discount on every purchase — online checkout,
+buy-now, and POS. Added 2026-08-11.
+
+- **Schema** — `cards` (`card_number` unique, auto-generated 8-digit; `customer_id`
+  nullable FK; `is_active`); `orders.card_id` + `orders.card_discount`;
+  `pos_carts.card_id`. Global terms live on `generate_settings`:
+  `card_discount_percentage` (default **10**) and `card_min_order_amount` (default **500**).
+- **Terms** — `card_discount_percentage`% of the subtotal when the order meets the
+  minimum. The card discount is **instead-of** any coupon (a card wins, coupons are
+  skipped). Online the card must belong to the logged-in customer; at POS any active
+  card number applies (the plastic is the credential).
+- **One active card per customer** — `CardRepository::createForCustomer` deactivates a
+  customer's other cards when a new one is issued.
+- **Flow** — `CardRepository` (`resolveForCustomer` / `resolveActive` / `discountFor`);
+  applied per-shop in `OrderRepository::getCartWiseAmounts` and via
+  `PosCartRepository::applyCard`. Orders persist `card_id` + `card_discount`; checkout
+  preview returns `card_discount`/`card_error`.
+- **Admin** — "Cards" section (`/admin/cards`): create (auto number), assign to a
+  customer, activate/deactivate, and a per-card detail + usage view
+  (`/admin/cards/{card}`) listing the orders that used it.
+- **Replaces the collected-voucher scheme** — the broken `coupon_collects` mechanism
+  (collect button, `getCollectedCoupons` auto-apply) was removed; **typed coupon codes
+  still work**.
+
+---
+
 ## Frontends
 
 ### 1. Customer SPA (Vue 3 + Vite + Tailwind)

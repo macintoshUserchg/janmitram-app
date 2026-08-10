@@ -147,10 +147,12 @@ Under this architecture:
    - `OrderRepository` decrements `$shopProduct->quantity` (the Shop Copy Product) inside a `DB::transaction`; any mid-way failure rolls back all writes.
    - No `StockLedger` entry is written for the sale — sales draw from shop inventory only; warehouse stock was already consumed when the shop's stock request was dispatched (Phase 4).
    - **Reorder** (`OrderRepository::reOrder`) runs through the same `createOrderForShop()`/`groupLinesByShop()` processor as checkout — it re-prices at current prices (variants, active flash sale, size/color), re-allocates like a fresh checkout, persists VAT, and links the payment. Flash-sale pricing uses the `isActive()` scope, so an ended flash sale never applies its old price.
+   - **Membership card** — a customer with an active card enters its number at checkout for a flat `card_discount_percentage`% off the subtotal (minimum `card_min_order_amount`), **instead-of** any coupon. (See `project_notes.md` § Card System.)
 2. **In-Person Vendor POS Sale**:
    - Vendor processes POS transaction in Shop Panel (`/shop/pos`).
    - `PosCartRepository` decrements `$shopProduct->quantity` (the Shop Copy Product) inside a `DB::transaction`.
    - No `StockLedger` entry is written for the sale — same semantics as the online order above.
+   - A customer's membership card number can be entered at the counter for the same card discount (instead-of coupon).
 
 ---
 
