@@ -100,14 +100,6 @@ class User extends Authenticatable
     }
 
     /**
-     * get coupons model for this user.
-     * */
-    public function coupons(): HasMany
-    {
-        return $this->hasMany(CouponCollect::class, 'user_id', 'id');
-    }
-
-    /**
      * get shop model for this user.
      */
     public function shop(): HasOne

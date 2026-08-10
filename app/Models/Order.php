@@ -25,6 +25,7 @@ class Order extends Model
         'order_status' => OrderStatus::class,
         'payment_method' => PaymentMethod::class,
         'payment_status' => PaymentStatus::class,
+        'card_discount' => 'float',
     ];
 
     /**

@@ -268,17 +268,32 @@ class CartRepository extends Repository
         }
         $array = (object) [
             'coupon_code' => $request->coupon_code,
+            'card_number' => $request->card_number ?? null,
             'products' => $products,
         ];
+
+        $cardDiscount = 0;
+        $cardError = null;
 
         if ($tokens['customer_id']) {
             // get coupon discount
             $getDiscount = CouponRepository::getCouponDiscount($array);
 
             $couponDiscount = $getDiscount['discount_amount'];
+            $cardDiscount = (float) ($getDiscount['card_discount_amount'] ?? 0);
+            $couponDiscount -= $cardDiscount; // coupon portion only; the card discount is shown separately
+            $card = $getDiscount['card'] ?? null;
+
+            if ($request->card_number ?? null) {
+                if (! $card) {
+                    $cardError = __('Invalid or inactive card');
+                } elseif ($cardDiscount == 0) {
+                    $cardError = __('Minimum order amount not met');
+                }
+            }
         }
 
-        $payableAmount = $totalAmount + $deliveryCharge - $couponDiscount;
+        $payableAmount = $totalAmount + $deliveryCharge - $couponDiscount - $cardDiscount;
 
         // get order base tax: one default rate on the global base, plus per-product overrides
         $defaultVatTax = VatTaxRepository::getDefaultVatTax();
@@ -321,6 +336,8 @@ class CartRepository extends Repository
             'total_amount' => (float) round($totalAmount, 2),
             'delivery_charge' => (float) round($deliveryCharge, 2),
             'coupon_discount' => (float) round($couponDiscount, 2),
+            'card_discount' => (float) round($cardDiscount, 2),
+            'card_error' => $cardError,
             'order_tax_amount' => (float) round($totalOrderTaxAmount, 2),
             'payable_amount' => (float) round($payableAmount, 2),
             'all_vat_taxes' => $vatTaxesArray,

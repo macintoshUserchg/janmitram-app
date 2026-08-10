@@ -139,7 +139,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('shop-candidates', [OrderController::class, 'shopCandidates']);
 
     // Vouchers
-    Route::post('vouchers-collect', [CouponController::class, 'collectedVouchers']);
     Route::post('apply-voucher', [CouponController::class, 'applyVoucher']);
     Route::post('voucher/discount', [CouponController::class, 'getDiscount']);  // VERIFY
 

@@ -20,7 +20,10 @@
             </div>
 
             <!-- Discount -->
-            <div v-if="authStore.user" class="my-4 flex justify-between gap-4">
+            <div
+                v-if="authStore.user && orderData.coupon_discount > 0"
+                class="my-4 flex justify-between gap-4"
+            >
                 <div class="text-red-500 text-base font-normal leading-normal">
                     {{ $t("Discount") }}
                 </div>
@@ -28,6 +31,21 @@
                     class="text-slate-950 text-base font-normal leading-normal"
                 >
                     -{{ master.showCurrency(orderData.coupon_discount) }}
+                </div>
+            </div>
+
+            <!-- Card Discount -->
+            <div
+                v-if="authStore.user && orderData.card_discount > 0"
+                class="my-4 flex justify-between gap-4"
+            >
+                <div class="text-red-500 text-base font-normal leading-normal">
+                    {{ $t("Card Discount") }}
+                </div>
+                <div
+                    class="text-slate-950 text-base font-normal leading-normal"
+                >
+                    -{{ master.showCurrency(orderData.card_discount) }}
                 </div>
             </div>
 
@@ -50,7 +68,8 @@
                         master.showCurrency(
                             (
                                 orderData.total_amount -
-                                orderData.coupon_discount
+                                orderData.coupon_discount -
+                                orderData.card_discount
                             ).toFixed(2)
                         )
                     }}
@@ -164,6 +183,30 @@
                     </span>
                 </div>
             </div>
+
+            <!-- Have a membership card -->
+            <div v-if="authStore.user" class="p-4 mt-4 bg-slate-100 rounded-xl">
+                <div class="text-black text-base font-normal leading-normal">
+                    {{ $t("Have a membership card") }}?
+                </div>
+                <div class="relative mt-2">
+                    <input
+                        type="text"
+                        v-model="card"
+                        class="formInputCoupon pr-14 p-3"
+                        :placeholder="$t('Enter card number')"
+                    />
+                    <button
+                        class="bg-slate-700 absolute top-1/2 -translate-y-1/2 right-1.5 h-10 w-10 rounded flex justify-center items-center"
+                        @click="ApplyCard"
+                    >
+                        <ArrowRightIcon class="w-6 h-6 text-white" />
+                    </button>
+                </div>
+                <div v-if="cardError" class="mt-1 text-red-500 text-sm">
+                    {{ cardError }}
+                </div>
+            </div>
         </div>
 
         <!-- Unfulfillable lines: manual shop picker -->
@@ -274,6 +317,8 @@ const toast = useToast();
 const hasCoupon = ref(false);
 
 const coupon = ref("");
+const card = ref("");
+const cardError = ref("");
 
 const showVerifyOtpModal = ref(false);
 
@@ -344,6 +389,7 @@ const orderData = ref({
     total_amount: 0,
     delivery_charge: 0,
     coupon_discount: 0,
+    card_discount: 0,
     payable_amount: 0,
     order_tax_amount: 0,
 });
@@ -491,6 +537,7 @@ const processOrderConfirm = () => {
                     address_id: basketStore.address.id,
                     payment_method: props.paymentMethod,
                     coupon_code: coupon.value,
+                    card_number: card.value,
                     note: props.note,
                     is_buy_now: true,
                     allocations: buildAllocations(),
@@ -578,6 +625,7 @@ const processGuestOrderConfirm = () => {
                     shop_ids: [basketStore.buyNowShopId],
                     payment_method: props.paymentMethod,
                     coupon_code: coupon.value,
+                    card_number: card.value,
                     note: props.note,
                     is_buy_now: true,
                     name: guestAddressStore.name,
@@ -735,6 +783,62 @@ const openPaymentPopupWindow = (url) => {
         clearInterval(intervalID);
         win.close();
     }, 180000);
+};
+
+const ApplyCard = () => {
+    if (card.value.length > 0) {
+        fetchCardApply();
+    }
+};
+
+const fetchCardApply = () => {
+    axios
+        .post(
+            "/cart/checkout",
+            {
+                shop_ids: [basketStore.buyNowShopId],
+                is_buy_now: true,
+                card_number: card.value,
+                address_id: basketStore.address ? basketStore.address.id : null,
+            },
+            {
+                headers: {
+                    Authorization: authStore.token,
+                    "X-Guest-Token": authStore.access_token,
+                },
+            }
+        )
+        .then((response) => {
+            orderData.value = response.data.data.checkout;
+            cardError.value = response.data.data.checkout.card_error || "";
+
+            if (cardError.value) {
+                toast.error(cardError.value, {
+                    position:
+                        master.langDirection === "rtl"
+                            ? "bottom-right"
+                            : "bottom-left",
+                });
+            } else {
+                hasCoupon.value = false;
+                coupon.value = "";
+                basketStore.coupon_code = "";
+                toast.success(response.data.message, {
+                    position:
+                        master.langDirection === "rtl"
+                            ? "bottom-right"
+                            : "bottom-left",
+                });
+            }
+        })
+        .catch((error) => {
+            toast.error(error.response.data.message, {
+                position:
+                    master.langDirection === "rtl"
+                        ? "bottom-right"
+                        : "bottom-left",
+            });
+        });
 };
 </script>
 

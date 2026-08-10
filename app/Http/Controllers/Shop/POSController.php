@@ -15,6 +15,7 @@ use App\Models\Order;
 use App\Models\PosCart;
 use App\Models\PosCartProduct;
 use App\Models\VatTax;
+use App\Repositories\CardRepository;
 use App\Repositories\CustomerRepository;
 use App\Repositories\OrderRepository;
 use App\Repositories\PosCartRepository;
@@ -396,6 +397,46 @@ class POSController extends Controller
         }
 
         return $this->json(__('Coupon not found'), [], 422);
+    }
+
+    public function applyCard(Request $request)
+    {
+        $shop = generaleSetting('shop');
+
+        $card = CardRepository::resolveActive($request->card_number);
+
+        if (! $card) {
+            return $this->json(__('Invalid card number'), [], 422);
+        }
+
+        $postCart = PosCartRepository::query()->where('shop_id', $shop->id)->where('name', $request->name)->first();
+
+        if (! $postCart) {
+            return $this->json(__('Cart not found'), [], 422);
+        }
+
+        $postCart = PosCartRepository::applyCard($postCart, $card);
+
+        if ($postCart->discount > 0) {
+            return $this->json(__('Card discount applied'), [], 200);
+        }
+
+        return $this->json(__('Minimum order amount not met'), [], 422);
+    }
+
+    public function removeCard(Request $request)
+    {
+        $shop = generaleSetting('shop');
+
+        $postCart = PosCartRepository::query()->where('shop_id', $shop->id)->where('name', $request->name)->first();
+
+        if ($postCart) {
+            $postCart = PosCartRepository::removeCard($postCart);
+
+            return $this->json(__('Card discount removed'), [], 200);
+        }
+
+        return $this->json(__('Cart not found'), [], 422);
     }
 
     public function getProductDetail(Request $request)

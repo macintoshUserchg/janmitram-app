@@ -363,6 +363,13 @@
                         {{ __('Promo Code') }}
                     </a>
                 @endhasPermission
+
+                @hasPermission('admin.cards.index')
+                    <a href="{{ route('admin.cards.index') }}"
+                        class="subMenu hasCount {{ request()->routeIs('admin.cards.*') ? 'active' : '' }}">
+                        {{ __('Cards') }}
+                    </a>
+                @endhasPermission
             </div>
         </div>
     </li>

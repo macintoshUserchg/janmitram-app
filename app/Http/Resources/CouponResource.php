@@ -15,8 +15,6 @@ class CouponResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $collectedCoupons = auth()->user()->coupons->pluck('coupon_id')->toArray();
-
         return [
             'id' => $this->id,
             'voucher_type' => (string) $this->shop_id ? 'Shop Voucher' : 'Amin Voucher',
@@ -29,7 +27,6 @@ class CouponResource extends JsonResource
             'shop_id' => $this->shop_id ?? null,
             'started' => Carbon::parse($this->started_at)->format('d F Y H:i'),
             'validity' => Carbon::parse($this->expired_at)->format('d F Y H:i'),
-            'is_collected' => (bool) in_array($this->id, $collectedCoupons) ? true : false,
         ];
     }
 }

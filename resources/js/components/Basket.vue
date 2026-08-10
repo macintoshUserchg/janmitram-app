@@ -146,12 +146,7 @@
                                         <div
                                             v-for="coupon in coupons"
                                             :key="coupon.id"
-                                            class="px-4 py-3 bg-primary-50 rounded-xl transition-all border border-dashed"
-                                            :class="
-                                                coupon.isCollected
-                                                    ? 'border-transparent'
-                                                    : 'border-primary'
-                                            "
+                                            class="px-4 py-3 bg-primary-50 rounded-xl transition-all border border-dashed border-primary"
                                         >
                                             <div
                                                 class="flex justify-between items-start"
@@ -184,25 +179,6 @@
                                                             )
                                                         }}
                                                     </div>
-                                                </div>
-
-                                                <!-- Collect button -->
-                                                <div
-                                                    class="px-4 transition py-2.5 rounded-[100px] text-white text-base font-medium bg-primary"
-                                                    :class="
-                                                        coupon.is_collected
-                                                            ? 'opacity-25 rotate-[-15deg]'
-                                                            : 'bg-primary-500 cursor-pointer'
-                                                    "
-                                                    @click="
-                                                        collectVoucher(coupon)
-                                                    "
-                                                >
-                                                    {{
-                                                        coupon.is_collected
-                                                            ? "Collected"
-                                                            : "Collect"
-                                                    }}
                                                 </div>
                                             </div>
                                             <!-- Validity -->
@@ -335,37 +311,5 @@ const getShopVoucher = (shop) => {
                 router.push("/");
             }
         });
-};
-
-const collectVoucher = (coupon) => {
-    if (!coupon.is_collected) {
-        axios
-            .post(
-                "/vouchers-collect",
-                { coupon_id: coupon.id },
-                {
-                    headers: {
-                        Authorization: authStore.token,
-                    },
-                }
-            )
-            .then((response) => {
-                toast.success(response.data.message, {
-                    position:
-                        master.langDirection === "rtl"
-                            ? "bottom-right"
-                            : "bottom-left",
-                });
-                coupon.is_collected = true;
-            })
-            .catch((error) => {
-                toast.error(error.response.data.message, {
-                    position:
-                        master.langDirection === "rtl"
-                            ? "bottom-right"
-                            : "bottom-left",
-                });
-            });
-    }
 };
 </script>

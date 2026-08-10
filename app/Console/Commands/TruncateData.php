@@ -66,7 +66,6 @@ class TruncateData extends Command
         'categories',
         'category_subcategories',
         'colors',
-        'coupon_collects',
         'coupons',
         'customers',
         'device_keys',

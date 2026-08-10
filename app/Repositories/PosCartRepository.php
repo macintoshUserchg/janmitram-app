@@ -6,6 +6,7 @@ use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use App\Http\Requests\PosCartRequest;
+use App\Models\Card;
 use App\Models\Coupon;
 use App\Models\Customer;
 use App\Models\OrderVatTax;
@@ -218,6 +219,40 @@ class PosCartRepository extends Repository
         return $postCart;
     }
 
+    public static function applyCard(PosCart $postCart, Card $card): PosCart
+    {
+        $discount = CardRepository::discountFor($postCart->subtotal);
+
+        if ($discount > 0) {
+            $postCart->update([
+                'card_id' => $card->id,
+                'discount' => $discount,
+                'total' => $postCart->subtotal - $discount,
+                'coupon_id' => null, // a card discount is instead-of a coupon
+            ]);
+        }
+
+        return $postCart;
+    }
+
+    public static function removeCard(PosCart $postCart): PosCart
+    {
+        $postCart->update([
+            'card_id' => null,
+            'discount' => 0,
+        ]);
+
+        $calculateAmount = self::calculateTotal($postCart);
+
+        $postCart->update([
+            'subtotal' => $calculateAmount['subtotal'],
+            'total' => $calculateAmount['total'],
+            'discount' => $calculateAmount['discount'],
+        ]);
+
+        return $postCart;
+    }
+
     public static function destroyProduct($request, PosCart $postCart)
     {
         $postCartProduct = PosCartProduct::find($request->pos_cart_id);
@@ -330,9 +365,11 @@ class PosCartRepository extends Repository
             'order_code' => str_pad($lastOrderId + 1, 6, '0', STR_PAD_LEFT),
             'prefix' => $shop->prefix ?? 'RC',
             'coupon_id' => $posCart->coupon_id,
+            'card_id' => $posCart->card_id,
             'delivery_charge' => 0,
             'total_amount' => $posCart->subtotal,
-            'coupon_discount' => $posCart->discount,
+            'coupon_discount' => $posCart->coupon_id ? $posCart->discount : 0,
+            'card_discount' => $posCart->card_id ? $posCart->discount : 0,
             'tax_amount' => $totalTaxAmount,
             'payable_amount' => $total + $totalTaxAmount,
             'payment_method' => $paymentMethod,

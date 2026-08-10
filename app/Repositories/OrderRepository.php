@@ -161,7 +161,7 @@ class OrderRepository extends Repository
         object $orderData,
         ?string $couponCode = null,
     ): array {
-        $getCartAmounts = self::getCartWiseAmounts($shop, $lines, $couponCode);
+        $getCartAmounts = self::getCartWiseAmounts($shop, $lines, $couponCode, $orderData->card_number ?? null);
 
         $order = self::createNewOrder($orderData, $shop, $paymentMethod, $getCartAmounts);
 
@@ -380,7 +380,9 @@ class OrderRepository extends Repository
             'payable_amount' => $getCartAmounts['payableAmount'],
             'total_amount' => $getCartAmounts['totalAmount'],
             'tax_amount' => $getCartAmounts['totalTaxAmount'],
-            'coupon_discount' => $getCartAmounts['discount'],
+            'coupon_discount' => max(0, $getCartAmounts['discount'] - ($getCartAmounts['cardDiscount'] ?? 0)),
+            'card_id' => $getCartAmounts['card'] ?? null,
+            'card_discount' => $getCartAmounts['cardDiscount'] ?? 0,
             'payment_method' => $paymentMethod->value,
             'order_status' => OrderStatus::PENDING->value,
             'address_id' => $request->address_id,
@@ -402,7 +404,7 @@ class OrderRepository extends Repository
         return $address->deliveryAmount();
     }
 
-    private static function getCartWiseAmounts(Shop $shop, $carts, $couponCode = null): array
+    private static function getCartWiseAmounts(Shop $shop, $carts, $couponCode = null, $cardNumber = null): array
     {
         $totalAmount = 0;
         $discount = 0;
@@ -498,13 +500,29 @@ class OrderRepository extends Repository
             }
         }
 
-        // get coupon discount
-        $couponDiscount = self::getCouponDiscount($totalAmount, $shop->id, $couponCode);
+        // a valid card discount takes precedence over coupons (instead-of)
+        $card = null;
+        $cardDiscount = 0;
 
-        // check coupon discount amount
-        if ($couponDiscount['total_discount_amount'] > 0) {
-            $discount += $couponDiscount['total_discount_amount'];
-            $coupon = $couponDiscount['coupon'];
+        if ($cardNumber) {
+            $card = CardRepository::resolveForCustomer($cardNumber, cartAccessToken(request())['customer_id'] ?? null);
+
+            if ($card) {
+                $cardDiscount = CardRepository::discountFor($totalAmount);
+            }
+        }
+
+        if ($cardDiscount > 0) {
+            $discount += $cardDiscount;
+        } else {
+            // get coupon discount
+            $couponDiscount = self::getCouponDiscount($totalAmount, $shop->id, $couponCode);
+
+            // check coupon discount amount
+            if ($couponDiscount['total_discount_amount'] > 0) {
+                $discount += $couponDiscount['total_discount_amount'];
+                $coupon = $couponDiscount['coupon'];
+            }
         }
 
         // calculate payable amount
@@ -518,6 +536,8 @@ class OrderRepository extends Repository
             'discount' => $discount,
             'deliveryCharge' => $deliveryCharge,
             'coupon' => $coupon?->id,
+            'card' => $card?->id,
+            'cardDiscount' => $cardDiscount,
             'allVatTaxes' => $allVatTaxes,
         ];
     }
@@ -629,22 +649,6 @@ class OrderRepository extends Repository
 
                 $totalOrderAmount += $discount['total_amount'];
                 $totalDiscountAmount += $discount['discount_amount'];
-            }
-        } else {
-
-            $collectedCoupons = CouponRepository::getCollectedCoupons($shopId);
-
-            foreach ($collectedCoupons as $collectedCoupon) {
-
-                $discount = self::getCouponDiscountAmount($collectedCoupon, $totalAmount);
-
-                $totalOrderAmount += $discount['total_amount'];
-
-                if ($discount['discount_amount'] > 0) {
-                    $coupon = $collectedCoupon;
-                    $totalDiscountAmount += $discount['discount_amount'];
-                    break;
-                }
             }
         }
 

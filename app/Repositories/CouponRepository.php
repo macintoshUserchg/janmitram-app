@@ -6,7 +6,6 @@ use App\Enums\DiscountType;
 use App\Http\Requests\CouponRequest;
 use App\Models\AdminCoupon;
 use App\Models\Coupon;
-use App\Models\Customer;
 use App\Models\Product;
 use App\Models\Shop;
 use App\Support\Repositories\Repository;
@@ -85,37 +84,6 @@ class CouponRepository extends Repository
     }
 
     /**
-     * Get the collected coupons.
-     *
-     * @param  mixed  $shopId
-     * @return mixed
-     */
-    public static function getCollectedCoupons($shopId = null)
-    {
-        $tokens = cartAccessToken(request());
-        $userID = auth()->id() ?? Customer::firstWhere('id', $tokens['customer_id'])->user_id ?? null;
-
-        $coupons = self::query()->whereHas('users', function ($query) use ($userID) {
-            $query->where('user_id', $userID);
-        })->when($shopId, function ($query) use ($shopId) {
-            $query->where('shop_id', $shopId);
-        })->Active()->isValid()->get();
-
-        if ($shopId) {
-            $adminCoupons = AdminCoupon::where('shop_id', $shopId)->get();
-            $userCollectedCoupons = CouponCollectRepository::query()->where('user_id', $userID)->pluck('coupon_id')->toArray();
-
-            foreach ($adminCoupons as $adminCoupon) {
-                if (in_array($adminCoupon->coupon_id, $userCollectedCoupons)) {
-                    $coupons->push($adminCoupon->coupon);
-                }
-            }
-        }
-
-        return $coupons;
-    }
-
-    /**
      * Get coupon discount amount and total amount
      *
      * @param  mixed  $request
@@ -133,12 +101,31 @@ class CouponRepository extends Repository
 
         $couponCode = $request->coupon_code ?? null;
 
+        // a valid card discount takes precedence over coupons (instead-of)
+        $card = null;
+        $cardDiscountAmount = 0;
+
+        if ($request->card_number ?? null) {
+            $card = CardRepository::resolveForCustomer($request->card_number, cartAccessToken(request())['customer_id'] ?? null);
+        }
+
         foreach ($shopProducts as $shopId => $products) {
 
             $totalAmount = 0; // total amount
             foreach ($products as $productArray) {
                 $product = Product::find($productArray['id']);
                 $totalAmount += (float) ($product->discount_price > 0 ? $product->discount_price : $product->price) * $productArray['quantity'];
+            }
+
+            if ($card) {
+                $cardDiscount = CardRepository::discountFor($totalAmount);
+                if ($cardDiscount > 0) {
+                    $totalOrderAmount += $totalAmount;
+                    $totalDiscountAmount += $cardDiscount;
+                    $cardDiscountAmount += $cardDiscount;
+
+                    continue;
+                }
             }
 
             if ($couponCode) {
@@ -157,22 +144,6 @@ class CouponRepository extends Repository
                     $totalOrderAmount += (float) $discount['total_amount'];
                     $totalDiscountAmount += (float) $discount['discount_amount'];
                 }
-            } else {
-
-                $collectedCoupons = CouponRepository::getCollectedCoupons($shopId);
-
-                foreach ($collectedCoupons as $collectedCoupon) {
-
-                    $discount = self::getCouponDiscountAmount($collectedCoupon, $totalAmount);
-
-                    $totalOrderAmount += (float) $discount['total_amount'];
-
-                    if ($discount['discount_amount'] > 0) {
-                        $coupon = $collectedCoupon;
-                        $totalDiscountAmount += (float) $discount['discount_amount'];
-                        break;
-                    }
-                }
             }
         }
 
@@ -180,6 +151,8 @@ class CouponRepository extends Repository
             'total_amount' => $totalOrderAmount,
             'discount_amount' => $totalDiscountAmount,
             'coupon' => $coupon,
+            'card' => $card,
+            'card_discount_amount' => $cardDiscountAmount,
         ];
     }
 

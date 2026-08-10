@@ -36,14 +36,6 @@ class Coupon extends Model
     }
 
     /**
-     * get users model for this coupon.
-     * */
-    public function users(): BelongsToMany
-    {
-        return $this->belongsToMany(User::class, 'coupon_collects', 'coupon_id', 'user_id');
-    }
-
-    /**
      * Scope a query to only include active coupons.
      */
     public function scopeActive($query)

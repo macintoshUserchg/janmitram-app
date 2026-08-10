@@ -6,9 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ApplyCouponRequest;
 use App\Http\Requests\VoucherRequest;
 use App\Http\Resources\CouponResource;
-use App\Repositories\CouponCollectRepository;
 use App\Repositories\CouponRepository;
-use Illuminate\Http\Request;
 
 class CouponController extends Controller
 {
@@ -32,43 +30,7 @@ class CouponController extends Controller
     }
 
     /**
-     * collect voucher
-     * */
-    public function store(VoucherRequest $request)
-    {
-        $hasExistCoupon = CouponCollectRepository::hasExistCoupon($request);
-
-        if ($hasExistCoupon) {
-            return $this->json('Voucher already collected');
-        }
-
-        $coupon = CouponCollectRepository::storeByRequest($request);
-
-        return $this->json('Voucher collected successfully', [
-            'coupon' => CouponResource::make($coupon->coupon),
-        ]);
-    }
-
-    /**
-     * get collected vouchers
-     *
-     * @param  VoucherRequest  $request
-     * */
-    public function collectedVouchers(Request $request)
-    {
-        // get shop id
-        $shopId = $request->shop_id;
-
-        // get collected vouchers from repository
-        $coupons = CouponRepository::getCollectedCoupons($shopId);
-
-        return $this->json('available collected vouchers', [
-            'coupons' => CouponResource::collection($coupons),
-        ]);
-    }
-
-    /**
-     * Apply voucher from user collected vouchers
+     * Apply voucher from a coupon code
      */
     public function applyVoucher(ApplyCouponRequest $request)
     {

@@ -19,9 +19,11 @@ export const useBasketStore = defineStore("basketStore", {
         total_amount: 0,
         delivery_charge: 0,
         coupon_discount: 0,
+        card_discount: 0,
         payable_amount: 0,
         order_tax_amount: 0,
         coupon_code: "",
+        card_number: "",
         all_vat_taxes: [],
         showOrderConfirmModal: false,
         orderPaymentCancelModal: false,
@@ -180,8 +182,10 @@ export const useBasketStore = defineStore("basketStore", {
                 this.total_amount = 0;
                 this.delivery_charge = 0;
                 this.coupon_discount = 0;
+                this.card_discount = 0;
                 this.payable_amount = 0;
                 this.coupon_code = "";
+                this.card_number = "";
                 this.address = null;
                 authStore.user = null;
                 authStore.addresses = [];

@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\AreaController;
 use App\Http\Controllers\Admin\Auth\LoginController;
 use App\Http\Controllers\Admin\BlogController;
 use App\Http\Controllers\Admin\BusinessSetupController;
+use App\Http\Controllers\Admin\CardsController;
 use App\Http\Controllers\Admin\ContactUsController;
 use App\Http\Controllers\Admin\CountryController;
 use App\Http\Controllers\Admin\CouponController;
@@ -247,6 +248,8 @@ Route::prefix('shop')->name('shop.')->middleware(['web'])->group(function () {
         Route::match(['post', 'delete'], 'pos/cart/remove', [POSController::class, 'removeCart'])->name('pos.removeCart');
         Route::post('pos/coupon/apply', [POSController::class, 'applyCoupon'])->name('pos.applyCoupon');
         Route::match(['post', 'delete'], 'pos/coupon/remove', [POSController::class, 'removeCoupon'])->name('pos.removeCoupon');
+        Route::post('pos/card/apply', [POSController::class, 'applyCard'])->name('pos.applyCard');
+        Route::match(['post', 'delete'], 'pos/card/remove', [POSController::class, 'removeCard'])->name('pos.removeCard');
         Route::post('pos/product-detail', [POSController::class, 'getProductDetail'])->name('pos.product.detail');
         Route::post('pos/add-or-update-sku', [POSController::class, 'addOrUpdateSKU'])->name('pos.addOrUpdateSKU');
 
@@ -489,6 +492,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:root'])->group
     Route::put('coupon/{coupon}', [CouponController::class, 'update'])->name('coupon.update');
     Route::get('coupon/{coupon}/toggle', [CouponController::class, 'statusToggle'])->name('coupon.toggle');
     Route::delete('coupon/{coupon}', [CouponController::class, 'destroy'])->name('coupon.destroy');
+
+    Route::get('cards', [CardsController::class, 'index'])->name('cards.index');
+    Route::post('cards', [CardsController::class, 'store'])->name('cards.store');
+    Route::get('cards/{card}', [CardsController::class, 'show'])->name('cards.show');
+    Route::get('cards/{card}/toggle', [CardsController::class, 'toggleActive'])->name('cards.toggle');
 
     Route::get('order', [App\Http\Controllers\Admin\OrderController::class, 'index'])->name('order.index');
     Route::get('order/{order}', [App\Http\Controllers\Admin\OrderController::class, 'show'])->name('order.show');

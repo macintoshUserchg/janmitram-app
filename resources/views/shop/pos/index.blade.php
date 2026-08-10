@@ -146,6 +146,17 @@
                                 <!-- Coupon Control Button -->
                                 <div id="couponControlBtn"></div>
                             </div>
+
+                            <div class="d-flex mt-2 pos-card-row">
+                                <input type="text" id="cardNumber" class="form-control text-muted me-2 py-2.5"
+                                    placeholder="{{ __('Card Number (10% off)') }}">
+                                <button type="button" id="cardApplyBtn" class="btn btn-sm btn-primary me-1">
+                                    {{ __('Apply Card') }}
+                                </button>
+                                <button type="button" id="cardRemoveBtn" class="btn btn-sm btn-outline-danger">
+                                    {{ __('Remove') }}
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -1396,6 +1407,61 @@
                 }
             });
         };
+
+        // apply membership card
+        function applyCard() {
+            $.ajax({
+                url: "{{ route('shop.pos.applyCard') }}",
+                method: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    card_number: $('#cardNumber').val(),
+                    name: $('#name').val()
+                },
+                success: (response) => {
+                    fetchPosCart();
+                    Toast.fire({
+                        icon: 'success',
+                        title: response.message
+                    });
+                },
+                error: (error) => {
+                    Toast.fire({
+                        icon: 'error',
+                        title: error.responseJSON.message
+                    });
+                }
+            });
+        }
+
+        // remove membership card
+        function removeCard() {
+            $('#cardNumber').val('');
+            $.ajax({
+                url: "{{ route('shop.pos.removeCard') }}",
+                method: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    name: $('#name').val()
+                },
+                success: (response) => {
+                    fetchPosCart();
+                    Toast.fire({
+                        icon: 'success',
+                        title: response.message
+                    });
+                },
+                error: (error) => {
+                    Toast.fire({
+                        icon: 'error',
+                        title: error.responseJSON.message
+                    });
+                }
+            });
+        }
+
+        $('#cardApplyBtn').on('click', applyCard);
+        $('#cardRemoveBtn').on('click', removeCard);
 
         function selectPaymentMethod(paymentMethod) {
             selectedPaymentMethod = paymentMethod;

@@ -35,6 +35,7 @@ class OrderRequest extends FormRequest
             'note' => 'nullable|string',
             'payment_method' => 'required|string',
             'coupon_code' => 'nullable|string|max:50',
+            'card_number' => 'nullable|string|max:20',
             'allocations' => 'nullable|array',
             'allocations.*.product_id' => 'required|integer',
             'allocations.*.shop_id' => 'required|exists:shops,id',
