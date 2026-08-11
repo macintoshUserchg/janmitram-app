@@ -454,7 +454,7 @@
                                     <div class="customer-about">
                                         <p class="text-dark name">{{ Str::limit($product->name, 30, '...') }}</p>
                                         <p class="order">{{ __('Rating') }}:
-                                            {{ number_format($product->reviews->avg('rating'), 1) }}
+                                            {{ number_format((float) ($product->reviews->avg('rating') ?? 0), 1) }}
                                         </p>
                                     </div>
                                 </div>

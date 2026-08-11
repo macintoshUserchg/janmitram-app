@@ -38,12 +38,14 @@
 
                                 <div>
                                     <i class="fa-solid fa-star text-warning"></i>
-                                    {{ number_format($product->reviews->avg('rating'), 1) }}
+                                    {{ number_format((float) ($product->reviews->avg('rating') ?? 0), 1) }}
                                 </div>
-
+                                <div class="review-star-icon d-flex align-items-center">
+                                    {!! renderStarRating($product->reviews->avg('rating') ?? 0) !!}
+                                </div>
                                 <div class="border-start w-0" style="height: 20px"></div>
 
-                                <div>{{ number_format($product->reviews->count(), 1) }} {{ __('Reviews') }}</div>
+                                <div>{{ number_format((int) ($product->reviews->count() ?? 0)) }} {{ __('Reviews') }}</div>
                             </div>
                             <div class="mt-2">
                                 <div>

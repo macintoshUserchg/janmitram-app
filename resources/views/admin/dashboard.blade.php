@@ -476,7 +476,7 @@
                                             <i class="bi bi-star-fill text-warning"></i>
                                             <i class="bi bi-star-fill text-warning"></i>
                                             <i class="bi bi-star-half text-warning"></i>
-                                            <span class="text-black ms-1">{{ number_format($product->reviews->avg('rating'), 1) }}</span>
+                                            <span class="text-black ms-1">{{ number_format((float) ($product->reviews->avg('rating') ?? 0), 1) }}</span>
                                             <span class="text-secondary">({{ $product->reviews->count() }})</span>
                                         </p>
                                     </div>
