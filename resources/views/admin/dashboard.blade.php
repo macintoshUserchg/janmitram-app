@@ -342,14 +342,15 @@
                                     {{ $order->created_at->format('d M, Y') }}
                                 </td>
                                 @php
-                                    $status = Str::ucfirst(str_replace(' ', '', $order->order_status->value));
+                                    $rawStatus = is_object($order->order_status) ? ($order->order_status->value ?? '') : (string) ($order->order_status ?? '');
+                                    $status = Str::ucfirst(str_replace(' ', '', $rawStatus));
                                 @endphp
                                 <td class="tableStatus">
                                     <div class="statusItem">
                                         <div class="circleDot animated{{ $status }}"></div>
                                         <div class="statusText">
                                             <span class="status{{ $status }}">
-                                                {{ $order->order_status->value }}
+                                                {{ $rawStatus }}
                                             </span>
                                         </div>
                                     </div>

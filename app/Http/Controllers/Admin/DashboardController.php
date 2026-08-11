@@ -28,7 +28,7 @@ class DashboardController extends Controller
         $generaleSetting = generaleSetting('setting');
 
         $totalCustomer = Customer::count();
-        $totalRider = User::role('driver')->count();
+        $totalRider = rescue(fn () => User::role('driver')->count(), 0, false);
         $totalWarehouses = Warehouse::count();
         $pendingStockRequests = StockRequest::where('status', 'pending')->count();
         $fulfilledStockRequests = StockRequest::where('status', 'completed')->count();
