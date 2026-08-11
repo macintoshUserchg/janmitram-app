@@ -13,27 +13,45 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('cards', function (Blueprint $table) {
-            $table->id();
-            $table->string('card_number')->unique();
-            $table->foreignId('customer_id')->nullable()->constrained()->nullOnDelete();
-            $table->boolean('is_active')->default(true);
-            $table->timestamps();
-        });
+        if (! Schema::hasTable('cards')) {
+            Schema::create('cards', function (Blueprint $table) {
+                $table->id();
+                $table->string('card_number')->unique();
+                $table->foreignId('customer_id')->nullable()->constrained()->nullOnDelete();
+                $table->boolean('is_active')->default(true);
+                $table->timestamps();
+            });
+        }
 
-        Schema::table('orders', function (Blueprint $table) {
-            $table->foreignId('card_id')->nullable()->constrained('cards')->nullOnDelete();
-            $table->decimal('card_discount', 10, 2)->nullable();
-        });
+        if (Schema::hasTable('orders')) {
+            Schema::table('orders', function (Blueprint $table) {
+                if (! Schema::hasColumn('orders', 'card_id')) {
+                    $table->foreignId('card_id')->nullable()->constrained('cards')->nullOnDelete();
+                }
+                if (! Schema::hasColumn('orders', 'card_discount')) {
+                    $table->decimal('card_discount', 10, 2)->nullable();
+                }
+            });
+        }
 
-        Schema::table('pos_carts', function (Blueprint $table) {
-            $table->foreignId('card_id')->nullable()->constrained('cards')->nullOnDelete();
-        });
+        if (Schema::hasTable('pos_carts')) {
+            Schema::table('pos_carts', function (Blueprint $table) {
+                if (! Schema::hasColumn('pos_carts', 'card_id')) {
+                    $table->foreignId('card_id')->nullable()->constrained('cards')->nullOnDelete();
+                }
+            });
+        }
 
-        Schema::table('generate_settings', function (Blueprint $table) {
-            $table->integer('card_discount_percentage')->default(10);
-            $table->decimal('card_min_order_amount', 10, 2)->default(500);
-        });
+        if (Schema::hasTable('generate_settings')) {
+            Schema::table('generate_settings', function (Blueprint $table) {
+                if (! Schema::hasColumn('generate_settings', 'card_discount_percentage')) {
+                    $table->integer('card_discount_percentage')->default(10);
+                }
+                if (! Schema::hasColumn('generate_settings', 'card_min_order_amount')) {
+                    $table->decimal('card_min_order_amount', 10, 2)->default(500);
+                }
+            });
+        }
 
         Schema::dropIfExists('coupon_collects');
     }
