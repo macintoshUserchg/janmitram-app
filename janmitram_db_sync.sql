@@ -945,7 +945,7 @@ CREATE TABLE `customers` (
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `customers_user_id_foreign` (`user_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -958,7 +958,8 @@ LOCK TABLES `customers` WRITE;
 INSERT INTO `customers` VALUES
 (1,6,'2026-08-05 18:18:12','2026-08-05 18:18:12'),
 (2,1,'2026-08-06 18:21:21','2026-08-06 18:21:21'),
-(3,5,'2026-08-06 19:12:55','2026-08-06 19:12:55');
+(3,5,'2026-08-06 19:12:55','2026-08-06 19:12:55'),
+(4,9,'2026-08-11 19:23:57','2026-08-11 19:23:57');
 /*!40000 ALTER TABLE `customers` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -2773,7 +2774,7 @@ CREATE TABLE `personal_access_tokens` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `personal_access_tokens_token_unique` (`token`),
   KEY `personal_access_tokens_tokenable_type_tokenable_id_index` (`tokenable_type`,`tokenable_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2786,7 +2787,9 @@ LOCK TABLES `personal_access_tokens` WRITE;
 INSERT INTO `personal_access_tokens` VALUES
 (1,'App\\Models\\User',3,'api_token','4bc082902c78c718c511b7877d6fbd0e144db98501e90941db6b2094e772a8bf','[\"*\"]','2026-08-04 13:02:08',NULL,'2026-08-04 12:10:54','2026-08-04 13:02:08'),
 (2,'App\\Models\\User',6,'api_token','9f892c36ab36f453de39cb58dc6d6f9ee8cc4255a63773e13c10d11af6ac2dcc','[\"*\"]','2026-08-05 20:31:49',NULL,'2026-08-05 18:17:04','2026-08-05 20:31:49'),
-(3,'App\\Models\\User',1,'api_token','89815a1919564213e778d20e3be3770e7c4fd14d07b9c5d848e070dbc745836f','[\"*\"]','2026-08-06 18:41:22',NULL,'2026-08-06 18:21:21','2026-08-06 18:41:22');
+(3,'App\\Models\\User',1,'api_token','89815a1919564213e778d20e3be3770e7c4fd14d07b9c5d848e070dbc745836f','[\"*\"]','2026-08-06 18:41:22',NULL,'2026-08-06 18:21:21','2026-08-06 18:41:22'),
+(4,'App\\Models\\User',9,'api_token','64a20afb59b6dc1b2c2621601207dc75dc0b284b982daf2611807b47b032b686','[\"*\"]','2026-08-11 19:29:33',NULL,'2026-08-11 19:23:57','2026-08-11 19:29:33'),
+(5,'App\\Models\\User',9,'api_token','798c4e0be29d8aa8f91781353520a8926515f7f9c7f848da2d52af378e79d240','[\"*\"]','2026-08-11 19:34:45',NULL,'2026-08-11 19:33:12','2026-08-11 19:34:45');
 /*!40000 ALTER TABLE `personal_access_tokens` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -4740,14 +4743,14 @@ SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
 INSERT INTO `users` VALUES
-(1,'DR. APARNA KUMARI','Super admin','9571523516','root@janmitram.com',67,'$2y$12$hHv82ChVVioypklqriMuvuosPk2qygbizrBnv/Iwnpsj/.SO071Lq','female','1980-08-15',1,'2026-08-03 08:41:09','2026-08-03 08:41:09',NULL,NULL,NULL,'2026-08-03 08:41:09','2026-08-06 21:38:39',NULL,NULL,NULL,NULL,NULL,NULL,'2026-08-06 18:41:22'),
+(1,'DR. APARNA KUMARI','Super admin','9571523516','root@janmitram.com',67,'$2y$12$H8xxsNUp2CapB/1MuN4awOMM/GEEw8J6XK67VQwGhjDW83yvBO/zG','female','1980-08-15',1,'2026-08-03 08:41:09','2026-08-03 08:41:09',NULL,NULL,NULL,'2026-08-03 08:41:09','2026-08-06 21:38:39',NULL,NULL,NULL,NULL,NULL,NULL,'2026-08-06 18:41:22'),
 (3,'Shubham','Gour','9549803319','chandangaurjecrc@gmail.com',6,'$2y$12$BCvawwHqr3sTTTPkIu/ulu53Y8Z4Hh.HeIGIv1Us/rXVrs.WECSlS','male',NULL,1,NULL,NULL,NULL,NULL,NULL,'2026-08-03 11:44:54','2026-08-08 19:50:07',NULL,'India','91',NULL,NULL,NULL,'2026-08-04 13:02:08'),
 (4,'Shubham','Gaur','9549803300','shg@janmitram.com',9,'$2y$12$ytIdZYyfw3yg4xl./WuEyu5HtRyUwPBttZ4qQL6I5Gbb6Qzi.6HbS','male',NULL,1,NULL,NULL,NULL,NULL,NULL,'2026-08-03 11:48:51','2026-08-06 18:33:49','2026-08-06 18:33:49',NULL,NULL,NULL,NULL,NULL,NULL),
 (5,'Archana','ojha','7004113699','archana@janmitram.com',12,'$2y$12$OqEIoEjY70CwPdXLw5CvA.wIftWhG0bdcnoiDdjZibgjGmkFgmBeq','female',NULL,1,NULL,NULL,NULL,NULL,NULL,'2026-08-03 15:28:58','2026-08-08 19:43:47',NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (6,'Dinesh bhai','Sharma','9920996281','dinesh@janmitram.com',15,'$2y$12$EFdZX2Qt7YvlnCcfZg5O6.sWi7O7GLHaUyJd/sMBorGdirhwPOCrG','male',NULL,1,NULL,NULL,NULL,NULL,NULL,'2026-08-03 21:32:31','2026-08-08 20:24:10',NULL,'India','91',NULL,NULL,NULL,'2026-08-05 20:31:49'),
 (7,'Manoj','kumar','8209514177','manoj@janmitram.com',68,'$2y$12$jf0UuQ/C233ctf6zuLlUTesooZnBvso7lerHtytsUT4h.4kMjtfeq','male','1977-08-15',1,NULL,NULL,NULL,NULL,NULL,'2026-08-08 19:15:25','2026-08-08 19:15:25',NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (8,'Mudrika mohan','Sharma','9372475990','mudrika@janmitram.com',74,'$2y$12$/F6xFE9tKRSqN8P9Efcs5uYFpKkpmkcynVsrWC9LJ0gX6ARzqva2W','male','1968-10-15',1,NULL,NULL,NULL,NULL,NULL,'2026-08-09 20:39:38','2026-08-09 20:39:38',NULL,NULL,NULL,NULL,NULL,NULL,NULL),
-(9,'Suman','Mishra','9414057690','suman@janmitram.com',80,'$2y$12$AZiXYeQ3WzdNuo02dcZ..OdrRiIeNyTzY2gKkBvsw8oSt5nvBh9Kq','female','1979-08-01',1,NULL,NULL,NULL,NULL,NULL,'2026-08-10 20:22:55','2026-08-10 20:22:55',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+(9,'bhaskar',NULL,'9414057690','bhaskar@janmitram.com',80,'$2y$12$Igl2GG1NKBfM1NsmWBEwQeUU3GuaIB.bcbAkytpSL09wryGPXIXu.',NULL,NULL,1,NULL,NULL,NULL,NULL,NULL,'2026-08-10 20:22:55','2026-08-11 19:33:12',NULL,'India','91',NULL,NULL,NULL,'2026-08-11 19:33:12');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -5100,4 +5103,4 @@ SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
 
--- Dump completed on 2026-08-10 19:27:44
+-- Dump completed on 2026-08-11 14:09:38

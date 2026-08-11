@@ -16,9 +16,10 @@ trait SortableIndex
     /** @var array<int, string> Columns a given controller allows sorting by (override as needed). */
     protected array $sortableColumns = ['id', 'created_at', 'updated_at'];
 
-    public function resolveSort(): array
+    public function resolveSort(?array $allowedColumns = null): array
     {
-        $sort = in_array(request('sort'), $this->sortableColumns, true) ? request('sort') : 'id';
+        $allowed = $allowedColumns ?? $this->sortableColumns;
+        $sort = in_array(request('sort'), $allowed, true) ? request('sort') : 'id';
         $direction = request('direction') === 'desc' ? 'desc' : 'asc';
 
         return [$sort, $direction];
@@ -37,9 +38,10 @@ trait SortableIndex
         return in_array($perPage, $this->perPageOptions, true) ? $perPage : $default;
     }
 
-    protected function applySort(Builder $query, ?string $sort = null, ?string $direction = 'asc'): Builder
+    protected function applySort(Builder $query, ?string $sort = null, ?string $direction = 'asc', ?array $allowedColumns = null): Builder
     {
-        $sort = in_array($sort, $this->sortableColumns, true) ? $sort : 'id';
+        $allowed = $allowedColumns ?? $this->sortableColumns;
+        $sort = in_array($sort, $allowed, true) ? $sort : 'id';
 
         return $query->orderBy($sort, $direction === 'desc' ? 'desc' : 'asc');
     }

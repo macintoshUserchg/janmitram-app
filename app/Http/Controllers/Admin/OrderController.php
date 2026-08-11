@@ -19,9 +19,6 @@ class OrderController extends Controller
 {
     use SortableIndex;
 
-    /** @var array<int, string> */
-    protected array $sortableColumns = ['id', 'created_at', 'payable_amount', 'order_status', 'payment_status'];
-
     /**
      * Display a order list with filter status.
      */
@@ -36,7 +33,8 @@ class OrderController extends Controller
             $shop = User::role(Roles::ROOT->value)->first()?->shop;
         }
 
-        [$sort, $direction] = $this->resolveSort();
+        $allowedColumns = ['id', 'created_at', 'payable_amount', 'order_status', 'payment_status'];
+        [$sort, $direction] = $this->resolveSort($allowedColumns);
 
         $query = OrderRepository::query()
             ->when($shop, function ($query) use ($shop) {
@@ -46,7 +44,7 @@ class OrderController extends Controller
                 $query->where('order_status', $statusStr);
             });
 
-        $orders = $this->applySort($query, $sort, $direction)
+        $orders = $this->applySort($query, $sort, $direction, $allowedColumns)
             ->paginate($this->resolvePerPage(20))
             ->withQueryString();
 
