@@ -365,10 +365,12 @@
                 @endhasPermission
 
                 @hasPermission('admin.cards.index')
-                    <a href="{{ route('admin.cards.index') }}"
-                        class="subMenu hasCount {{ request()->routeIs('admin.cards.*') ? 'active' : '' }}">
-                        {{ __('Cards') }}
-                    </a>
+                    @if (Route::has('admin.cards.index'))
+                        <a href="{{ route('admin.cards.index') }}"
+                            class="subMenu hasCount {{ request()->routeIs('admin.cards.*') ? 'active' : '' }}">
+                            {{ __('Cards') }}
+                        </a>
+                    @endif
                 @endhasPermission
             </div>
         </div>
