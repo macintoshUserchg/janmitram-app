@@ -155,6 +155,17 @@
         </div>
     </div>
     <div class="card-body p-4">
+        @if($isPaid)
+            <div class="alert alert-info border-0 shadow-sm mb-3">
+                <i class="fas fa-info-circle me-1"></i>
+                {{ __('These values are the finalized payout snapshot for this month — the downline tree as it stood when payouts were run, not the current live network. New shops added since then are not reflected here.') }}
+            </div>
+        @else
+            <div class="alert alert-secondary border-0 shadow-sm mb-3">
+                <i class="fas fa-clock me-1"></i>
+                {{ __('This is a live preview of your current downline tree. Values will be finalized when the payout for this month is run.') }}
+            </div>
+        @endif
         <div class="payout-tree-wrapper">
             @forelse($nodes as $node)
                 <ul class="list-unstyled mb-3">
@@ -245,7 +256,7 @@
             + '<div class="d-flex align-items-center gap-2 flex-wrap text-nowrap small">'
             + '<span class="badge bg-light text-dark border px-2 py-1 fw-normal">{{ __('Personal') }}: <span class="fw-bold text-dark">₹' + fmt(node.personal_sales) + '</span></span>'
             + '<span class="badge bg-light text-dark border px-2 py-1 fw-normal">{{ __('Group Sales') }}: <span class="fw-bold text-primary">₹' + fmt(node.group_sales) + '</span></span>'
-            + '<span class="badge bg-light text-dark border px-2 py-1 fw-normal">{{ __('Group Size') }}: <span class="fw-bold text-dark">' + node.group_size + '</span></span>'
+            + '<span class="badge bg-light text-dark border px-2 py-1 fw-normal" title="{{ __('Downline shops counted at payout time for this month (frozen snapshot for paid months).') }}">{{ __('Group Size') }}: <span class="fw-bold text-dark">' + node.group_size + '</span></span>'
             + '<span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 fw-normal">{{ __('Phase 1') }}: <span class="fw-bold">₹' + fmt(node.phase1_amount) + '</span></span>'
             + '<span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1 fw-normal">{{ __('Phase 2') }}: <span class="fw-bold">₹' + fmt(node.phase2_amount) + '</span></span>'
             + '<span class="badge bg-success text-white px-3 py-1 fw-bold fs-6">₹' + fmt(node.total_payout) + '</span></div></div></div>' + children + '</li>';

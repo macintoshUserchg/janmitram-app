@@ -32,7 +32,7 @@
                 <span class="badge bg-light text-dark border px-2 py-1 fw-normal">
                     {{ __('Group Sales') }}: <span class="fw-bold text-primary">₹{{ number_format($node['group_sales'], 2) }}</span>
                 </span>
-                <span class="badge bg-light text-dark border px-2 py-1 fw-normal">
+                <span class="badge bg-light text-dark border px-2 py-1 fw-normal" title="{{ __('Downline shops counted at payout time for this month (frozen snapshot for paid months).') }}">
                     {{ __('Group Size') }}: <span class="fw-bold text-dark">{{ $node['group_size'] }}</span>
                 </span>
                 <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 fw-normal">

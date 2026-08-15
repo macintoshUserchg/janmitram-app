@@ -142,6 +142,18 @@
     </div>
 </div>
 
+@if($isPaid)
+    <div class="alert alert-info border-0 shadow-sm mb-4">
+        <i class="fas fa-info-circle me-1"></i>
+        {{ __('This month is already paid — the tree below reflects the finalized payout snapshot, not the current live network. Running the payout again will be skipped for shops that were already credited.') }}
+    </div>
+@else
+    <div class="alert alert-secondary border-0 shadow-sm mb-4">
+        <i class="fas fa-clock me-1"></i>
+        {{ __('This is a live preview of the current downline tree. Values will be finalized when the payout for this month is run.') }}
+    </div>
+@endif
+
 <!-- Month Selection & Run Action Card -->
 <div class="card border-0 shadow-sm rounded-12 mb-4">
     <div class="card-body py-3">

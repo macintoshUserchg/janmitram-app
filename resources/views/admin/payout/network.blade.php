@@ -144,6 +144,18 @@
     </div>
 </div>
 
+@if($isPaid)
+    <div class="alert alert-info border-0 shadow-sm mb-4">
+        <i class="fas fa-info-circle me-1"></i>
+        {{ __('These values are the finalized payout snapshot for this month — the downline tree as it stood when payouts were run, not the current live network. New shops added since then are not reflected here.') }}
+    </div>
+@else
+    <div class="alert alert-secondary border-0 shadow-sm mb-4">
+        <i class="fas fa-clock me-1"></i>
+        {{ __('This is a live preview of the current downline tree. Values will be finalized when the payout for this month is run.') }}
+    </div>
+@endif
+
 {{-- Month / Year Filter --}}
 <div class="card border-0 shadow-sm rounded-12 mb-4">
     <div class="card-body py-3">

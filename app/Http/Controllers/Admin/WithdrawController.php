@@ -52,7 +52,18 @@ class WithdrawController extends Controller
      */
     public function update(Withdraw $withdraw, Request $request)
     {
-        WithdrawRepository::updateWithdraw($withdraw, $request);
+        $previousStatus = $withdraw->status;
+
+        $result = WithdrawRepository::updateWithdraw($withdraw, $request);
+
+        if (! $result['ok']) {
+            return back()->with('error', $result['message']);
+        }
+
+        // Only notify on a genuine status change (skip idempotent re-approvals).
+        if ($previousStatus === $withdraw->status) {
+            return back()->withSuccess($result['message']);
+        }
 
         // admin notification message
         $message = 'Withdraw request '.$withdraw->status;
