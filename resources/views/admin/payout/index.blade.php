@@ -167,8 +167,9 @@
                             <td class="text-end">₹{{ number_format((float) $payout->personal_sales, 2) }}</td>
                             <td class="text-end">₹{{ number_format((float) $payout->group_sales, 2) }}</td>
                             <td class="text-center">
-                                <span class="badge bg-light text-dark border px-3 py-2 rounded-pill">
-                                    {{ $payout->group_size }}
+                                <span class="badge bg-light text-dark border px-2 py-1 rounded-pill" title="{{ __('Total team size recorded at payout execution: :size (1 self + :downlines downline shops)', ['size' => $payout->group_size, 'downlines' => max(0, $payout->group_size - 1)]) }}">
+                                    <i class="fas fa-users text-secondary me-1"></i>{{ $payout->group_size }}
+                                    <span class="text-muted small">({{ max(0, $payout->group_size - 1) }} {{ max(0, $payout->group_size - 1) === 1 ? __('downline') : __('downlines') }})</span>
                                 </span>
                             </td>
                             <td class="text-center">
