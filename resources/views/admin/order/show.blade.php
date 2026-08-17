@@ -131,26 +131,57 @@
                         </table>
                     </div>
 
+                    @php
+                        $couponDisc = (float)($order->coupon_discount ?? 0);
+                        $cardDisc = (float)($order->card_discount ?? 0);
+                        $otherDisc = max(0, (float)($order->discount ?? 0) - $couponDisc - $cardDisc);
+                    @endphp
+
                     <div class="max-300 ms-auto d-flex flex-column gap-1 order-total-summary">
                         <div class="d-flex align-items-center justify-content-between gap-2">
                             <div>{{ __('Sub Total') }}</div>
                             <div>{{ showCurrency($order->total_amount) }}</div>
                         </div>
 
-                        <div class="d-flex align-items-center justify-content-between gap-2">
-                            <div>{{ __('Coupon Discount') }}</div>
-                            <div>{{ showCurrency($order->coupon_discount) }}</div>
-                        </div>
+                        @if ($couponDisc > 0)
+                            <div class="d-flex align-items-center justify-content-between gap-2 text-danger">
+                                <div>{{ __('Coupon Discount') }} {{ $order->coupon ? '(' . $order->coupon->code . ')' : '' }}</div>
+                                <div>-{{ showCurrency($couponDisc) }}</div>
+                            </div>
+                        @endif
+
+                        @if ($cardDisc > 0)
+                            <div class="d-flex align-items-center justify-content-between gap-2 text-primary">
+                                <div>{{ __('Card Discount') }} {{ $order->card ? '(' . $order->card->card_number . ')' : '' }}</div>
+                                <div>-{{ showCurrency($cardDisc) }}</div>
+                            </div>
+                        @endif
+
+                        @if ($otherDisc > 0)
+                            <div class="d-flex align-items-center justify-content-between gap-2 text-warning">
+                                <div>{{ __('Special Discount') }}</div>
+                                <div>-{{ showCurrency($otherDisc) }}</div>
+                            </div>
+                        @endif
 
                         <div class="d-flex align-items-center justify-content-between gap-2">
                             <div>{{ __('Delivery Charge') }}</div>
                             <div>{{ showCurrency($order->delivery_charge) }}</div>
                         </div>
 
-                        <div class="d-flex align-items-center justify-content-between gap-2">
-                            <div>{{ __('VAT & Tax') }}</div>
-                            <div>{{ showCurrency($order->tax_amount) }}</div>
-                        </div>
+                        @if ($order->vatTaxes && $order->vatTaxes->count() > 0)
+                            @foreach ($order->vatTaxes as $vatTax)
+                                <div class="d-flex align-items-center justify-content-between gap-2 text-muted">
+                                    <div>{{ $vatTax->name }} ({{ $vatTax->percentage }}%)</div>
+                                    <div>+{{ showCurrency($vatTax->amount) }}</div>
+                                </div>
+                            @endforeach
+                        @elseif ($order->tax_amount > 0)
+                            <div class="d-flex align-items-center justify-content-between gap-2">
+                                <div>{{ __('VAT & Tax') }}</div>
+                                <div>+{{ showCurrency($order->tax_amount) }}</div>
+                            </div>
+                        @endif
 
                         <div class="d-flex align-items-center justify-content-between gap-2 border-top pt-1 mt-1">
                             <div class="fw-bold">{{ __('Grand Total') }}</div>

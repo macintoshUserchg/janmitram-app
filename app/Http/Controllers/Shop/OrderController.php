@@ -45,13 +45,12 @@ class OrderController extends Controller
     {
         $shop = generaleSetting('shop');
 
-        $query = Order::withoutGlobalScopes();
+        $query = Order::withoutGlobalScopes()->with(['products.unit', 'vatTaxes', 'coupon', 'card', 'customer.user', 'address']);
         if ($shop) {
             $query->where('shop_id', $shop->id);
         }
 
         $order = $query->findOrFail($orderId);
-
         $orderStatus = OrderStatus::cases();
 
         $riders = Driver::whereHas('user', function ($query) {

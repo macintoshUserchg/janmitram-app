@@ -57,6 +57,7 @@ class OrderController extends Controller
      */
     public function show(Order $order)
     {
+        $order->loadMissing(['products.unit', 'vatTaxes', 'coupon', 'card', 'customer.user', 'address']);
         $orderStatus = OrderStatus::cases();
 
         $riders = Driver::whereHas('user', function ($query) {
