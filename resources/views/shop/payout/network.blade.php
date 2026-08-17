@@ -201,9 +201,20 @@
         var chevron = node.has_children
             ? '<button type="button" class="btn btn-sm btn-light border p-1 rounded-circle payout-expand text-primary me-1" data-bs-toggle="collapse" data-bs-target="#node-' + node.shop_id + '" aria-expanded="false" title="{{ __('Toggle downline') }}"><i class="fas fa-chevron-right payout-chevron fs-6" style="width: 14px; height: 14px; display: inline-flex; align-items: center; justify-content: center;"></i></button>'
             : '<span class="d-inline-block text-center text-muted me-1" style="width: 24px;"><i class="fas fa-store-alt opacity-50"></i></span>';
-        var level = node.level !== null
-            ? '<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1">Level ' + node.level + '</span>'
-            : '<span class="badge bg-light text-secondary border rounded-pill px-2 py-1">—</span>';
+        var level = '';
+        if (node.level !== null) {
+            var rankNames = {
+                0: 'L0 - {{ __('Star Promoter') }}',
+                1: 'L1 - {{ __('Silver Associate') }}',
+                2: 'L2 - {{ __('Gold Leader') }}',
+                3: 'L3 - {{ __('Diamond Director') }}',
+                4: 'L4 - {{ __('Crown Ambassador') }}'
+            };
+            var rankTitle = rankNames[node.level] || ('Level ' + node.level);
+            level = '<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1 fw-bold">' + rankTitle + '</span>';
+        } else {
+            level = '<span class="badge bg-light text-secondary border rounded-pill px-2 py-1">—</span>';
+        }
         var children = node.has_children
             ? '<ul class="list-unstyled collapse payout-children" id="node-' + node.shop_id + '"></ul>'
             : '';
