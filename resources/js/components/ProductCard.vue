@@ -49,11 +49,15 @@
                             {{ props.product?.name }}
                         </div>
 
-                        <div class="flex items-center gap-2" :class="props.product?.quantity > 0 ? '' : 'opacity-30'">
+                        <div class="flex items-center gap-2 flex-wrap" :class="props.product?.quantity > 0 ? '' : 'opacity-30'">
                             <!-- price -->
                             <div class="text-primary text-base font-bold leading-normal">
                                 {{ masterStore.showCurrency(props.product?.discount_price > 0 ?
                                     props.product?.discount_price : props.product?.price) }}
+                            </div>
+                            <!-- unit -->
+                            <div v-if="props.product?.unit?.name" class="text-slate-600 text-xs font-medium bg-slate-100 px-1.5 py-0.5 rounded">
+                                {{ props.product?.unit?.name }}
                             </div>
                             <!-- discount price -->
                             <div v-if="props.product?.discount_price > 0"

@@ -104,14 +104,22 @@
                         </div>
                     </div>
                 <div class="flex flex-wrap items-center gap-3" :class="product.is_digital != true ? 'justify-between' : 'justify-end'">
-                    <!-- Size and color -->
-                    <div class="flex items-center gap-1" v-if="product.is_digital != true">
+                    <!-- Size, color, and unit -->
+                    <div class="flex items-center gap-1 flex-wrap" v-if="product.is_digital != true">
                         <div
+                            v-if="product.unit"
+                            class="min-w-8 text-center px-2 py-1 bg-slate-100 rounded text-slate-800 text-xs font-medium"
+                        >
+                            {{ product.unit }}
+                        </div>
+                        <div
+                            v-if="product.size"
                             class="min-w-8 text-center px-2 py-1 bg-slate-100 rounded text-slate-800 text-xs font-normal"
                         >
                             {{ product.size }}
                         </div>
                         <div
+                            v-if="product.color"
                             class="px-2 py-1 bg-slate-100 rounded text-slate-800 text-xs font-normal"
                         >
                             {{ product.color }}

@@ -33,17 +33,25 @@
               {{ product.name }}
             </div>
             <div class="flex flex-wrap justify-between items-center gap-3">
-              <!-- Size and color -->
-              <div class="flex items-center gap-1">
+              <!-- Size, color, and unit -->
+              <div class="flex items-center gap-1 flex-wrap">
                 <div
-                  class="min-w-8 text-center px-2 py-1 bg-slate-100 rounded text-slate-800 text-xs font-normal"
+                  v-if="product.unit?.name || (typeof product.unit === 'string' && product.unit)"
+                  class="min-w-8 text-center px-2 py-1 bg-slate-100 rounded text-slate-800 text-xs font-medium"
                 >
-                  {{ product.size?.name }}
+                  {{ product.unit?.name || product.unit }}
                 </div>
                 <div
+                  v-if="product.size?.name || (typeof product.size === 'string' && product.size)"
+                  class="min-w-8 text-center px-2 py-1 bg-slate-100 rounded text-slate-800 text-xs font-normal"
+                >
+                  {{ product.size?.name || product.size }}
+                </div>
+                <div
+                  v-if="product.color?.name || (typeof product.color === 'string' && product.color)"
                   class="px-2 py-1 bg-slate-100 rounded text-slate-800 text-xs font-normal"
                 >
-                  {{ product.color?.name }}
+                  {{ product.color?.name || product.color }}
                 </div>
               </div>
               <!-- quantity and price -->

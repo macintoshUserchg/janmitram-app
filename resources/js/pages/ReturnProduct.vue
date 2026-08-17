@@ -65,18 +65,24 @@
                                     <div
                                         class="flex flex-wrap justify-between items-center gap-3"
                                     >
-                                        <!-- Size and color -->
+                                        <!-- Size, color, and unit -->
                                         <div
                                             class="flex items-center flex-wrap gap-1"
                                         >
                                             <div
-                                            v-if="product.sisdfze"
+                                                v-if="product.unit"
+                                                class="min-w-8 text-center px-2 py-1 bg-slate-100 rounded text-slate-800 text-[10px] md:text-xs font-medium"
+                                            >
+                                                {{ product.unit }}
+                                            </div>
+                                            <div
+                                                v-if="product.size"
                                                 class="min-w-8 text-center px-2 py-1 bg-slate-100 rounded text-slate-800 text-[10px] md:text-xs font-normal"
                                             >
                                                 {{ product.size }}
                                             </div>
                                             <div
-                                            v-if="product.color"
+                                                v-if="product.color"
                                                 class="px-2 py-1 bg-slate-100 rounded text-slate-800 text-[10px] md:text-xs font-normal"
                                             >
                                                 {{ product.color }}

@@ -231,6 +231,12 @@
                                 {{ masterStore.showCurrency(parseFloat(productPrice).toFixed(2)) }}
                             </div>
 
+                            <!-- Unit Badge -->
+                            <div v-if="product.unit?.name"
+                                class="px-2.5 py-1 bg-slate-100 border border-slate-200 text-slate-700 text-sm font-semibold rounded-lg">
+                                {{ product.unit?.name }}
+                            </div>
+
                             <!-- Price -->
                             <div v-if="product.discount_price > 0"
                                 class="text-slate-400 text-2xl font-normal line-through leading-loose">
@@ -241,6 +247,16 @@
                             <div v-if="discountPercentage > 0"
                                 class="px-2 py-1 bg-red-500 rounded-2xl text-white text-base font-medium">
                                 {{ discountPercentage }}% {{ $t("OFF") }}
+                            </div>
+                        </div>
+
+                        <!-- Unit Specification -->
+                        <div v-if="product.unit?.name && product.is_digital == false" class="flex items-center gap-3 py-4 border-b border-slate-100">
+                            <div class="w-[40px] md:w-[88px] text-slate-600 text-base font-normal leading-normal">
+                                {{ $t("Unit") }}
+                            </div>
+                            <div class="px-3 py-1 bg-slate-100 border border-slate-200 rounded-md text-slate-800 text-sm font-medium">
+                                {{ product.unit?.name }}
                             </div>
                         </div>
 

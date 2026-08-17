@@ -30,14 +30,17 @@
                 </div>
             </div>
 
-            <!-- Size -->
+            <!-- Size, Color, and Unit -->
             <div class="flex justify-between gap-2 flex-wrap w-full items-center">
-                <div class="flex gap-2">
+                <div class="flex gap-2 items-center flex-wrap">
+                    <div v-if="props.product?.unit?.name || (typeof props.product?.unit === 'string' && props.product?.unit)" class="min-w-8 p-1 bg-slate-100 rounded text-center text-slate-800 text-xs font-medium">
+                       {{ props.product?.unit?.name || props.product?.unit }}
+                    </div>
                     <div v-if="props.product?.size" class="min-w-8 p-1 bg-slate-100 rounded text-center text-slate-800 text-xs font-normal">
-                       {{ props.product?.size?.name }}
+                       {{ props.product?.size?.name || props.product?.size }}
                     </div>
                     <div v-if="props.product?.color" class="min-w-8 p-1 bg-slate-100 rounded text-center text-slate-800 text-xs font-normal">
-                       {{ props.product?.color?.name }}
+                       {{ props.product?.color?.name || props.product?.color }}
                     </div>
                 </div>
 
