@@ -47,6 +47,9 @@
                                 @if ($businessModel == 'multi')
                                     <th>{{ __('Shop') }}</th>
                                 @endif
+                                <th style="min-width: 140px">
+                                    @include('admin.partials.sortable-header', ['label' => __('Discounts'), 'column' => 'coupon_discount', 'route' => 'admin.order.index', 'routeParam' => $status, 'sort' => $sort ?? 'id', 'direction' => $direction ?? 'desc'])
+                                </th>
                                 <th style="min-width: 130px">
                                     @include('admin.partials.sortable-header', ['label' => __('GST / Tax'), 'column' => 'tax_amount', 'route' => 'admin.order.index', 'routeParam' => $status, 'sort' => $sort ?? 'id', 'direction' => $direction ?? 'desc'])
                                 </th>
@@ -69,6 +72,36 @@
                                             {{ $order->shop?->name }}
                                         </td>
                                     @endif
+                                    @php
+                                        $couponDisc = (float)($order->coupon_discount ?? 0);
+                                        $cardDisc = (float)($order->card_discount ?? 0);
+                                        $otherDisc = max(0, (float)($order->discount ?? 0) - $couponDisc - $cardDisc);
+                                        $totalDisc = $couponDisc + $cardDisc + $otherDisc;
+                                    @endphp
+                                    <td class="w-min order-discount-cell">
+                                        @if ($totalDisc > 0)
+                                            <span class="fw-bold text-danger">-{{ showCurrency($totalDisc) }}</span>
+                                            <div class="mt-1 d-flex flex-wrap gap-1">
+                                                @if ($couponDisc > 0)
+                                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle font-monospace" style="font-size: 10px;">
+                                                        Coupon: -{{ showCurrency($couponDisc) }}{{ $order->coupon ? ' (' . $order->coupon->code . ')' : '' }}
+                                                    </span>
+                                                @endif
+                                                @if ($cardDisc > 0)
+                                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace" style="font-size: 10px;">
+                                                        Card: -{{ showCurrency($cardDisc) }}{{ $order->card ? ' (' . $order->card->card_number . ')' : '' }}
+                                                    </span>
+                                                @endif
+                                                @if ($otherDisc > 0)
+                                                    <span class="badge bg-warning-subtle text-warning-emphasis border font-monospace" style="font-size: 10px;">
+                                                        Special: -{{ showCurrency($otherDisc) }}
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        @else
+                                            <span class="text-muted">—</span>
+                                        @endif
+                                    </td>
                                     <td class="w-min order-tax-cell">
                                         <span class="fw-bold text-dark">{{ showCurrency($order->tax_amount ?? 0) }}</span>
                                         @if ($order->vatTaxes && $order->vatTaxes->count() > 0)
