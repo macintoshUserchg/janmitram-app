@@ -4,24 +4,8 @@
 @section('header-subtitle', __('Monthly MLM payouts for shop owners.'))
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-    <div>
-        <h4 class="fw-bold mb-1 text-dark">{{ __('Payout History') }}</h4>
-        <p class="text-muted small mb-0">{{ __('Audit log of credited Phase 1 and Phase 2 monthly payouts.') }}</p>
-    </div>
-    <div class="d-flex gap-2">
-        @hasPermission('admin.payout.network')
-            <a href="{{ route('admin.payout.network') }}" class="btn btn-outline-primary shadow-sm">
-                <i class="fas fa-sitemap me-1"></i> {{ __('Payout Network') }}
-            </a>
-        @endhasPermission
-        @hasPermission('admin.payout.run')
-            <a href="{{ route('admin.payout.run.form') }}" class="btn btn-primary shadow-sm">
-                <i class="fas fa-play me-1"></i> {{ __('Run Payout') }}
-            </a>
-        @endhasPermission
-    </div>
-</div>
+{{-- Sub-Navigation Hub --}}
+@include('admin.payout.partials._nav')
 
 @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm mb-4">{{ session('success') }}</div>
@@ -30,7 +14,7 @@
     <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm mb-4">{{ session('error') }}</div>
 @endif
 
-<!-- Summary Metric Cards -->
+<!-- Summary Metric KPI Cards -->
 <div class="row g-3 mb-4">
     <div class="col-md-3">
         <div class="card border-0 shadow-sm rounded-12 bg-white h-100">
@@ -126,7 +110,7 @@
 
 <!-- History Table Card -->
 <div class="card border-0 shadow-sm rounded-12">
-    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
         <h5 class="card-title mb-0 fw-bold">{{ __('Historical Payout Ledger') }}</h5>
         <span class="badge bg-light text-dark border">{{ $payouts->total() }} {{ __('Total Records') }}</span>
     </div>
@@ -141,8 +125,8 @@
                         <th>{{ __('Owner Name') }}</th>
                         <th class="text-end">{{ __('Personal Sales') }}</th>
                         <th class="text-end">{{ __('Group Sales') }}</th>
-                        <th class="text-center">{{ __('Group Size') }}</th>
-                        <th class="text-center">{{ __('Level') }}</th>
+                        <th class="text-center">{{ __('Team Size') }}</th>
+                        <th class="text-center">{{ __('Rank Level') }}</th>
                         <th class="text-end">{{ __('Phase 1') }}</th>
                         <th class="text-end">{{ __('Phase 2') }}</th>
                         <th class="text-end">{{ __('Total Payout') }}</th>
@@ -165,7 +149,7 @@
                                 <div class="text-muted small">{{ $payout->shop?->user?->name ?? '—' }}</div>
                             </td>
                             <td class="text-end">₹{{ number_format((float) $payout->personal_sales, 2) }}</td>
-                            <td class="text-end">₹{{ number_format((float) $payout->group_sales, 2) }}</td>
+                            <td class="text-end text-primary fw-semibold">₹{{ number_format((float) $payout->group_sales, 2) }}</td>
                             <td class="text-center">
                                 <span class="badge bg-light text-dark border px-2 py-1 rounded-pill" title="{{ __('Total team size recorded at payout execution: :size (1 self + :downlines downline shops)', ['size' => $payout->group_size, 'downlines' => max(0, $payout->group_size - 1)]) }}">
                                     <i class="fas fa-users text-secondary me-1"></i>{{ $payout->group_size }}
@@ -173,9 +157,18 @@
                                 </span>
                             </td>
                             <td class="text-center">
+                                @php
+                                    $rankTitles = [
+                                        0 => 'L0 - ' . __('Star Promoter'),
+                                        1 => 'L1 - ' . __('Silver Associate'),
+                                        2 => 'L2 - ' . __('Gold Leader'),
+                                        3 => 'L3 - ' . __('Diamond Director'),
+                                        4 => 'L4 - ' . __('Crown Ambassador'),
+                                    ];
+                                @endphp
                                 @if($payout->level !== null)
-                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill fw-semibold">
-                                        Level {{ $payout->level }}
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1 rounded-pill fw-semibold">
+                                        {{ $rankTitles[$payout->level] ?? ('Level ' . $payout->level) }}
                                     </span>
                                 @else
                                     <span class="badge bg-light text-secondary border rounded-pill">—</span>

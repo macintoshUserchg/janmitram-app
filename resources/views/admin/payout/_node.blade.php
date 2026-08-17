@@ -17,8 +17,19 @@
                 <div class="d-flex align-items-center gap-2 flex-wrap">
                     <span class="fw-bold text-dark fs-6">{{ $node['shop_name'] }}</span>
                     <span class="text-muted small">({{ $node['owner_name'] }})</span>
+                    @php
+                        $rankTitles = [
+                            0 => 'L0 - ' . __('Star Promoter'),
+                            1 => 'L1 - ' . __('Silver Associate'),
+                            2 => 'L2 - ' . __('Gold Leader'),
+                            3 => 'L3 - ' . __('Diamond Director'),
+                            4 => 'L4 - ' . __('Crown Ambassador'),
+                        ];
+                    @endphp
                     @if($node['level'] !== null)
-                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1">Level {{ $node['level'] }}</span>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1 fw-bold">
+                            {{ $rankTitles[$node['level']] ?? ('Level ' . $node['level']) }}
+                        </span>
                     @else
                         <span class="badge bg-light text-secondary border rounded-pill px-2 py-1">—</span>
                     @endif

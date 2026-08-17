@@ -121,6 +121,39 @@
                 </div>
             </div>
         </div>
+
+        {{-- Next Rank Tier Milestone Progress --}}
+        @php
+            $groupSales = (float) ($currentTree['group_sales'] ?? 0);
+            $groupSize = (int) ($currentTree['group_size'] ?? 1);
+            $currentLevel = $currentTree['level'] ?? null;
+
+            $nextTier = match($currentLevel) {
+                null => ['level' => 0, 'title' => __('L0 - Star Promoter'), 'sales' => 33000, 'size' => 10, 'reward' => '₹3,000 ' . __('Flat Bonus')],
+                0 => ['level' => 1, 'title' => __('L1 - Silver Associate'), 'sales' => 75000, 'size' => 10, 'reward' => '4% ' . __('of Group Sales')],
+                1 => ['level' => 2, 'title' => __('L2 - Gold Leader'), 'sales' => 300000, 'size' => 100, 'reward' => '1% ' . __('of Group Sales')],
+                2 => ['level' => 3, 'title' => __('L3 - Diamond Director'), 'sales' => 3000000, 'size' => 10000, 'reward' => '0.2% ' . __('of Group Sales')],
+                3 => ['level' => 4, 'title' => __('L4 - Crown Ambassador'), 'sales' => 30000000, 'size' => 100000, 'reward' => '0.04% ' . __('of Group Sales (₹1.5L Cap)')],
+                default => null,
+            };
+
+            $salesPercent = $nextTier ? min(100, round(($groupSales / $nextTier['sales']) * 100)) : 100;
+            $sizePercent = $nextTier ? min(100, round(($groupSize / $nextTier['size']) * 100)) : 100;
+        @endphp
+
+        @if($nextTier)
+            <div class="mt-4 pt-3 border-top">
+                <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                    <span class="fw-bold text-dark small d-flex align-items-center gap-1">
+                        <i class="fas fa-trophy text-warning"></i> {{ __('Next Milestone:') }} <span class="text-primary">{{ $nextTier['title'] }}</span> ({{ $nextTier['reward'] }})
+                    </span>
+                    <span class="small text-muted">{{ __('Sales Progress:') }} <strong>{{ $salesPercent }}%</strong> (₹{{ number_format($groupSales, 2) }} / ₹{{ number_format($nextTier['sales'], 2) }})</span>
+                </div>
+                <div class="progress rounded-pill shadow-none" style="height: 10px; background-color: #e2e8f0;">
+                    <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated" role="progressbar" style="width: {{ $salesPercent }}%;" aria-valuenow="{{ $salesPercent }}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+            </div>
+        @endif
     </div>
 </div>
 
@@ -138,8 +171,8 @@
                         <th class="ps-4">{{ __('Period') }}</th>
                         <th class="text-end">{{ __('Personal Sales') }}</th>
                         <th class="text-end">{{ __('Group Sales') }}</th>
-                        <th class="text-center">{{ __('Group Size') }}</th>
-                        <th class="text-center">{{ __('Tier Level') }}</th>
+                        <th class="text-center">{{ __('Team Size') }}</th>
+                        <th class="text-center">{{ __('Rank Level') }}</th>
                         <th class="text-end">{{ __('Phase 1') }}</th>
                         <th class="text-end">{{ __('Phase 2') }}</th>
                         <th class="text-end">{{ __('Total Credited') }}</th>
@@ -155,16 +188,26 @@
                                 </span>
                             </td>
                             <td class="text-end">₹{{ number_format((float) $payout->personal_sales, 2) }}</td>
-                            <td class="text-end">₹{{ number_format((float) $payout->group_sales, 2) }}</td>
+                            <td class="text-end text-primary fw-semibold">₹{{ number_format((float) $payout->group_sales, 2) }}</td>
                             <td class="text-center">
-                                <span class="badge bg-light text-dark border px-3 py-2 rounded-pill">
-                                    {{ $payout->group_size }}
+                                <span class="badge bg-light text-dark border px-2 py-1 rounded-pill" title="{{ __('Total team size: :size (1 self + :downlines downlines)', ['size' => $payout->group_size, 'downlines' => max(0, $payout->group_size - 1)]) }}">
+                                    <i class="fas fa-users text-secondary me-1"></i>{{ $payout->group_size }}
+                                    <span class="text-muted small">({{ max(0, $payout->group_size - 1) }} {{ max(0, $payout->group_size - 1) === 1 ? __('downline') : __('downlines') }})</span>
                                 </span>
                             </td>
                             <td class="text-center">
+                                @php
+                                    $rankTitles = [
+                                        0 => 'L0 - ' . __('Star Promoter'),
+                                        1 => 'L1 - ' . __('Silver Associate'),
+                                        2 => 'L2 - ' . __('Gold Leader'),
+                                        3 => 'L3 - ' . __('Diamond Director'),
+                                        4 => 'L4 - ' . __('Crown Ambassador'),
+                                    ];
+                                @endphp
                                 @if($payout->level !== null)
-                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill fw-semibold">
-                                        Level {{ $payout->level }}
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1 rounded-pill fw-semibold">
+                                        {{ $rankTitles[$payout->level] ?? ('Level ' . $payout->level) }}
                                     </span>
                                 @else
                                     <span class="badge bg-light text-secondary border rounded-pill">—</span>

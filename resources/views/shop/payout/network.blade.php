@@ -4,59 +4,7 @@
 @section('header-subtitle', __('Analyse your downline shop tree and network sales distribution.'))
 
 @push('styles')
-<style>
-.payout-tree-wrapper {
-    position: relative;
-    padding-left: 0;
-}
-.payout-tree-wrapper ul {
-    position: relative;
-    padding-left: 1.75rem;
-    list-style: none;
-    margin-bottom: 0;
-}
-.payout-tree-wrapper ul::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    bottom: 1.25rem;
-    left: 0.85rem;
-    width: 2px;
-    background-color: #cbd5e1;
-}
-.payout-tree-wrapper li {
-    position: relative;
-    margin-top: 0.75rem;
-    margin-bottom: 0.75rem;
-}
-.payout-tree-wrapper ul > li::before {
-    content: '';
-    position: absolute;
-    top: 1.5rem;
-    left: -0.9rem;
-    width: 0.9rem;
-    height: 2px;
-    background-color: #cbd5e1;
-}
-.payout-tree-card {
-    background-color: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 0.75rem;
-    padding: 0.75rem 1rem;
-    transition: all 0.2s ease-in-out;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-.payout-tree-card:hover {
-    border-color: #3b82f6;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.12);
-}
-.payout-chevron {
-    transition: transform 0.2s ease-in-out;
-}
-.payout-expand[aria-expanded="true"] .payout-chevron {
-    transform: rotate(90deg);
-}
-</style>
+@include('admin.payout.partials._tree_styles')
 @endpush
 
 @section('content')

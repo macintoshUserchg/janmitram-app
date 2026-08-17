@@ -4,80 +4,12 @@
 @section('header-subtitle', __('Analyse the MLM network payouts hierarchically.'))
 
 @push('styles')
-<style>
-.payout-tree-wrapper {
-    position: relative;
-    padding-left: 0;
-}
-.payout-tree-wrapper ul {
-    position: relative;
-    padding-left: 1.75rem;
-    list-style: none;
-    margin-bottom: 0;
-}
-.payout-tree-wrapper ul::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    bottom: 1.25rem;
-    left: 0.85rem;
-    width: 2px;
-    background-color: #cbd5e1;
-}
-.payout-tree-wrapper li {
-    position: relative;
-    margin-top: 0.75rem;
-    margin-bottom: 0.75rem;
-}
-.payout-tree-wrapper ul > li::before {
-    content: '';
-    position: absolute;
-    top: 1.5rem;
-    left: -0.9rem;
-    width: 0.9rem;
-    height: 2px;
-    background-color: #cbd5e1;
-}
-.payout-tree-card {
-    background-color: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 0.75rem;
-    padding: 0.75rem 1rem;
-    transition: all 0.2s ease-in-out;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-.payout-tree-card:hover {
-    border-color: #3b82f6;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.12);
-}
-.payout-chevron {
-    transition: transform 0.2s ease-in-out;
-}
-.payout-expand[aria-expanded="true"] .payout-chevron {
-    transform: rotate(90deg);
-}
-</style>
+@include('admin.payout.partials._tree_styles')
 @endpush
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-    <div>
-        <h4 class="fw-bold mb-1 text-dark">{{ __('Payout Network') }}</h4>
-        <p class="text-muted small mb-0">{{ __('Analyse downline network sales, tiers, and payout distributions in an expandable hierarchical tree.') }}</p>
-    </div>
-    <div class="d-flex gap-2">
-        @hasPermission('admin.payout.index')
-            <a href="{{ route('admin.payout.index') }}" class="btn btn-outline-secondary shadow-sm">
-                <i class="fas fa-history me-1"></i> {{ __('Payout History') }}
-            </a>
-        @endhasPermission
-        @hasPermission('admin.payout.run')
-            <a href="{{ route('admin.payout.run.form', ['year' => $year, 'month' => $month]) }}" class="btn btn-primary shadow-sm">
-                <i class="fas fa-play me-1"></i> {{ __('Run Payout') }}
-            </a>
-        @endhasPermission
-    </div>
-</div>
+{{-- Sub-Navigation Hub --}}
+@include('admin.payout.partials._nav', ['year' => $year, 'month' => $month])
 
 @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm mb-4">{{ session('success') }}</div>
@@ -86,7 +18,7 @@
     <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm mb-4">{!! nl2br(e(session('error'))) !!}</div>
 @endif
 
-<!-- Summary Metric Cards -->
+<!-- Summary Metric KPI Cards -->
 <div class="row g-3 mb-4">
     <div class="col-md-3">
         <div class="card border-0 shadow-sm rounded-12 bg-white h-100">
@@ -121,7 +53,7 @@
                     <i class="fas fa-wallet fs-3"></i>
                 </div>
                 <div>
-                    <div class="text-muted small fw-semibold">{{ __('Total Payouts') }}</div>
+                    <div class="text-muted small fw-semibold">{{ __('Total Projected Payout') }}</div>
                     <h3 class="fw-bold mb-0 text-success">₹{{ number_format(collect($nodes)->sum('total_payout'), 2) }}</h3>
                 </div>
             </div>
@@ -134,9 +66,9 @@
                     <i class="fas {{ $isPaid ? 'fa-check-circle' : 'fa-clock' }} fs-3"></i>
                 </div>
                 <div>
-                    <div class="text-muted small fw-semibold">{{ __('Month Status') }}</div>
-                    <span class="badge {{ $isPaid ? 'bg-success text-white' : 'bg-warning text-dark' }} px-2 py-1 fs-6">
-                        {{ $isPaid ? __('Snapshot (Paid)') : __('Live Preview') }}
+                    <div class="text-muted small fw-semibold">{{ __('Billing Period Status') }}</div>
+                    <span class="badge {{ $isPaid ? 'bg-success text-white' : 'bg-warning text-dark' }} px-3 py-1 fs-6 rounded-pill">
+                        {{ $isPaid ? __('Snapshot (Finalized)') : __('Live Current Month') }}
                     </span>
                 </div>
             </div>
@@ -145,18 +77,24 @@
 </div>
 
 @if($isPaid)
-    <div class="alert alert-info border-0 shadow-sm mb-4">
-        <i class="fas fa-info-circle me-1"></i>
-        {{ __('These values are the finalized payout snapshot for this month — the downline tree as it stood when payouts were run, not the current live network. New shops added since then are not reflected here.') }}
+    <div class="alert alert-info border-0 shadow-sm mb-4 rounded-12 d-flex align-items-center gap-3">
+        <i class="fas fa-info-circle fs-4 text-info"></i>
+        <div>
+            <strong>{{ __('Finalized Historical Snapshot') }} ({{ sprintf('%04d-%02d', $year, $month) }}):</strong>
+            {{ __('These values represent the frozen audit snapshot at payout execution time. New shops or orders created after payout execution are not reflected in this historical tree.') }}
+        </div>
     </div>
 @else
-    <div class="alert alert-secondary border-0 shadow-sm mb-4">
-        <i class="fas fa-clock me-1"></i>
-        {{ __('This is a live preview of the current downline tree. Values will be finalized when the payout for this month is run.') }}
+    <div class="alert alert-secondary border-0 shadow-sm mb-4 rounded-12 d-flex align-items-center gap-3">
+        <i class="fas fa-clock fs-4 text-secondary"></i>
+        <div>
+            <strong>{{ __('Live Network Preview') }} ({{ sprintf('%04d-%02d', $year, $month) }}):</strong>
+            {{ __('This is a live preview of the current organizational downline tree. Calculations will be permanently snapshot when the monthly payout is executed.') }}
+        </div>
     </div>
 @endif
 
-{{-- Month / Year Filter --}}
+{{-- Period Filter Bar --}}
 <div class="card border-0 shadow-sm rounded-12 mb-4">
     <div class="card-body py-3">
         <form method="GET" action="{{ route('admin.payout.network') }}" class="row g-2 align-items-end">
@@ -177,8 +115,8 @@
                 </select>
             </div>
             <div class="col-auto">
-                <button type="submit" class="btn btn-outline-primary btn-sm shadow-sm"><i class="fas fa-filter me-1"></i> {{ __('Apply') }}</button>
-                <a href="{{ route('admin.payout.network') }}" class="btn btn-outline-secondary btn-sm shadow-sm">{{ __('Reset') }}</a>
+                <button type="submit" class="btn btn-outline-primary btn-sm shadow-sm"><i class="fas fa-filter me-1"></i> {{ __('Apply Filter') }}</button>
+                <a href="{{ route('admin.payout.network') }}" class="btn btn-outline-secondary btn-sm shadow-sm">{{ __('Current Active Month') }}</a>
             </div>
         </form>
     </div>
@@ -189,10 +127,10 @@
     <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
         <div>
             <h5 class="card-title mb-0 fw-bold">{{ __('Hierarchical Network Tree') }} ({{ sprintf('%04d-%02d', $year, $month) }})</h5>
-            <small class="text-muted">{{ __('Click chevrons to expand downline nodes in the organizational tree.') }}</small>
+            <small class="text-muted">{{ __('Click arrow chevrons to expand downline partner nodes.') }}</small>
         </div>
         <div class="d-flex align-items-center gap-2 flex-wrap">
-            <input type="text" id="treeSearchInput" class="form-control form-control-sm" style="width: 220px;" placeholder="{{ __('Filter tree nodes...') }}">
+            <input type="text" id="treeSearchInput" class="form-control form-control-sm" style="width: 220px;" placeholder="{{ __('Search tree nodes...') }}">
             <button type="button" class="btn btn-sm btn-outline-secondary" id="expandAllBtn">
                 <i class="fas fa-folder-open me-1"></i> {{ __('Expand All') }}
             </button>
@@ -211,7 +149,7 @@
             @empty
                 <div class="text-center py-5 text-muted">
                     <i class="fas fa-sitemap fs-1 mb-3 d-block text-secondary"></i>
-                    {{ __('No active shops in the network for this month.') }}
+                    {{ __('No active shops found in the network for this month.') }}
                 </div>
             @endforelse
         </div>
@@ -220,103 +158,5 @@
 @endsection
 
 @push('scripts')
-<script>
-(function () {
-    // Lazy-load children for collapsed nodes.
-    document.addEventListener('click', function (e) {
-        var btn = e.target.closest('.payout-expand');
-        if (!btn) return;
-        var li = btn.closest('.payout-tree-node');
-        var target = document.querySelector(btn.getAttribute('data-bs-target'));
-        if (!target) return;
-
-        if (!target.dataset.loaded && li.dataset.childrenUrl) {
-            fetch(li.dataset.childrenUrl)
-                .then(function (r) { return r.json(); })
-                .then(function (children) {
-                    if (!children || !children.length) { target.dataset.loaded = '1'; return; }
-                    var html = '';
-                    children.forEach(function (node) {
-                        html += renderNode(node, {{ $year }}, {{ $month }});
-                    });
-                    target.innerHTML = html;
-                    target.dataset.loaded = '1';
-                })
-                .catch(function () {
-                    target.innerHTML = '<li class="text-danger small py-1 ms-4">{{ __('Failed to load downline children.') }}</li>';
-                });
-        }
-    });
-
-    var expandBtn = document.getElementById('expandAllBtn');
-    if (expandBtn) {
-        expandBtn.addEventListener('click', function () {
-            document.querySelectorAll('.payout-expand').forEach(function(btn) {
-                var target = document.querySelector(btn.getAttribute('data-bs-target'));
-                if (target && !target.classList.contains('show')) {
-                    btn.click();
-                }
-            });
-        });
-    }
-
-    var collapseBtn = document.getElementById('collapseAllBtn');
-    if (collapseBtn) {
-        collapseBtn.addEventListener('click', function () {
-            document.querySelectorAll('.payout-children.show').forEach(function(el) {
-                var bsCollapse = bootstrap.Collapse.getInstance(el) || new bootstrap.Collapse(el, {toggle: false});
-                bsCollapse.hide();
-            });
-        });
-    }
-
-    var treeSearchInput = document.getElementById('treeSearchInput');
-    if (treeSearchInput) {
-        treeSearchInput.addEventListener('input', function (e) {
-            var q = e.target.value.toLowerCase().trim();
-            document.querySelectorAll('.payout-tree-node').forEach(function (node) {
-                var text = node.textContent.toLowerCase();
-                if (!q || text.includes(q)) {
-                    node.style.display = '';
-                } else {
-                    node.style.display = 'none';
-                }
-            });
-        });
-    }
-
-    function renderNode(node, year, month) {
-        var url = node.has_children
-            ? '{{ route('admin.payout.network.children', ['shop' => '__ID__']) }}?year=' + year + '&month=' + month
-            : '';
-        url = url.replace('__ID__', node.shop_id);
-        var chevron = node.has_children
-            ? '<button type="button" class="btn btn-sm btn-light border p-1 rounded-circle payout-expand text-primary me-1" data-bs-toggle="collapse" data-bs-target="#node-' + node.shop_id + '" aria-expanded="false" title="{{ __('Toggle downline') }}"><i class="fas fa-chevron-right payout-chevron fs-6" style="width: 14px; height: 14px; display: inline-flex; align-items: center; justify-content: center;"></i></button>'
-            : '<span class="d-inline-block text-center text-muted me-1" style="width: 24px;"><i class="fas fa-store-alt opacity-50"></i></span>';
-        var level = node.level !== null
-            ? '<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1">Level ' + node.level + '</span>'
-            : '<span class="badge bg-light text-secondary border rounded-pill px-2 py-1">—</span>';
-        var children = node.has_children
-            ? '<ul class="list-unstyled collapse payout-children" id="node-' + node.shop_id + '"></ul>'
-            : '';
-        var downlinesCount = Math.max(0, (node.group_size || 1) - 1);
-        var downlineLabel = downlinesCount === 1 ? '{{ __('downline') }}' : '{{ __('downlines') }}';
-        return '<li class="payout-tree-node" data-shop-id="' + node.shop_id + '" data-children-url="' + url + '">'
-            + '<div class="payout-tree-card"><div class="d-flex align-items-center justify-content-between flex-wrap gap-2">'
-            + '<div class="d-flex align-items-center gap-2 flex-grow-1">' + chevron
-            + '<div class="d-flex align-items-center gap-2 flex-wrap">'
-            + '<span class="fw-bold text-dark fs-6">' + esc(node.shop_name) + '</span>'
-            + '<span class="text-muted small">(' + esc(node.owner_name) + ')</span>' + level + '</div></div>'
-            + '<div class="d-flex align-items-center gap-2 flex-wrap text-nowrap small">'
-            + '<span class="badge bg-light text-dark border px-2 py-1 fw-normal">{{ __('Personal') }}: <span class="fw-bold text-dark">₹' + fmt(node.personal_sales) + '</span></span>'
-            + '<span class="badge bg-light text-dark border px-2 py-1 fw-normal">{{ __('Group Sales') }}: <span class="fw-bold text-primary">₹' + fmt(node.group_sales) + '</span></span>'
-            + '<span class="badge bg-light text-dark border px-2 py-1 fw-normal" title="{{ __('Total team size: 1 self + downline shops') }}"><i class="fas fa-users text-secondary me-1"></i>{{ __('Team') }}: <span class="fw-bold text-dark">' + node.group_size + '</span> <span class="text-muted small">(' + downlinesCount + ' ' + downlineLabel + ')</span></span>'
-            + '<span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 fw-normal">{{ __('Phase 1') }}: <span class="fw-bold">₹' + fmt(node.phase1_amount) + '</span></span>'
-            + '<span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1 fw-normal">{{ __('Phase 2') }}: <span class="fw-bold">₹' + fmt(node.phase2_amount) + '</span></span>'
-            + '<span class="badge bg-success text-white px-3 py-1 fw-bold fs-6">₹' + fmt(node.total_payout) + '</span></div></div></div>' + children + '</li>';
-    }
-    function fmt(v) { return Number(v).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
-    function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
-})();
-</script>
+@include('admin.payout.partials._tree_scripts', ['year' => $year, 'month' => $month])
 @endpush
