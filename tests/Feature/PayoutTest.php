@@ -330,4 +330,43 @@ class PayoutTest extends TestCase
 
         $this->assertSame(1, $exitCode);
     }
+
+    public function test_main_shop_has_unlimited_direct_downline_capacity(): void
+    {
+        // Main shop (id = 1)
+        $mainShop = Shop::find(1) ?? Shop::create([
+            'id' => 1,
+            'name' => 'Main Janmitram Shop',
+            'user_id' => User::factory()->create(['is_active' => true])->id,
+            'parent_shop_id' => null,
+        ]);
+
+        $this->assertTrue($mainShop->isMainShop());
+        $this->assertTrue($mainShop->canAcceptDirectDownline());
+        $this->assertNull($mainShop->availableDirectDownlineSlots());
+
+        // Add 12 direct downlines to Main Shop
+        for ($i = 0; $i < 12; $i++) {
+            $this->shop($mainShop);
+        }
+
+        $this->assertTrue($mainShop->canAcceptDirectDownline());
+    }
+
+    public function test_standard_shop_enforces_10_direct_downline_limit(): void
+    {
+        $partnerShop = $this->shop();
+        $this->assertFalse($partnerShop->isMainShop());
+        $this->assertTrue($partnerShop->canAcceptDirectDownline());
+        $this->assertSame(10, $partnerShop->availableDirectDownlineSlots());
+
+        // Add 10 direct children
+        for ($i = 0; $i < 10; $i++) {
+            $this->shop($partnerShop);
+        }
+
+        $this->assertSame(10, $partnerShop->directDownlinesCount());
+        $this->assertSame(0, $partnerShop->availableDirectDownlineSlots());
+        $this->assertFalse($partnerShop->canAcceptDirectDownline());
+    }
 }

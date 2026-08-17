@@ -526,6 +526,17 @@ source:
 * **Comprehensive Financial Breakdown**: Renders Sub Total, Coupon Discount (with promo code), Membership Card Discount (with card number), Special Discounts, Delivery Charge, Itemized GST percentages (with dynamic labels like `GST (5%)`), and Grand Total Payable.
 * **Bold Product Units**: Renders product measurement units (e.g., `200GM`, `1 KG`, `1 Ltr`, `10kg`) in bold badges across frontend Vue components (listings, cards, details, cart drawer, checkout) and printable PDF invoice line items.
 
+### 4. MLM Downline Network Capacity Architecture (Updated 2026-08-17)
+* **Direct Downline Capacity Rule**:
+  * **Main Janmitram Shop (ID: 1)**: Primary root node with **unlimited direct downlines**.
+  * **Standard Partner Shops (ID != 1)**: Restricted to a maximum of **10 direct downline shops** (1 self + 10 direct downlines = 11 direct frontline members).
+* **Multi-Level Depth Preservation**: There is no depth restriction on subsequent generations. Once a shop owner fills their 10 direct slots, new partners register under their existing downline partners, growing deep multi-level branches that roll up for Phase 2 Group Sales bonuses.
+* **Multi-Layer Enforcement**:
+  * `Shop::canAcceptDirectDownline()` and `Shop::MAX_DIRECT_DOWNLINES = 10`.
+  * Form Request & live AJAX verification reject registrations using a saturated sponsor code.
+  * Shop Partner Creation Form disables new partner creation and directs leaders to promote their team members' referral codes.
+  * Admin Shop Create/Edit screens visually display direct capacity tags (`[X/10 downlines]` or `[Full: 10/10 capacity]`).
+
 ---
 
 ### Test coverage summary

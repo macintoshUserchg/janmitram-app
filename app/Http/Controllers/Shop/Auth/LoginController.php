@@ -116,6 +116,19 @@ class LoginController extends Controller
         $sponsor = Shop::findByReferralCode($code);
 
         if ($sponsor && $sponsor->status) {
+            if (! $sponsor->canAcceptDirectDownline()) {
+                return response()->json([
+                    'valid' => false,
+                    'name' => $sponsor->name,
+                    'id' => $sponsor->id,
+                    'message' => __('Sponsor ":name" (#:id) has reached the maximum capacity of :max direct downlines. Please use another sponsor code or register directly.', [
+                        'name' => $sponsor->name,
+                        'id' => $sponsor->id,
+                        'max' => Shop::MAX_DIRECT_DOWNLINES,
+                    ]),
+                ]);
+            }
+
             return response()->json([
                 'valid' => true,
                 'name' => $sponsor->name,

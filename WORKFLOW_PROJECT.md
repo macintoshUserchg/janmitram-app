@@ -244,6 +244,16 @@ vendor/bin/pint --dirty --format agent
 - **Order Details (`/admin/order/{id}`, `/shop/order/{id}`)**: Full financial breakdown including Sub Total, Coupon Discount, Card Discount, Delivery Charge, Itemized VAT/GST percentages, and Grand Total.
 - **Invoice PDF (`PDF/invoice.blade.php`)**: Generates compliant invoices with item units, dynamic QR codes, discounts breakdown, and tax percentages.
 
+### 9. MLM Downline Network Capacity Architecture
+- **Direct Downline Capacity Limits**:
+  - **Main Janmitram Shop (ID: 1)**: Unlimited direct downline capacity.
+  - **Standard Partner Shops (ID != 1)**: Maximum of **10 direct downline shops** ($1\text{ self} + 10\text{ downlines} = 11\text{ direct frontline members}$).
+- **Generational Multi-Level Depth**: No limit on downstream generation depth. Once a partner's 10 frontline slots are filled, recruits register under existing team members, building deep legs that roll up for Phase 2 Group Sales bonuses.
+- **Enforcement Mechanisms**:
+  - Validation in `ShopCreateRequest` / `verifySponsor` prevents registrations under saturated sponsors.
+  - Shop Panel partner creation shows direct capacity counters (`X / 10 slots filled`).
+  - Admin Panel shop creation/edit highlights direct downline capacity in sponsor dropdowns.
+
 ---
 
-_Last updated: 2026-08-17. Option A Warehouse, GST Tax Inheritance, and Order Management architecture verified._
+_Last updated: 2026-08-17. Option A Warehouse, GST Tax Inheritance, MLM 10-Downline Capacity, and Order Management architecture verified._

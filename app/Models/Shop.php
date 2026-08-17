@@ -302,4 +302,52 @@ class Shop extends Model
 
         return self::where('name', 'like', "%{$code}%")->first();
     }
+
+    /**
+     * Maximum allowed direct downline shops for standard partner shops.
+     * Main Janmitram Shop (ID: 1) is exempt and has unlimited direct capacity.
+     */
+    public const MAX_DIRECT_DOWNLINES = 10;
+
+    /**
+     * Check if this shop is the Main Janmitram Central Shop (unrestricted).
+     */
+    public function isMainShop(): bool
+    {
+        return (int) $this->id === 1
+            || $this->name === 'Main Janmitram Shop'
+            || ($this->parent_shop_id === null && ((int) $this->user_id === 1 || ($this->user && $this->user->hasRole('root'))));
+    }
+
+    /**
+     * Total direct active downline shops.
+     */
+    public function directDownlinesCount(): int
+    {
+        return $this->children()->whereHas('user', fn ($query) => $query->where('is_active', 1))->count();
+    }
+
+    /**
+     * Check if this shop can accept another direct downline partner.
+     */
+    public function canAcceptDirectDownline(): bool
+    {
+        if ($this->isMainShop()) {
+            return true;
+        }
+
+        return $this->directDownlinesCount() < self::MAX_DIRECT_DOWNLINES;
+    }
+
+    /**
+     * Remaining direct downline slots available (null for Main Shop = unlimited).
+     */
+    public function availableDirectDownlineSlots(): ?int
+    {
+        if ($this->isMainShop()) {
+            return null;
+        }
+
+        return max(0, self::MAX_DIRECT_DOWNLINES - $this->directDownlinesCount());
+    }
 }

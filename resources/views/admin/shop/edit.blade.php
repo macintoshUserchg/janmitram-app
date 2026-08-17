@@ -113,8 +113,15 @@
                         <x-select label="Sponsor / Parent Shop (MLM Tree)" name="parent_shop_id">
                             <option value="">{{ __('-- Root Node (No Sponsor) --') }}</option>
                             @foreach($parentShops ?? [] as $pShop)
+                                @php
+                                    $capacityText = $pShop->isMainShop()
+                                        ? __(' [Main Shop: Unlimited]')
+                                        : ($pShop->canAcceptDirectDownline()
+                                            ? ' [' . $pShop->directDownlinesCount() . '/' . \App\Models\Shop::MAX_DIRECT_DOWNLINES . ' ' . __('downlines') . ']'
+                                            : ' [' . __('Full: 10/10 capacity') . ']');
+                                @endphp
                                 <option value="{{ $pShop->id }}" {{ (old('parent_shop_id', $shop->parent_shop_id) == $pShop->id) ? 'selected' : '' }}>
-                                    {{ $pShop->name }} ({{ $pShop->referral_code }})
+                                    {{ $pShop->name }} ({{ $pShop->referral_code }}){{ $capacityText }}
                                 </option>
                             @endforeach
                         </x-select>

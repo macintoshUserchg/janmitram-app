@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Shop;
 use App\Models\VerifyManage;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -148,5 +149,41 @@ class ShopCreateRequest extends FormRequest
             'account_number.required' => __('The bank account number is required.'),
             'other_documents.max' => __('The other documents file must not be greater than 5 MB.'),
         ];
+    }
+
+    /**
+     * Configure the validator instance with downline capacity limits.
+     */
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            $sponsorCode = $this->ref ?? $this->sponsor_code;
+            $parentShopId = $this->parent_shop_id;
+
+            $sponsor = null;
+            if ($parentShopId) {
+                $sponsor = Shop::find((int) $parentShopId);
+            } elseif ($sponsorCode) {
+                $sponsor = Shop::findByReferralCode($sponsorCode);
+            }
+
+            if ($sponsor && ! $sponsor->canAcceptDirectDownline()) {
+                // If updating a shop and parent_shop_id is unchanged, allow keeping the existing parent
+                $currentParentId = $this->shop?->parent_shop_id;
+                if ($this->routeIs('admin.shop.update') && $parentShopId && (int) $parentShopId === (int) $currentParentId) {
+                    return;
+                }
+
+                $key = $this->has('parent_shop_id') ? 'parent_shop_id' : ($this->has('ref') ? 'ref' : 'sponsor_code');
+                $validator->errors()->add(
+                    $key,
+                    __('Sponsor ":name" (#:id) has reached the maximum capacity of :max direct downlines. Please use another sponsor code or register directly.', [
+                        'name' => $sponsor->name,
+                        'id' => $sponsor->id,
+                        'max' => Shop::MAX_DIRECT_DOWNLINES,
+                    ])
+                );
+            }
+        });
     }
 }

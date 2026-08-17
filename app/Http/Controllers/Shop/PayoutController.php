@@ -155,6 +155,13 @@ class PayoutController extends Controller
         $user = auth()->user();
         $shop = $user->shop ?? Shop::where('user_id', $user->id)->firstOrFail();
 
+        if (! $shop->canAcceptDirectDownline()) {
+            return back()->withInput()->with('error', __(
+                'You have reached the maximum limit of :max direct downline shops. Your downline partners can recruit under their own shops to expand your Phase 2 group sales!',
+                ['max' => Shop::MAX_DIRECT_DOWNLINES]
+            ));
+        }
+
         // Force parent_shop_id to logged-in shop owner
         $request->merge(['parent_shop_id' => $shop->id]);
 

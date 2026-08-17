@@ -23,14 +23,41 @@
                         <div class="fs-3 me-3 text-primary">
                             <i class="fas fa-sitemap"></i>
                         </div>
-                        <div>
-                            <div class="fw-bold text-dark fs-6">{{ __('Locked Sponsor Node') }}: {{ $shop->name }} (#{{ $shop->id }})</div>
-                            <div class="small text-muted">
-                                {{ __('Referral Code') }}: <span class="badge bg-primary px-2 py-1">{{ $shop->referral_code }}</span> | {{ __('This new shop will be automatically placed in your direct Level 1 downline.') }}
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                <div>
+                                    <div class="fw-bold text-dark fs-6">{{ __('Locked Sponsor Node') }}: {{ $shop->name }} (#{{ $shop->id }})</div>
+                                    <div class="small text-muted">
+                                        {{ __('Referral Code') }}: <span class="badge bg-primary px-2 py-1">{{ $shop->referral_code }}</span> | {{ __('Direct Level 1 Placement') }}
+                                    </div>
+                                </div>
+                                @if($shop->isMainShop())
+                                    <span class="badge bg-info text-white px-3 py-2 rounded-pill fw-semibold"><i class="fas fa-infinity me-1"></i>{{ __('Unlimited Capacity') }}</span>
+                                @elseif($shop->canAcceptDirectDownline())
+                                    <span class="badge bg-light text-dark border px-3 py-2 rounded-pill fw-semibold">
+                                        <i class="fas fa-users text-primary me-1"></i>{{ __('Direct Slots') }}: {{ $shop->directDownlinesCount() }} / {{ \App\Models\Shop::MAX_DIRECT_DOWNLINES }} ({{ $shop->availableDirectDownlineSlots() }} {{ __('available') }})
+                                    </span>
+                                @else
+                                    <span class="badge bg-danger text-white px-3 py-2 rounded-pill fw-bold">
+                                        <i class="fas fa-exclamation-circle me-1"></i>{{ __('Direct Capacity Full (10/10)') }}
+                                    </span>
+                                @endif
                             </div>
                         </div>
                     </div>
 
+                    @if(!$shop->canAcceptDirectDownline())
+                        <div class="alert alert-warning border-0 shadow-sm p-4 rounded-12 mb-4 text-center">
+                            <i class="fas fa-users-slash fs-1 text-warning mb-3 d-block"></i>
+                            <h5 class="fw-bold text-dark mb-2">{{ __('Direct Frontline Capacity Reached') }}</h5>
+                            <p class="text-muted mb-3 max-w-600 mx-auto">
+                                {{ __('You have already filled all :max direct frontline downline slots for this shop. To continue expanding your group network and increasing Phase 2 bonuses, direct your new recruits to register using your existing team members\' sponsor codes.', ['max' => \App\Models\Shop::MAX_DIRECT_DOWNLINES]) }}
+                            </p>
+                            <a href="{{ route('shop.payout.network') }}" class="btn btn-primary px-4 shadow-sm">
+                                <i class="fas fa-sitemap me-1"></i> {{ __('View Downline Team Sponsor Codes') }}
+                            </a>
+                        </div>
+                    @else
                     <form action="{{ route('shop.payout.network.store') }}" method="POST" enctype="multipart/form-data">
                         @csrf
 
@@ -125,6 +152,7 @@
                             </button>
                         </div>
                     </form>
+                    @endif
 
                 </div>
             </div>

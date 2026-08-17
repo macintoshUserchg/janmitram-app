@@ -79,23 +79,35 @@
     </div>
 </div>
 
-@if(isset($rootShop) && $rootShop)
+@if(isset($shop) && $shop)
 {{-- Referral Link & Invite Card --}}
 <div class="card border-0 shadow-sm rounded-12 mb-4 bg-primary text-white" style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);">
     <div class="card-body p-4">
         <div class="row align-items-center g-3">
             <div class="col-md-7">
-                <div class="d-flex align-items-center gap-2 mb-2">
-                    <span class="badge bg-white text-primary fw-bold px-3 py-1 rounded-pill">{{ __('Sponsor Code') }}: {{ $rootShop->referral_code }}</span>
-                    <span class="badge bg-info-subtle text-light px-2 py-1 rounded-pill small">{{ __('Level 1 Direct Sponsor') }}</span>
+                <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+                    <span class="badge bg-white text-primary fw-bold px-3 py-1 rounded-pill">{{ __('Sponsor Code') }}: {{ $shop->referral_code }}</span>
+                    @if($shop->isMainShop())
+                        <span class="badge bg-info text-white px-3 py-1 rounded-pill fw-semibold"><i class="fas fa-infinity me-1"></i>{{ __('Direct Slots: Unlimited') }}</span>
+                    @elseif($shop->canAcceptDirectDownline())
+                        <span class="badge bg-white text-dark px-3 py-1 rounded-pill fw-semibold"><i class="fas fa-users me-1"></i>{{ __('Direct Slots') }}: {{ $shop->directDownlinesCount() }} / {{ \App\Models\Shop::MAX_DIRECT_DOWNLINES }} ({{ $shop->availableDirectDownlineSlots() }} {{ __('available') }})</span>
+                    @else
+                        <span class="badge bg-warning text-dark px-3 py-1 rounded-pill fw-bold"><i class="fas fa-check-circle me-1"></i>{{ __('Direct Slots: 10/10 Full') }}</span>
+                    @endif
                 </div>
                 <h5 class="fw-bold mb-1 text-white">{{ __('Grow Your Downline Network') }}</h5>
-                <p class="mb-0 text-white-50 small">{{ __('Share your unique referral link with new shop owners. When they register, they automatically join your downline group.') }}</p>
+                @if(!$shop->isMainShop() && !$shop->canAcceptDirectDownline())
+                    <p class="mb-0 text-warning small font-semibold">
+                        <i class="fas fa-info-circle me-1"></i>{{ __('Your 10 direct frontline slots are full! Encourage new recruits to join using your team members\' sponsor codes to expand your multi-level Phase 2 group sales!') }}
+                    </p>
+                @else
+                    <p class="mb-0 text-white-50 small">{{ __('Share your unique referral link with new shop owners. When they register, they automatically join your direct downline group.') }}</p>
+                @endif
             </div>
             <div class="col-md-5">
                 <label class="form-label text-white-50 small mb-1">{{ __('Your Referral Link') }}</label>
                 <div class="input-group shadow-sm">
-                    <input type="text" id="referralUrlInput" class="form-control form-control-sm border-0 bg-white" value="{{ $rootShop->referral_url }}" readonly>
+                    <input type="text" id="referralUrlInput" class="form-control form-control-sm border-0 bg-white" value="{{ $shop->referral_url }}" readonly>
                     <button class="btn btn-light text-primary fw-bold btn-sm px-3" type="button" onclick="copyReferralLink()">
                         <i class="fas fa-copy me-1"></i> {{ __('Copy Link') }}
                     </button>
