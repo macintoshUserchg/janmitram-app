@@ -32,8 +32,9 @@
                 <span class="badge bg-light text-dark border px-2 py-1 fw-normal">
                     {{ __('Group Sales') }}: <span class="fw-bold text-primary">₹{{ number_format($node['group_sales'], 2) }}</span>
                 </span>
-                <span class="badge bg-light text-dark border px-2 py-1 fw-normal" title="{{ __('Downline shops counted at payout time for this month (frozen snapshot for paid months).') }}">
-                    {{ __('Group Size') }}: <span class="fw-bold text-dark">{{ $node['group_size'] }}</span>
+                <span class="badge bg-light text-dark border px-2 py-1 fw-normal" title="{{ __('Total team size: :size (1 self + :downlines downline shops)', ['size' => $node['group_size'], 'downlines' => max(0, $node['group_size'] - 1)]) }}">
+                    <i class="fas fa-users text-secondary me-1"></i>{{ __('Team') }}: <span class="fw-bold text-dark">{{ $node['group_size'] }}</span>
+                    <span class="text-muted small">({{ max(0, $node['group_size'] - 1) }} {{ max(0, $node['group_size'] - 1) === 1 ? __('downline') : __('downlines') }})</span>
                 </span>
                 <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 fw-normal">
                     {{ __('Phase 1') }}: <span class="fw-bold">₹{{ number_format($node['phase1_amount'], 2) }}</span>

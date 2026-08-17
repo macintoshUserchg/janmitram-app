@@ -212,7 +212,16 @@
             <h5 class="card-title mb-0 fw-bold">{{ __('Live Preview Breakdown') }} ({{ sprintf('%04d-%02d', $year, $month) }})</h5>
             <small class="text-muted">{{ __('Inspect shop-level payouts before confirming execution.') }}</small>
         </div>
-        <span class="badge bg-light text-dark border">{{ count($nodes) }} {{ __('roots') }}</span>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <input type="text" id="treeSearchInput" class="form-control form-control-sm" style="width: 220px;" placeholder="{{ __('Filter tree nodes...') }}">
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="expandAllBtn">
+                <i class="fas fa-folder-open me-1"></i> {{ __('Expand All') }}
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="collapseAllBtn">
+                <i class="fas fa-folder me-1"></i> {{ __('Collapse All') }}
+            </button>
+            <span class="badge bg-light text-dark border ms-1">{{ count($nodes) }} {{ __('roots') }}</span>
+        </div>
     </div>
     <div class="card-body p-4">
         <div class="payout-tree-wrapper">
@@ -230,3 +239,105 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+(function () {
+    // Lazy-load children for collapsed nodes.
+    document.addEventListener('click', function (e) {
+        var btn = e.target.closest('.payout-expand');
+        if (!btn) return;
+        var li = btn.closest('.payout-tree-node');
+        var target = document.querySelector(btn.getAttribute('data-bs-target'));
+        if (!target) return;
+
+        if (!target.dataset.loaded && li.dataset.childrenUrl) {
+            fetch(li.dataset.childrenUrl)
+                .then(function (r) { return r.json(); })
+                .then(function (children) {
+                    if (!children || !children.length) { target.dataset.loaded = '1'; return; }
+                    var html = '';
+                    children.forEach(function (node) {
+                        html += renderNode(node, {{ $year }}, {{ $month }});
+                    });
+                    target.innerHTML = html;
+                    target.dataset.loaded = '1';
+                })
+                .catch(function () {
+                    target.innerHTML = '<li class="text-danger small py-1 ms-4">{{ __('Failed to load downline children.') }}</li>';
+                });
+        }
+    });
+
+    var expandBtn = document.getElementById('expandAllBtn');
+    if (expandBtn) {
+        expandBtn.addEventListener('click', function () {
+            document.querySelectorAll('.payout-expand').forEach(function(btn) {
+                var target = document.querySelector(btn.getAttribute('data-bs-target'));
+                if (target && !target.classList.contains('show')) {
+                    btn.click();
+                }
+            });
+        });
+    }
+
+    var collapseBtn = document.getElementById('collapseAllBtn');
+    if (collapseBtn) {
+        collapseBtn.addEventListener('click', function () {
+            document.querySelectorAll('.payout-children.show').forEach(function(el) {
+                var bsCollapse = bootstrap.Collapse.getInstance(el) || new bootstrap.Collapse(el, {toggle: false});
+                bsCollapse.hide();
+            });
+        });
+    }
+
+    var treeSearchInput = document.getElementById('treeSearchInput');
+    if (treeSearchInput) {
+        treeSearchInput.addEventListener('input', function (e) {
+            var q = e.target.value.toLowerCase().trim();
+            document.querySelectorAll('.payout-tree-node').forEach(function (node) {
+                var text = node.textContent.toLowerCase();
+                if (!q || text.includes(q)) {
+                    node.style.display = '';
+                } else {
+                    node.style.display = 'none';
+                }
+            });
+        });
+    }
+
+    function renderNode(node, year, month) {
+        var url = node.has_children
+            ? '{{ route('admin.payout.network.children', ['shop' => '__ID__']) }}?year=' + year + '&month=' + month
+            : '';
+        url = url.replace('__ID__', node.shop_id);
+        var chevron = node.has_children
+            ? '<button type="button" class="btn btn-sm btn-light border p-1 rounded-circle payout-expand text-primary me-1" data-bs-toggle="collapse" data-bs-target="#node-' + node.shop_id + '" aria-expanded="false" title="{{ __('Toggle downline') }}"><i class="fas fa-chevron-right payout-chevron fs-6" style="width: 14px; height: 14px; display: inline-flex; align-items: center; justify-content: center;"></i></button>'
+            : '<span class="d-inline-block text-center text-muted me-1" style="width: 24px;"><i class="fas fa-store-alt opacity-50"></i></span>';
+        var level = node.level !== null
+            ? '<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1">Level ' + node.level + '</span>'
+            : '<span class="badge bg-light text-secondary border rounded-pill px-2 py-1">—</span>';
+        var children = node.has_children
+            ? '<ul class="list-unstyled collapse payout-children" id="node-' + node.shop_id + '"></ul>'
+            : '';
+        var downlinesCount = Math.max(0, (node.group_size || 1) - 1);
+        var downlineLabel = downlinesCount === 1 ? '{{ __('downline') }}' : '{{ __('downlines') }}';
+        return '<li class="payout-tree-node" data-shop-id="' + node.shop_id + '" data-children-url="' + url + '">'
+            + '<div class="payout-tree-card"><div class="d-flex align-items-center justify-content-between flex-wrap gap-2">'
+            + '<div class="d-flex align-items-center gap-2 flex-grow-1">' + chevron
+            + '<div class="d-flex align-items-center gap-2 flex-wrap">'
+            + '<span class="fw-bold text-dark fs-6">' + esc(node.shop_name) + '</span>'
+            + '<span class="text-muted small">(' + esc(node.owner_name) + ')</span>' + level + '</div></div>'
+            + '<div class="d-flex align-items-center gap-2 flex-wrap text-nowrap small">'
+            + '<span class="badge bg-light text-dark border px-2 py-1 fw-normal">{{ __('Personal') }}: <span class="fw-bold text-dark">₹' + fmt(node.personal_sales) + '</span></span>'
+            + '<span class="badge bg-light text-dark border px-2 py-1 fw-normal">{{ __('Group Sales') }}: <span class="fw-bold text-primary">₹' + fmt(node.group_sales) + '</span></span>'
+            + '<span class="badge bg-light text-dark border px-2 py-1 fw-normal" title="{{ __('Total team size: 1 self + downline shops') }}"><i class="fas fa-users text-secondary me-1"></i>{{ __('Team') }}: <span class="fw-bold text-dark">' + node.group_size + '</span> <span class="text-muted small">(' + downlinesCount + ' ' + downlineLabel + ')</span></span>'
+            + '<span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 fw-normal">{{ __('Phase 1') }}: <span class="fw-bold">₹' + fmt(node.phase1_amount) + '</span></span>'
+            + '<span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1 fw-normal">{{ __('Phase 2') }}: <span class="fw-bold">₹' + fmt(node.phase2_amount) + '</span></span>'
+            + '<span class="badge bg-success text-white px-3 py-1 fw-bold fs-6">₹' + fmt(node.total_payout) + '</span></div></div></div>' + children + '</li>';
+    }
+    function fmt(v) { return Number(v).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+    function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+})();
+</script>
+@endpush

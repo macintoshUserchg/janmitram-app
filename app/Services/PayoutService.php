@@ -292,6 +292,8 @@ class PayoutService
         int $month
     ): array {
         $snapshot = $snapshots[$shop->id] ?? null;
+        $directChildrenCount = isset($byParent[$shop->id]) ? $byParent[$shop->id]->count() : 0;
+        $downlineCount = self::descendants($shop->id, $byParent)->count();
 
         if ($snapshot !== null) {
             $personal = (float) $snapshot->personal_sales;
@@ -322,10 +324,12 @@ class PayoutService
             'personal_sales' => $personal,
             'group_sales' => $groupSales,
             'group_size' => $groupSize,
+            'downline_count' => $downlineCount,
+            'direct_children_count' => $directChildrenCount,
             'phase1_amount' => $phase1,
             'phase2_amount' => $phase2,
             'total_payout' => $total,
-            'has_children' => isset($byParent[$shop->id]) && $byParent[$shop->id]->isNotEmpty(),
+            'has_children' => $directChildrenCount > 0,
         ];
     }
 

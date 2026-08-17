@@ -173,12 +173,7 @@ class PayoutController extends Controller
             return [$year, $month];
         }
 
-        $latest = ShopMonthlyPayout::orderByDesc('year')->orderByDesc('month')->first();
-        if ($latest !== null) {
-            return [(int) $latest->year, (int) $latest->month];
-        }
-
-        $now = now()->subMonthNoOverflow();
+        $now = now();
 
         return [$now->year, $now->month];
     }
