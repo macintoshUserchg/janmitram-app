@@ -547,6 +547,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:root'])->group
     Route::get('review/{reviewId}/toggle', [ReviewsController::class, 'toggleReview'])->name('review.toggle');
 
     Route::get('withdraw', [App\Http\Controllers\Admin\WithdrawController::class, 'index'])->name('withdraw.index');
+    Route::get('withdraw/export', [App\Http\Controllers\Admin\WithdrawController::class, 'export'])->name('withdraw.export');
     Route::get('withdraw/{withdraw}', [App\Http\Controllers\Admin\WithdrawController::class, 'show'])->name('withdraw.show');
     Route::put('withdraw/{withdraw}', [App\Http\Controllers\Admin\WithdrawController::class, 'update'])->name('withdraw.update');
 
