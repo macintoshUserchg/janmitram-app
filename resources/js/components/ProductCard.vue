@@ -56,7 +56,7 @@
                                     props.product?.discount_price : props.product?.price) }}
                             </div>
                             <!-- unit -->
-                            <div v-if="props.product?.unit?.name" class="text-slate-600 text-xs font-medium bg-slate-100 px-1.5 py-0.5 rounded">
+                            <div v-if="props.product?.unit?.name" class="text-slate-800 text-xs font-bold bg-slate-100 px-1.5 py-0.5 rounded">
                                 {{ props.product?.unit?.name }}
                             </div>
                             <!-- discount price -->

@@ -71,7 +71,7 @@
                                         >
                                             <div
                                                 v-if="product.unit"
-                                                class="min-w-8 text-center px-2 py-1 bg-slate-100 rounded text-slate-800 text-[10px] md:text-xs font-medium"
+                                                class="min-w-8 text-center px-2 py-1 bg-slate-100 rounded text-slate-900 text-[10px] md:text-xs font-bold"
                                             >
                                                 {{ product.unit }}
                                             </div>

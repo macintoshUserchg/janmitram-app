@@ -233,7 +233,7 @@
 
                             <!-- Unit Badge -->
                             <div v-if="product.unit?.name"
-                                class="px-2.5 py-1 bg-slate-100 border border-slate-200 text-slate-700 text-sm font-semibold rounded-lg">
+                                class="px-2.5 py-1 bg-slate-100 border border-slate-200 text-slate-800 text-sm font-bold rounded-lg">
                                 {{ product.unit?.name }}
                             </div>
 
@@ -255,7 +255,7 @@
                             <div class="w-[40px] md:w-[88px] text-slate-600 text-base font-normal leading-normal">
                                 {{ $t("Unit") }}
                             </div>
-                            <div class="px-3 py-1 bg-slate-100 border border-slate-200 rounded-md text-slate-800 text-sm font-medium">
+                            <div class="px-3 py-1 bg-slate-100 border border-slate-200 rounded-md text-slate-900 text-sm font-bold">
                                 {{ product.unit?.name }}
                             </div>
                         </div>

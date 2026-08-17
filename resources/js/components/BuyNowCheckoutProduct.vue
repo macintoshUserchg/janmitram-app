@@ -30,7 +30,7 @@
               <div class="flex items-center gap-1 flex-wrap">
                 <div
                   v-if="product?.unit?.name || (typeof product?.unit === 'string' && product?.unit)"
-                  class="min-w-8 text-center px-2 py-1 bg-slate-100 rounded text-slate-800 text-xs font-medium"
+                  class="min-w-8 text-center px-2 py-1 bg-slate-100 rounded text-slate-900 text-xs font-bold"
                 >
                   {{ product?.unit?.name || product?.unit }}
                 </div>
