@@ -271,6 +271,9 @@ class POSController extends Controller
             $lineTotal = $price * $product->pivot->quantity;
 
             $assignedActive = $product->vatTaxes()->where('is_active', true)->get();
+            if ($assignedActive->isEmpty() && $product->master_product_id) {
+                $assignedActive = $product->masterProduct?->vatTaxes()->where('is_active', true)->get() ?? collect();
+            }
 
             if ($assignedActive->isNotEmpty()) {
                 foreach ($assignedActive as $rate) {

@@ -455,6 +455,9 @@ class OrderRepository extends Repository
             $totalAmount += $lineTotal;
 
             $assignedActive = $product->vatTaxes()->where('is_active', true)->get();
+            if ($assignedActive->isEmpty() && $product->master_product_id) {
+                $assignedActive = $product->masterProduct?->vatTaxes()->where('is_active', true)->get() ?? collect();
+            }
 
             if ($assignedActive->isNotEmpty()) {
                 foreach ($assignedActive as $rate) {
