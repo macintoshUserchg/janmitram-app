@@ -511,6 +511,23 @@ source:
     `CalculateMonthlyPayouts`/`DeactivateInactiveMembers` commands. Added
     2026-08-01. Documented in the Stack table and Structural Guidelines above.
 
+## Order Management, Tax & Invoice Architecture (Updated 2026-08-17)
+
+### 1. Dynamic Master Product GST & Tax Inheritance
+* **Central Catalog Configuration**: The Admin configures VAT/Tax slabs (GST 5%, 12%, 18%, 28%) centrally on Master Products or sets a platform-wide default rate under `Admin -> VAT & Tax` (`/admin/vat-tax`).
+* **Real-time Shop Inheritance**: When customer orders or POS transactions are placed, `OrderRepository` and `POSController` dynamically evaluate `$product->vatTaxes()` and automatically fall back to `$product->masterProduct?->vatTaxes()` if the shop copy has no direct tax override.
+* **Instant Propagation**: If the Admin changes a Master Product's GST rate (or changes the Platform Default Tax rate), all shop inventories across the platform immediately reflect and charge the updated GST rate on all future orders without manual shop inventory re-configuration.
+
+### 2. Admin Order Management Enhancements (`/admin/order`)
+* **GST / Tax Amount Column**: Displays the exact GST / tax amount charged in rupees with sortable header. If multiple tax lines apply (`CGST`, `SGST`, `IGST`), interactive sub-badges display each tax name and rupee amount.
+* **Discounts Column**: Displays total discounts in rupees with sortable header, breaking down Coupon deductions with coupon code, Membership Card discounts with card number, and Special promotional discounts.
+
+### 3. Order Details & PDF Invoice Generation (`resources/views/PDF/invoice.blade.php`)
+* **Comprehensive Financial Breakdown**: Renders Sub Total, Coupon Discount (with promo code), Membership Card Discount (with card number), Special Discounts, Delivery Charge, Itemized GST percentages (with dynamic labels like `GST (5%)`), and Grand Total Payable.
+* **Bold Product Units**: Renders product measurement units (e.g., `200GM`, `1 KG`, `1 Ltr`, `10kg`) in bold badges across frontend Vue components (listings, cards, details, cart drawer, checkout) and printable PDF invoice line items.
+
+---
+
 ### Test coverage summary
 
 **Strong:** MLM/payout (`PayoutTest` 15 tests, `PayoutNetworkTest`,

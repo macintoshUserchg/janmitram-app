@@ -231,6 +231,19 @@ php artisan dusk
 vendor/bin/pint --dirty --format agent
 ```
 
+### 8. Order Management, Tax & Invoice Breakdown
+
+#### Dynamic Master Product GST & Tax Inheritance
+- **Central Slabs**: Taxes (GST 5%, 12%, 18%, 28%) are attached to Master Catalog items or configured as the Platform Default Tax under `Admin -> VAT & Tax`.
+- **Shop Inventory Propagation**: When orders are placed (Web checkout or Shop POS), `OrderRepository` and `POSController` check `$product->vatTaxes()` and fall back to `$product->masterProduct?->vatTaxes()`.
+- **Dynamic Updates**: Modifying a Master Product's tax rate or changing the Platform Default Tax rate instantly takes effect across all shop inventories on all future orders.
+
+#### Admin Orders Index & Details
+- **GST / Tax Column (`/admin/order`)**: Displays exact tax amount in rupees with sortable headers and multi-tax badges (`CGST`, `SGST`, `IGST`).
+- **Discounts Column (`/admin/order`)**: Displays Coupon discounts with code, Membership Card discounts with card number, and Special discounts.
+- **Order Details (`/admin/order/{id}`, `/shop/order/{id}`)**: Full financial breakdown including Sub Total, Coupon Discount, Card Discount, Delivery Charge, Itemized VAT/GST percentages, and Grand Total.
+- **Invoice PDF (`PDF/invoice.blade.php`)**: Generates compliant invoices with item units, dynamic QR codes, discounts breakdown, and tax percentages.
+
 ---
 
-_Last updated: 2026-08-02. Warehouse/stock surface verified; route table is a subset of the re-scaffolded `web.php`/`api.php`._
+_Last updated: 2026-08-17. Option A Warehouse, GST Tax Inheritance, and Order Management architecture verified._

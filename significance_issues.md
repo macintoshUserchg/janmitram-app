@@ -126,6 +126,22 @@ Migrations create the table as `warehouse_stock` (singular) in
 `2026_07_27_000001_create_warehouses_tables.php`, which mismatches plural table
 conventions used elsewhere and any code expecting `warehouse_stocks`.
 
+### 13. Shop replicated products missed master product GST/tax rates
+Shop inventory products cloned from Central Master Products lacked direct rows
+in `product_vat_taxes`, causing online customer orders to calculate 0 GST when
+no platform default rate was selected.
+
+**Status:** ✅ **Resolved 2026-08-17** (`364b48d`) — `OrderRepository` and `POSController`
+now automatically inherit the active GST/VAT configuration of `$product->masterProduct?->vatTaxes`.
+
+### 14. Order details and Invoice PDF omitted Membership Card discounts and GST rates
+Order details views (`admin/order/show` and `shop/order/show`) and PDF invoices
+only printed `coupon_discount`, omitting `card_discount` and itemized GST percentages.
+
+**Status:** ✅ **Resolved 2026-08-17** (`1b86166` / `1a92b49`) — Added sortable GST / Tax
+and Discounts columns to `/admin/order`, comprehensive financial breakdowns to order views,
+and itemized GST percentages with bold units on PDF invoices.
+
 ---
 
 ## Notes
@@ -134,4 +150,4 @@ conventions used elsewhere and any code expecting `warehouse_stocks`.
   `OrderRepository::storeByRequestFromCart()` (~220 lines) that mixes
   allocation, pricing, stock, licensing, and mailing.
 - Findings marked "verified against code" in this file were re-checked against
-  the on-disk routes, migrations, and source during 2026-08-05.
+  the on-disk routes, migrations, and source during 2026-08-17.
