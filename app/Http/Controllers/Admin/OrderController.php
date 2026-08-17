@@ -33,10 +33,11 @@ class OrderController extends Controller
             $shop = User::role(Roles::ROOT->value)->first()?->shop;
         }
 
-        $allowedColumns = ['id', 'created_at', 'payable_amount', 'order_status', 'payment_status'];
+        $allowedColumns = ['id', 'created_at', 'payable_amount', 'tax_amount', 'order_status', 'payment_status'];
         [$sort, $direction] = $this->resolveSort($allowedColumns);
 
         $query = OrderRepository::query()
+            ->with(['customer.user', 'shop', 'vatTaxes'])
             ->when($shop, function ($query) use ($shop) {
                 return $query->where('shop_id', $shop->id);
             })
