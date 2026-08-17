@@ -24,7 +24,27 @@ class WithdrawController extends Controller
         $shop = generaleSetting('shop');
         $userShopIds = Shop::where('user_id', auth()->id())->pluck('id');
 
-        $withdraws = $shop->withdraws()->latest('id')->paginate(20);
+        $status = request('status');
+        $search = request('search');
+
+        $withdraws = $shop->withdraws()
+            ->when($status, function ($query) use ($status) {
+                return $query->where('status', $status);
+            })
+            ->when($search, function ($query) use ($search) {
+                $cleanId = ltrim($search, '#Ww- ');
+
+                return $query->where(function ($q) use ($search, $cleanId) {
+                    if (is_numeric($cleanId)) {
+                        $q->orWhere('id', (int) $cleanId);
+                    }
+                    $q->orWhere('reason', 'like', "%{$search}%")
+                        ->orWhere('amount', 'like', "%{$search}%");
+                });
+            })
+            ->latest('id')
+            ->paginate(20)
+            ->withQueryString();
 
         $walletBalance = (float) (auth()->user()->wallet?->balance ?? 0);
         $pendingWithdraws = (float) Withdraw::whereIn('shop_id', $userShopIds)->where('status', 'pending')->sum('amount');
@@ -32,15 +52,18 @@ class WithdrawController extends Controller
         $lifetimePayouts = (float) ShopMonthlyPayout::whereIn('shop_id', $userShopIds)->sum('total_payout');
         $withdrawableBalance = max(0, $walletBalance - $pendingWithdraws);
         $generaleSetting = GeneraleSetting::first();
+        $kyc = $shop?->kyc;
 
         return view('shop.withdraw.index', compact(
+            'shop',
             'withdraws',
             'walletBalance',
             'pendingWithdraws',
             'approvedWithdraws',
             'lifetimePayouts',
             'withdrawableBalance',
-            'generaleSetting'
+            'generaleSetting',
+            'kyc'
         ));
     }
 
