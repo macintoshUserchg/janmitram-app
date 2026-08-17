@@ -21,11 +21,14 @@
         ? (int) request('per_page')
         : null;
 
-    $params = array_filter([
+    $params = array_merge(request()->query(), [
         'sort' => $column,
         'direction' => $newDirection,
-        'per_page' => $perPage,
     ]);
+
+    if ($perPage) {
+        $params['per_page'] = $perPage;
+    }
 
     $url = ! empty($routeParam)
         ? route($route, [$routeParam] + $params)

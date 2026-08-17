@@ -43,12 +43,16 @@
                                 <th style="min-width: 150px">
                                     @include('admin.partials.sortable-header', ['label' => __('Order Date'), 'column' => 'created_at', 'route' => 'admin.order.index', 'routeParam' => $status, 'sort' => $sort ?? 'id', 'direction' => $direction ?? 'desc'])
                                 </th>
-                                <th>{{ __('Customer') }}</th>
+                                <th style="min-width: 140px">
+                                    @include('admin.partials.sortable-header', ['label' => __('Customer'), 'column' => 'customer_name', 'route' => 'admin.order.index', 'routeParam' => $status, 'sort' => $sort ?? 'id', 'direction' => $direction ?? 'desc'])
+                                </th>
                                 @if ($businessModel == 'multi')
-                                    <th>{{ __('Shop') }}</th>
+                                    <th style="min-width: 140px">
+                                        @include('admin.partials.sortable-header', ['label' => __('Shop'), 'column' => 'shop_name', 'route' => 'admin.order.index', 'routeParam' => $status, 'sort' => $sort ?? 'id', 'direction' => $direction ?? 'desc'])
+                                    </th>
                                 @endif
                                 <th style="min-width: 140px">
-                                    @include('admin.partials.sortable-header', ['label' => __('Discounts'), 'column' => 'coupon_discount', 'route' => 'admin.order.index', 'routeParam' => $status, 'sort' => $sort ?? 'id', 'direction' => $direction ?? 'desc'])
+                                    @include('admin.partials.sortable-header', ['label' => __('Discounts'), 'column' => 'discount', 'route' => 'admin.order.index', 'routeParam' => $status, 'sort' => $sort ?? 'id', 'direction' => $direction ?? 'desc'])
                                 </th>
                                 <th style="min-width: 130px">
                                     @include('admin.partials.sortable-header', ['label' => __('GST / Tax'), 'column' => 'tax_amount', 'route' => 'admin.order.index', 'routeParam' => $status, 'sort' => $sort ?? 'id', 'direction' => $direction ?? 'desc'])
@@ -56,7 +60,9 @@
                                 <th style="min-width: 140px">
                                     @include('admin.partials.sortable-header', ['label' => __('Total Amount'), 'column' => 'payable_amount', 'route' => 'admin.order.index', 'routeParam' => $status, 'sort' => $sort ?? 'id', 'direction' => $direction ?? 'desc'])
                                 </th>
-                                <th>{{ __('Payment Method') }}</th>
+                                <th style="min-width: 140px">
+                                    @include('admin.partials.sortable-header', ['label' => __('Payment Method'), 'column' => 'payment_method', 'route' => 'admin.order.index', 'routeParam' => $status, 'sort' => $sort ?? 'id', 'direction' => $direction ?? 'desc'])
+                                </th>
                                 <th>{{ __('Action') }}</th>
                             </tr>
                         </thead>

@@ -33,20 +33,37 @@ class OrderController extends Controller
             $shop = User::role(Roles::ROOT->value)->first()?->shop;
         }
 
-        $allowedColumns = ['id', 'created_at', 'payable_amount', 'tax_amount', 'coupon_discount', 'card_discount', 'order_status', 'payment_status'];
-        [$sort, $direction] = $this->resolveSort($allowedColumns);
+        $allowedColumns = [
+            'id', 'created_at', 'payable_amount', 'tax_amount', 'discount', 'coupon_discount',
+            'card_discount', 'order_status', 'payment_status', 'payment_method', 'customer_name', 'shop_name',
+        ];
+        [$sort, $direction] = $this->resolveSort($allowedColumns, 'id', 'desc');
 
         $query = OrderRepository::query()
             ->with(['customer.user', 'shop', 'vatTaxes', 'coupon', 'card'])
             ->when($shop, function ($query) use ($shop) {
-                return $query->where('shop_id', $shop->id);
+                return $query->where('orders.shop_id', $shop->id);
             })
             ->when($statusStr, function ($query) use ($statusStr) {
-                $query->where('order_status', $statusStr);
+                $query->where('orders.order_status', $statusStr);
             });
 
-        $orders = $this->applySort($query, $sort, $direction, $allowedColumns)
-            ->paginate($this->resolvePerPage(20))
+        if ($sort === 'customer_name') {
+            $query->leftJoin('customers', 'customers.id', '=', 'orders.customer_id')
+                ->leftJoin('users', 'users.id', '=', 'customers.user_id')
+                ->orderBy('users.name', $direction)
+                ->select('orders.*');
+        } elseif ($sort === 'shop_name') {
+            $query->leftJoin('shops', 'shops.id', '=', 'orders.shop_id')
+                ->orderBy('shops.name', $direction)
+                ->select('orders.*');
+        } elseif ($sort === 'discount') {
+            $query->orderByRaw('(COALESCE(orders.coupon_discount, 0) + COALESCE(orders.card_discount, 0) + COALESCE(orders.discount, 0)) '.($direction === 'desc' ? 'DESC' : 'ASC'));
+        } else {
+            $this->applySort($query, $sort, $direction, $allowedColumns);
+        }
+
+        $orders = $query->paginate($this->resolvePerPage(20))
             ->withQueryString();
 
         return view('admin.order.index', compact('orders', 'status', 'rawStatus', 'sort', 'direction'));

@@ -16,11 +16,13 @@ trait SortableIndex
     /** @var array<int, string> Columns a given controller allows sorting by (override as needed). */
     protected array $sortableColumns = ['id', 'created_at', 'updated_at'];
 
-    public function resolveSort(?array $allowedColumns = null): array
+    public function resolveSort(?array $allowedColumns = null, string $defaultSort = 'id', string $defaultDirection = 'asc'): array
     {
         $allowed = $allowedColumns ?? $this->sortableColumns;
-        $sort = in_array(request('sort'), $allowed, true) ? request('sort') : 'id';
-        $direction = request('direction') === 'desc' ? 'desc' : 'asc';
+        $sort = in_array(request('sort'), $allowed, true) ? request('sort') : $defaultSort;
+        $direction = request()->has('direction')
+            ? (request('direction') === 'asc' ? 'asc' : 'desc')
+            : $defaultDirection;
 
         return [$sort, $direction];
     }
