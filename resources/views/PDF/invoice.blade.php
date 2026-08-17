@@ -404,6 +404,9 @@
                             {{ __('Quantity') }}
                         </th>
                         <th class="text-center">
+                            {{ __('Unit') }}
+                        </th>
+                        <th class="text-center">
                             {{ __('Size') }}
                         </th>
                         <th class="text-center">
@@ -457,6 +460,7 @@
                             </td>
                             <td class="text-center fw-400">{{ showCurrency($price) }}</td>
                             <td class="text-center">{{ $product->pivot->quantity }}</td>
+                            <td class="text-center">{{ $product->pivot->unit ?? $product->unit?->name ?? '--' }}</td>
                             <td class="text-center">{{ $product->pivot->size ?? '--' }}</td>
                             <td class="text-center">{{ $product->pivot->color ?? '--' }}</td>
                             <td class="text-right">{{ showCurrency($price * $product->pivot->quantity) }}</td>
@@ -465,6 +469,10 @@
                 </tbody>
             </table>
         </div>
+
+        @php
+            $otherDiscount = max(0, (float)($order->discount ?? 0) - (float)($order->coupon_discount ?? 0) - (float)($order->card_discount ?? 0));
+        @endphp
 
         @if ($directory != 'rtl')
             <div class="invoice-total">
@@ -479,10 +487,30 @@
                 @if ($order->coupon_discount > 0)
                     <div class="w-full pt-2">
                         <p class="w-50 float-left">
-                            {{ __('Discount') }}
+                            {{ __('Coupon Discount') }} {{ $order->coupon ? '(' . $order->coupon->code . ')' : '' }}
                         </p>
-                        <p class="w-50 text-right fw-500">
-                            {{ showCurrency($order->coupon_discount) }}
+                        <p class="w-50 text-right fw-500" style="color: #dc2626;">
+                            -{{ showCurrency($order->coupon_discount) }}
+                        </p>
+                    </div>
+                @endif
+                @if ($order->card_discount > 0)
+                    <div class="w-full pt-2">
+                        <p class="w-50 float-left">
+                            {{ __('Card Discount') }} {{ $order->card ? '(' . $order->card->card_number . ')' : '' }}
+                        </p>
+                        <p class="w-50 text-right fw-500" style="color: #dc2626;">
+                            -{{ showCurrency($order->card_discount) }}
+                        </p>
+                    </div>
+                @endif
+                @if ($otherDiscount > 0)
+                    <div class="w-full pt-2">
+                        <p class="w-50 float-left">
+                            {{ __('Special Discount') }}
+                        </p>
+                        <p class="w-50 text-right fw-500" style="color: #dc2626;">
+                            -{{ showCurrency($otherDiscount) }}
                         </p>
                     </div>
                 @endif
@@ -498,7 +526,7 @@
                 @foreach ($order->vatTaxes ?? [] as $vatTax)
                     <div class="w-full pt-2">
                         <p class="w-50 float-left">
-                            {{ $vatTax->name . '(' . $vatTax->percentage . '%)' }}
+                            {{ $vatTax->name }} ({{ $vatTax->percentage }}%)
                         </p>
                         <p class="w-50 text-right fw-500">
                             {{ showCurrency($vatTax->amount) }}
@@ -508,7 +536,7 @@
                 @if ($order->tax_amount > 0 && count($order->vatTaxes ?? []) <= 0)
                     <div class="w-full pt-2">
                         <p class="w-50 float-left">
-                            {{ __('Total Tax Amount') }}
+                            {{ __('GST / Tax') }}
                         </p>
                         <p class="w-50 text-right fw-500">
                             {{ showCurrency($order->tax_amount) }}
@@ -537,11 +565,31 @@
                 </div>
                 @if ($order->coupon_discount > 0)
                     <div class="w-full pt-2" style="padding-left: 20px">
-                        <p class="w-50 float-left text-left">
-                            {{ showCurrency($order->coupon_discount) }}
+                        <p class="w-50 float-left text-left" style="color: #dc2626;">
+                            -{{ showCurrency($order->coupon_discount) }}
                         </p>
                         <p class="w-50">
-                            {{ __('Discount') }}
+                            {{ __('Coupon Discount') }} {{ $order->coupon ? '(' . $order->coupon->code . ')' : '' }}
+                        </p>
+                    </div>
+                @endif
+                @if ($order->card_discount > 0)
+                    <div class="w-full pt-2" style="padding-left: 20px">
+                        <p class="w-50 float-left text-left" style="color: #dc2626;">
+                            -{{ showCurrency($order->card_discount) }}
+                        </p>
+                        <p class="w-50">
+                            {{ __('Card Discount') }} {{ $order->card ? '(' . $order->card->card_number . ')' : '' }}
+                        </p>
+                    </div>
+                @endif
+                @if ($otherDiscount > 0)
+                    <div class="w-full pt-2" style="padding-left: 20px">
+                        <p class="w-50 float-left text-left" style="color: #dc2626;">
+                            -{{ showCurrency($otherDiscount) }}
+                        </p>
+                        <p class="w-50">
+                            {{ __('Special Discount') }}
                         </p>
                     </div>
                 @endif
@@ -553,13 +601,23 @@
                         {{ __('Delivery Charge') }}
                     </p>
                 </div>
-                @if ($order->tax_amount > 0)
+                @foreach ($order->vatTaxes ?? [] as $vatTax)
+                    <div class="w-full pt-2" style="padding-left: 20px">
+                        <p class="w-50 float-left text-left">
+                            {{ showCurrency($vatTax->amount) }}
+                        </p>
+                        <p class="w-50">
+                            {{ $vatTax->name }} ({{ $vatTax->percentage }}%)
+                        </p>
+                    </div>
+                @endforeach
+                @if ($order->tax_amount > 0 && count($order->vatTaxes ?? []) <= 0)
                     <div class="w-full pt-2" style="padding-left: 20px">
                         <p class="w-50 float-left text-left">
                             {{ showCurrency($order->tax_amount) }}
                         </p>
                         <p class="w-50">
-                            {{ __('VAT & Tax') }}
+                            {{ __('GST / Tax') }}
                         </p>
                     </div>
                 @endif

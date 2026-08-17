@@ -97,7 +97,7 @@ class POSController extends Controller
             $orderId = $request->get('id') ?: array_key_first($request->query()) ?: 1;
         }
 
-        $order = Order::withoutGlobalScopes()->findOrFail($orderId);
+        $order = Order::withoutGlobalScopes()->with(['products.unit', 'vatTaxes', 'coupon', 'card', 'customer.user', 'address'])->findOrFail($orderId);
 
         $orderCode = '#'.$order->prefix.$order->order_code;
 

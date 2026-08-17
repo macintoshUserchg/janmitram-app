@@ -71,7 +71,15 @@ class Order extends Model
      */
     public function coupon(): BelongsTo
     {
-        return $this->belongsTo(Coupon::class, 'coupon_id')->withTrashed();
+        return $this->belongsTo(Coupon::class, 'coupon_id');
+    }
+
+    /**
+     * Get the membership card for the Order.
+     */
+    public function card(): BelongsTo
+    {
+        return $this->belongsTo(Card::class, 'card_id');
     }
 
     /**

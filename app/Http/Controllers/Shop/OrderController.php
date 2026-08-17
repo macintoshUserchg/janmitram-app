@@ -151,7 +151,7 @@ class OrderController extends Controller
         $tmpDir = storage_path('app/public/mpdf_tmp');
         File::ensureDirectoryExists($tmpDir);
 
-        $order = Order::withoutGlobalScopes()->findOrFail($id);
+        $order = Order::withoutGlobalScopes()->with(['products.unit', 'vatTaxes', 'coupon', 'card', 'customer.user', 'address'])->findOrFail($id);
 
         $orderCode = '#'.$order->prefix.$order->order_code;
 
