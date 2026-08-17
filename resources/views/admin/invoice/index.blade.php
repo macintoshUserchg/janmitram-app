@@ -67,10 +67,18 @@
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th class="ps-3">{{ __('Invoice #') }}</th>
-                        <th>{{ __('Dispatch Date') }}</th>
-                        <th>{{ __('Receiving Shop (To)') }}</th>
-                        <th>{{ __('Fulfilling Hub (From)') }}</th>
+                        <th class="ps-3" style="min-width: 140px">
+                            @include('admin.partials.sortable-header', ['label' => __('Invoice #'), 'column' => 'id', 'route' => 'admin.invoice.index', 'sort' => $sort ?? 'id', 'direction' => $direction ?? 'desc'])
+                        </th>
+                        <th style="min-width: 150px">
+                            @include('admin.partials.sortable-header', ['label' => __('Dispatch Date'), 'column' => 'updated_at', 'route' => 'admin.invoice.index', 'sort' => $sort ?? 'id', 'direction' => $direction ?? 'desc'])
+                        </th>
+                        <th style="min-width: 160px">
+                            @include('admin.partials.sortable-header', ['label' => __('Receiving Shop (To)'), 'column' => 'shop_name', 'route' => 'admin.invoice.index', 'sort' => $sort ?? 'id', 'direction' => $direction ?? 'desc'])
+                        </th>
+                        <th style="min-width: 160px">
+                            @include('admin.partials.sortable-header', ['label' => __('Fulfilling Hub (From)'), 'column' => 'warehouse_name', 'route' => 'admin.invoice.index', 'sort' => $sort ?? 'id', 'direction' => $direction ?? 'desc'])
+                        </th>
                         <th class="text-center">{{ __('SKUs & Units') }}</th>
                         <th class="text-end">{{ __('Total Valuation') }}</th>
                         <th class="text-center pe-3">{{ __('Actions') }}</th>

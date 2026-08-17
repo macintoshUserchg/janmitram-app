@@ -10,15 +10,24 @@ use Illuminate\Http\Request;
 
 class InvoiceController extends Controller
 {
+    use SortableIndex;
+
     public function index(Request $request)
     {
+        $allowedColumns = ['id', 'created_at', 'updated_at', 'shop_name', 'warehouse_name'];
+        [$sort, $direction] = $this->resolveSort($allowedColumns, 'id', 'desc');
+
         $query = StockRequest::where('status', 'completed')
             ->with(['shop', 'warehouse', 'items.product']);
 
         if ($request->filled('search')) {
             $search = trim($request->search);
-            $query->where(function ($q) use ($search) {
-                $q->where('id', 'like', "%{$search}%")
+            $cleanId = ltrim($search, '#INV-SR-sr- ');
+            $query->where(function ($q) use ($search, $cleanId) {
+                if (is_numeric($cleanId)) {
+                    $q->orWhere('stock_requests.id', (int) $cleanId);
+                }
+                $q->orWhere('stock_requests.id', 'like', "%{$search}%")
                     ->orWhereHas('shop', function ($sq) use ($search) {
                         $sq->where('name', 'like', "%{$search}%");
                     })
@@ -28,7 +37,19 @@ class InvoiceController extends Controller
             });
         }
 
-        $invoices = $query->latest()->paginate(15);
+        if ($sort === 'shop_name') {
+            $query->leftJoin('shops', 'shops.id', '=', 'stock_requests.shop_id')
+                ->orderBy('shops.name', $direction)
+                ->select('stock_requests.*');
+        } elseif ($sort === 'warehouse_name') {
+            $query->leftJoin('warehouses', 'warehouses.id', '=', 'stock_requests.warehouse_id')
+                ->orderBy('warehouses.name', $direction)
+                ->select('stock_requests.*');
+        } else {
+            $this->applySort($query, $sort, $direction, $allowedColumns);
+        }
+
+        $invoices = $query->paginate($this->resolvePerPage(15))->withQueryString();
 
         // Aggregate statistics for completed stock request dispatches
         $completedRequests = StockRequest::where('status', 'completed')->with('items.product')->get();
@@ -49,7 +70,9 @@ class InvoiceController extends Controller
             'invoices',
             'totalInvoices',
             'totalDispatchedUnits',
-            'totalValuation'
+            'totalValuation',
+            'sort',
+            'direction'
         ));
     }
 }

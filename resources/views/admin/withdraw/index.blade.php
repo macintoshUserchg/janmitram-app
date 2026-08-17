@@ -227,13 +227,25 @@
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th class="ps-4" style="width: 60px;">{{ __('ID') }}</th>
-                        <th>{{ __('Request Date & Time') }}</th>
-                        <th>{{ __('Shop & Owner') }}</th>
-                        <th>{{ __('Contact Phone') }}</th>
+                        <th class="ps-4" style="min-width: 120px;">
+                            @include('admin.partials.sortable-header', ['label' => __('ID'), 'column' => 'id', 'route' => 'admin.withdraw.index', 'sort' => $sort ?? 'id', 'direction' => $direction ?? 'desc'])
+                        </th>
+                        <th style="min-width: 160px;">
+                            @include('admin.partials.sortable-header', ['label' => __('Request Date & Time'), 'column' => 'created_at', 'route' => 'admin.withdraw.index', 'sort' => $sort ?? 'id', 'direction' => $direction ?? 'desc'])
+                        </th>
+                        <th style="min-width: 160px;">
+                            @include('admin.partials.sortable-header', ['label' => __('Shop & Owner'), 'column' => 'shop_name', 'route' => 'admin.withdraw.index', 'sort' => $sort ?? 'id', 'direction' => $direction ?? 'desc'])
+                        </th>
+                        <th style="min-width: 140px;">
+                            @include('admin.partials.sortable-header', ['label' => __('Contact'), 'column' => 'name', 'route' => 'admin.withdraw.index', 'sort' => $sort ?? 'id', 'direction' => $direction ?? 'desc'])
+                        </th>
                         <th>{{ __('KYC Bank / Payment Particulars') }}</th>
-                        <th class="text-end">{{ __('Amount (₹)') }}</th>
-                        <th class="text-center">{{ __('Status') }}</th>
+                        <th class="text-end" style="min-width: 140px;">
+                            @include('admin.partials.sortable-header', ['label' => __('Amount (₹)'), 'column' => 'amount', 'route' => 'admin.withdraw.index', 'sort' => $sort ?? 'id', 'direction' => $direction ?? 'desc'])
+                        </th>
+                        <th class="text-center" style="min-width: 120px;">
+                            @include('admin.partials.sortable-header', ['label' => __('Status'), 'column' => 'status', 'route' => 'admin.withdraw.index', 'sort' => $sort ?? 'id', 'direction' => $direction ?? 'desc'])
+                        </th>
                         <th>{{ __('Remarks') }}</th>
                         <th class="text-center pe-4" style="width: 100px;">{{ __('Action') }}</th>
                     </tr>

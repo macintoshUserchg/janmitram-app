@@ -3,12 +3,25 @@
     <div class="d-flex align-items-center flex-wrap gap-3 justify-content-between px-3">
         <h4>{{ __('All Customers') }}</h4>
 
-        @hasPermission('admin.customer.create')
-            <a href="{{ route('admin.customer.create') }}" class="btn py-2 btn-primary">
-                <i class="bi bi-patch-plus"></i>
-                {{ __('Add Customer') }}
-            </a>
-        @endhasPermission
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <form action="{{ route('admin.customer.index') }}" method="GET" class="d-flex gap-2">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-light"><i class="fas fa-search text-muted"></i></span>
+                    <input type="text" name="search" class="form-control" placeholder="{{ __('Search customer, phone, email...') }}" value="{{ request('search') }}" style="width: 220px;">
+                </div>
+                <button type="submit" class="btn btn-sm btn-primary">{{ __('Search') }}</button>
+                @if(request('search'))
+                    <a href="{{ route('admin.customer.index') }}" class="btn btn-sm btn-outline-secondary">{{ __('Reset') }}</a>
+                @endif
+            </form>
+
+            @hasPermission('admin.customer.create')
+                <a href="{{ route('admin.customer.create') }}" class="btn btn-sm py-2 btn-primary">
+                    <i class="bi bi-patch-plus"></i>
+                    {{ __('Add Customer') }}
+                </a>
+            @endhasPermission
+        </div>
     </div>
 
     <div class="container-fluid mt-3">
@@ -19,13 +32,25 @@
                     <table class="table border table-responsive-lg">
                         <thead>
                             <tr>
-                                <th class="text-center">{{ __('SL') }}.</th>
+                                <th class="text-center" style="width: 70px;">
+                                    @include('admin.partials.sortable-header', ['label' => __('SL'), 'column' => 'id', 'route' => 'admin.customer.index', 'sort' => $sort ?? 'id', 'direction' => $direction ?? 'desc'])
+                                </th>
                                 <th>{{ __('Profile') }}</th>
-                                <th style="min-width: 150px">{{ __('Name') }}</th>
-                                <th style="min-width: 100px">{{ __('Phone') }}</th>
-                                <th>{{ __('Email') }}</th>
-                                <th class="text-center">{{ __('Gender') }}</th>
-                                <th class="text-center">{{ __('Date of Birth') }}</th>
+                                <th style="min-width: 150px">
+                                    @include('admin.partials.sortable-header', ['label' => __('Name'), 'column' => 'name', 'route' => 'admin.customer.index', 'sort' => $sort ?? 'id', 'direction' => $direction ?? 'desc'])
+                                </th>
+                                <th style="min-width: 130px">
+                                    @include('admin.partials.sortable-header', ['label' => __('Phone'), 'column' => 'phone', 'route' => 'admin.customer.index', 'sort' => $sort ?? 'id', 'direction' => $direction ?? 'desc'])
+                                </th>
+                                <th style="min-width: 150px">
+                                    @include('admin.partials.sortable-header', ['label' => __('Email'), 'column' => 'email', 'route' => 'admin.customer.index', 'sort' => $sort ?? 'id', 'direction' => $direction ?? 'desc'])
+                                </th>
+                                <th class="text-center" style="min-width: 110px">
+                                    @include('admin.partials.sortable-header', ['label' => __('Gender'), 'column' => 'gender', 'route' => 'admin.customer.index', 'sort' => $sort ?? 'id', 'direction' => $direction ?? 'desc'])
+                                </th>
+                                <th class="text-center" style="min-width: 130px">
+                                    @include('admin.partials.sortable-header', ['label' => __('Date of Birth'), 'column' => 'date_of_birth', 'route' => 'admin.customer.index', 'sort' => $sort ?? 'id', 'direction' => $direction ?? 'desc'])
+                                </th>
                                 <th class="text-center">{{ __('Action') }}</th>
                             </tr>
                         </thead>

@@ -31,12 +31,24 @@
                 <table class="table table-responsive-lg">
                     <thead>
                         <tr>
-                            <th>{{ __('Order ID') }}</th>
-                            <th>{{ __('Order Date') }}</th>
-                            <th>{{ __('Customer') }}</th>
-                            <th>{{ __('Total Amount') }}</th>
-                            <th>{{ __('Payment Method') }}</th>
-                            <th>{{ __('Status') }}</th>
+                            <th style="min-width: 120px">
+                                @include('admin.partials.sortable-header', ['label' => __('Order ID'), 'column' => 'id', 'route' => 'shop.pos.sales', 'sort' => $sort ?? 'id', 'direction' => $direction ?? 'desc'])
+                            </th>
+                            <th style="min-width: 150px">
+                                @include('admin.partials.sortable-header', ['label' => __('Order Date'), 'column' => 'created_at', 'route' => 'shop.pos.sales', 'sort' => $sort ?? 'id', 'direction' => $direction ?? 'desc'])
+                            </th>
+                            <th style="min-width: 140px">
+                                @include('admin.partials.sortable-header', ['label' => __('Customer'), 'column' => 'customer_name', 'route' => 'shop.pos.sales', 'sort' => $sort ?? 'id', 'direction' => $direction ?? 'desc'])
+                            </th>
+                            <th style="min-width: 140px">
+                                @include('admin.partials.sortable-header', ['label' => __('Total Amount'), 'column' => 'payable_amount', 'route' => 'shop.pos.sales', 'sort' => $sort ?? 'id', 'direction' => $direction ?? 'desc'])
+                            </th>
+                            <th style="min-width: 140px">
+                                @include('admin.partials.sortable-header', ['label' => __('Payment Method'), 'column' => 'payment_method', 'route' => 'shop.pos.sales', 'sort' => $sort ?? 'id', 'direction' => $direction ?? 'desc'])
+                            </th>
+                            <th style="min-width: 120px">
+                                @include('admin.partials.sortable-header', ['label' => __('Status'), 'column' => 'order_status', 'route' => 'shop.pos.sales', 'sort' => $sort ?? 'id', 'direction' => $direction ?? 'desc'])
+                            </th>
                             <th>{{ __('Action') }}</th>
                         </tr>
                     </thead>

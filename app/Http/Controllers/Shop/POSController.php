@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Shop;
 
 use App\Enums\Roles;
+use App\Http\Controllers\Admin\SortableIndex;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PosApplyCouponRequest;
 use App\Http\Requests\PosCartRequest;
@@ -33,6 +34,8 @@ use Mpdf\Mpdf;
 
 class POSController extends Controller
 {
+    use SortableIndex;
+
     public function index()
     {
         $shop = generaleSetting('shop');
@@ -59,9 +62,27 @@ class POSController extends Controller
     {
         $shop = generaleSetting('shop');
 
-        $orders = OrderRepository::query()->withoutGlobalScopes()->where('shop_id', $shop->id)->where('pos_order', true)->latest()->paginate(20);
+        $allowedColumns = ['id', 'created_at', 'payable_amount', 'payment_method', 'order_status', 'customer_name'];
+        [$sort, $direction] = $this->resolveSort($allowedColumns, 'id', 'desc');
 
-        return view('shop.pos.sales', compact('orders'));
+        $query = OrderRepository::query()
+            ->withoutGlobalScopes()
+            ->with(['customer.user'])
+            ->where('orders.shop_id', $shop->id)
+            ->where('orders.pos_order', true);
+
+        if ($sort === 'customer_name') {
+            $query->leftJoin('customers', 'customers.id', '=', 'orders.customer_id')
+                ->leftJoin('users', 'users.id', '=', 'customers.user_id')
+                ->orderBy('users.name', $direction)
+                ->select('orders.*');
+        } else {
+            $this->applySort($query, $sort, $direction, $allowedColumns);
+        }
+
+        $orders = $query->paginate($this->resolvePerPage(20))->withQueryString();
+
+        return view('shop.pos.sales', compact('orders', 'sort', 'direction'));
     }
 
     public function draft()

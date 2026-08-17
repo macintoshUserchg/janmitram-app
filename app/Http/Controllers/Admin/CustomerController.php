@@ -11,16 +11,35 @@ use App\Models\User;
 use App\Repositories\CustomerRepository;
 use App\Repositories\UserRepository;
 use App\Repositories\WalletRepository;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 
 class CustomerController extends Controller
 {
-    public function index()
-    {
-        $customers = User::role(Roles::CUSTOMER->value)->latest('id')->with('media')->paginate(20);
+    use SortableIndex;
 
-        return view('admin.customer.index', compact('customers'));
+    public function index(Request $request)
+    {
+        $allowedColumns = ['id', 'name', 'phone', 'email', 'gender', 'date_of_birth', 'created_at'];
+        [$sort, $direction] = $this->resolveSort($allowedColumns, 'id', 'desc');
+
+        $query = User::role(Roles::CUSTOMER->value)->with('media');
+
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        $customers = $this->applySort($query, $sort, $direction, $allowedColumns)
+            ->paginate($this->resolvePerPage(20))
+            ->withQueryString();
+
+        return view('admin.customer.index', compact('customers', 'sort', 'direction'));
     }
 
     public function create()
@@ -58,36 +77,25 @@ class CustomerController extends Controller
 
     public function destroy(User $user)
     {
-        $media = $user->media;
-
-        if ($media && Storage::exists($media->src)) {
-            Storage::delete($media->src);
+        if ($user->orders()->exists()) {
+            return back()->withError(__('Cannot delete customer with order history'));
         }
 
-        $user->wallet()?->delete();
-        $user->syncPermissions([]);
-        $user->syncRoles([]);
+        if ($user->profile_photo_path) {
+            Storage::delete($user->profile_photo_path);
+        }
 
-        $delTime = now()->format('YmdHis');
-
-        $user->update([
-            'phone' => $user->phone.'_deleted:'.$delTime,
-            'email' => $user->email.'_deleted:'.$delTime,
-            'deleted_at' => now(),
-        ]);
-
-        $media?->delete();
+        $user->delete();
 
         return back()->withSuccess(__('Deleted successfully'));
     }
 
     public function resetPassword(User $user, ShopPasswordResetRequest $request)
     {
-        // Update the user password
         $user->update([
             'password' => Hash::make($request->password),
         ]);
 
-        return back()->withSuccess(__('Password updated successfully'));
+        return back()->withSuccess(__('Password reset successfully'));
     }
 }

@@ -16,6 +16,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class WithdrawController extends Controller
 {
+    use SortableIndex;
+
     /**
      * Show withdraw requests list with financial period analysis and multi-filtering.
      */
@@ -36,9 +38,19 @@ class WithdrawController extends Controller
             'denied_amount' => (float) (clone $metricsQuery)->where('status', 'denied')->sum('amount'),
         ];
 
+        $allowedColumns = ['id', 'created_at', 'amount', 'status', 'shop_name', 'name'];
+        [$sort, $direction] = $this->resolveSort($allowedColumns, 'id', 'desc');
+
+        if ($sort === 'shop_name') {
+            $query->leftJoin('shops', 'shops.id', '=', 'withdraws.shop_id')
+                ->orderBy('shops.name', $direction)
+                ->select('withdraws.*');
+        } else {
+            $this->applySort($query, $sort, $direction, $allowedColumns);
+        }
+
         $withdraws = $query->with(['shop.user', 'shop.kyc', 'shop.parent'])
-            ->orderByDesc('id')
-            ->paginate(20)
+            ->paginate($this->resolvePerPage(20))
             ->withQueryString();
 
         $shops = Shop::orderBy('name')->get(['id', 'name']);
@@ -55,7 +67,7 @@ class WithdrawController extends Controller
             ];
         }
 
-        return view('admin.withdraw.index', compact('withdraws', 'summary', 'shops', 'financialYears'));
+        return view('admin.withdraw.index', compact('withdraws', 'summary', 'shops', 'financialYears', 'sort', 'direction'));
     }
 
     /**
