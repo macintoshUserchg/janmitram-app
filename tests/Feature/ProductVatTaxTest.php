@@ -187,4 +187,23 @@ class ProductVatTaxTest extends TestCase
 
         $this->assertTrue($product->vatTaxes()->pluck('vat_taxes.id')->contains($tax->id));
     }
+
+    public function test_product_creation_requires_unit_and_vat_tax(): void
+    {
+        $user = User::factory()->create();
+        $shop = Shop::factory()->create(['user_id' => $user->id]);
+        $this->actingAs($user);
+
+        $response = $this->post(route('shop.product.store'), [
+            'name' => 'Sample Product',
+            'short_description' => 'Short desc',
+            'description' => 'Full desc',
+            'category' => 1,
+            'code' => '123456',
+            'price' => 150,
+            // omitting 'unit' and 'vat_tax_id'
+        ]);
+
+        $response->assertSessionHasErrors(['unit', 'vat_tax_id']);
+    }
 }

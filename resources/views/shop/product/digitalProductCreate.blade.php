@@ -109,19 +109,23 @@
                                 </x-select>
                             </div>
 
-                            @if ($isRootShop && $vatTaxes->isNotEmpty())
-                                <div class="col-md-6 col-lg-4 mt-4">
-                                    <label class="form-label">{{ __('VAT & Tax') }}</label>
-                                    <select name="vat_tax_id" class="form-control">
-                                        <option value="">{{ __('Default (no specific rate)') }}</option>
-                                        @foreach ($vatTaxes as $vatTax)
-                                            <option value="{{ $vatTax->id }}" @selected(old('vat_tax_id') == $vatTax->id)>
-                                                {{ $vatTax->name }} ({{ $vatTax->percentage }}%)
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            @endif
+                            <div class="col-md-6 col-lg-4 mt-4">
+                                <label class="form-label">
+                                    {{ __('VAT & Tax') }}
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <select name="vat_tax_id" class="form-control select2" style="width: 100%" required>
+                                    <option value="" selected disabled>{{ __('Select VAT & Tax') }}</option>
+                                    @foreach ($vatTaxes as $vatTax)
+                                        <option value="{{ $vatTax->id }}" @selected(old('vat_tax_id', $vatTaxes->where('is_default', true)->first()?->id ?? ($loop->first ? $vatTax->id : null)) == $vatTax->id)>
+                                            {{ $vatTax->name }} ({{ $vatTax->percentage }}%)
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('vat_tax_id')
+                                    <p class="text text-danger m-0">{{ $message }}</p>
+                                @enderror
+                            </div>
 
                             <div class="col-md-6 col-lg-4 mt-4">
                                 <label class="form-label d-flex align-items-center gap-2 justify-content-between flex-wrap">

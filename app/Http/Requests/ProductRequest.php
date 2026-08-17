@@ -42,7 +42,7 @@ class ProductRequest extends FormRequest
             'size' => 'nullable|array',
             'size.*.id' => 'nullable|exists:sizes,id',
             'size.*.price' => 'nullable|numeric|min:0',
-            'unit' => 'nullable|exists:units,id',
+            'unit' => 'required|exists:units,id',
             'buy_price' => 'nullable|numeric|min:0',
             'price' => 'required|numeric|min:0',
             'discount_price' => 'nullable|numeric|min:0|max:'.$this->price,
@@ -61,7 +61,7 @@ class ProductRequest extends FormRequest
             'is_stock_managed' => 'nullable|boolean',
             'warehouse_id' => 'nullable|exists:warehouses,id',
             'initial_warehouse_stock' => 'nullable|integer|min:0',
-            'vat_tax_id' => 'nullable|exists:vat_taxes,id',
+            'vat_tax_id' => 'required|exists:vat_taxes,id',
         ];
     }
 
@@ -106,6 +106,10 @@ class ProductRequest extends FormRequest
             'additionThumbnail.image' => __('The addition thumbnail must be an image.'),
             'additionThumbnail.mimes' => __('The addition thumbnail must be a file of type: png, jpg, jpeg, webp.'),
             'additionThumbnail.max' => __('The addition thumbnail may not be greater than 2048 kilobytes.'),
+            'unit.required' => __('The unit field is required.'),
+            'unit.exists' => __('The selected unit is invalid.'),
+            'vat_tax_id.required' => __('The VAT & Tax field is required.'),
+            'vat_tax_id.exists' => __('The selected VAT & Tax is invalid.'),
         ];
     }
 }
