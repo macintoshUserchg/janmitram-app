@@ -3,12 +3,14 @@
 namespace Tests\Feature;
 
 use App\Models\Brand;
+use App\Models\Category;
 use App\Models\GeneraleSetting;
 use App\Models\Product;
 use App\Models\Shop;
 use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class ProductCatalogDeduplicationTest extends TestCase
@@ -133,5 +135,31 @@ class ProductCatalogDeduplicationTest extends TestCase
 
         $justForYouTotal = $response->json('data.just_for_you.total');
         $this->assertEquals(1, $justForYouTotal);
+    }
+
+    public function test_admin_can_view_product_show_details_page(): void
+    {
+        Role::firstOrCreate(['name' => 'root']);
+        $admin = User::factory()->create();
+        $admin->assignRole('root');
+        $this->actingAs($admin);
+
+        $shop = Shop::factory()->create(['user_id' => $admin->id, 'status' => true]);
+        $unit = Unit::create(['name' => 'kg', 'shop_id' => $shop->id, 'is_active' => true]);
+        Category::create(['name' => 'General Category']);
+        Brand::create(['name' => 'General Brand', 'slug' => 'general-brand']);
+
+        $product = Product::factory()->create([
+            'name' => 'Sample Test Product',
+            'shop_id' => $shop->id,
+            'unit_id' => $unit->id,
+            'is_active' => true,
+            'is_approve' => true,
+        ]);
+
+        $response = $this->get(route('admin.product.show', $product->id));
+
+        $response->assertStatus(200);
+        $response->assertSee('Sample Test Product');
     }
 }

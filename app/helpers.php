@@ -356,3 +356,30 @@ if (! function_exists('haversineKm')) {
         return $earthRadiusKm * 2 * atan2(sqrt($a), sqrt(1 - $a));
     }
 }
+
+if (! function_exists('renderStarRating')) {
+    /**
+     * Render HTML star rating icons based on numeric rating.
+     */
+    function renderStarRating(float|int $rating = 0): string
+    {
+        $rounded = round((float) $rating, 1);
+        $fullStars = (int) floor($rounded);
+        $hasHalf = ($rounded - $fullStars) >= 0.3 && ($rounded - $fullStars) <= 0.7;
+        $emptyStars = max(0, 5 - $fullStars - ($hasHalf ? 1 : 0));
+
+        $html = '<div class="d-inline-flex align-items-center text-warning" style="gap: 2px;">';
+        for ($i = 0; $i < $fullStars; $i++) {
+            $html .= '<i class="fa-solid fa-star"></i>';
+        }
+        if ($hasHalf) {
+            $html .= '<i class="fa-solid fa-star-half-stroke"></i>';
+        }
+        for ($i = 0; $i < $emptyStars; $i++) {
+            $html .= '<i class="fa-regular fa-star text-muted" style="opacity: 0.35;"></i>';
+        }
+        $html .= '</div>';
+
+        return $html;
+    }
+}
