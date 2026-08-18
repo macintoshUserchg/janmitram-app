@@ -32,7 +32,7 @@ class GoogleMapsService
     }
 
     /**
-     * Google Places Autocomplete Search (with multi-tier fallback).
+     * Google Places Autocomplete Search (supports Places API New & Legacy + fallback).
      */
     public function autocomplete(string $input, ?float $lat = null, ?float $lng = null, int $limit = 6): array
     {
@@ -41,40 +41,45 @@ class GoogleMapsService
             return [];
         }
 
-        // 1. Google Places Autocomplete API
+        // 1. Try Google Places API (New)
         if (! empty($this->apiKey)) {
             try {
-                $params = [
+                $payload = [
                     'input' => $input,
-                    'key' => $this->apiKey,
-                    'components' => 'country:in',
-                    'language' => 'en',
+                    'includedRegionCodes' => ['in'],
                 ];
-
                 if ($lat !== null && $lng !== null) {
-                    $params['location'] = "{$lat},{$lng}";
-                    $params['radius'] = 50000; // 50km bias
+                    $payload['locationBias'] = [
+                        'circle' => [
+                            'center' => ['latitude' => $lat, 'longitude' => $lng],
+                            'radius' => 50000.0,
+                        ],
+                    ];
                 }
 
-                $response = Http::timeout(4)->get('https://maps.googleapis.com/maps/api/place/autocomplete/json', $params);
+                $newResponse = Http::timeout(3)
+                    ->withHeaders([
+                        'Content-Type' => 'application/json',
+                        'X-Goog-Api-Key' => $this->apiKey,
+                    ])
+                    ->post('https://places.googleapis.com/v1/places:autocomplete', $payload);
 
-                if ($response->successful()) {
-                    $predictions = $response->json('predictions', []);
-                    if (! empty($predictions)) {
+                if ($newResponse->successful()) {
+                    $suggestions = $newResponse->json('suggestions', []);
+                    if (! empty($suggestions)) {
                         $results = [];
-                        foreach (array_slice($predictions, 0, $limit) as $pred) {
-                            $placeId = $pred['place_id'] ?? null;
-                            $displayName = $pred['description'] ?? '';
-
-                            // Fetch Place details for coordinates if needed
+                        foreach (array_slice($suggestions, 0, $limit) as $s) {
+                            $pred = $s['placePrediction'] ?? [];
+                            $placeId = $pred['placeId'] ?? null;
+                            $text = $pred['text']['text'] ?? '';
                             $coords = $this->getPlaceCoordinates($placeId);
 
                             $results[] = [
-                                'display_name' => $displayName,
+                                'display_name' => $text,
                                 'place_id' => $placeId,
                                 'lat' => $coords['lat'] ?? null,
                                 'lng' => $coords['lng'] ?? null,
-                                'source' => 'google_maps',
+                                'source' => 'google_maps_new',
                             ];
                         }
 
@@ -84,13 +89,53 @@ class GoogleMapsService
                     }
                 }
             } catch (\Throwable $e) {
-                Log::debug('Google Places autocomplete notice: '.$e->getMessage());
+                Log::debug('Google Places API (New) notice: ' . $e->getMessage());
+            }
+
+            // 2. Try Google Places API (Legacy)
+            try {
+                $params = [
+                    'input' => $input,
+                    'key' => $this->apiKey,
+                    'components' => 'country:in',
+                    'language' => 'en',
+                ];
+                if ($lat !== null && $lng !== null) {
+                    $params['location'] = "{$lat},{$lng}";
+                    $params['radius'] = 50000;
+                }
+
+                $legacyRes = Http::timeout(3)->get('https://maps.googleapis.com/maps/api/place/autocomplete/json', $params);
+                if ($legacyRes->successful()) {
+                    $preds = $legacyRes->json('predictions', []);
+                    if (! empty($preds)) {
+                        $results = [];
+                        foreach (array_slice($preds, 0, $limit) as $pred) {
+                            $placeId = $pred['place_id'] ?? null;
+                            $coords = $this->getPlaceCoordinates($placeId);
+
+                            $results[] = [
+                                'display_name' => $pred['description'] ?? '',
+                                'place_id' => $placeId,
+                                'lat' => $coords['lat'] ?? null,
+                                'lng' => $coords['lng'] ?? null,
+                                'source' => 'google_maps_legacy',
+                            ];
+                        }
+
+                        if (! empty($results)) {
+                            return $results;
+                        }
+                    }
+                }
+            } catch (\Throwable $e) {
+                Log::debug('Google Places Legacy notice: ' . $e->getMessage());
             }
         }
 
-        // 2. OpenStreetMap Nominatim Fallback
+        // 3. OpenStreetMap Nominatim Fallback
         try {
-            $osmResponse = Http::timeout(4)
+            $osmResponse = Http::timeout(3)
                 ->withHeaders(['User-Agent' => 'JanmitramApp/1.0'])
                 ->get('https://nominatim.openstreetmap.org/search', [
                     'format' => 'json',
@@ -118,12 +163,12 @@ class GoogleMapsService
                 }
             }
         } catch (\Throwable $e) {
-            Log::debug('Nominatim autocomplete notice: '.$e->getMessage());
+            Log::debug('Nominatim autocomplete notice: ' . $e->getMessage());
         }
 
-        // 3. Photon Komoot Fuzzy Geocoder Fallback
+        // 4. Photon Komoot Fuzzy Geocoder Fallback
         try {
-            $photonResponse = Http::timeout(4)->get('https://photon.komoot.io/api/', [
+            $photonResponse = Http::timeout(3)->get('https://photon.komoot.io/api/', [
                 'q' => $input,
                 'limit' => $limit,
                 'lang' => 'en',
@@ -162,7 +207,7 @@ class GoogleMapsService
                 }
             }
         } catch (\Throwable $e) {
-            Log::debug('Photon fuzzy geocode notice: '.$e->getMessage());
+            Log::debug('Photon fuzzy geocode notice: ' . $e->getMessage());
         }
 
         return [];
@@ -194,7 +239,7 @@ class GoogleMapsService
                 }
             }
         } catch (\Throwable $e) {
-            Log::debug('Google Place Details error: '.$e->getMessage());
+            Log::debug('Google Place Details error: ' . $e->getMessage());
         }
 
         return null;
@@ -225,7 +270,6 @@ class GoogleMapsService
             if (! empty($cleanedResults)) {
                 return array_map(function ($item) {
                     $item['is_heuristic'] = true;
-
                     return $item;
                 }, $cleanedResults);
             }
@@ -243,7 +287,6 @@ class GoogleMapsService
                         return array_map(function ($item) use ($subQuery) {
                             $item['is_heuristic'] = true;
                             $item['heuristic_anchor'] = $subQuery;
-
                             return $item;
                         }, $subResults);
                     }
@@ -266,7 +309,7 @@ class GoogleMapsService
         // 1. Google Geocoding API
         if (! empty($this->apiKey)) {
             try {
-                $response = Http::timeout(4)->get('https://maps.googleapis.com/maps/api/geocode/json', [
+                $response = Http::timeout(3)->get('https://maps.googleapis.com/maps/api/geocode/json', [
                     'latlng' => "{$lat},{$lng}",
                     'key' => $this->apiKey,
                     'language' => 'en',
@@ -285,13 +328,13 @@ class GoogleMapsService
                     }
                 }
             } catch (\Throwable $e) {
-                Log::debug('Google reverse geocode notice: '.$e->getMessage());
+                Log::debug('Google reverse geocode notice: ' . $e->getMessage());
             }
         }
 
         // 2. OpenStreetMap Fallback
         try {
-            $osmResponse = Http::timeout(4)
+            $osmResponse = Http::timeout(3)
                 ->withHeaders(['User-Agent' => 'JanmitramApp/1.0'])
                 ->get('https://nominatim.openstreetmap.org/reverse', [
                     'format' => 'json',
@@ -311,7 +354,7 @@ class GoogleMapsService
                 ];
             }
         } catch (\Throwable $e) {
-            Log::debug('Nominatim reverse geocode notice: '.$e->getMessage());
+            Log::debug('Nominatim reverse geocode notice: ' . $e->getMessage());
         }
 
         return null;
@@ -324,7 +367,7 @@ class GoogleMapsService
     {
         if (! empty($this->apiKey)) {
             try {
-                $response = Http::timeout(4)->get('https://maps.googleapis.com/maps/api/directions/json', [
+                $response = Http::timeout(3)->get('https://maps.googleapis.com/maps/api/directions/json', [
                     'origin' => "{$originLat},{$originLng}",
                     'destination' => "{$destLat},{$destLng}",
                     'key' => $this->apiKey,
@@ -344,7 +387,7 @@ class GoogleMapsService
                     }
                 }
             } catch (\Throwable $e) {
-                Log::debug('Google directions notice: '.$e->getMessage());
+                Log::debug('Google directions notice: ' . $e->getMessage());
             }
         }
 
