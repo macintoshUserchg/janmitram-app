@@ -10,7 +10,11 @@
                         v-model="searchQuery"
                         @input="onSearchInput"
                         @focus="showResults = searchResults.length > 0"
-                        placeholder="Search colony, landmark, shop, or street in India..."
+                        @keydown.enter.prevent.stop="handleEnterSearch"
+                        @keydown.down.prevent.stop="navigateResults(1)"
+                        @keydown.up.prevent.stop="navigateResults(-1)"
+                        @keydown.esc.prevent.stop="clearSearch"
+                        placeholder="Type address & press Enter to search..."
                         class="w-full pl-10 pr-9 py-2.5 text-sm bg-white border border-slate-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all font-medium text-slate-800 placeholder:text-slate-400"
                     />
                     <!-- Search Icon -->
@@ -46,7 +50,8 @@
                         v-for="(item, idx) in searchResults"
                         :key="idx"
                         @click="selectSearchResult(item)"
-                        class="w-full text-left px-3.5 py-2.5 text-xs hover:bg-amber-50 flex items-start gap-2.5 transition-colors cursor-pointer"
+                        :class="selectedSearchIndex === idx ? 'bg-amber-100/90 font-bold' : 'hover:bg-amber-50'"
+                        class="w-full text-left px-3.5 py-2.5 text-xs flex items-start gap-2.5 transition-colors cursor-pointer"
                     >
                         <div class="w-6 h-6 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center shrink-0 mt-0.5">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
@@ -215,6 +220,7 @@ const activeLayer = ref("streets");
 
 const searchQuery = ref("");
 const searchResults = ref([]);
+const selectedSearchIndex = ref(-1);
 const isSearching = ref(false);
 const showResults = ref(false);
 const isLocating = ref(false);
@@ -345,6 +351,8 @@ function applyManualCoordinates() {
 
 function onSearchInput() {
     clearTimeout(searchTimeout);
+    selectedSearchIndex.value = -1;
+
     if (!searchQuery.value || searchQuery.value.trim().length < 2) {
         searchResults.value = [];
         showResults.value = false;
@@ -356,10 +364,10 @@ function onSearchInput() {
         try {
             const response = await axios.get("/maps/autocomplete", {
                 params: {
-                    input: searchQuery.value,
+                    input: searchQuery.value.trim(),
                     lat: currentLat.value,
                     lng: currentLng.value,
-                    limit: 5,
+                    limit: 6,
                 },
             });
 
@@ -375,11 +383,65 @@ function onSearchInput() {
     }, 300);
 }
 
+function navigateResults(dir) {
+    if (!searchResults.value || searchResults.value.length === 0) return;
+    showResults.value = true;
+    selectedSearchIndex.value += dir;
+    if (selectedSearchIndex.value < 0) {
+        selectedSearchIndex.value = searchResults.value.length - 1;
+    } else if (selectedSearchIndex.value >= searchResults.value.length) {
+        selectedSearchIndex.value = 0;
+    }
+}
+
+async function handleEnterSearch() {
+    clearTimeout(searchTimeout);
+
+    // 1. If an item is navigated with arrow keys, select it
+    if (selectedSearchIndex.value >= 0 && searchResults.value[selectedSearchIndex.value]) {
+        selectSearchResult(searchResults.value[selectedSearchIndex.value]);
+        return;
+    }
+
+    // 2. If dropdown results are already present, select first result
+    if (searchResults.value && searchResults.value.length > 0) {
+        selectSearchResult(searchResults.value[0]);
+        return;
+    }
+
+    // 3. Otherwise execute instant deep search
+    const val = (searchQuery.value || "").trim();
+    if (val.length < 2) return;
+
+    isSearching.value = true;
+    try {
+        const response = await axios.get("/maps/autocomplete", {
+            params: {
+                input: val,
+                lat: currentLat.value,
+                lng: currentLng.value,
+                limit: 8,
+            },
+        });
+
+        if (response.data && response.data.data && response.data.data.length > 0) {
+            searchResults.value = response.data.data;
+            showResults.value = true;
+            selectSearchResult(response.data.data[0]);
+        }
+    } catch (e) {
+        console.warn("Deep search notice:", e);
+    } finally {
+        isSearching.value = false;
+    }
+}
+
 function selectSearchResult(item) {
     if (item.lat && item.lng) {
         searchQuery.value = item.display_name;
         descriptiveAddress.value = item.display_name;
         showResults.value = false;
+        selectedSearchIndex.value = -1;
         updateLocation(item.lat, item.lng, true, item.display_name);
     }
 }
@@ -388,6 +450,7 @@ function clearSearch() {
     searchQuery.value = "";
     searchResults.value = [];
     showResults.value = false;
+    selectedSearchIndex.value = -1;
 }
 
 function detectCurrentGPSLocation() {
