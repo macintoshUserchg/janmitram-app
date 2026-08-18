@@ -225,6 +225,36 @@
             </div>
         </div>
 
+        <!-- Fulfillment Mode Toggle -->
+        <div class="p-4 mt-4 bg-slate-50 rounded-xl border border-slate-200">
+            <label class="flex items-start gap-3 cursor-pointer">
+                <input
+                    type="checkbox"
+                    v-model="fulfillFromNearest"
+                    class="mt-1 w-4 h-4 text-primary rounded border-slate-300 focus:ring-primary"
+                />
+                <div class="flex-1">
+                    <div class="text-sm font-semibold text-slate-900 flex items-center gap-1.5 flex-wrap">
+                        <span>{{ $t("Auto-deliver from nearest shop") }}</span>
+                        <span v-if="fulfillFromNearest" class="text-xs bg-emerald-100 text-emerald-800 font-medium px-2 py-0.5 rounded-full">
+                            {{ $t("Recommended") }}
+                        </span>
+                        <span v-else class="text-xs bg-amber-100 text-amber-800 font-medium px-2 py-0.5 rounded-full">
+                            {{ $t("Strict Mode") }}
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-0.5 leading-relaxed">
+                        <template v-if="fulfillFromNearest">
+                            {{ $t("Items will be dispatched from the closest franchised shop with available stock for fastest delivery.") }}
+                        </template>
+                        <template v-else>
+                            {{ $t("Deliver strictly from the shop(s) selected in your cart. No dynamic re-allocation will occur.") }}
+                        </template>
+                    </p>
+                </div>
+            </label>
+        </div>
+
         <div
             v-if="
                 authStore.user &&
@@ -327,6 +357,7 @@ const showVerifyOtpModal = ref(false);
 const unfulfillable = ref({});
 const shopCandidates = ref({});
 const pickedShops = ref({});
+const fulfillFromNearest = ref(true);
 
 const buildAllocations = () =>
     Object.entries(pickedShops.value).map(([product_id, shop_id]) => ({
@@ -465,6 +496,7 @@ const processOrderConfirm = () => {
                     card_number: card.value,
                     note: props.note,
                     allocations: buildAllocations(),
+                    fulfill_from_nearest_shop: fulfillFromNearest.value,
                 },
                 {
                     headers: {
@@ -519,7 +551,7 @@ const processOrderConfirm = () => {
                     return;
                 }
 
-                toast.error(error.response.data.message, {
+                toast.error(error.response?.data?.message || "Order placement failed", {
                     position:
                         master.langDirection === "rtl"
                             ? "bottom-right"
@@ -566,6 +598,7 @@ const processGuestOrderConfirm = () => {
                     card_number: card.value,
                     note: props.note,
                     allocations: buildAllocations(),
+                    fulfill_from_nearest_shop: fulfillFromNearest.value,
                 },
                 {
                     headers: {

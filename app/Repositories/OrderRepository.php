@@ -70,7 +70,9 @@ class OrderRepository extends Repository
 
         $lines = collect($carts)->map(fn ($cart) => ['cart' => $cart]);
 
-        $shopLines = self::groupLinesByShop($lines, $address, $isMultiVendor, $overrides);
+        $fulfillFromNearest = filter_var($request->fulfill_from_nearest_shop ?? true, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? true;
+
+        $shopLines = self::groupLinesByShop($lines, $address, $isMultiVendor, $overrides, $fulfillFromNearest);
 
         foreach ($shopLines as $shopId => $cartProducts) {
             $shop = Shop::find($shopId);
@@ -101,13 +103,14 @@ class OrderRepository extends Repository
 
     /**
      * Group cart lines by the shop that will fulfil them. In multi-vendor mode
-     * each line is allocated to the nearest shop with enough stock; lines that
-     * no shop can fulfil are collected and throw UnfulfillableOrderException.
+     * with fulfillFromNearest=true, each line is allocated to the nearest shop with enough stock;
+     * in strict mode (fulfillFromNearest=false) or single-vendor, lines are fulfilled strictly
+     * from the shop selected in the cart.
      *
      * @param  Collection  $lines  collection of ['cart' => $cart]
      * @return array<string, array<int, array{cart: mixed, copy: Product}>>
      */
-    private static function groupLinesByShop(Collection $lines, Address $address, bool $isMultiVendor, ?Collection $overrides = null): array
+    private static function groupLinesByShop(Collection $lines, Address $address, bool $isMultiVendor, ?Collection $overrides = null, bool $fulfillFromNearest = true): array
     {
         $shopLines = [];
         $unfulfillable = [];
@@ -115,7 +118,19 @@ class OrderRepository extends Repository
         foreach ($lines as $line) {
             $cart = $line['cart'];
 
-            if (! $isMultiVendor) {
+            if (! $isMultiVendor || ! $fulfillFromNearest) {
+                if ($cart->product->quantity < $cart->quantity) {
+                    $shopName = $cart->product->shop?->name ?? 'Selected Shop';
+                    throw new \RuntimeException(__(
+                        'Sorry, this product is no longer available in the required quantity. The selected shop ":shop" does not have enough stock for ":product" (Available: :available units). Please reduce quantity or enable "Auto-deliver from nearest shop".',
+                        [
+                            'shop' => $shopName,
+                            'product' => $cart->product->name,
+                            'available' => (int) $cart->product->quantity,
+                        ]
+                    ));
+                }
+
                 $shopLines[$cart->shop_id][] = ['cart' => $cart, 'copy' => $cart->product];
 
                 continue;

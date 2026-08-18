@@ -39,6 +39,7 @@ class OrderRequest extends FormRequest
             'allocations' => 'nullable|array',
             'allocations.*.product_id' => 'required|integer',
             'allocations.*.shop_id' => 'required|exists:shops,id',
+            'fulfill_from_nearest_shop' => 'nullable|boolean',
         ];
     }
 
