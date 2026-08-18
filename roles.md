@@ -60,6 +60,7 @@ The application contains **330 granular permission nodes** managed via Spatie La
 | **MLM Payout Engine** | `admin.payout.index`, `admin.payout.run`, `admin.payout.network`, `admin.payout.guide`, `admin.payout.slip` |
 | **Withdrawal Disbursals** | `admin.withdraw.index`, `admin.withdraw.update`, `admin.withdraw.show` |
 | **Order Processing** | `admin.order.index`, `admin.order.show`, `admin.order.status.change`, `admin.order.payment.status.toggle`, `admin.order.assign.rider` |
+| **Customer Reviews** | `admin.review.index`, `admin.review.approve`, `admin.review.reject`, `admin.review.reply`, `admin.review.destroy` |
 | **Product & Catalog** | `admin.product.index`, `admin.product.approve`, `admin.product.show`, `admin.product.destroy`, `admin.category.*`, `admin.subcategory.*`, `admin.brand.*`, `admin.unit.*`, `admin.size.*`, `admin.color.*` |
 | **Customer & Riders** | `admin.customer.index`, `admin.customer.create`, `admin.customer.show`, `admin.customer.edit`, `admin.customer.destroy`, `admin.customer.toggle`, `admin.customer.reset.password`, `admin.rider.*` |
 | **Health Cards & Coupons** | `admin.coupon.index`, `admin.coupon.create`, `admin.coupon.edit`, `admin.coupon.destroy` |

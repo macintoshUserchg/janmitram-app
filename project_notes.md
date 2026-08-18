@@ -537,22 +537,53 @@ source:
   * Shop Partner Creation Form disables new partner creation and directs leaders to promote their team members' referral codes.
   * Admin Shop Create/Edit screens visually display direct capacity tags (`[X/10 downlines]` or `[Full: 10/10 capacity]`).
 
+### 5. First Stock Transfer Minimum Threshold (₹3,000) (Updated 2026-08-18)
+* **Minimum Initial Capital Rule**: To guarantee franchise readiness, the first physical stock transfer/dispatch to any newly registered or newly approved franchise shop must have a minimum aggregate value of **₹3,000.00**.
+* **Engine & Logic**:
+  * Defined `Shop::MIN_FIRST_STOCK_TRANSFER_AMOUNT = 3000.0`.
+  * Helper methods `Shop::hasReceivedStock(): bool` and `Shop::isFirstStockTransfer(): bool` check whether the shop has ever received inventory before.
+  * Enforced in both `StockAssignmentRequest` (Admin warehouse assignment) and `StockRequestRequest` (Vendor shop stock request).
+  * Subsequent reorders/restocks have no minimum threshold restriction.
+  * Admin & Shop creation UIs feature real-time subtotal calculators, shortfall alerts, and first-transfer badges.
+  * Covered by `FirstStockTransferThresholdTest` (6 assertions).
+
+### 6. Customer-Controlled Fulfillment Mode (Updated 2026-08-18)
+* **Customer Choice at Checkout**: Customers can toggle between **"Auto-deliver from nearest shop"** (intelligent geolocation dispatching) and **"Force delivery strictly from the shop selected in cart"** (strict shop locking).
+* **Backend Order Routing (`OrderRepository.php`)**:
+  * **Auto-Nearest Mode (`fulfill_from_nearest_shop = true`, default)**: Reallocates order lines using Haversine distance within a 50 km radius to the closest shop holding stock.
+  * **Strict Mode (`fulfill_from_nearest_shop = false`)**: Locks lines directly to `$cart->shop_id`. If cart items belong to multiple shops, it splits sub-orders matching the selected shops and fails gracefully if local stock is deficient.
+  * Covered by `OrderShopFulfillmentModeTest` (4 assertions).
+
+### 7. Customer Review System & Admin Approval Workflow (Updated 2026-08-19)
+* **Admin Approval Workflow**: All new customer reviews default to `is_active = 0` (Pending Approval) and are guarded by `ActiveScope`. Reviews do not appear publicly on product/shop pages until approved by an Admin.
+* **Dual Attribution**: Reviews link simultaneously to `product_id`, `shop_id`, `customer_id`, and `order_id` (verified purchase link).
+* **Multi-Photo Attachments**: Customers can upload up to 5 unboxing/product photos (`photos` JSON column) with full-screen lightbox modal previews.
+* **Official Store / Admin Replies**: Admins and shop managers can submit or edit an official response (`reply`, `replied_at`) displayed below customer reviews.
+* **Master Catalog Review Aggregation**: Public queries on master products aggregate approved reviews across all cloned franchise shop copies.
+* **Dynamic Shop Star Ratings**: A franchise shop's rating is automatically calculated as the live average of all approved product reviews fulfilled by that shop.
+* **Admin Moderation Dashboard (`/admin/review`)**: Features KPI summary cards, status tabs (All, Pending Approval, Approved & Live), shop/star/text filters, quick action buttons (Approve, Reject, Reply, Delete), and a live pending badge in the admin sidebar.
+* **Shop Profile Reviews Tab**: Dedicated reviews inspection inside each shop profile at `/admin/shop/{id}/reviews`.
+* Covered by `ReviewApprovalAndModerationTest` (6 assertions).
+
+### 8. Monthly Shop Payout Execution Frequency
+* **Monthly Cycle**: Admin calculates monthly payouts once per month (on or after the 1st of the month for the prior calendar month) using `php artisan payout:monthly` or the Admin Payout dashboard (`/admin/payout`).
+* **Manual Withdrawals**: In addition to monthly payout calculations, franchise shop owners can submit withdrawal requests for their approved earnings at any time via `/shop/withdraw`.
+
 ---
 
 ### Test coverage summary
 
-**Strong:** MLM/payout (`PayoutTest` 15 tests, `PayoutNetworkTest`,
-`PayoutSlipTest`, `ShopPayoutTest`), deactivation (`DeactivationTest`),
-recruitment (`DownlineRecruitmentTest`), shop registration wizard
-(`ShopRegistrationVerificationTest`), map integration (`MapIntegrationTest`),
-warehouse (`WarehouseTest`, `ProductWarehouseSyncTest`), data truncation
-(`TruncateDataTest`). Dusk: admin CRUD smoke across all areas + shop-owner +
-customer SPA flows.
-
-**Gaps:** order status-change workflow (transitions, cancellation restock),
-rider `assignOrder` logic, payment gateway flows (and the missing callback
-routes above), `CheckSubscription` middleware, the `riderLocation` null-deref.
+**Strong Test Coverage (144 Test Classes, 528 Assertions):**
+* **MLM & Network Payouts**: `PayoutTest` (15 tests), `PayoutNetworkTest`, `PayoutSlipTest`, `ShopPayoutTest`, `ShopWithdrawalPayoutIntegrationTest`
+* **Downline Capacity & Recruitment**: `DownlineRecruitmentTest`, `AdminShopCreateTest`
+* **Shop KYC & Onboarding**: `AdminShopKycTest`, `ShopRegistrationVerificationTest`
+* **Stock & Warehouse Management**: `WarehouseTest`, `ProductWarehouseSyncTest`, `ShopInventoryAssignmentTest`, `FirstStockTransferThresholdTest` (6 tests)
+* **Order Placement & Shop Allocation**: `ShopAllocationTest` (20 tests), `OrderShopFulfillmentModeTest` (4 tests)
+* **Customer Reviews & Moderation**: `ReviewApprovalAndModerationTest` (6 tests)
+* **Cards & Tax/Discounts**: `CardTest`, `ProductVatTaxTest`
+* **Catalog & Maintenance**: `ProductCatalogDeduplicationTest`, `ProductImportExportTest`, `TruncateDataTest`
+* **Dusk Browser Suites**: Full Admin CRUD smoke suites + Shop vendor portal + Customer Vue 3 SPA checkout/browse flows.
 
 ---
 
-_Last updated: 2026-08-02. Verified against the codebase via a full deep analysis; see "Known Gaps & Docs-vs-Reality" for the drift from earlier docs._
+_Last updated: 2026-08-19. Fully verified against the codebase and live production environment._

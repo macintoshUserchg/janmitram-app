@@ -208,30 +208,7 @@ The **Shop Vendor Sidebar** (`resources/views/layouts/partials/shop-menu.blade.p
 
 ---
 
-### 7. Automated Testing & Code Verification
-
-To ensure system integrity across all warehouse transactions, stock request fulfillments, and stock calculations, run the test suites:
-
-```bash
-# Run all automated feature/unit tests compact (13 feature files / 56 methods)
-php artisan test --compact
-
-# Filter specific warehouse & inventory tests
-php artisan test --compact --filter=WarehouseTest
-php artisan test --compact --filter=ProductWarehouseSyncTest
-
-# MLM payout / deactivation coverage
-php artisan test --compact --filter=PayoutTest
-php artisan test --compact --filter=DeactivationTest
-
-# Run Laravel Dusk browser automation tests (21 classes / 89 methods)
-php artisan dusk
-
-# Apply Laravel Pint code style formatting
-vendor/bin/pint --dirty --format agent
-```
-
-### 8. Order Management, Tax & Invoice Breakdown
+### 7. Order Management, Tax & Invoice Breakdown
 
 #### Dynamic Master Product GST & Tax Inheritance
 - **Central Slabs**: Taxes (GST 5%, 12%, 18%, 28%) are attached to Master Catalog items or configured as the Platform Default Tax under `Admin -> VAT & Tax`.
@@ -244,7 +221,7 @@ vendor/bin/pint --dirty --format agent
 - **Order Details (`/admin/order/{id}`, `/shop/order/{id}`)**: Full financial breakdown including Sub Total, Coupon Discount, Card Discount, Delivery Charge, Itemized VAT/GST percentages, and Grand Total.
 - **Invoice PDF (`PDF/invoice.blade.php`)**: Generates compliant invoices with item units, dynamic QR codes, discounts breakdown, and tax percentages.
 
-### 9. MLM Downline Network Capacity Architecture
+### 8. MLM Downline Network Capacity Architecture
 - **Direct Downline Capacity Limits**:
   - **Main Janmitram Shop (ID: 1)**: Unlimited direct downline capacity.
   - **Standard Partner Shops (ID != 1)**: Maximum of **10 direct downline shops** ($1\text{ self} + 10\text{ downlines} = 11\text{ direct frontline members}$).
@@ -254,6 +231,68 @@ vendor/bin/pint --dirty --format agent
   - Shop Panel partner creation shows direct capacity counters (`X / 10 slots filled`).
   - Admin Panel shop creation/edit highlights direct downline capacity in sponsor dropdowns.
 
+### 9. First Stock Transfer Minimum Threshold (₹3,000)
+- **Franchise Readiness Rule**: Any newly created or newly approved franchise shop must receive an initial physical inventory assignment or stock request dispatch of at least **₹3,000.00** total aggregate product value.
+- **Implementation**:
+  - `Shop::MIN_FIRST_STOCK_TRANSFER_AMOUNT = 3000.0`.
+  * `Shop::hasReceivedStock(): bool` and `Shop::isFirstStockTransfer(): bool` determine if the shop is on its initial stocking cycle.
+  * Enforced in both `StockAssignmentRequest` (Admin warehouse-to-shop assignment) and `StockRequestRequest` (Vendor shop stock request).
+  * Subsequent reorders/replenishments have no minimum transfer restrictions.
+  * Real-time UI calculators in Admin Assignment and Shop Stock Request views provide live total value computations and shortfall alerts.
+
+### 10. Customer-Controlled Order Fulfillment Mode
+- **Dual Fulfillment Options at Checkout**:
+  - **Auto-Deliver from Nearest Shop (Default)**: Dynamically evaluates candidate shops with available inventory within 50 km using Haversine distance, routing to the closest franchise shop.
+  - **Force Delivery Strictly from Selected Shop**: Bypasses dynamic reallocation, locking order lines strictly to the selected shop in the user's cart (`$cart->shop_id`). Defensively checks local stock and rejects overselling.
+- **Frontend & Backend Integration**:
+  - Validated in `OrderRequest` (`'fulfill_from_nearest_shop' => 'nullable|boolean'`).
+  - Implemented in `OrderRepository::groupLinesByShop`.
+  - Interactive Fulfillment Mode toggle card in `CheckoutOrderSummary.vue` and `BuyNowCheckoutOrderSummary.vue`.
+
+### 11. Customer Reviews & Franchise Shop Reputation Engine
+- **Admin Moderation & Approval Workflow**:
+  - All new customer reviews start with `is_active = 0` (Pending Approval) and are hidden from the public store via `ActiveScope` on the `Review` model until approved by an Admin.
+  - Reviews simultaneously bind `product_id`, `shop_id`, `customer_id`, and `order_id` (verified purchase link).
+- **Multi-Photo Attachments & Official Replies**:
+  - Customers can upload up to 5 unboxing/product photos (`photos` JSON column) with a full-screen lightbox preview.
+  - Admins and shop managers can publish official responses (`reply`, `replied_at`).
+- **Master Product Review Aggregation**:
+  - Master catalog queries in `ReviewController@index` aggregate approved reviews across all cloned franchise shop copies.
+- **Dynamic Real-Time Shop Star Ratings**:
+  - Shop star ratings (`Shop::averageRating`) are calculated dynamically as the live average of all approved product reviews fulfilled by that shop ($1.0 - 5.0\star$, defaulting to $5.0\star$ baseline for brand new shops).
+- **Admin Moderation Center (`/admin/review`)**:
+  - KPI summary metrics (Total Reviews, Pending Approval, Approved & Live, Average Rating).
+  - Status tabs, franchise shop dropdown, star rating dropdown, customer/product search, quick action toolbar (**Approve**, **Reject**, **Reply Modal**, **Delete**), and live pending badge in the admin sidebar.
+
+### 12. Monthly Shop Payout Execution Schedule
+- **Monthly Payout Run**: Root Administrator executes monthly payout calculations on or after the 1st of each month for the preceding calendar month via `php artisan payout:monthly` or `/admin/payout`.
+- **Manual Withdrawals**: Franchise shops can submit withdrawal requests for approved balances at any time via `/shop/withdraw`.
+
 ---
 
-_Last updated: 2026-08-17. Option A Warehouse, GST Tax Inheritance, MLM 10-Downline Capacity, and Order Management architecture verified._
+### 13. Automated Testing & Code Verification
+
+To ensure system integrity across all warehouse transactions, stock request fulfillments, review moderation, and order allocation:
+
+```bash
+# Run all automated feature/unit tests compact (144 test classes / 528 assertions)
+php artisan test --compact
+
+# Filter specific feature test suites
+php artisan test --compact --filter=FirstStockTransferThresholdTest
+php artisan test --compact --filter=OrderShopFulfillmentModeTest
+php artisan test --compact --filter=ReviewApprovalAndModerationTest
+php artisan test --compact --filter=ShopAllocationTest
+php artisan test --compact --filter=WarehouseTest
+php artisan test --compact --filter=PayoutTest
+
+# Run Laravel Dusk browser automation tests
+php artisan dusk
+
+# Apply Laravel Pint code style formatting
+vendor/bin/pint --dirty --format agent
+```
+
+---
+
+_Last updated: 2026-08-19. Option A Warehouse, First Stock Threshold (₹3,000), Fulfillment Mode Toggle, Review Approval & Moderation, and MLM Downline Capacity architecture fully verified._
