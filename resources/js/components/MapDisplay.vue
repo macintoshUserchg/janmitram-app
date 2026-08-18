@@ -1,17 +1,17 @@
 <template>
-    <div class="modern-ola-map-wrapper w-full">
-        <!-- Floating / Integrated Search & Geolocation Control Bar -->
+    <div class="descriptive-map-container w-full select-none">
+        <!-- Top Search Bar & GPS Geolocation Control -->
         <div v-if="enableSetLocation" class="mb-3 flex flex-wrap gap-2 items-center">
             <!-- Search Autocomplete Input -->
-            <div class="relative flex-1 min-w-[240px]">
+            <div class="relative flex-1 min-w-[260px]">
                 <div class="relative">
                     <input
                         type="text"
                         v-model="searchQuery"
                         @input="onSearchInput"
                         @focus="showResults = searchResults.length > 0"
-                        placeholder="Search area, landmark, or street in India..."
-                        class="w-full pl-10 pr-9 py-2.5 text-sm bg-white border border-slate-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all font-medium text-slate-800 placeholder:text-slate-400"
+                        placeholder="Search colony, landmark, shop, or street in India..."
+                        class="w-full pl-10 pr-9 py-2.5 text-sm bg-white border border-slate-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all font-medium text-slate-800 placeholder:text-slate-400"
                     />
                     <!-- Search Icon -->
                     <span class="absolute left-3.5 top-3 text-amber-500">
@@ -30,7 +30,7 @@
                         v-else-if="searchQuery"
                         type="button"
                         @click="clearSearch"
-                        class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-700 text-base font-bold"
+                        class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-700 text-base font-bold cursor-pointer"
                     >
                         &times;
                     </button>
@@ -39,21 +39,24 @@
                 <!-- Dropdown Search Results -->
                 <div
                     v-if="showResults && searchResults.length > 0"
-                    class="absolute z-[1000] left-0 right-0 mt-1 bg-white border border-slate-100 rounded-xl shadow-2xl max-h-60 overflow-y-auto divide-y divide-slate-100"
+                    class="absolute z-[1000] left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-xl shadow-2xl max-h-64 overflow-y-auto divide-y divide-slate-100"
                 >
                     <button
                         type="button"
                         v-for="(item, idx) in searchResults"
                         :key="idx"
                         @click="selectSearchResult(item)"
-                        class="w-full text-left px-3.5 py-2.5 text-xs hover:bg-amber-50/80 flex items-start gap-2.5 transition-colors cursor-pointer"
+                        class="w-full text-left px-3.5 py-2.5 text-xs hover:bg-amber-50 flex items-start gap-2.5 transition-colors cursor-pointer"
                     >
-                        <div class="w-5 h-5 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center shrink-0 mt-0.5">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                        <div class="w-6 h-6 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center shrink-0 mt-0.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
                             </svg>
                         </div>
-                        <span class="text-slate-700 font-medium leading-snug">{{ item.display_name }}</span>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-slate-800 font-semibold text-xs leading-snug">{{ item.display_name.split(',')[0] }}</p>
+                            <p class="text-slate-500 text-[11px] truncate leading-tight mt-0.5">{{ item.display_name }}</p>
+                        </div>
                     </button>
                 </div>
             </div>
@@ -63,33 +66,84 @@
                 type="button"
                 @click="detectCurrentGPSLocation"
                 :disabled="isLocating"
-                class="px-4 py-2.5 text-xs font-semibold bg-white hover:bg-slate-50 text-slate-800 rounded-xl border border-slate-200 shadow-sm flex items-center gap-2 transition-all hover:shadow active:scale-95 disabled:opacity-50 cursor-pointer"
+                class="px-4 py-2.5 text-xs font-semibold bg-white hover:bg-slate-50 text-slate-800 rounded-xl border border-slate-300 shadow-sm flex items-center gap-2 transition-all hover:shadow active:scale-95 disabled:opacity-50 cursor-pointer"
                 title="Detect My GPS Location"
             >
                 <div class="relative flex h-2.5 w-2.5">
                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                     <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
                 </div>
-                <span>{{ isLocating ? 'Locating...' : 'Use My GPS' }}</span>
+                <span>{{ isLocating ? 'Detecting GPS...' : 'Use My GPS' }}</span>
             </button>
         </div>
 
-        <!-- Interactive Map Container -->
-        <div class="relative rounded-2xl overflow-hidden shadow-inner border border-slate-200 bg-slate-100">
+        <!-- Interactive Map Container with Layer Toggle & Descriptive Overlays -->
+        <div class="relative rounded-2xl overflow-hidden shadow-md border border-slate-300 bg-slate-100">
+            <!-- Leaflet Mount Div -->
             <div
                 ref="mapContainer"
-                :style="{ width: width, height: height, minHeight: '320px' }"
+                :style="{ width: width, height: height, minHeight: '340px' }"
                 class="w-full relative z-0"
             ></div>
 
-            <!-- Floating Coordinates & Location Badge -->
-            <div class="absolute bottom-3 left-3 z-[400] bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-lg shadow-sm border border-slate-200/80 flex items-center gap-2 text-[11px] text-slate-700 pointer-events-none">
-                <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                <span class="font-mono font-medium">{{ currentLat.toFixed(5) }}, {{ currentLng.toFixed(5) }}</span>
+            <!-- Map Layer Switcher (Streets vs Satellite Hybrid) -->
+            <div class="absolute top-3 right-3 z-[400] bg-white/95 backdrop-blur-md p-1 rounded-xl shadow-md border border-slate-200 flex items-center gap-1 text-xs">
+                <button
+                    type="button"
+                    @click="setMapLayer('streets')"
+                    :class="activeLayer === 'streets' ? 'bg-amber-500 text-white font-bold shadow-sm' : 'text-slate-600 hover:bg-slate-100 font-medium'"
+                    class="px-2.5 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1 text-[11px]"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                    </svg>
+                    Streets
+                </button>
+                <button
+                    type="button"
+                    @click="setMapLayer('satellite')"
+                    :class="activeLayer === 'satellite' ? 'bg-amber-500 text-white font-bold shadow-sm' : 'text-slate-600 hover:bg-slate-100 font-medium'"
+                    class="px-2.5 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1 text-[11px]"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Satellite
+                </button>
+            </div>
+
+            <!-- Helpful Drag Instruction Tip -->
+            <div v-if="enableSetLocation" class="absolute top-3 left-3 z-[400] bg-slate-900/80 backdrop-blur-md text-white px-3 py-1.5 rounded-lg text-[11px] font-medium shadow flex items-center gap-1.5 pointer-events-none">
+                <span class="animate-bounce">📍</span>
+                <span>Drag pin or click map to set exact delivery doorstep</span>
+            </div>
+
+            <!-- Rich Descriptive Address Overlay Card at Bottom -->
+            <div class="absolute bottom-3 left-3 right-16 z-[400] bg-white/95 backdrop-blur-md px-3.5 py-2.5 rounded-xl shadow-lg border border-slate-200/90 text-xs">
+                <div class="flex items-start gap-2.5">
+                    <div class="w-7 h-7 rounded-lg bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-sm mt-0.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-slate-900 text-xs">Selected Doorstep Location</span>
+                            <span v-if="isGeocodingAddress" class="text-[10px] text-amber-600 font-semibold animate-pulse">Resolving address...</span>
+                        </div>
+                        <p class="text-slate-700 font-medium text-[11px] leading-snug line-clamp-2 mt-0.5">
+                            {{ descriptiveAddress || 'Click or drag the pin anywhere to select location' }}
+                        </p>
+                        <div class="flex items-center gap-2 mt-1 text-[10px] text-slate-500 font-mono">
+                            <span class="bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">Lat: {{ currentLat.toFixed(6) }}</span>
+                            <span class="bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">Lng: {{ currentLng.toFixed(6) }}</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Lat/Lng Coordinate Manual Adjustment Inputs -->
+        <!-- Lat/Lng Manual Adjustment Fields -->
         <div v-if="enableSetLocation" class="mt-2.5 grid grid-cols-2 gap-3 text-xs">
             <div>
                 <label class="block text-slate-500 font-medium mb-1">Latitude</label>
@@ -132,7 +186,7 @@ const props = defineProps({
     },
     height: {
         type: String,
-        default: "340px",
+        default: "360px",
     },
     latitude: {
         type: [Number, String],
@@ -153,11 +207,19 @@ let map = null;
 let marker = null;
 let resizeObserver = null;
 
+let streetsLayer = null;
+let satelliteLayer = null;
+let satelliteLabelsLayer = null;
+
+const activeLayer = ref("streets");
+
 const searchQuery = ref("");
 const searchResults = ref([]);
 const isSearching = ref(false);
 const showResults = ref(false);
 const isLocating = ref(false);
+const isGeocodingAddress = ref(false);
+const descriptiveAddress = ref("");
 
 // Default Jaipur, India coordinates
 const currentLat = ref(27.0056949);
@@ -167,14 +229,16 @@ const inputLat = ref(currentLat.value);
 const inputLng = ref(currentLng.value);
 
 let searchTimeout = null;
+let geocodeTimeout = null;
 
 // Modern SVG Location Pin
 const customPinHtml = `
-    <div style="position: relative; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;">
-        <div style="position: absolute; width: 14px; height: 14px; background: rgba(245, 158, 11, 0.35); border-radius: 50%; bottom: 0; filter: blur(2px);"></div>
-        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); transform: translateY(-4px);">
-            <path d="M12 2C8.13401 2 5 5.13401 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13401 15.866 2 12 2Z" fill="#f59e0b" stroke="#ffffff" stroke-width="1.5"/>
-            <circle cx="12" cy="9" r="3.5" fill="#ffffff"/>
+    <div style="position: relative; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;">
+        <div style="position: absolute; width: 16px; height: 16px; background: rgba(245, 158, 11, 0.4); border-radius: 50%; bottom: 0; filter: blur(3px); animation: pulse 2s infinite;"></div>
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 6px 8px rgba(0,0,0,0.35)); transform: translateY(-6px);">
+            <path d="M12 2C8.13401 2 5 5.13401 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13401 15.866 2 12 2Z" fill="#f59e0b" stroke="#ffffff" stroke-width="1.8"/>
+            <circle cx="12" cy="9" r="3.8" fill="#ffffff"/>
+            <circle cx="12" cy="9" r="2" fill="#d97706"/>
         </svg>
     </div>
 `;
@@ -182,9 +246,9 @@ const customPinHtml = `
 const modernPinIcon = L.divIcon({
     html: customPinHtml,
     className: "modern-custom-pin",
-    iconSize: [38, 38],
-    iconAnchor: [19, 36],
-    popupAnchor: [0, -34],
+    iconSize: [44, 44],
+    iconAnchor: [22, 40],
+    popupAnchor: [0, -38],
 });
 
 function sanitizeCoords(lat, lng) {
@@ -197,12 +261,41 @@ function sanitizeCoords(lat, lng) {
     return { lat: pLat, lng: pLng };
 }
 
+async function reverseGeocodeCoords(lat, lng) {
+    clearTimeout(geocodeTimeout);
+    isGeocodingAddress.value = true;
+
+    geocodeTimeout = setTimeout(async () => {
+        try {
+            const res = await axios.get("/maps/reverse-geocode", {
+                params: { lat, lng },
+            });
+            if (res.data?.data?.display_name) {
+                descriptiveAddress.value = res.data.data.display_name;
+                emit("location-updated", {
+                    lat,
+                    lng,
+                    address: res.data.data.display_name,
+                });
+            }
+        } catch (e) {
+            console.warn("Reverse geocode notice:", e);
+        } finally {
+            isGeocodingAddress.value = false;
+        }
+    }, 400);
+}
+
 function updateLocation(lat, lng, triggerEmit = true, address = "") {
     const coords = sanitizeCoords(lat, lng);
     currentLat.value = coords.lat;
     currentLng.value = coords.lng;
     inputLat.value = parseFloat(coords.lat.toFixed(7));
     inputLng.value = parseFloat(coords.lng.toFixed(7));
+
+    if (address) {
+        descriptiveAddress.value = address;
+    }
 
     if (marker) {
         marker.setLatLng([coords.lat, coords.lng]);
@@ -215,8 +308,27 @@ function updateLocation(lat, lng, triggerEmit = true, address = "") {
         emit("location-updated", {
             lat: coords.lat,
             lng: coords.lng,
-            address: address,
+            address: address || descriptiveAddress.value,
         });
+
+        if (!address) {
+            reverseGeocodeCoords(coords.lat, coords.lng);
+        }
+    }
+}
+
+function setMapLayer(layerType) {
+    if (!map) return;
+    activeLayer.value = layerType;
+
+    if (layerType === "satellite") {
+        if (map.hasLayer(streetsLayer)) map.removeLayer(streetsLayer);
+        if (!map.hasLayer(satelliteLayer)) satelliteLayer.addTo(map);
+        if (!map.hasLayer(satelliteLabelsLayer)) satelliteLabelsLayer.addTo(map);
+    } else {
+        if (map.hasLayer(satelliteLayer)) map.removeLayer(satelliteLayer);
+        if (map.hasLayer(satelliteLabelsLayer)) map.removeLayer(satelliteLabelsLayer);
+        if (!map.hasLayer(streetsLayer)) streetsLayer.addTo(map);
     }
 }
 
@@ -266,6 +378,7 @@ function onSearchInput() {
 function selectSearchResult(item) {
     if (item.lat && item.lng) {
         searchQuery.value = item.display_name;
+        descriptiveAddress.value = item.display_name;
         showResults.value = false;
         updateLocation(item.lat, item.lng, true, item.display_name);
     }
@@ -290,17 +403,6 @@ function detectCurrentGPSLocation() {
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
             updateLocation(lat, lng, true);
-
-            try {
-                const res = await axios.get("/maps/reverse-geocode", {
-                    params: { lat, lng },
-                });
-                if (res.data?.data?.display_name) {
-                    searchQuery.value = res.data.data.display_name;
-                }
-            } catch (err) {
-                console.warn("Reverse geocode warning:", err);
-            }
         },
         (error) => {
             isLocating.value = false;
@@ -325,10 +427,10 @@ function initMap() {
     inputLat.value = parseFloat(coords.lat.toFixed(7));
     inputLng.value = parseFloat(coords.lng.toFixed(7));
 
-    // Initialize Leaflet with smooth animations
+    // Initialize Leaflet
     map = L.map(mapContainer.value, {
         center: [coords.lat, coords.lng],
-        zoom: 15,
+        zoom: 16,
         zoomControl: false,
         attributionControl: false,
     });
@@ -336,8 +438,8 @@ function initMap() {
     // Custom Minimal Zoom Control on Bottom Right
     L.control.zoom({ position: "bottomright" }).addTo(map);
 
-    // High-definition modern CartoDB Voyager tiles (crisp streets, soft pastels, clean labels)
-    const modernTiles = L.tileLayer(
+    // 1. High-Definition Streets Layer (CartoDB Voyager Retina)
+    streetsLayer = L.tileLayer(
         "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
         {
             maxZoom: 20,
@@ -345,22 +447,24 @@ function initMap() {
         }
     );
 
-    // Fallback standard OSM tiles
-    const fallbackOsmTiles = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: 19,
-        subdomains: ["a", "b", "c"],
-    });
-
-    modernTiles.addTo(map);
-
-    let tileErrors = 0;
-    modernTiles.on("tileerror", () => {
-        tileErrors++;
-        if (tileErrors >= 3 && !map.hasLayer(fallbackOsmTiles)) {
-            map.removeLayer(modernTiles);
-            fallbackOsmTiles.addTo(map);
+    // 2. High-Resolution Satellite Layer (Esri World Imagery)
+    satelliteLayer = L.tileLayer(
+        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        {
+            maxZoom: 19,
         }
-    });
+    );
+
+    // 3. Satellite Street Labels & Boundaries
+    satelliteLabelsLayer = L.tileLayer(
+        "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png",
+        {
+            maxZoom: 20,
+            subdomains: "abcd",
+        }
+    );
+
+    streetsLayer.addTo(map);
 
     // Add marker
     marker = L.marker([coords.lat, coords.lng], {
@@ -378,6 +482,9 @@ function initMap() {
             updateLocation(e.latlng.lat, e.latlng.lng, true);
         });
     }
+
+    // Trigger initial reverse geocoding to show descriptive address immediately
+    reverseGeocodeCoords(coords.lat, coords.lng);
 
     // Modal / Container dynamic resize observer
     if (window.ResizeObserver && mapContainer.value) {
@@ -405,6 +512,7 @@ watch(
             const parsedLng = parseFloat(newLng);
             if (!isNaN(parsedLat) && !isNaN(parsedLng) && (parsedLat !== 0 || parsedLng !== 0)) {
                 updateLocation(parsedLat, parsedLng, false);
+                reverseGeocodeCoords(parsedLat, parsedLng);
             }
         }
     },
@@ -434,22 +542,24 @@ onUnmounted(() => {
 }
 .leaflet-control-zoom {
     border: none !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
     border-radius: 12px !important;
     overflow: hidden;
+    margin-bottom: 24px !important;
+    margin-right: 12px !important;
 }
 .leaflet-control-zoom a {
     background-color: #ffffff !important;
     color: #334155 !important;
     border: none !important;
-    width: 32px !important;
-    height: 32px !important;
-    line-height: 32px !important;
-    font-size: 14px !important;
+    width: 34px !important;
+    height: 34px !important;
+    line-height: 34px !important;
+    font-size: 15px !important;
     font-weight: bold !important;
 }
 .leaflet-control-zoom a:hover {
-    background-color: #f8fafc !important;
-    color: #f59e0b !important;
+    background-color: #fef3c7 !important;
+    color: #d97706 !important;
 }
 </style>
