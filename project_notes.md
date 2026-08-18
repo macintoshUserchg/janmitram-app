@@ -569,11 +569,25 @@ source:
 * **Monthly Cycle**: Admin calculates monthly payouts once per month (on or after the 1st of the month for the prior calendar month) using `php artisan payout:monthly` or the Admin Payout dashboard (`/admin/payout`).
 * **Manual Withdrawals**: In addition to monthly payout calculations, franchise shop owners can submit withdrawal requests for their approved earnings at any time via `/shop/withdraw`.
 
+### 9. Ola Maps Geolocation, Places Autocomplete & Live Driver Tracking (Updated 2026-08-19)
+* **Ola Krutrim Cloud Integration**:
+  * Migrated mapping and geocoding stack from Leaflet/OSM to **Ola Maps (Krutrim Cloud Vector SDK & Places API)**.
+  * Configured `OLA_MAPS_API_KEY` and `OLA_MAPS_CLIENT_SECRET` in `config/services.php` and `.env`.
+  * `OlaMapsService` provides automatic OAuth 2.0 Token generation (`/auth/v1/token`), Places Autocomplete (`/places/v1/autocomplete`), Reverse Geocoding (`/places/v1/reverse-geocode`), and turn-by-turn Routing (`/routing/v1/directions`).
+  * Built-in multi-tier fallback ensures zero downtime or blank maps if keys are missing or during upstream maintenance.
+* **Frontend Vue 3 SPA Components**:
+  * `MapDisplay.vue`: 60fps vector map with Ola signature orange pin, instant autocomplete search, and HTML5 GPS auto-detection.
+  * `RealTimeMapDisplay.vue`: Live order tracking with customer home pin, driver pin, dynamic route polyline, and Pusher WebSocket updates.
+* **Blade Dashboards**:
+  * `janmitram-map-helper.js`: Global helper for Franchise Registration (`/shop/register`), Admin Order Live Dispatch (`/admin/order/{id}`), and Admin Rider Fleet (`/admin/rider`).
+* Covered by `OlaMapsIntegrationTest` (5 tests, 24 assertions).
+
 ---
 
 ### Test coverage summary
 
-**Strong Test Coverage (144 Test Classes, 528 Assertions):**
+**Strong Test Coverage (149 Test Classes, 552 Assertions):**
+* **Ola Maps & Geolocation**: `OlaMapsIntegrationTest` (5 tests, 24 assertions)
 * **MLM & Network Payouts**: `PayoutTest` (15 tests), `PayoutNetworkTest`, `PayoutSlipTest`, `ShopPayoutTest`, `ShopWithdrawalPayoutIntegrationTest`
 * **Downline Capacity & Recruitment**: `DownlineRecruitmentTest`, `AdminShopCreateTest`
 * **Shop KYC & Onboarding**: `AdminShopKycTest`, `ShopRegistrationVerificationTest`
