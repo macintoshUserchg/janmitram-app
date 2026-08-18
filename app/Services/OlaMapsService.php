@@ -76,7 +76,8 @@ class OlaMapsService
      */
     public function autocomplete(string $input, ?float $lat = null, ?float $lng = null, int $limit = 5): array
     {
-        if (empty(trim($input))) {
+        $input = trim($input);
+        if (empty($input)) {
             return [];
         }
 
@@ -88,7 +89,7 @@ class OlaMapsService
                 if ($lat !== null && $lng !== null) {
                     $params['location'] = "{$lat},{$lng}";
                 }
-                $response = Http::withToken($token)->timeout(5)->get("{$this->baseUrl}/places/v1/autocomplete", $params);
+                $response = Http::withToken($token)->timeout(4)->get("{$this->baseUrl}/places/v1/autocomplete", $params);
                 if ($response->successful()) {
                     $results = $this->formatPredictions($response->json(), $limit);
                     if (! empty($results)) {
@@ -96,7 +97,7 @@ class OlaMapsService
                     }
                 }
             } catch (\Throwable $e) {
-                Log::debug('OlaMaps OAuth autocomplete fallback: '.$e->getMessage());
+                Log::debug('OlaMaps OAuth autocomplete notice: '.$e->getMessage());
             }
         }
 
@@ -110,7 +111,7 @@ class OlaMapsService
                 if ($lat !== null && $lng !== null) {
                     $params['location'] = "{$lat},{$lng}";
                 }
-                $response = Http::timeout(5)->get("{$this->baseUrl}/places/v1/autocomplete", $params);
+                $response = Http::timeout(4)->get("{$this->baseUrl}/places/v1/autocomplete", $params);
                 if ($response->successful()) {
                     $results = $this->formatPredictions($response->json(), $limit);
                     if (! empty($results)) {
@@ -122,34 +123,151 @@ class OlaMapsService
             }
         }
 
-        // 3. Resilient Fallback to OpenStreetMap
+        // 3. Primary Fallback: OpenStreetMap Nominatim
         try {
-            $osmResponse = Http::timeout(5)
+            $osmResponse = Http::timeout(4)
                 ->withHeaders(['User-Agent' => 'JanmitramApp/1.0'])
                 ->get('https://nominatim.openstreetmap.org/search', [
                     'format' => 'json',
                     'q' => $input,
                     'limit' => $limit,
                     'addressdetails' => 1,
+                    'countrycodes' => 'in',
                 ]);
 
             if ($osmResponse->successful()) {
                 $osmData = $osmResponse->json();
-                $results = [];
-                foreach ($osmData as $item) {
-                    $results[] = [
-                        'display_name' => $item['display_name'] ?? '',
-                        'place_id' => $item['place_id'] ?? null,
-                        'lat' => (float) ($item['lat'] ?? 0),
-                        'lng' => (float) ($item['lon'] ?? 0),
-                        'source' => 'osm_fallback',
-                    ];
-                }
+                if (! empty($osmData)) {
+                    $results = [];
+                    foreach ($osmData as $item) {
+                        $results[] = [
+                            'display_name' => $item['display_name'] ?? '',
+                            'place_id' => $item['place_id'] ?? null,
+                            'lat' => (float) ($item['lat'] ?? 0),
+                            'lng' => (float) ($item['lon'] ?? 0),
+                            'source' => 'osm_fallback',
+                        ];
+                    }
 
-                return $results;
+                    return $results;
+                }
             }
         } catch (\Throwable $e) {
-            Log::warning('Nominatim fallback autocomplete failed: '.$e->getMessage());
+            Log::debug('Nominatim autocomplete notice: '.$e->getMessage());
+        }
+
+        // 4. Secondary Fallback: Photon Fuzzy Geocoding (OpenStreetMap based)
+        try {
+            $photonResponse = Http::timeout(4)->get('https://photon.komoot.io/api/', [
+                'q' => $input,
+                'limit' => $limit,
+                'lang' => 'en',
+            ]);
+
+            if ($photonResponse->successful()) {
+                $features = $photonResponse->json('features', []);
+                if (! empty($features)) {
+                    $results = [];
+                    foreach ($features as $f) {
+                        $coords = $f['geometry']['coordinates'] ?? [0, 0];
+                        $props = $f['properties'] ?? [];
+                        $nameParts = array_filter([
+                            $props['name'] ?? null,
+                            $props['street'] ?? null,
+                            $props['district'] ?? null,
+                            $props['city'] ?? null,
+                            $props['state'] ?? null,
+                            $props['postcode'] ?? null,
+                        ]);
+                        $displayName = implode(', ', $nameParts);
+
+                        if (! empty($displayName)) {
+                            $results[] = [
+                                'display_name' => $displayName,
+                                'place_id' => $props['osm_id'] ?? null,
+                                'lat' => (float) ($coords[1] ?? 0),
+                                'lng' => (float) ($coords[0] ?? 0),
+                                'source' => 'photon_fuzzy',
+                            ];
+                        }
+                    }
+
+                    if (! empty($results)) {
+                        return $results;
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::debug('Photon fuzzy geocoding notice: '.$e->getMessage());
+        }
+
+        return [];
+    }
+
+    /**
+     * Multi-stage Heuristic Search for Unregistered / Complex / Niche Addresses.
+     */
+    public function heuristicSearch(string $query, ?float $lat = null, ?float $lng = null): array
+    {
+        $query = trim($query);
+        if (empty($query)) {
+            return [];
+        }
+
+        // 1. Direct search first
+        $directResults = $this->autocomplete($query, $lat, $lng, 5);
+        if (! empty($directResults)) {
+            return $directResults;
+        }
+
+        // 2. Candidate generation: Strip plot/flat/shop/room prefixes
+        $cleaned = preg_replace('/^(shop|flat|house|h\.?no|plot|room|gali|lane|ward|block|khasra)\s*[\#\d\-\w\/,]+/i', '', $query);
+        $cleaned = trim($cleaned, " ,-\t\n\r\0\x0B");
+
+        if (! empty($cleaned) && $cleaned !== $query) {
+            $cleanedResults = $this->autocomplete($cleaned, $lat, $lng, 5);
+            if (! empty($cleanedResults)) {
+                return array_map(function ($item) {
+                    $item['is_heuristic'] = true;
+
+                    return $item;
+                }, $cleanedResults);
+            }
+        }
+
+        // 3. Progressive right-to-left chunk decomposition
+        $commaParts = array_map('trim', explode(',', $query));
+        if (count($commaParts) > 1) {
+            while (count($commaParts) > 1) {
+                array_shift($commaParts); // Drop leftmost specific chunk
+                $subQuery = implode(', ', $commaParts);
+                if (strlen($subQuery) >= 3) {
+                    $subResults = $this->autocomplete($subQuery, $lat, $lng, 5);
+                    if (! empty($subResults)) {
+                        return array_map(function ($item) use ($subQuery) {
+                            $item['is_heuristic'] = true;
+                            $item['heuristic_anchor'] = $subQuery;
+
+                            return $item;
+                        }, $subResults);
+                    }
+                }
+            }
+        }
+
+        // 4. Token-level fallback: Extract major locality tokens (Jaipur, Sanganer, Mansarovar, etc.)
+        $words = preg_split('/[\s,]+/', $query);
+        if (count($words) > 2) {
+            $majorTokenQuery = implode(' ', array_slice($words, -3));
+            $tokenResults = $this->autocomplete($majorTokenQuery, $lat, $lng, 5);
+            if (! empty($tokenResults)) {
+                return array_map(function ($item) use ($majorTokenQuery) {
+                    $item['is_heuristic'] = true;
+                    $item['heuristic_anchor'] = $majorTokenQuery;
+
+                    return $item;
+                }, $tokenResults);
+            }
         }
 
         return [];
@@ -189,7 +307,7 @@ class OlaMapsService
         $token = $this->getAccessToken();
         if ($token) {
             try {
-                $response = Http::withToken($token)->timeout(5)->get("{$this->baseUrl}/places/v1/reverse-geocode", [
+                $response = Http::withToken($token)->timeout(4)->get("{$this->baseUrl}/places/v1/reverse-geocode", [
                     'latlng' => "{$lat},{$lng}",
                 ]);
                 if ($response->successful()) {
@@ -211,7 +329,7 @@ class OlaMapsService
         // 2. Try with direct API key
         if (! empty($this->apiKey)) {
             try {
-                $response = Http::timeout(5)->get("{$this->baseUrl}/places/v1/reverse-geocode", [
+                $response = Http::timeout(4)->get("{$this->baseUrl}/places/v1/reverse-geocode", [
                     'latlng' => "{$lat},{$lng}",
                     'api_key' => $this->apiKey,
                 ]);
@@ -234,7 +352,7 @@ class OlaMapsService
 
         // 3. Fallback to Nominatim
         try {
-            $osmResponse = Http::timeout(5)
+            $osmResponse = Http::timeout(4)
                 ->withHeaders(['User-Agent' => 'JanmitramApp/1.0'])
                 ->get('https://nominatim.openstreetmap.org/reverse', [
                     'format' => 'json',
@@ -254,7 +372,7 @@ class OlaMapsService
                 ];
             }
         } catch (\Throwable $e) {
-            Log::warning('Nominatim reverseGeocode fallback failed: '.$e->getMessage());
+            Log::debug('Nominatim reverseGeocode fallback notice: '.$e->getMessage());
         }
 
         return null;
@@ -267,7 +385,7 @@ class OlaMapsService
     {
         if (! empty($this->apiKey)) {
             try {
-                $response = Http::timeout(5)->get("{$this->baseUrl}/routing/v1/directions", [
+                $response = Http::timeout(4)->get("{$this->baseUrl}/routing/v1/directions", [
                     'origin' => "{$originLat},{$originLng}",
                     'destination' => "{$destLat},{$destLng}",
                     'api_key' => $this->apiKey,

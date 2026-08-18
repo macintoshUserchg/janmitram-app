@@ -80,4 +80,18 @@ class OlaMapsIntegrationTest extends TestCase
                 ],
             ]);
     }
+
+    /**
+     * Test heuristic search endpoint for complex / niche queries.
+     */
+    public function test_maps_heuristic_search_endpoint_resolves_complex_query(): void
+    {
+        $response = $this->getJson('/api/maps/heuristic-search?query=Flat+402,+Shivaji+Marg,+Malviya+Nagar,+Jaipur');
+
+        $response->assertStatus(200)
+            ->assertJsonStructure([
+                'success',
+                'data',
+            ]);
+    }
 }

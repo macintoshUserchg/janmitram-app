@@ -44,6 +44,7 @@ use App\Http\Controllers\Admin\VatTaxController;
 use App\Http\Controllers\Admin\VerifyManageController;
 use App\Http\Controllers\Admin\WarehouseController;
 use App\Http\Controllers\Admin\WarehouseTransferController;
+use App\Http\Controllers\API\MapController;
 use App\Http\Controllers\CreateSuperAdmin;
 use App\Http\Controllers\Gateway\PaymentGatewayController;
 use App\Http\Controllers\Shop\BannerController;
@@ -653,10 +654,11 @@ Route::match(['get', 'post'], 'admin/pwa-setting', function () {
 
 /* ===================== MAPS & GEOLOCATION API ===================== */
 Route::prefix('maps')->group(function () {
-    Route::get('config', [\App\Http\Controllers\API\MapController::class, 'config']);
-    Route::get('autocomplete', [\App\Http\Controllers\API\MapController::class, 'autocomplete']);
-    Route::get('reverse-geocode', [\App\Http\Controllers\API\MapController::class, 'reverseGeocode']);
-    Route::get('directions', [\App\Http\Controllers\API\MapController::class, 'directions']);
+    Route::get('config', [MapController::class, 'config']);
+    Route::get('autocomplete', [MapController::class, 'autocomplete']);
+    Route::get('heuristic-search', [MapController::class, 'heuristicSearch']);
+    Route::get('reverse-geocode', [MapController::class, 'reverseGeocode']);
+    Route::get('directions', [MapController::class, 'directions']);
 });
 
 /* ===================== SPA fallback — serve Vue Router shell ===================== */

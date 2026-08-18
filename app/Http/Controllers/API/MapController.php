@@ -41,6 +41,23 @@ class MapController extends Controller
     }
 
     /**
+     * Multi-stage Heuristic Search for Unregistered / Complex / Niche Addresses.
+     */
+    public function heuristicSearch(Request $request): JsonResponse
+    {
+        $query = (string) $request->input('query', $request->input('input', ''));
+        $lat = $request->filled('lat') ? (float) $request->input('lat') : null;
+        $lng = $request->filled('lng') ? (float) $request->input('lng') : null;
+
+        $results = $this->olaMapsService->heuristicSearch($query, $lat, $lng);
+
+        return response()->json([
+            'success' => true,
+            'data' => $results,
+        ]);
+    }
+
+    /**
      * Reverse Geocode (Lat/Lng -> Address).
      */
     public function reverseGeocode(Request $request): JsonResponse

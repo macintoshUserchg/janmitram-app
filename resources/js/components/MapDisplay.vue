@@ -118,9 +118,14 @@
             </div>
 
             <!-- Helpful Drag Instruction Tip -->
-            <div v-if="enableSetLocation" class="absolute top-3 left-3 z-[400] bg-slate-900/80 backdrop-blur-md text-white px-3 py-1.5 rounded-lg text-[11px] font-medium shadow flex items-center gap-1.5 pointer-events-none">
+            <div v-if="enableSetLocation && !heuristicNotice" class="absolute top-3 left-3 z-[400] bg-slate-900/80 backdrop-blur-md text-white px-3 py-1.5 rounded-lg text-[11px] font-medium shadow flex items-center gap-1.5 pointer-events-none">
                 <span class="animate-bounce">📍</span>
                 <span>Drag pin or click map to set exact delivery doorstep</span>
+            </div>
+
+            <!-- Heuristic Search Notification Banner -->
+            <div v-if="heuristicNotice" class="absolute top-3 left-3 right-32 z-[400] bg-amber-500/95 backdrop-blur-md text-white px-3.5 py-2 rounded-xl text-xs font-semibold shadow-lg flex items-center gap-2 transition-all">
+                <span>{{ heuristicNotice }}</span>
             </div>
 
             <!-- Rich Descriptive Address Overlay Card at Bottom -->
@@ -226,6 +231,7 @@ const showResults = ref(false);
 const isLocating = ref(false);
 const isGeocodingAddress = ref(false);
 const descriptiveAddress = ref("");
+const heuristicNotice = ref("");
 
 // Default Jaipur, India coordinates
 const currentLat = ref(27.0056949);
@@ -409,13 +415,16 @@ async function handleEnterSearch() {
         return;
     }
 
-    // 3. Otherwise execute instant deep search
+    // 3. Execute instant deep search & multi-tier heuristic search
     const val = (searchQuery.value || "").trim();
     if (val.length < 2) return;
 
     isSearching.value = true;
+    heuristicNotice.value = "";
+
     try {
-        const response = await axios.get("/maps/autocomplete", {
+        // Step A: Try direct autocomplete
+        let response = await axios.get("/maps/autocomplete", {
             params: {
                 input: val,
                 lat: currentLat.value,
@@ -424,13 +433,41 @@ async function handleEnterSearch() {
             },
         });
 
-        if (response.data && response.data.data && response.data.data.length > 0) {
+        if (response.data?.data && response.data.data.length > 0) {
             searchResults.value = response.data.data;
             showResults.value = true;
             selectSearchResult(response.data.data[0]);
+            return;
         }
+
+        // Step B: Multi-tier Heuristic Search
+        let heuristicRes = await axios.get("/maps/heuristic-search", {
+            params: {
+                query: val,
+                lat: currentLat.value,
+                lng: currentLng.value,
+            },
+        });
+
+        if (heuristicRes.data?.data && heuristicRes.data.data.length > 0) {
+            const firstResult = heuristicRes.data.data[0];
+            searchResults.value = heuristicRes.data.data;
+            showResults.value = true;
+            selectSearchResult(firstResult);
+
+            heuristicNotice.value = "🎯 Matched nearest area: " + (firstResult.display_name.split(',')[0] || val) + ". Drag pin to your exact building.";
+            setTimeout(() => {
+                heuristicNotice.value = "";
+            }, 6000);
+            return;
+        }
+
+        heuristicNotice.value = "⚠️ Exact landmark not found. Please click or drag the pin on the map.";
+        setTimeout(() => {
+            heuristicNotice.value = "";
+        }, 5000);
     } catch (e) {
-        console.warn("Deep search notice:", e);
+        console.warn("Deep heuristic search notice:", e);
     } finally {
         isSearching.value = false;
     }
