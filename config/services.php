@@ -38,4 +38,8 @@ return [
         'api_base_url' => env('OLA_MAPS_BASE_URL', 'https://api.olamaps.io'),
     ],
 
+    'google_maps' => [
+        'key' => env('GOOGLE_MAPS_KEY', env('GOOGLE_MAPS_API_KEY', '')),
+    ],
+
 ];

@@ -1,11 +1,12 @@
 <template>
-    <div class="descriptive-map-container w-full select-none">
+    <div class="google-map-component w-full select-none">
         <!-- Top Search Bar & GPS Geolocation Control -->
         <div v-if="enableSetLocation" class="mb-3 flex flex-wrap gap-2 items-center">
             <!-- Search Autocomplete Input -->
             <div class="relative flex-1 min-w-[260px]">
                 <div class="relative">
                     <input
+                        ref="searchInputRef"
                         type="text"
                         v-model="searchQuery"
                         @input="onSearchInput"
@@ -14,7 +15,7 @@
                         @keydown.down.prevent.stop="navigateResults(1)"
                         @keydown.up.prevent.stop="navigateResults(-1)"
                         @keydown.esc.prevent.stop="clearSearch"
-                        placeholder="Type address & press Enter to search..."
+                        placeholder="Search colony, street, gali, shop, or pin code in India..."
                         class="w-full pl-10 pr-9 py-2.5 text-sm bg-white border border-slate-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all font-medium text-slate-800 placeholder:text-slate-400"
                     />
                     <!-- Search Icon -->
@@ -40,7 +41,7 @@
                     </button>
                 </div>
 
-                <!-- Dropdown Search Results -->
+                <!-- Dropdown Search Results (Google Places) -->
                 <div
                     v-if="showResults && searchResults.length > 0"
                     class="absolute z-[1000] left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-xl shadow-2xl max-h-64 overflow-y-auto divide-y divide-slate-100"
@@ -84,14 +85,14 @@
 
         <!-- Interactive Map Container with Layer Toggle & Descriptive Overlays -->
         <div class="relative rounded-2xl overflow-hidden shadow-md border border-slate-300 bg-slate-100">
-            <!-- Leaflet Mount Div -->
+            <!-- Map Mount Div -->
             <div
                 ref="mapContainer"
                 :style="{ width: width, height: height, minHeight: '340px' }"
                 class="w-full relative z-0"
             ></div>
 
-            <!-- Map Layer Switcher (Streets vs Satellite Hybrid) -->
+            <!-- Map Layer Switcher (Roadmap vs Satellite) -->
             <div class="absolute top-3 right-3 z-[400] bg-white/95 backdrop-blur-md p-1 rounded-xl shadow-md border border-slate-200 flex items-center gap-1 text-xs">
                 <button
                     type="button"
@@ -102,7 +103,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                     </svg>
-                    Streets
+                    Roadmap
                 </button>
                 <button
                     type="button"
@@ -213,13 +214,20 @@ const props = defineProps({
 const emit = defineEmits(["location-updated"]);
 
 const mapContainer = ref(null);
-let map = null;
-let marker = null;
-let resizeObserver = null;
+const searchInputRef = ref(null);
 
-let streetsLayer = null;
-let satelliteLayer = null;
-let satelliteLabelsLayer = null;
+let gMap = null;
+let gMarker = null;
+let gGeocoder = null;
+
+let lMap = null;
+let lMarker = null;
+let lStreetsLayer = null;
+let lSatelliteLayer = null;
+let lSatelliteLabelsLayer = null;
+
+let isGoogleMapActive = false;
+let resizeObserver = null;
 
 const activeLayer = ref("streets");
 
@@ -243,14 +251,14 @@ const inputLng = ref(currentLng.value);
 let searchTimeout = null;
 let geocodeTimeout = null;
 
-// Modern SVG Location Pin
+// Modern SVG Location Pin for Leaflet
 const customPinHtml = `
     <div style="position: relative; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;">
         <div style="position: absolute; width: 16px; height: 16px; background: rgba(245, 158, 11, 0.4); border-radius: 50%; bottom: 0; filter: blur(3px); animation: pulse 2s infinite;"></div>
         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 6px 8px rgba(0,0,0,0.35)); transform: translateY(-6px);">
-            <path d="M12 2C8.13401 2 5 5.13401 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13401 15.866 2 12 2Z" fill="#f59e0b" stroke="#ffffff" stroke-width="1.8"/>
+            <path d="M12 2C8.13401 2 5 5.13401 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13401 15.866 2 12 2Z" fill="#ea4335" stroke="#ffffff" stroke-width="1.8"/>
             <circle cx="12" cy="9" r="3.8" fill="#ffffff"/>
-            <circle cx="12" cy="9" r="2" fill="#d97706"/>
+            <circle cx="12" cy="9" r="2" fill="#c5221f"/>
         </svg>
     </div>
 `;
@@ -309,11 +317,13 @@ function updateLocation(lat, lng, triggerEmit = true, address = "") {
         descriptiveAddress.value = address;
     }
 
-    if (marker) {
-        marker.setLatLng([coords.lat, coords.lng]);
-    }
-    if (map) {
-        map.setView([coords.lat, coords.lng], map.getZoom() || 15);
+    if (isGoogleMapActive && gMap && gMarker) {
+        const gLatLng = new window.google.maps.LatLng(coords.lat, coords.lng);
+        gMarker.setPosition(gLatLng);
+        gMap.panTo(gLatLng);
+    } else {
+        if (lMarker) lMarker.setLatLng([coords.lat, coords.lng]);
+        if (lMap) lMap.setView([coords.lat, coords.lng], lMap.getZoom() || 16);
     }
 
     if (triggerEmit) {
@@ -330,17 +340,24 @@ function updateLocation(lat, lng, triggerEmit = true, address = "") {
 }
 
 function setMapLayer(layerType) {
-    if (!map) return;
     activeLayer.value = layerType;
 
-    if (layerType === "satellite") {
-        if (map.hasLayer(streetsLayer)) map.removeLayer(streetsLayer);
-        if (!map.hasLayer(satelliteLayer)) satelliteLayer.addTo(map);
-        if (!map.hasLayer(satelliteLabelsLayer)) satelliteLabelsLayer.addTo(map);
-    } else {
-        if (map.hasLayer(satelliteLayer)) map.removeLayer(satelliteLayer);
-        if (map.hasLayer(satelliteLabelsLayer)) map.removeLayer(satelliteLabelsLayer);
-        if (!map.hasLayer(streetsLayer)) streetsLayer.addTo(map);
+    if (isGoogleMapActive && gMap) {
+        gMap.setMapTypeId(
+            layerType === "satellite"
+                ? window.google.maps.MapTypeId.HYBRID
+                : window.google.maps.MapTypeId.ROADMAP
+        );
+    } else if (lMap) {
+        if (layerType === "satellite") {
+            if (lMap.hasLayer(lStreetsLayer)) lMap.removeLayer(lStreetsLayer);
+            if (!lMap.hasLayer(lSatelliteLayer)) lSatelliteLayer.addTo(lMap);
+            if (!lMap.hasLayer(lSatelliteLabelsLayer)) lSatelliteLabelsLayer.addTo(lMap);
+        } else {
+            if (lMap.hasLayer(lSatelliteLayer)) lMap.removeLayer(lSatelliteLayer);
+            if (lMap.hasLayer(lSatelliteLabelsLayer)) lMap.removeLayer(lSatelliteLabelsLayer);
+            if (!lMap.hasLayer(lStreetsLayer)) lStreetsLayer.addTo(lMap);
+        }
     }
 }
 
@@ -377,7 +394,7 @@ function onSearchInput() {
                 },
             });
 
-            if (response.data && response.data.data) {
+            if (response.data?.data) {
                 searchResults.value = response.data.data;
                 showResults.value = searchResults.value.length > 0;
             }
@@ -403,19 +420,16 @@ function navigateResults(dir) {
 async function handleEnterSearch() {
     clearTimeout(searchTimeout);
 
-    // 1. If an item is navigated with arrow keys, select it
     if (selectedSearchIndex.value >= 0 && searchResults.value[selectedSearchIndex.value]) {
         selectSearchResult(searchResults.value[selectedSearchIndex.value]);
         return;
     }
 
-    // 2. If dropdown results are already present, select first result
     if (searchResults.value && searchResults.value.length > 0) {
         selectSearchResult(searchResults.value[0]);
         return;
     }
 
-    // 3. Execute instant deep search & multi-tier heuristic search
     const val = (searchQuery.value || "").trim();
     if (val.length < 2) return;
 
@@ -423,7 +437,6 @@ async function handleEnterSearch() {
     heuristicNotice.value = "";
 
     try {
-        // Step A: Try direct autocomplete
         let response = await axios.get("/maps/autocomplete", {
             params: {
                 input: val,
@@ -440,7 +453,6 @@ async function handleEnterSearch() {
             return;
         }
 
-        // Step B: Multi-tier Heuristic Search
         let heuristicRes = await axios.get("/maps/heuristic-search", {
             params: {
                 query: val,
@@ -467,7 +479,7 @@ async function handleEnterSearch() {
             heuristicNotice.value = "";
         }, 5000);
     } catch (e) {
-        console.warn("Deep heuristic search notice:", e);
+        console.warn("Deep search notice:", e);
     } finally {
         isSearching.value = false;
     }
@@ -513,13 +525,130 @@ function detectCurrentGPSLocation() {
     );
 }
 
-function initMap() {
+function loadGoogleMapsSdk(apiKey) {
+    return new Promise((resolve, reject) => {
+        if (window.google && window.google.maps) {
+            resolve(window.google.maps);
+            return;
+        }
+
+        const existingScript = document.getElementById("google-maps-sdk");
+        if (existingScript) {
+            existingScript.addEventListener("load", () => resolve(window.google.maps));
+            existingScript.addEventListener("error", reject);
+            return;
+        }
+
+        const script = document.createElement("script");
+        script.id = "google-maps-sdk";
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,geometry`;
+        script.async = true;
+        script.defer = true;
+        script.onload = () => resolve(window.google.maps);
+        script.onerror = reject;
+        document.head.appendChild(script);
+    });
+}
+
+async function initGoogleMap(apiKey, coords) {
+    try {
+        await loadGoogleMapsSdk(apiKey);
+        if (!mapContainer.value || !window.google || !window.google.maps) return false;
+
+        const center = { lat: coords.lat, lng: coords.lng };
+
+        gMap = new window.google.maps.Map(mapContainer.value, {
+            center: center,
+            zoom: 16,
+            mapTypeId: window.google.maps.MapTypeId.ROADMAP,
+            disableDefaultUI: false,
+            zoomControl: true,
+            mapTypeControl: false,
+            streetViewControl: false,
+            fullscreenControl: false,
+        });
+
+        gMarker = new window.google.maps.Marker({
+            position: center,
+            map: gMap,
+            draggable: props.enableSetLocation,
+            animation: window.google.maps.Animation.DROP,
+        });
+
+        if (props.enableSetLocation) {
+            gMarker.addListener("dragend", () => {
+                const pos = gMarker.getPosition();
+                updateLocation(pos.lat(), pos.lng(), true);
+            });
+
+            gMap.addListener("click", (e) => {
+                updateLocation(e.latLng.lat(), e.latLng.lng(), true);
+            });
+        }
+
+        isGoogleMapActive = true;
+        return true;
+    } catch (e) {
+        console.warn("Could not initialize Google Maps SDK, using fallback:", e);
+        return false;
+    }
+}
+
+function initLeafletFallback(coords) {
     if (!mapContainer.value) return;
 
-    if (map) {
-        map.remove();
-        map = null;
+    if (lMap) {
+        lMap.remove();
+        lMap = null;
     }
+
+    lMap = L.map(mapContainer.value, {
+        center: [coords.lat, coords.lng],
+        zoom: 16,
+        zoomControl: false,
+        attributionControl: false,
+    });
+
+    L.control.zoom({ position: "bottomright" }).addTo(lMap);
+
+    lStreetsLayer = L.tileLayer(
+        "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+        { maxZoom: 20, subdomains: "abcd" }
+    );
+
+    lSatelliteLayer = L.tileLayer(
+        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        { maxZoom: 19 }
+    );
+
+    lSatelliteLabelsLayer = L.tileLayer(
+        "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png",
+        { maxZoom: 20, subdomains: "abcd" }
+    );
+
+    lStreetsLayer.addTo(lMap);
+
+    lMarker = L.marker([coords.lat, coords.lng], {
+        draggable: props.enableSetLocation,
+        icon: modernPinIcon,
+    }).addTo(lMap);
+
+    if (props.enableSetLocation) {
+        lMarker.on("dragend", () => {
+            const pos = lMarker.getLatLng();
+            updateLocation(pos.lat, pos.lng, true);
+        });
+
+        lMap.on("click", (e) => {
+            updateLocation(e.latlng.lat, e.latlng.lng, true);
+        });
+    }
+
+    isGoogleMapActive = false;
+}
+
+async function initMap() {
+    if (!mapContainer.value) return;
 
     const coords = sanitizeCoords(props.latitude, props.longitude);
     currentLat.value = coords.lat;
@@ -527,80 +656,47 @@ function initMap() {
     inputLat.value = parseFloat(coords.lat.toFixed(7));
     inputLng.value = parseFloat(coords.lng.toFixed(7));
 
-    // Initialize Leaflet
-    map = L.map(mapContainer.value, {
-        center: [coords.lat, coords.lng],
-        zoom: 16,
-        zoomControl: false,
-        attributionControl: false,
-    });
-
-    // Custom Minimal Zoom Control on Bottom Right
-    L.control.zoom({ position: "bottomright" }).addTo(map);
-
-    // 1. High-Definition Streets Layer (CartoDB Voyager Retina)
-    streetsLayer = L.tileLayer(
-        "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
-        {
-            maxZoom: 20,
-            subdomains: "abcd",
+    // Check if Google Maps API key is configured
+    let googleKey = null;
+    try {
+        const configRes = await axios.get("/maps/config");
+        if (configRes.data?.data?.api_key) {
+            googleKey = configRes.data.data.api_key;
         }
-    );
-
-    // 2. High-Resolution Satellite Layer (Esri World Imagery)
-    satelliteLayer = L.tileLayer(
-        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-        {
-            maxZoom: 19,
-        }
-    );
-
-    // 3. Satellite Street Labels & Boundaries
-    satelliteLabelsLayer = L.tileLayer(
-        "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png",
-        {
-            maxZoom: 20,
-            subdomains: "abcd",
-        }
-    );
-
-    streetsLayer.addTo(map);
-
-    // Add marker
-    marker = L.marker([coords.lat, coords.lng], {
-        draggable: props.enableSetLocation,
-        icon: modernPinIcon,
-    }).addTo(map);
-
-    if (props.enableSetLocation) {
-        marker.on("dragend", () => {
-            const pos = marker.getLatLng();
-            updateLocation(pos.lat, pos.lng, true);
-        });
-
-        map.on("click", (e) => {
-            updateLocation(e.latlng.lat, e.latlng.lng, true);
-        });
+    } catch (e) {
+        console.warn("Could not fetch maps config:", e);
     }
 
-    // Trigger initial reverse geocoding to show descriptive address immediately
+    let googleLoaded = false;
+    if (googleKey) {
+        googleLoaded = await initGoogleMap(googleKey, coords);
+    }
+
+    if (!googleLoaded) {
+        initLeafletFallback(coords);
+    }
+
     reverseGeocodeCoords(coords.lat, coords.lng);
 
-    // Modal / Container dynamic resize observer
     if (window.ResizeObserver && mapContainer.value) {
         resizeObserver = new ResizeObserver(() => {
-            if (map) map.invalidateSize();
+            if (isGoogleMapActive && gMap && window.google) {
+                window.google.maps.event.trigger(gMap, "resize");
+            } else if (lMap) {
+                lMap.invalidateSize();
+            }
         });
         resizeObserver.observe(mapContainer.value);
     }
 
     nextTick(() => {
         setTimeout(() => {
-            if (map) map.invalidateSize();
-        }, 200);
-        setTimeout(() => {
-            if (map) map.invalidateSize();
-        }, 600);
+            if (isGoogleMapActive && gMap && window.google) {
+                window.google.maps.event.trigger(gMap, "resize");
+            } else if (lMap) {
+                lMap.invalidateSize();
+            }
+        }, 300);
     });
 }
 
@@ -628,9 +724,9 @@ onUnmounted(() => {
         resizeObserver.disconnect();
         resizeObserver = null;
     }
-    if (map) {
-        map.remove();
-        map = null;
+    if (lMap) {
+        lMap.remove();
+        lMap = null;
     }
 });
 </script>

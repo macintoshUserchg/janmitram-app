@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use App\Services\OlaMapsService;
+use App\Services\GoogleMapsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class MapController extends Controller
 {
-    public function __construct(protected OlaMapsService $olaMapsService) {}
+    public function __construct(protected GoogleMapsService $mapService) {}
 
     /**
      * Return public map client configuration.
@@ -18,21 +18,21 @@ class MapController extends Controller
     {
         return response()->json([
             'success' => true,
-            'data' => $this->olaMapsService->getClientConfig(),
+            'data' => $this->mapService->getClientConfig(),
         ]);
     }
 
     /**
-     * Autocomplete Place Search.
+     * Autocomplete Place Search (Google Places + fallback).
      */
     public function autocomplete(Request $request): JsonResponse
     {
         $input = (string) $request->input('input', '');
         $lat = $request->filled('lat') ? (float) $request->input('lat') : null;
         $lng = $request->filled('lng') ? (float) $request->input('lng') : null;
-        $limit = (int) $request->input('limit', 5);
+        $limit = (int) $request->input('limit', 6);
 
-        $results = $this->olaMapsService->autocomplete($input, $lat, $lng, $limit);
+        $results = $this->mapService->autocomplete($input, $lat, $lng, $limit);
 
         return response()->json([
             'success' => true,
@@ -49,7 +49,7 @@ class MapController extends Controller
         $lat = $request->filled('lat') ? (float) $request->input('lat') : null;
         $lng = $request->filled('lng') ? (float) $request->input('lng') : null;
 
-        $results = $this->olaMapsService->heuristicSearch($query, $lat, $lng);
+        $results = $this->mapService->heuristicSearch($query, $lat, $lng);
 
         return response()->json([
             'success' => true,
@@ -70,7 +70,7 @@ class MapController extends Controller
         $lat = (float) $request->input('lat');
         $lng = (float) $request->input('lng');
 
-        $result = $this->olaMapsService->reverseGeocode($lat, $lng);
+        $result = $this->mapService->reverseGeocode($lat, $lng);
 
         return response()->json([
             'success' => $result !== null,
@@ -90,7 +90,7 @@ class MapController extends Controller
             'dest_lng' => 'required|numeric',
         ]);
 
-        $result = $this->olaMapsService->getDirections(
+        $result = $this->mapService->getDirections(
             (float) $request->input('origin_lat'),
             (float) $request->input('origin_lng'),
             (float) $request->input('dest_lat'),
