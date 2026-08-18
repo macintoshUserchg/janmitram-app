@@ -651,6 +651,14 @@ Route::match(['get', 'post'], 'admin/pwa-setting', function () {
     return back()->with('warning', 'PWA setting unavailable');
 })->name('admin.pwaSetting.update')->middleware(['auth', 'role:root']);
 
+/* ===================== MAPS & GEOLOCATION API ===================== */
+Route::prefix('maps')->group(function () {
+    Route::get('config', [\App\Http\Controllers\API\MapController::class, 'config']);
+    Route::get('autocomplete', [\App\Http\Controllers\API\MapController::class, 'autocomplete']);
+    Route::get('reverse-geocode', [\App\Http\Controllers\API\MapController::class, 'reverseGeocode']);
+    Route::get('directions', [\App\Http\Controllers\API\MapController::class, 'directions']);
+});
+
 /* ===================== SPA fallback — serve Vue Router shell ===================== */
 Route::get('/{any}', function () {
     return view('app');

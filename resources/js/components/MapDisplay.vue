@@ -242,7 +242,7 @@ function onSearchInput() {
     isSearching.value = true;
     searchTimeout = setTimeout(async () => {
         try {
-            const response = await axios.get("/api/maps/autocomplete", {
+            const response = await axios.get("/maps/autocomplete", {
                 params: {
                     input: searchQuery.value,
                     lat: currentLat.value,
@@ -292,7 +292,7 @@ function detectCurrentGPSLocation() {
             updateLocation(lat, lng, true);
 
             try {
-                const res = await axios.get("/api/maps/reverse-geocode", {
+                const res = await axios.get("/maps/reverse-geocode", {
                     params: { lat, lng },
                 });
                 if (res.data?.data?.display_name) {
