@@ -32,7 +32,8 @@ return [
     ],
 
     'olamaps' => [
-        'api_key' => env('OLA_MAPS_API_KEY', ''),
+        'api_key' => env('OLA_MAPS_API_KEY', env('OLA_MAPS_CLIENT_ID', '')),
+        'client_secret' => env('OLA_MAPS_CLIENT_SECRET', env('OLA_MAPS_SECRET_KEY', '')),
         'tiles_url' => env('OLA_MAPS_TILES_URL', 'https://api.olamaps.io/tiles/vector/v1/styles/default-light-standard/style.json'),
         'api_base_url' => env('OLA_MAPS_BASE_URL', 'https://api.olamaps.io'),
     ],
