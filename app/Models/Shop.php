@@ -350,4 +350,25 @@ class Shop extends Model
 
         return max(0, self::MAX_DIRECT_DOWNLINES - $this->directDownlinesCount());
     }
+
+    /**
+     * Minimum monetary value required for a shop's first stock transfer / initial stocking kit.
+     */
+    public const MIN_FIRST_STOCK_TRANSFER_AMOUNT = 3000.0;
+
+    /**
+     * Check if this shop has ever received completed stock inventory.
+     */
+    public function hasReceivedStock(): bool
+    {
+        return $this->stockRequests()->where('status', 'completed')->exists();
+    }
+
+    /**
+     * Check if the next stock transfer for this shop is its first initial allocation.
+     */
+    public function isFirstStockTransfer(): bool
+    {
+        return ! $this->hasReceivedStock();
+    }
 }

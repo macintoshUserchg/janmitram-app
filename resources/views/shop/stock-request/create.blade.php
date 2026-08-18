@@ -29,7 +29,34 @@
     <div class="alert alert-danger alert-dismissible fade show mb-4">{{ session('error') }}</div>
 @endif
 
-<form action="{{ route('shop.stock-request.store') }}" method="POST" id="stockRequestForm">
+@if($errors->any())
+    <div class="alert alert-danger alert-dismissible fade show rounded-3 shadow-sm mb-4">
+        <div class="fw-bold mb-1"><i class="fas fa-exclamation-triangle me-2"></i>{{ __('Please resolve the following errors:') }}</div>
+        <ul class="mb-0 ps-3">
+            @foreach($errors->all() as $err)
+                <li>{{ $err }}</li>
+            @endforeach
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
+
+@if($isFirstTransfer)
+    <div class="alert alert-warning border-0 shadow-sm rounded-12 mb-4 d-flex align-items-center gap-3">
+        <div class="p-2 bg-warning-subtle rounded-circle text-warning fs-4">
+            <i class="fas fa-star"></i>
+        </div>
+        <div>
+            <div class="fw-bold text-dark">{{ __('⭐ Welcome to Janmitram! Initial Stocking Request') }}</div>
+            <div class="small text-muted">
+                {{ __('As per franchise policy, your first stock request must be valued at') }}
+                <strong class="text-dark">₹3,000.00</strong> {{ __('or above. Subsequent stock requests can be of any quantity.') }}
+            </div>
+        </div>
+    </div>
+@endif
+
+<form action="{{ route('shop.stock-request.store') }}" method="POST" id="stockRequestForm" data-is-first-transfer="{{ $isFirstTransfer ? '1' : '0' }}">
     @csrf
 
     <!-- Product Search Bar -->
@@ -70,11 +97,19 @@
                             <th class="text-center">{{ __('Unit Price') }}</th>
                             <th class="text-center">{{ __('Central Stock') }}</th>
                             <th class="text-center" style="width: 180px;">{{ __('Requested Quantity') }}</th>
+                            <th class="text-end pe-3" style="width: 140px;">{{ __('Subtotal') }}</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($masterProducts as $index => $mp)
-                            <tr class="product-row" data-name="{{ strtolower($mp->name) }}" data-code="{{ strtolower($mp->code ?? '') }}" data-brand="{{ strtolower($mp->brand?->name ?? '') }}">
+                            @php
+                                $unitPrice = (float) ($mp->discount_price > 0 ? $mp->discount_price : $mp->price);
+                            @endphp
+                            <tr class="product-row"
+                                data-name="{{ strtolower($mp->name) }}"
+                                data-code="{{ strtolower($mp->code ?? '') }}"
+                                data-brand="{{ strtolower($mp->brand?->name ?? '') }}"
+                                data-price="{{ $unitPrice }}">
                                 <td class="text-center">
                                     <input type="checkbox" class="form-check-input product-checkbox" id="check_{{ $mp->id }}" data-target="qty_input_{{ $mp->id }}">
                                 </td>
@@ -98,7 +133,7 @@
                                         @endif
                                     </div>
                                 </td>
-                                <td class="text-center fw-bold">{{ showCurrency($mp->price) }}</td>
+                                <td class="text-center fw-bold">{{ showCurrency($unitPrice) }}</td>
                                 <td class="text-center">
                                     @if($mp->warehouse_qty > 10)
                                         <span class="badge bg-success-subtle text-success fs-6 px-3 py-2">
@@ -118,14 +153,17 @@
                                     <input type="hidden" name="items[{{ $index }}][product_id]" value="{{ $mp->id }}" class="product-id-field" disabled>
                                     <div class="input-group input-group-sm quantity-group">
                                         <button type="button" class="btn btn-outline-secondary btn-minus" disabled>-</button>
-                                        <input type="number" name="items[{{ $index }}][quantity]" id="qty_input_{{ $mp->id }}" class="form-control text-center qty-input" min="1" max="{{ max(1, $mp->warehouse_qty) }}" value="1" disabled>
+                                        <input type="number" name="items[{{ $index }}][quantity]" id="qty_input_{{ $mp->id }}" class="form-control text-center qty-input fw-bold" min="1" max="{{ max(1, $mp->warehouse_qty) }}" value="1" disabled>
                                         <button type="button" class="btn btn-outline-secondary btn-plus" disabled>+</button>
                                     </div>
+                                </td>
+                                <td class="text-end pe-3">
+                                    <span class="fw-bold text-dark item-subtotal">{{ showCurrency(0) }}</span>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center py-5 text-muted">
+                                <td colspan="7" class="text-center py-5 text-muted">
                                     <div class="mb-2"><i class="fas fa-boxes fs-1 text-muted"></i></div>
                                     <h5>{{ __('No Master Products Available in Central Warehouse') }}</h5>
                                     <p class="small mb-0">{{ __('Stock must be added to the central warehouse before shops can request dispatches.') }}</p>
@@ -147,10 +185,15 @@
             </div>
 
             <div class="d-flex justify-content-between align-items-center pt-3 border-top flex-wrap gap-2">
-                <a href="{{ route('shop.stock-request.index') }}" class="btn btn-light rounded-pill px-4">{{ __('Cancel') }}</a>
-                <button type="submit" class="btn btn-primary rounded-pill px-4 py-2 fw-bold fs-6" id="submitBtn" disabled>
-                    <i class="fas fa-paper-plane me-1"></i> {{ __('Submit Stock Request') }} (<span id="submitCount">0</span> {{ __('Items') }})
-                </button>
+                <div id="requestSummary">
+                    <span class="text-muted small"><i class="fas fa-info-circle me-1"></i>Select products above to build your stock request.</span>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{{ route('shop.stock-request.index') }}" class="btn btn-light rounded-pill px-4">{{ __('Cancel') }}</a>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 py-2 fw-bold fs-6 shadow-sm" id="submitBtn" disabled>
+                        <i class="fas fa-paper-plane me-1"></i> {{ __('Submit Stock Request') }}
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -159,21 +202,28 @@
 @push('scripts')
 <script>
     document.addEventListener("DOMContentLoaded", function () {
+        const formEl = document.getElementById('stockRequestForm');
         const checkboxes = document.querySelectorAll('.product-checkbox');
         const selectAll = document.getElementById('selectAllCheckbox');
         const searchInput = document.getElementById('catalogSearchInput');
         const submitBtn = document.getElementById('submitBtn');
         const selectedCount = document.getElementById('selectedCount');
-        const submitCount = document.getElementById('submitCount');
+        const requestSummary = document.getElementById('requestSummary');
+        const isFirstTransfer = formEl && formEl.getAttribute('data-is-first-transfer') === '1';
 
         function updateTotals() {
             let count = 0;
+            let totalQty = 0;
+            let totalValue = 0.0;
+
             checkboxes.forEach(cb => {
                 const row = cb.closest('tr');
                 const productIdField = row.querySelector('.product-id-field');
                 const qtyInput = row.querySelector('.qty-input');
                 const btnMinus = row.querySelector('.btn-minus');
                 const btnPlus = row.querySelector('.btn-plus');
+                const subtotalEl = row.querySelector('.item-subtotal');
+                const price = parseFloat(row.getAttribute('data-price') || '0');
 
                 if (cb.checked) {
                     count++;
@@ -182,18 +232,45 @@
                     btnMinus.disabled = false;
                     btnPlus.disabled = false;
                     row.classList.add('table-primary-subtle');
+
+                    const qty = parseInt(qtyInput.value) || 1;
+                    const itemTotal = qty * price;
+                    totalQty += qty;
+                    totalValue += itemTotal;
+                    if (subtotalEl) subtotalEl.textContent = '₹' + itemTotal.toFixed(2);
                 } else {
                     productIdField.disabled = true;
                     qtyInput.disabled = true;
                     btnMinus.disabled = true;
                     btnPlus.disabled = true;
                     row.classList.remove('table-primary-subtle');
+                    if (subtotalEl) subtotalEl.textContent = '₹0.00';
                 }
             });
 
             selectedCount.textContent = count;
-            submitCount.textContent = count;
-            submitBtn.disabled = (count === 0);
+
+            const meetsLimit = !isFirstTransfer || (totalValue >= 3000.0);
+            submitBtn.disabled = (count === 0) || !meetsLimit;
+
+            if (requestSummary) {
+                if (count > 0) {
+                    let html = '<div class="d-flex flex-column gap-1">' +
+                        '<div><strong>' + count + ' Product(s)</strong> selected (Total: <strong>' + totalQty + ' units</strong> | Value: <strong class="text-success fs-6">₹' + totalValue.toFixed(2) + '</strong>)</div>';
+                    if (isFirstTransfer) {
+                        if (totalValue < 3000.0) {
+                            const shortfall = (3000.0 - totalValue).toFixed(2);
+                            html += '<div class="badge bg-warning text-dark px-3 py-1.5 rounded-pill text-start"><i class="fas fa-exclamation-triangle me-1"></i>First request minimum ₹3,000 required. Need ₹' + shortfall + ' more.</div>';
+                        } else {
+                            html += '<div class="badge bg-success text-white px-3 py-1.5 rounded-pill text-start"><i class="fas fa-check-circle me-1"></i>First request minimum threshold (₹3,000) fulfilled.</div>';
+                        }
+                    }
+                    html += '</div>';
+                    requestSummary.innerHTML = html;
+                } else {
+                    requestSummary.innerHTML = '<span class="text-muted small"><i class="fas fa-info-circle me-1"></i>Select products above to build your stock request.</span>';
+                }
+            }
         }
 
         checkboxes.forEach(cb => {
@@ -217,6 +294,7 @@
                 let val = parseInt(input.value) || 1;
                 if (val > 1) {
                     input.value = val - 1;
+                    updateTotals();
                 }
             });
         });
@@ -228,7 +306,14 @@
                 let max = parseInt(input.getAttribute('max')) || 999999;
                 if (val < max) {
                     input.value = val + 1;
+                    updateTotals();
                 }
+            });
+        });
+
+        document.querySelectorAll('.qty-input').forEach(input => {
+            input.addEventListener('input', function () {
+                updateTotals();
             });
         });
 

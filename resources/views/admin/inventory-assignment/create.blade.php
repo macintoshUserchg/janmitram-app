@@ -78,12 +78,28 @@
                         <select name="shop_id" id="shop_id" class="form-select form-select-lg border-2 @error('shop_id') is-invalid @enderror" required>
                             <option value="">{{ __('-- Choose Target Shop --') }}</option>
                             @foreach($shops as $shop)
-                                <option value="{{ $shop->id }}" {{ old('shop_id') == $shop->id ? 'selected' : '' }}>
-                                    🛍️ {{ $shop->name }} ({{ $shop->user?->first_name ?? 'Root' }})
+                                <option value="{{ $shop->id }}"
+                                    data-is-first-transfer="{{ $shop->is_first_transfer ? '1' : '0' }}"
+                                    {{ old('shop_id') == $shop->id ? 'selected' : '' }}>
+                                    🛍️ {{ $shop->name }} ({{ $shop->user?->first_name ?? 'Root' }}) {{ $shop->is_first_transfer ? '⭐ [1st Initial Transfer]' : '' }}
                                 </option>
                             @endforeach
                         </select>
                         @error('shop_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+                </div>
+
+                <!-- Initial Transfer Alert Banner -->
+                <div id="firstTransferAlert" class="alert alert-warning border-0 shadow-sm rounded-3 mt-4 mb-0 d-none d-flex align-items-center gap-3">
+                    <div class="p-2 bg-warning-subtle rounded-circle text-warning fs-4">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold text-dark">{{ __('⭐ Initial Stock Transfer Notice') }}</div>
+                        <div class="small text-muted">
+                            {{ __('This shop has never received inventory. As per onboarding policy, the first stock transfer must be valued at') }}
+                            <strong class="text-dark">₹3,000.00</strong> {{ __('or above.') }}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -151,16 +167,22 @@
                                         <input type="checkbox" class="form-check-input" id="selectAllCheckbox" title="{{ __('Select All Available') }}">
                                     </th>
                                     <th class="py-3">{{ __('Product Name & SKU') }}</th>
-                                    <th class="text-center py-3" style="width: 240px;">{{ __('Source Warehouse Availability') }}</th>
-                                    <th class="text-center py-3" style="width: 220px;">{{ __('Quantity To Assign') }}</th>
+                                    <th class="text-center py-3" style="width: 140px;">{{ __('Unit Price') }}</th>
+                                    <th class="text-center py-3" style="width: 220px;">{{ __('Source Warehouse Availability') }}</th>
+                                    <th class="text-center py-3" style="width: 200px;">{{ __('Quantity To Assign') }}</th>
+                                    <th class="text-end pe-3 py-3" style="width: 140px;">{{ __('Subtotal') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($products as $index => $product)
+                                    @php
+                                        $unitPrice = (float) ($product->discount_price > 0 ? $product->discount_price : $product->price);
+                                    @endphp
                                     <tr class="product-row is-visible"
                                         data-id="{{ $product->id }}"
                                         data-name="{{ strtolower($product->name) }}"
                                         data-code="{{ strtolower($product->code ?? '') }}"
+                                        data-price="{{ $unitPrice }}"
                                         data-stock='@json($product->stock_map)'>
                                         <td class="text-center">
                                             <input type="checkbox" class="form-check-input product-checkbox" id="check_{{ $product->id }}">
@@ -168,6 +190,9 @@
                                         <td>
                                             <label for="check_{{ $product->id }}" class="fw-bold text-dark mb-0 d-block cursor-pointer">{{ $product->name }}</label>
                                             <div class="small text-muted font-monospace"><i class="fas fa-barcode me-1 text-secondary"></i>SKU: {{ $product->code ?? 'N/A' }}</div>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="fw-semibold text-dark">{{ showCurrency($unitPrice) }}</span>
                                         </td>
                                         <td class="text-center" id="avail_{{ $product->id }}">
                                             <span class="badge bg-secondary-subtle text-secondary px-3 py-2 rounded-pill">{{ __('Select warehouse') }}</span>
@@ -177,9 +202,12 @@
                                             <div class="input-group input-group-sm justify-content-center">
                                                 <button type="button" class="btn btn-outline-secondary qty-minus-btn" disabled>-</button>
                                                 <input type="number" name="items[{{ $index }}][quantity]" id="qty_input_{{ $product->id }}"
-                                                    class="form-control text-center qty-input fw-bold" style="max-width: 90px;" min="1" value="1" disabled>
+                                                    class="form-control text-center qty-input fw-bold" style="max-width: 80px;" min="1" value="1" disabled>
                                                 <button type="button" class="btn btn-outline-secondary qty-plus-btn" disabled>+</button>
                                             </div>
+                                        </td>
+                                        <td class="text-end pe-3">
+                                            <span class="fw-bold text-dark item-subtotal" id="subtotal_{{ $product->id }}">{{ showCurrency(0) }}</span>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -189,15 +217,23 @@
                 </div>
             </div>
 
-            <!-- Notes & Summary -->
+            <!-- Notes Card -->
             <div class="card shadow-sm border-0 rounded-3 mb-4">
                 <div class="card-body p-4">
-                    <label class="form-label fw-bold text-dark"><i class="fas fa-sticky-note text-warning me-2"></i>{{ __('Assignment Notes / Reference') }}</label>
-                    <textarea name="notes" class="form-control" rows="2" placeholder="{{ __('Optional notes or reference number for this inventory assignment...') }}">{{ old('notes') }}</textarea>
+                    <label class="form-label fw-bold text-dark mb-1">
+                        <i class="fas fa-sticky-note text-warning me-2"></i>{{ __('Assignment Notes / Reference') }}
+                    </label>
+                    <textarea name="notes" class="form-control" rows="2" placeholder="{{ __('Optional internal notes, e.g. Initial franchise stocking batch, dispatch reference...') }}">{{ old('notes') }}</textarea>
                 </div>
-                <div class="card-footer bg-white p-4 border-top d-flex flex-column flex-md-row align-items-center justify-content-between gap-3">
-                    <div class="small text-muted">
-                        <span class="fw-bold text-dark" id="summaryText">{{ __('No items selected') }}</span>
+            </div>
+
+            <!-- Sticky Bottom Submission Bar -->
+            <div class="card shadow-sm border-0 rounded-3 sticky-bottom bg-white border-top mb-4">
+                <div class="card-body p-3 d-flex flex-column flex-md-row align-items-center justify-content-between gap-3">
+                    <div class="d-flex flex-column flex-md-row align-items-md-center gap-3">
+                        <div id="summaryText">
+                            <span class="text-muted"><i class="fas fa-info-circle me-1"></i>{{ __('Select at least one product above to enable assignment.') }}</span>
+                        </div>
                     </div>
                     <div class="d-flex gap-2 w-100 w-md-auto justify-content-end">
                         <a href="{{ route('admin.inventory-assignment.index') }}" class="btn btn-light px-4">{{ __('Cancel') }}</a>
@@ -229,6 +265,7 @@
         const selectAllCheck = document.getElementById('selectAllCheckbox');
         const submitBtn = document.getElementById('submitBtn');
         const summaryTextEl = document.getElementById('summaryText');
+        const firstTransferAlert = document.getElementById('firstTransferAlert');
 
         if (!whSelect) return;
 
@@ -308,7 +345,7 @@
 
                     if (qty > 0) {
                         if (availEl) {
-                            availEl.innerHTML = '<span class="badge bg-success-subtle text-success fs-6 px-3 py-2 rounded-pill"><i class="fas fa-check-circle me-1"></i>' + qty + ' units available</span>';
+                            availEl.innerHTML = '<span class="badge bg-success-subtle text-success fs-6 px-3 py-2 rounded-pill"><i class="fas fa-check-circle me-1"></i>' + qty + ' available</span>';
                         }
                         if (checkbox) checkbox.disabled = false;
                     } else {
@@ -340,6 +377,18 @@
         function updateSelectionState() {
             let selectedCount = 0;
             let totalAssignedQty = 0;
+            let totalAssignedValue = 0.0;
+
+            const selectedShopOpt = shopSelect && shopSelect.selectedOptions && shopSelect.selectedOptions[0];
+            const isFirstTransfer = selectedShopOpt && selectedShopOpt.getAttribute('data-is-first-transfer') === '1';
+
+            if (firstTransferAlert) {
+                if (isFirstTransfer && shopSelect.value) {
+                    firstTransferAlert.classList.remove('d-none');
+                } else {
+                    firstTransferAlert.classList.add('d-none');
+                }
+            }
 
             const rows = document.querySelectorAll('#assignmentTable tbody tr.product-row');
             rows.forEach(function(row) {
@@ -348,6 +397,8 @@
                 const qtyInput = row.querySelector('.qty-input');
                 const qtyMinus = row.querySelector('.qty-minus-btn');
                 const qtyPlus = row.querySelector('.qty-plus-btn');
+                const subtotalEl = row.querySelector('.item-subtotal');
+                const price = parseFloat(row.getAttribute('data-price') || '0');
 
                 const isVisible = !row.classList.contains('is-hidden') && row.style.display !== 'none';
                 const isChecked = isVisible && checkbox && checkbox.checked && !checkbox.disabled;
@@ -360,21 +411,38 @@
                 if (isChecked) {
                     selectedCount++;
                     const currentQty = parseInt(qtyInput ? qtyInput.value : '1', 10) || 1;
+                    const itemTotal = currentQty * price;
                     totalAssignedQty += currentQty;
+                    totalAssignedValue += itemTotal;
+                    if (subtotalEl) subtotalEl.textContent = '₹' + itemTotal.toFixed(2);
                     row.classList.add('table-primary');
                 } else {
+                    if (subtotalEl) subtotalEl.textContent = '₹0.00';
                     row.classList.remove('table-primary');
                 }
             });
 
             const hasTargetShop = !!(shopSelect && shopSelect.value);
-            const isValid = selectedCount > 0 && hasTargetShop;
+            const meetsFirstTransferLimit = !isFirstTransfer || (totalAssignedValue >= 3000.0);
+            const isValid = selectedCount > 0 && hasTargetShop && meetsFirstTransferLimit;
 
             if (submitBtn) submitBtn.disabled = !isValid;
 
             if (summaryTextEl) {
                 if (selectedCount > 0) {
-                    summaryTextEl.innerHTML = '<i class="fas fa-boxes me-1 text-primary"></i><strong>' + selectedCount + ' Product(s)</strong> selected for assignment (Total: <strong>' + totalAssignedQty + ' units</strong>).';
+                    let summaryHtml = '<div class="d-flex flex-column gap-1">' +
+                        '<div><i class="fas fa-boxes me-1 text-primary"></i><strong>' + selectedCount + ' Product(s)</strong> selected (Total: <strong>' + totalAssignedQty + ' units</strong> | Value: <strong class="text-success fs-6">₹' + totalAssignedValue.toFixed(2) + '</strong>)</div>';
+
+                    if (isFirstTransfer) {
+                        if (totalAssignedValue < 3000.0) {
+                            const shortfall = (3000.0 - totalAssignedValue).toFixed(2);
+                            summaryHtml += '<div class="badge bg-warning text-dark px-3 py-1.5 rounded-pill text-start"><i class="fas fa-exclamation-triangle me-1"></i>First transfer minimum ₹3,000 required. Need ₹' + shortfall + ' more to proceed.</div>';
+                        } else {
+                            summaryHtml += '<div class="badge bg-success text-white px-3 py-1.5 rounded-pill text-start"><i class="fas fa-check-circle me-1"></i>First transfer minimum threshold (₹3,000) fulfilled.</div>';
+                        }
+                    }
+                    summaryHtml += '</div>';
+                    summaryTextEl.innerHTML = summaryHtml;
                 } else {
                     summaryTextEl.innerHTML = '<span class="text-muted"><i class="fas fa-info-circle me-1"></i>Select at least one product above to enable assignment.</span>';
                 }
@@ -383,7 +451,11 @@
 
         // Before form submission, ensure ONLY checked, visible rows submit form inputs
         if (formEl) {
-            formEl.addEventListener('submit', function() {
+            formEl.addEventListener('submit', function(e) {
+                const selectedShopOpt = shopSelect && shopSelect.selectedOptions && shopSelect.selectedOptions[0];
+                const isFirstTransfer = selectedShopOpt && selectedShopOpt.getAttribute('data-is-first-transfer') === '1';
+
+                let totalValue = 0.0;
                 const rows = document.querySelectorAll('#assignmentTable tbody tr.product-row');
                 rows.forEach(function(row) {
                     const checkbox = row.querySelector('.product-checkbox');
@@ -393,8 +465,17 @@
                         row.querySelectorAll('.product-id-field, .qty-input').forEach(function(input) {
                             input.disabled = true;
                         });
+                    } else {
+                        const qty = parseInt(row.querySelector('.qty-input')?.value || '1', 10);
+                        const price = parseFloat(row.getAttribute('data-price') || '0');
+                        totalValue += (qty * price);
                     }
                 });
+
+                if (isFirstTransfer && totalValue < 3000.0) {
+                    e.preventDefault();
+                    alert('First stock transfer for this shop must be of ₹3,000 or above. Current total: ₹' + totalValue.toFixed(2));
+                }
             });
         }
 
@@ -448,48 +529,59 @@
                 rows.forEach(function(row) {
                     if (!row.classList.contains('is-hidden')) {
                         const checkbox = row.querySelector('.product-checkbox');
-                        if (checkbox && !checkbox.disabled) checkbox.checked = isChecked;
+                        if (checkbox && !checkbox.disabled) {
+                            checkbox.checked = isChecked;
+                        }
                     }
                 });
                 updateSelectionState();
             });
         }
 
-        // Delegate checkbox and quantity plus/minus buttons
-        document.querySelectorAll('#assignmentTable tbody tr.product-row').forEach(function(row) {
-            const checkbox = row.querySelector('.product-checkbox');
-            const qtyInput = row.querySelector('.qty-input');
-            const qtyMinus = row.querySelector('.qty-minus-btn');
-            const qtyPlus = row.querySelector('.qty-plus-btn');
-
-            if (checkbox) {
-                checkbox.addEventListener('change', updateSelectionState);
-            }
-            if (qtyInput) {
-                qtyInput.addEventListener('input', updateSelectionState);
-            }
-            if (qtyMinus && qtyInput) {
-                qtyMinus.addEventListener('click', function() {
-                    let val = parseInt(qtyInput.value || '1', 10);
-                    if (val > 1) {
-                        qtyInput.value = val - 1;
-                        updateSelectionState();
-                    }
-                });
-            }
-            if (qtyPlus && qtyInput) {
-                qtyPlus.addEventListener('click', function() {
-                    let val = parseInt(qtyInput.value || '1', 10);
-                    let max = parseInt(qtyInput.max || '99999', 10);
-                    if (val < max) {
-                        qtyInput.value = val + 1;
-                        updateSelectionState();
-                    }
-                });
-            }
+        document.querySelectorAll('.product-checkbox').forEach(function(checkbox) {
+            checkbox.addEventListener('change', updateSelectionState);
         });
 
-        renderCatalog();
+        document.querySelectorAll('.qty-minus-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const input = this.closest('.input-group').querySelector('.qty-input');
+                if (input && !input.disabled) {
+                    let val = parseInt(input.value, 10) || 1;
+                    if (val > 1) {
+                        input.value = val - 1;
+                        updateSelectionState();
+                    }
+                }
+            });
+        });
+
+        document.querySelectorAll('.qty-plus-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const input = this.closest('.input-group').querySelector('.qty-input');
+                if (input && !input.disabled) {
+                    let val = parseInt(input.value, 10) || 1;
+                    input.value = val + 1;
+                    updateSelectionState();
+                }
+            });
+        });
+
+        document.querySelectorAll('.qty-input').forEach(function(input) {
+            input.addEventListener('input', function() {
+                let val = parseInt(this.value, 10);
+                if (isNaN(val) || val < 1) {
+                    this.value = 1;
+                }
+                updateSelectionState();
+            });
+        });
+
+        // Initialize state on page load
+        if (whSelect.value) {
+            renderCatalog();
+        } else {
+            updateSelectionState();
+        }
     }
 
     if (document.readyState === 'loading') {

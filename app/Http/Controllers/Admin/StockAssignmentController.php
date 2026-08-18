@@ -36,7 +36,12 @@ class StockAssignmentController extends Controller
     public function create()
     {
         $warehouses = Warehouse::all();
-        $shops = Shop::with('user')->get();
+        $shops = Shop::with(['user', 'stockRequests' => fn ($q) => $q->where('status', 'completed')])->get()
+            ->map(function ($shop) {
+                $shop->is_first_transfer = $shop->stockRequests->isEmpty();
+
+                return $shop;
+            });
         $products = Product::where('is_digital', false)
             ->where('is_active', true)
             ->whereNull('master_product_id')

@@ -138,7 +138,9 @@ class StockRequestController extends Controller
             return $product;
         });
 
-        return view('shop.stock-request.create', compact('warehouse', 'masterProducts', 'shop'));
+        $isFirstTransfer = $shop ? $shop->isFirstStockTransfer() : false;
+
+        return view('shop.stock-request.create', compact('warehouse', 'masterProducts', 'shop', 'isFirstTransfer'));
     }
 
     public function store(StockRequestRequest $request)

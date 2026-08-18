@@ -48,7 +48,7 @@ class ShopInventoryAssignmentTest extends TestCase
             'is_digital' => false,
             'is_stock_managed' => true,
             'is_approve' => true,
-            'price' => 100,
+            'price' => 600,
         ]);
 
         return $product;
