@@ -1,8 +1,8 @@
 <template>
-    <div class="ola-map-wrapper w-full">
-        <!-- Floating / Integrated Search & Geolocation Control Bar -->
-        <div v-if="enableSetLocation" class="mb-2 flex flex-wrap gap-2 items-center">
-            <!-- Search Input with Autocomplete Dropdown -->
+    <div class="janmitram-map-component w-full">
+        <!-- Search & GPS Geolocation Control Bar -->
+        <div v-if="enableSetLocation" class="mb-3 flex flex-wrap gap-2 items-center">
+            <!-- Search Autocomplete Input -->
             <div class="relative flex-1 min-w-[240px]">
                 <div class="relative">
                     <input
@@ -19,7 +19,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                     </span>
-                    <!-- Clear / Loading Icon -->
+                    <!-- Spinner / Clear Icon -->
                     <span v-if="isSearching" class="absolute right-3 top-2.5 text-gray-400">
                         <svg class="animate-spin h-4 w-4 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -30,28 +30,28 @@
                         v-else-if="searchQuery"
                         type="button"
                         @click="clearSearch"
-                        class="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                        class="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 font-bold"
                     >
                         &times;
                     </button>
                 </div>
 
-                <!-- Autocomplete Dropdown Menu -->
+                <!-- Dropdown Search Results -->
                 <div
                     v-if="showResults && searchResults.length > 0"
-                    class="absolute z-50 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                    class="absolute z-50 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto"
                 >
                     <button
                         type="button"
                         v-for="(item, idx) in searchResults"
                         :key="idx"
                         @click="selectSearchResult(item)"
-                        class="w-full text-left px-3 py-2.5 text-xs hover:bg-gray-50 border-b border-gray-100 flex items-start gap-2 transition-colors"
+                        class="w-full text-left px-3 py-2.5 text-xs hover:bg-amber-50 border-b border-gray-100 flex items-start gap-2 transition-colors cursor-pointer"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-primary shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
                         </svg>
-                        <span class="text-gray-700 leading-snug">{{ item.display_name }}</span>
+                        <span class="text-gray-800 leading-snug">{{ item.display_name }}</span>
                     </button>
                 </div>
             </div>
@@ -61,24 +61,24 @@
                 type="button"
                 @click="detectCurrentGPSLocation"
                 :disabled="isLocating"
-                class="px-3 py-2 text-xs font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg border border-gray-300 shadow-sm flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                class="px-3.5 py-2 text-xs font-semibold bg-white hover:bg-gray-50 text-gray-700 rounded-lg border border-gray-300 shadow-sm flex items-center gap-1.5 transition-colors disabled:opacity-50 cursor-pointer"
                 title="Detect My GPS Location"
             >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-primary" viewBox="0 0 20 20" fill="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-emerald-600" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
                 </svg>
                 <span>{{ isLocating ? 'Detecting...' : 'Use My GPS' }}</span>
             </button>
         </div>
 
-        <!-- Ola Maps Vector Container -->
+        <!-- Interactive Map Container -->
         <div
             ref="mapContainer"
-            :style="{ width: width, height: height }"
-            class="rounded-xl overflow-hidden shadow-inner border border-gray-200 relative bg-gray-100"
+            :style="{ width: width, height: height, minHeight: '300px' }"
+            class="rounded-xl overflow-hidden shadow-sm border border-gray-300 relative bg-slate-100 z-0"
         ></div>
 
-        <!-- Lat/Lng Quick Coordinate Inputs (if enabled) -->
+        <!-- Lat/Lng Coordinate Inputs -->
         <div v-if="enableSetLocation" class="mt-2 grid grid-cols-2 gap-2 text-xs">
             <div>
                 <label class="block text-gray-500 font-medium mb-1">Latitude</label>
@@ -106,8 +106,8 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, watch, nextTick } from "vue";
-import * as maplibregl from "maplibre-gl";
-import "maplibre-gl/dist/maplibre-gl.css";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import axios from "axios";
 
 const props = defineProps({
@@ -121,7 +121,7 @@ const props = defineProps({
     },
     height: {
         type: String,
-        default: "300px",
+        default: "320px",
     },
     latitude: {
         type: Number,
@@ -156,6 +156,13 @@ const inputLng = ref(currentLng.value);
 
 let searchTimeout = null;
 
+const customIcon = L.icon({
+    iconUrl: "/assets/icons/home.png",
+    iconSize: [36, 36],
+    iconAnchor: [18, 36],
+    popupAnchor: [0, -32],
+});
+
 function sanitizeCoords(lat, lng) {
     let pLat = parseFloat(lat);
     let pLng = parseFloat(lng);
@@ -174,10 +181,10 @@ function updateLocation(lat, lng, triggerEmit = true, address = "") {
     inputLng.value = parseFloat(coords.lng.toFixed(7));
 
     if (marker) {
-        marker.setLngLat([coords.lng, coords.lat]);
+        marker.setLatLng([coords.lat, coords.lng]);
     }
     if (map) {
-        map.flyTo({ center: [coords.lng, coords.lat], zoom: map.getZoom() || 14, essential: true });
+        map.setView([coords.lat, coords.lng], map.getZoom() || 14);
     }
 
     if (triggerEmit) {
@@ -229,7 +236,7 @@ function onSearchInput() {
         } finally {
             isSearching.value = false;
         }
-    }, 350);
+    }, 300);
 }
 
 function selectSearchResult(item) {
@@ -260,7 +267,6 @@ function detectCurrentGPSLocation() {
             const lng = position.coords.longitude;
             updateLocation(lat, lng, true);
 
-            // Fetch address from reverse geocode
             try {
                 const res = await axios.get("/api/maps/reverse-geocode", {
                     params: { lat, lng },
@@ -275,14 +281,20 @@ function detectCurrentGPSLocation() {
         (error) => {
             isLocating.value = false;
             console.warn("GPS Geolocation error:", error);
-            alert("Could not detect GPS location. Please check your browser permissions.");
+            alert("Could not detect GPS location. Please check browser permissions.");
         },
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
 }
 
-async function initMap() {
+function initMap() {
     if (!mapContainer.value) return;
+
+    // Destroy existing instance if any
+    if (map) {
+        map.remove();
+        map = null;
+    }
 
     const coords = sanitizeCoords(props.latitude, props.longitude);
     currentLat.value = coords.lat;
@@ -290,67 +302,67 @@ async function initMap() {
     inputLat.value = parseFloat(coords.lat.toFixed(7));
     inputLng.value = parseFloat(coords.lng.toFixed(7));
 
-    // Fetch Ola Maps API config from backend
-    let mapStyle = "https://demotiles.maplibre.org/style.json";
-    let apiKey = import.meta.env.VITE_OLA_MAPS_API_KEY || "";
+    // Initialize Leaflet
+    map = L.map(mapContainer.value).setView([coords.lat, coords.lng], 14);
 
-    try {
-        const configRes = await axios.get("/api/maps/config");
-        if (configRes.data?.data) {
-            const cfg = configRes.data.data;
-            if (cfg.api_key) {
-                apiKey = cfg.api_key;
-                mapStyle = `${cfg.tiles_url}?api_key=${cfg.api_key}`;
-            }
-        }
-    } catch (e) {
-        console.warn("Maps config fetch error, using fallback style:", e);
-    }
-
-    // Initialize MapLibre GL with Ola Maps Vector Style
-    map = new maplibregl.Map({
-        container: mapContainer.value,
-        style: mapStyle,
-        center: [coords.lng, coords.lat],
-        zoom: 14,
-        attributionControl: false,
+    // Primary OpenStreetMap Layer
+    const primaryTiles = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        subdomains: ["a", "b", "c"],
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     });
 
-    // Add navigation controls (zoom in/out)
-    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+    // Fallback CartoDB Voyager Layer
+    const fallbackTiles = L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+        maxZoom: 19,
+        subdomains: "abcd",
+        attribution: "&copy; CartoDB &copy; OpenStreetMap",
+    });
 
-    // Add draggable pin marker
-    marker = new maplibregl.Marker({
+    primaryTiles.addTo(map);
+
+    let tileErrors = 0;
+    primaryTiles.on("tileerror", () => {
+        tileErrors++;
+        if (tileErrors >= 3 && !map.hasLayer(fallbackTiles)) {
+            map.removeLayer(primaryTiles);
+            fallbackTiles.addTo(map);
+        }
+    });
+
+    // Add marker
+    marker = L.marker([coords.lat, coords.lng], {
         draggable: props.enableSetLocation,
-        color: "#ff6b00", // Ola Orange
-    })
-        .setLngLat([coords.lng, coords.lat])
-        .addTo(map);
+        icon: customIcon,
+    }).addTo(map);
 
     if (props.enableSetLocation) {
-        // Marker dragend
+        // Dragend event
         marker.on("dragend", () => {
-            const lngLat = marker.getLngLat();
-            updateLocation(lngLat.lat, lngLat.lng, true);
+            const pos = marker.getLatLng();
+            updateLocation(pos.lat, pos.lng, true);
         });
 
-        // Map click
+        // Click event
         map.on("click", (e) => {
-            updateLocation(e.lngLat.lat, e.lngLat.lng, true);
+            updateLocation(e.latlng.lat, e.latlng.lng, true);
         });
     }
 
     nextTick(() => {
         setTimeout(() => {
-            if (map) map.resize();
+            if (map) map.invalidateSize();
         }, 200);
+        setTimeout(() => {
+            if (map) map.invalidateSize();
+        }, 500);
     });
 }
 
 watch(
     () => [props.latitude, props.longitude],
     ([newLat, newLng]) => {
-        if (newLat && newLng) {
+        if (newLat && newLng && map) {
             updateLocation(newLat, newLng, false);
         }
     }
@@ -369,7 +381,7 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.ola-map-wrapper {
+.janmitram-map-component {
     font-family: inherit;
 }
 </style>
