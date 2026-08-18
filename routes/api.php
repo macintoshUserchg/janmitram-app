@@ -14,6 +14,7 @@ use App\Http\Controllers\API\CouponController;
 use App\Http\Controllers\API\FlashSaleController;
 use App\Http\Controllers\API\HomeController;
 use App\Http\Controllers\API\LegalPageController;
+use App\Http\Controllers\API\MapController;
 use App\Http\Controllers\API\MasterController;
 use App\Http\Controllers\API\OrderController;
 use App\Http\Controllers\API\ProductController;
@@ -24,14 +25,14 @@ use App\Http\Controllers\API\Rider\OrderController as RiderOrderController;
 use App\Http\Controllers\API\Rider\UserController as RiderUserController;
 use App\Http\Controllers\API\Seller\DashboardController as SellerDashboardController;
 use App\Http\Controllers\API\Seller\LoginController as SellerLoginController;
-use App\Http\Controllers\API\Seller\OrderController as SellerOrderController;
 // Seller (vendor) app controllers
+use App\Http\Controllers\API\Seller\OrderController as SellerOrderController;
 use App\Http\Controllers\API\Seller\ProductController as SellerProductController;
 use App\Http\Controllers\API\Seller\UserController as SellerUserController;
 use App\Http\Controllers\API\ShopController;
 use App\Http\Controllers\API\SocialAuthController;
-use App\Http\Controllers\API\SubCategoryController;
 // Rider app controllers
+use App\Http\Controllers\API\SubCategoryController;
 use App\Http\Controllers\API\SupportController;
 use App\Http\Controllers\API\UserController;
 use Illuminate\Support\Facades\Route;
@@ -207,4 +208,12 @@ Route::prefix('rider')->group(function () {
         Route::post('order/status-update', [RiderOrderController::class, 'statusUpdate']);
         Route::get('status-wise-orders', [RiderOrderController::class, 'statusWiseOrders']);
     });
+});
+
+/* ===================== OLA MAPS & GEOLOCATION API ===================== */
+Route::prefix('maps')->group(function () {
+    Route::get('config', [MapController::class, 'config']);
+    Route::get('autocomplete', [MapController::class, 'autocomplete']);
+    Route::get('reverse-geocode', [MapController::class, 'reverseGeocode']);
+    Route::get('directions', [MapController::class, 'directions']);
 });

@@ -64,6 +64,8 @@
 
     <link rel="stylesheet" href="{{ asset('assets/css/leaflet.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/leaflet-routing-machine.css') }}">
+    <!-- MapLibre GL / Ola Maps Vector Stylesheet -->
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
 
     @stack('css')
 
@@ -504,6 +506,8 @@
 
     <script src="{{ asset('assets/scripts/leaflet.js') }}"></script>
     <script src="{{ asset('assets/scripts/leaflet-routing-machine.js') }}"></script>
+    <!-- MapLibre GL / Ola Maps Web SDK -->
+    <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
     <script src="{{ asset('assets/scripts/janmitram-map-helper.js') }}"></script>
     {{-- daterange-picker --}}
     <script type="text/javascript" src="{{ asset('assets/scripts/moment.min.js') }}"></script>

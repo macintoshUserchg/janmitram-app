@@ -1,6 +1,114 @@
+<template>
+    <div class="ola-map-wrapper w-full">
+        <!-- Floating / Integrated Search & Geolocation Control Bar -->
+        <div v-if="enableSetLocation" class="mb-2 flex flex-wrap gap-2 items-center">
+            <!-- Search Input with Autocomplete Dropdown -->
+            <div class="relative flex-1 min-w-[240px]">
+                <div class="relative">
+                    <input
+                        type="text"
+                        v-model="searchQuery"
+                        @input="onSearchInput"
+                        @focus="showResults = searchResults.length > 0"
+                        placeholder="Search area, landmark, or street in India..."
+                        class="w-full pl-9 pr-8 py-2 text-sm bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+                    />
+                    <!-- Search Icon -->
+                    <span class="absolute left-3 top-2.5 text-gray-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </span>
+                    <!-- Clear / Loading Icon -->
+                    <span v-if="isSearching" class="absolute right-3 top-2.5 text-gray-400">
+                        <svg class="animate-spin h-4 w-4 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </span>
+                    <button
+                        v-else-if="searchQuery"
+                        type="button"
+                        @click="clearSearch"
+                        class="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                    >
+                        &times;
+                    </button>
+                </div>
+
+                <!-- Autocomplete Dropdown Menu -->
+                <div
+                    v-if="showResults && searchResults.length > 0"
+                    class="absolute z-50 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                >
+                    <button
+                        type="button"
+                        v-for="(item, idx) in searchResults"
+                        :key="idx"
+                        @click="selectSearchResult(item)"
+                        class="w-full text-left px-3 py-2.5 text-xs hover:bg-gray-50 border-b border-gray-100 flex items-start gap-2 transition-colors"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-primary shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
+                        </svg>
+                        <span class="text-gray-700 leading-snug">{{ item.display_name }}</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- GPS Auto-Detect Button -->
+            <button
+                type="button"
+                @click="detectCurrentGPSLocation"
+                :disabled="isLocating"
+                class="px-3 py-2 text-xs font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg border border-gray-300 shadow-sm flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                title="Detect My GPS Location"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-primary" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
+                </svg>
+                <span>{{ isLocating ? 'Detecting...' : 'Use My GPS' }}</span>
+            </button>
+        </div>
+
+        <!-- Ola Maps Vector Container -->
+        <div
+            ref="mapContainer"
+            :style="{ width: width, height: height }"
+            class="rounded-xl overflow-hidden shadow-inner border border-gray-200 relative bg-gray-100"
+        ></div>
+
+        <!-- Lat/Lng Quick Coordinate Inputs (if enabled) -->
+        <div v-if="enableSetLocation" class="mt-2 grid grid-cols-2 gap-2 text-xs">
+            <div>
+                <label class="block text-gray-500 font-medium mb-1">Latitude</label>
+                <input
+                    type="number"
+                    step="0.0000001"
+                    v-model.number="inputLat"
+                    @change="applyManualCoordinates"
+                    class="w-full px-2.5 py-1.5 bg-gray-50 border border-gray-300 rounded font-mono text-gray-700 text-xs"
+                />
+            </div>
+            <div>
+                <label class="block text-gray-500 font-medium mb-1">Longitude</label>
+                <input
+                    type="number"
+                    step="0.0000001"
+                    v-model.number="inputLng"
+                    @change="applyManualCoordinates"
+                    class="w-full px-2.5 py-1.5 bg-gray-50 border border-gray-300 rounded font-mono text-gray-700 text-xs"
+                />
+            </div>
+        </div>
+    </div>
+</template>
+
 <script setup>
-import L from "leaflet";
 import { ref, onMounted, onUnmounted, watch, nextTick } from "vue";
+import * as maplibregl from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
+import axios from "axios";
 
 const props = defineProps({
     enableSetLocation: {
@@ -39,153 +147,106 @@ const isSearching = ref(false);
 const showResults = ref(false);
 const isLocating = ref(false);
 
-// Default coordinates: India or prop coordinates
-const currentLat = ref(props.latitude || 27.005694931660006);
-const currentLng = ref(props.longitude || 75.77754972401056);
+// Default Jaipur, India coordinates
+const currentLat = ref(props.latitude || 27.0056949);
+const currentLng = ref(props.longitude || 75.7775497);
 
 const inputLat = ref(currentLat.value);
 const inputLng = ref(currentLng.value);
+
+let searchTimeout = null;
 
 function sanitizeCoords(lat, lng) {
     let pLat = parseFloat(lat);
     let pLng = parseFloat(lng);
     if (isNaN(pLat) || isNaN(pLng) || (pLat === 0 && pLng === 0)) {
-        pLat = 27.005694931660006;
-        pLng = 75.77754972401056;
+        pLat = 27.0056949;
+        pLng = 75.7775497;
     }
     return { lat: pLat, lng: pLng };
 }
 
-const customIcon = L.icon({
-    iconUrl: "/assets/icons/home.png",
-    iconSize: [35, 35],
-    iconAnchor: [17, 35],
-    popupAnchor: [0, -30],
-});
-
-function updateLocation(lat, lng, triggerEmit = true) {
+function updateLocation(lat, lng, triggerEmit = true, address = "") {
     const coords = sanitizeCoords(lat, lng);
     currentLat.value = coords.lat;
     currentLng.value = coords.lng;
-    inputLat.value = coords.lat;
-    inputLng.value = coords.lng;
+    inputLat.value = parseFloat(coords.lat.toFixed(7));
+    inputLng.value = parseFloat(coords.lng.toFixed(7));
 
     if (marker) {
-        marker.setLatLng([coords.lat, coords.lng]);
+        marker.setLngLat([coords.lng, coords.lat]);
     }
     if (map) {
-        map.setView([coords.lat, coords.lng], map.getZoom() || 15);
+        map.flyTo({ center: [coords.lng, coords.lat], zoom: map.getZoom() || 14, essential: true });
     }
 
     if (triggerEmit) {
-        emit("location-updated", { lat: coords.lat, lng: coords.lng });
+        emit("location-updated", {
+            lat: coords.lat,
+            lng: coords.lng,
+            address: address,
+        });
     }
 }
 
-function applyCustomCoordinates() {
+function applyManualCoordinates() {
     let pLat = parseFloat(inputLat.value);
     let pLng = parseFloat(inputLng.value);
 
-    if (isNaN(pLat) || isNaN(pLng)) {
-        alert("Please enter valid numeric latitude and longitude values.");
-        return;
-    }
-
-    if (pLat < -90 || pLat > 90) {
-        alert("Latitude must be between -90 and 90.");
-        return;
-    }
-
-    if (pLng < -180 || pLng > 180) {
-        alert("Longitude must be between -180 and 180.");
+    if (isNaN(pLat) || isNaN(pLng) || pLat < -90 || pLat > 90 || pLng < -180 || pLng > 180) {
         return;
     }
 
     updateLocation(pLat, pLng, true);
 }
 
-function initMap() {
-    if (!mapContainer.value) return;
-
-    const coords = sanitizeCoords(currentLat.value, currentLng.value);
-
-    map = L.map(mapContainer.value).setView([coords.lat, coords.lng], 15);
-
-    const primaryTiles = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: 19,
-        subdomains: ["a", "b", "c"],
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    });
-
-    const fallbackTiles = L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-        maxZoom: 19,
-        subdomains: "abcd",
-        attribution: "&copy; CartoDB &copy; OpenStreetMap",
-    });
-
-    primaryTiles.addTo(map);
-
-    let tileErrors = 0;
-    primaryTiles.on("tileerror", () => {
-        tileErrors++;
-        if (tileErrors >= 3 && !map.hasLayer(fallbackTiles)) {
-            map.removeLayer(primaryTiles);
-            fallbackTiles.addTo(map);
-        }
-    });
-
-    marker = L.marker([coords.lat, coords.lng], {
-        draggable: props.enableSetLocation,
-        icon: customIcon,
-    }).addTo(map);
-
-    if (props.enableSetLocation) {
-        map.on("click", (e) => {
-            updateLocation(e.latlng.lat, e.latlng.lng);
-        });
-
-        marker.on("dragend", () => {
-            const pos = marker.getLatLng();
-            updateLocation(pos.lat, pos.lng);
-        });
+function onSearchInput() {
+    clearTimeout(searchTimeout);
+    if (!searchQuery.value || searchQuery.value.trim().length < 2) {
+        searchResults.value = [];
+        showResults.value = false;
+        return;
     }
 
-    nextTick(() => {
-        setTimeout(() => {
-            if (map) map.invalidateSize();
-        }, 200);
-    });
-}
-
-function handleSearch() {
-    const query = searchQuery.value.trim();
-    if (!query) return;
-
     isSearching.value = true;
-    const apiUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&email=support@janmitram.com`;
+    searchTimeout = setTimeout(async () => {
+        try {
+            const response = await axios.get("/api/maps/autocomplete", {
+                params: {
+                    input: searchQuery.value,
+                    lat: currentLat.value,
+                    lng: currentLng.value,
+                    limit: 5,
+                },
+            });
 
-    fetch(apiUrl)
-        .then((res) => res.json())
-        .then((data) => {
+            if (response.data && response.data.data) {
+                searchResults.value = response.data.data;
+                showResults.value = searchResults.value.length > 0;
+            }
+        } catch (e) {
+            console.warn("Autocomplete error:", e);
+        } finally {
             isSearching.value = false;
-            searchResults.value = data || [];
-            showResults.value = true;
-        })
-        .catch((err) => {
-            isSearching.value = false;
-            console.error("Leaflet Geocoding Error:", err);
-        });
+        }
+    }, 350);
 }
 
-function selectSearchResult(result) {
-    const nLat = parseFloat(result.lat);
-    const nLng = parseFloat(result.lon);
-    updateLocation(nLat, nLng);
-    searchQuery.value = result.display_name;
+function selectSearchResult(item) {
+    if (item.lat && item.lng) {
+        searchQuery.value = item.display_name;
+        showResults.value = false;
+        updateLocation(item.lat, item.lng, true, item.display_name);
+    }
+}
+
+function clearSearch() {
+    searchQuery.value = "";
+    searchResults.value = [];
     showResults.value = false;
 }
 
-function handleGetCurrentLocation() {
+function detectCurrentGPSLocation() {
     if (!navigator.geolocation) {
         alert("Geolocation is not supported by your browser.");
         return;
@@ -193,31 +254,110 @@ function handleGetCurrentLocation() {
 
     isLocating.value = true;
     navigator.geolocation.getCurrentPosition(
-        (pos) => {
+        async (position) => {
             isLocating.value = false;
-            updateLocation(pos.coords.latitude, pos.coords.longitude);
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            updateLocation(lat, lng, true);
+
+            // Fetch address from reverse geocode
+            try {
+                const res = await axios.get("/api/maps/reverse-geocode", {
+                    params: { lat, lng },
+                });
+                if (res.data?.data?.display_name) {
+                    searchQuery.value = res.data.data.display_name;
+                }
+            } catch (err) {
+                console.warn("Reverse geocode warning:", err);
+            }
         },
-        (err) => {
+        (error) => {
             isLocating.value = false;
-            alert("Could not detect current location: " + err.message);
+            console.warn("GPS Geolocation error:", error);
+            alert("Could not detect GPS location. Please check your browser permissions.");
         },
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
 }
 
+async function initMap() {
+    if (!mapContainer.value) return;
+
+    const coords = sanitizeCoords(props.latitude, props.longitude);
+    currentLat.value = coords.lat;
+    currentLng.value = coords.lng;
+    inputLat.value = parseFloat(coords.lat.toFixed(7));
+    inputLng.value = parseFloat(coords.lng.toFixed(7));
+
+    // Fetch Ola Maps API config from backend
+    let mapStyle = "https://demotiles.maplibre.org/style.json";
+    let apiKey = import.meta.env.VITE_OLA_MAPS_API_KEY || "";
+
+    try {
+        const configRes = await axios.get("/api/maps/config");
+        if (configRes.data?.data) {
+            const cfg = configRes.data.data;
+            if (cfg.api_key) {
+                apiKey = cfg.api_key;
+                mapStyle = `${cfg.tiles_url}?api_key=${cfg.api_key}`;
+            }
+        }
+    } catch (e) {
+        console.warn("Maps config fetch error, using fallback style:", e);
+    }
+
+    // Initialize MapLibre GL with Ola Maps Vector Style
+    map = new maplibregl.Map({
+        container: mapContainer.value,
+        style: mapStyle,
+        center: [coords.lng, coords.lat],
+        zoom: 14,
+        attributionControl: false,
+    });
+
+    // Add navigation controls (zoom in/out)
+    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+
+    // Add draggable pin marker
+    marker = new maplibregl.Marker({
+        draggable: props.enableSetLocation,
+        color: "#ff6b00", // Ola Orange
+    })
+        .setLngLat([coords.lng, coords.lat])
+        .addTo(map);
+
+    if (props.enableSetLocation) {
+        // Marker dragend
+        marker.on("dragend", () => {
+            const lngLat = marker.getLngLat();
+            updateLocation(lngLat.lat, lngLat.lng, true);
+        });
+
+        // Map click
+        map.on("click", (e) => {
+            updateLocation(e.lngLat.lat, e.lngLat.lng, true);
+        });
+    }
+
+    nextTick(() => {
+        setTimeout(() => {
+            if (map) map.resize();
+        }, 200);
+    });
+}
+
+watch(
+    () => [props.latitude, props.longitude],
+    ([newLat, newLng]) => {
+        if (newLat && newLng) {
+            updateLocation(newLat, newLng, false);
+        }
+    }
+);
+
 onMounted(() => {
     initMap();
-
-    if (navigator.geolocation && !props.hasOldValue && !props.latitude) {
-        navigator.geolocation.getCurrentPosition(
-            (pos) => {
-                updateLocation(pos.coords.latitude, pos.coords.longitude);
-            },
-            (err) => {
-                console.warn("Location access denied:", err.message);
-            }
-        );
-    }
 });
 
 onUnmounted(() => {
@@ -226,120 +366,10 @@ onUnmounted(() => {
         map = null;
     }
 });
-
-watch(
-    [() => props.latitude, () => props.longitude],
-    ([newLat, newLng]) => {
-        if (newLat != null && newLng != null && !isNaN(newLat) && !isNaN(newLng)) {
-            updateLocation(newLat, newLng, false);
-            if (map) {
-                map.setView([newLat, newLng], map.getZoom() || 15);
-            }
-        }
-    }
-);
 </script>
 
-<template>
-    <div class="janmitram-map-wrapper w-full flex flex-col gap-2 position-relative">
-        <!-- Optional Search Bar & GPS Controls when enableSetLocation is true -->
-        <div v-if="enableSetLocation" class="flex flex-wrap sm:flex-nowrap gap-2 items-center z-[1000] bg-white p-2 rounded-lg border shadow-sm">
-            <div class="relative grow">
-                <div class="flex rounded-md shadow-sm">
-                    <input
-                        v-model="searchQuery"
-                        type="text"
-                        class="block w-full rounded-l-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-1.5 border"
-                        placeholder="Search location (e.g. Raipur, Delhi)..."
-                        @keyup.enter="handleSearch"
-                    />
-                    <button
-                        type="button"
-                        class="inline-flex items-center px-3 py-1.5 border border-l-0 border-gray-300 rounded-r-md bg-primary text-white text-sm font-medium hover:bg-primary-dark"
-                        :disabled="isSearching"
-                        @click="handleSearch"
-                    >
-                        <span v-if="!isSearching">Search</span>
-                        <span v-else>Searching...</span>
-                    </button>
-                </div>
-
-                <!-- Autocomplete Dropdown -->
-                <div
-                    v-if="showResults && searchResults.length"
-                    class="absolute z-[2000] mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm"
-                >
-                    <button
-                        v-for="(item, index) in searchResults"
-                        :key="index"
-                        type="button"
-                        class="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm text-gray-700 flex items-start gap-2 border-b last:border-b-0"
-                        @click="selectSearchResult(item)"
-                    >
-                        <span class="text-red-500 font-bold">📍</span>
-                        <span>{{ item.display_name }}</span>
-                    </button>
-                </div>
-            </div>
-
-            <button
-                type="button"
-                class="inline-flex items-center gap-1 text-xs font-semibold px-3 py-2 bg-green-50 text-green-700 border border-green-300 rounded-md hover:bg-green-100 shrink-0"
-                :disabled="isLocating"
-                @click="handleGetCurrentLocation"
-            >
-                <span>🎯</span>
-                <span>{{ isLocating ? 'Locating...' : 'Use My Location' }}</span>
-            </button>
-        </div>
-
-        <!-- Leaflet Map Container -->
-        <div
-            ref="mapContainer"
-            :style="{ width: width, height: height }"
-            class="rounded-xl border shadow-inner overflow-hidden z-10"
-        ></div>
-
-        <!-- Interactive Latitude & Longitude Input Bar -->
-        <div v-if="enableSetLocation" class="mt-2 p-3 bg-slate-50 border rounded-lg shadow-sm flex flex-col sm:flex-row items-center gap-3">
-            <div class="flex-1 w-full">
-                <label class="block text-xs font-semibold text-gray-600 mb-1">
-                    📍 Latitude
-                </label>
-                <input
-                    v-model="inputLat"
-                    type="number"
-                    step="any"
-                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary text-xs px-3 py-2 border bg-white"
-                    placeholder="e.g. 21.251384"
-                    @keyup.enter="applyCustomCoordinates"
-                />
-            </div>
-
-            <div class="flex-1 w-full">
-                <label class="block text-xs font-semibold text-gray-600 mb-1">
-                    📍 Longitude
-                </label>
-                <input
-                    v-model="inputLng"
-                    type="number"
-                    step="any"
-                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary text-xs px-3 py-2 border bg-white"
-                    placeholder="e.g. 81.629641"
-                    @keyup.enter="applyCustomCoordinates"
-                />
-            </div>
-
-            <div class="w-full sm:w-auto sm:self-end">
-                <button
-                    type="button"
-                    class="w-full inline-flex items-center justify-center gap-1 text-xs font-medium px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark shadow-sm"
-                    @click="applyCustomCoordinates"
-                >
-                    <span>📍</span>
-                    <span>Locate on Map</span>
-                </button>
-            </div>
-        </div>
-    </div>
-</template>
+<style scoped>
+.ola-map-wrapper {
+    font-family: inherit;
+}
+</style>
