@@ -26,6 +26,26 @@
     </li>
 @endhasPermission
 
+<!--- Customer Reviews Moderation --->
+<li>
+    <a class="menu {{ $request->routeIs('admin.review.*') ? 'active' : '' }}" href="{{ route('admin.review.index') }}">
+        <span class="d-flex align-items-center justify-content-between w-100">
+            <span>
+                <i class="fas fa-star text-warning me-2" style="font-size: 15px;"></i>
+                {{ __('Customer Reviews') }}
+            </span>
+            @php
+                $pendingReviewsCount = \App\Models\Review::withoutGlobalScopes()->where('is_active', false)->count();
+            @endphp
+            @if($pendingReviewsCount > 0)
+                <span class="badge bg-warning text-dark rounded-pill ms-2 font-bold px-2 py-0.5" style="font-size: 10px;">
+                    {{ $pendingReviewsCount }}
+                </span>
+            @endif
+        </span>
+    </a>
+</li>
+
 @hasPermission(['shop.pos.index', 'shop.pos.draft', 'shop.pos.sales'])
     <li>
         <a class="menu {{ request()->routeIs('shop.pos.*') ? 'active' : '' }}" data-bs-toggle="collapse" href="#posMenu">
