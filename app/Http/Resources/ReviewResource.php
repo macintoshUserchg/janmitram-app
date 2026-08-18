@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
@@ -16,11 +18,19 @@ class ReviewResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'customer_name' => $this->customer->user->name,
-            'customer_profile' => $this->customer->user->thumbnail,
+            'customer_name' => $this->customer?->user?->name ?? 'Janmitram Customer',
+            'customer_profile' => $this->customer?->user?->thumbnail ?? asset('default/default.jpg'),
+            'product_id' => $this->product_id,
+            'product_name' => $this->product?->name,
+            'shop_id' => $this->shop_id,
+            'shop_name' => $this->shop?->name,
             'rating' => (float) $this->rating,
             'description' => $this->description,
-            'created_at' => $this->created_at->format('F d, Y'),
+            'photos' => $this->photos ?? [],
+            'reply' => $this->reply,
+            'replied_at' => $this->replied_at?->format('F d, Y'),
+            'is_active' => (bool) $this->is_active,
+            'created_at' => $this->created_at?->format('F d, Y'),
         ];
     }
 }

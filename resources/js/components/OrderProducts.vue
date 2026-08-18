@@ -206,29 +206,61 @@
                                     </div>
                                 </div>
                                 <div>
-                                    <label for="description">{{ $t('Message') }}</label>
+                                    <label for="description" class="block font-medium text-gray-700 mb-1">{{ $t('Message') }}</label>
                                     <textarea
                                         v-model="description"
-                                        class="border border-gray-300 p-2 w-full rounded focus:border-primary outline-none"
+                                        class="border border-gray-300 p-2.5 w-full rounded-lg focus:border-primary focus:ring-1 focus:ring-primary outline-none text-sm"
                                         rows="4"
                                         :placeholder="
-                                            $t('Enter your description')
+                                            $t('Share details of your experience with this product...')
                                         "
                                     ></textarea>
                                 </div>
 
+                                <!-- Photo Uploads -->
+                                <div class="mt-3">
+                                    <label class="block font-medium text-gray-700 text-sm mb-1">
+                                        {{ $t('Add Photos (Optional, up to 5)') }}
+                                    </label>
+                                    <input
+                                        type="file"
+                                        multiple
+                                        accept="image/*"
+                                        @change="handlePhotoChange"
+                                        class="block w-full text-xs text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-primary-50 file:text-primary hover:file:bg-primary-100 cursor-pointer"
+                                    />
+                                    <!-- Photo Preview Grid -->
+                                    <div v-if="photoPreviews.length > 0" class="flex gap-2 flex-wrap mt-2">
+                                        <div v-for="(preview, index) in photoPreviews" :key="index" class="relative group">
+                                            <img :src="preview" class="w-14 h-14 object-cover rounded-lg border border-gray-200" />
+                                            <button
+                                                type="button"
+                                                @click="removePhoto(index)"
+                                                class="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs shadow hover:bg-red-600"
+                                            >
+                                                &times;
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="bg-amber-50 border border-amber-200 rounded-lg p-2.5 mt-3 text-xs text-amber-800 flex items-start gap-2">
+                                    <span class="text-base leading-none">🛡️</span>
+                                    <span>{{ $t('Note: All reviews are verified and will be published after quick approval by our moderation team.') }}</span>
+                                </div>
+
                                 <div class="flex justify-end space-x-3 mt-4">
                                     <button
-                                        class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3.5 px-4 rounded-lg focus:outline-none flex-grow"
+                                        class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-4 rounded-lg focus:outline-none flex-grow"
                                         @click="showRatingModal = false"
                                     >
                                         {{ $t("Cancel") }}
                                     </button>
                                     <button
-                                        class="bg-primary hover:bg-primary-600 text-white font-semibold py-3.5 px-4 rounded-lg focus:outline-none flex-grow"
+                                        class="bg-primary hover:bg-primary-600 text-white font-semibold py-3 px-4 rounded-lg focus:outline-none flex-grow"
                                         @click="submitRating()"
                                     >
-                                        {{ $t("Submit") }}
+                                        {{ $t("Submit Review") }}
                                     </button>
                                 </div>
                             </div>
@@ -277,12 +309,39 @@ const rating = ref(0);
 const description = ref("");
 const showRatingModal = ref(false);
 const productID = ref("");
+const selectedPhotos = ref([]);
+const photoPreviews = ref([]);
 
 const showRating = (id) => {
     productID.value = id;
     rating.value = 0;
     description.value = "";
+    selectedPhotos.value = [];
+    photoPreviews.value = [];
     showRatingModal.value = true;
+};
+
+const handlePhotoChange = (event) => {
+    const files = Array.from(event.target.files);
+    if (selectedPhotos.value.length + files.length > 5) {
+        toast.warning("You can upload a maximum of 5 photos", {
+            position: master.langDirection === "rtl" ? "bottom-right" : "bottom-left",
+        });
+        return;
+    }
+    files.forEach((file) => {
+        selectedPhotos.value.push(file);
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            photoPreviews.value.push(e.target.result);
+        };
+        reader.readAsDataURL(file);
+    });
+};
+
+const removePhoto = (index) => {
+    selectedPhotos.value.splice(index, 1);
+    photoPreviews.value.splice(index, 1);
 };
 
 const submitRating = () => {
@@ -299,17 +358,24 @@ const submitRating = () => {
         });
         return false;
     }
+
+    const formData = new FormData();
+    formData.append("rating", rating.value);
+    formData.append("description", description.value);
+    formData.append("order_id", props.order.id);
+    formData.append("product_id", productID.value);
+
+    selectedPhotos.value.forEach((file, idx) => {
+        formData.append(`photos[${idx}]`, file);
+    });
+
     axios
-        .post(
-            "/product-review",
-            {
-                rating: rating.value,
-                description: description.value,
-                order_id: props.order.id,
-                product_id: productID.value,
+        .post("/product-review", formData, {
+            headers: {
+                Authorization: `${authStore.token}`,
+                "Content-Type": "multipart/form-data",
             },
-            { headers: { Authorization: `${authStore.token}` } }
-        )
+        })
         .then((response) => {
             toast.success(response.data.message, {
                 position:
@@ -321,7 +387,7 @@ const submitRating = () => {
             emit("refresh");
         })
         .catch((error) => {
-            toast.error(error.response.data.message, {
+            toast.error(error.response?.data?.message || "Failed to submit review", {
                 position:
                     master.langDirection === "rtl"
                         ? "bottom-right"

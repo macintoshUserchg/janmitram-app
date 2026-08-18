@@ -546,6 +546,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:root'])->group
 
     Route::get('review', [ReviewsController::class, 'index'])->name('review.index');
     Route::get('review/{reviewId}/toggle', [ReviewsController::class, 'toggleReview'])->name('review.toggle');
+    Route::post('review/{reviewId}/approve', [ReviewsController::class, 'approve'])->name('review.approve');
+    Route::post('review/{reviewId}/reject', [ReviewsController::class, 'reject'])->name('review.reject');
+    Route::post('review/{reviewId}/reply', [ReviewsController::class, 'reply'])->name('review.reply');
+    Route::delete('review/{reviewId}', [ReviewsController::class, 'destroy'])->name('review.destroy');
 
     Route::get('withdraw', [App\Http\Controllers\Admin\WithdrawController::class, 'index'])->name('withdraw.index');
     Route::get('withdraw/export', [App\Http\Controllers\Admin\WithdrawController::class, 'export'])->name('withdraw.export');

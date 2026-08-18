@@ -12,6 +12,7 @@ use App\Http\Resources\ProductResource;
 use App\Http\Resources\ReviewResource;
 use App\Http\Resources\SizeResource;
 use App\Models\FlashSale;
+use App\Models\Review;
 use App\Repositories\ProductRepository;
 use App\Repositories\ReviewRepository;
 use Illuminate\Http\JsonResponse;
@@ -269,9 +270,13 @@ class ProductController extends Controller
      */
     public function storeReview(ReviewRequest $request)
     {
-        $product = ProductRepository::find($request->product_id);
+        $product = ProductRepository::findOrFail($request->product_id);
 
-        $hasReview = $product->reviews()->where('customer_id', auth()->user()->customer->id)->where('order_id', $request->order_id)->first();
+        $hasReview = Review::withoutGlobalScopes()
+            ->where('product_id', $product->id)
+            ->where('customer_id', auth()->user()->customer->id)
+            ->where('order_id', $request->order_id)
+            ->first();
 
         if ($hasReview) {
             return $this->json('review already exists', [
@@ -281,7 +286,7 @@ class ProductController extends Controller
 
         $review = ReviewRepository::storeByRequest($request, $product);
 
-        return $this->json('review added successfully', [
+        return $this->json('Review submitted successfully. It will be published after admin approval.', [
             'review' => ReviewResource::make($review),
         ]);
     }

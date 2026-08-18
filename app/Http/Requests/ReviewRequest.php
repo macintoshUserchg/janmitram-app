@@ -27,6 +27,8 @@ class ReviewRequest extends FormRequest
             'order_id' => 'required|exists:orders,id',
             'rating' => 'required|numeric|min:1|max:5',
             'description' => 'required|string',
+            'photos' => 'nullable|array|max:5',
+            'photos.*' => 'nullable',
         ];
     }
 
