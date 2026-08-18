@@ -497,6 +497,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:root'])->group
     Route::post('cards', [CardsController::class, 'store'])->name('cards.store');
     Route::get('cards/{card}', [CardsController::class, 'show'])->name('cards.show');
     Route::get('cards/{card}/toggle', [CardsController::class, 'toggleActive'])->name('cards.toggle');
+    Route::get('cards/{card}/download', [CardsController::class, 'download'])->name('cards.download');
 
     Route::get('order', [App\Http\Controllers\Admin\OrderController::class, 'index'])->name('order.index');
     Route::get('order/{order}', [App\Http\Controllers\Admin\OrderController::class, 'show'])->name('order.show');

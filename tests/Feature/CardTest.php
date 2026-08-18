@@ -110,6 +110,70 @@ class CardTest extends TestCase
         $this->assertSame(540.0, (float) $posCart->total);
     }
 
+    public function test_admin_cards_index_renders_with_metrics_and_sorting(): void
+    {
+        Role::firstOrCreate(['name' => 'root']);
+        Role::firstOrCreate(['name' => 'customer']);
+        $rootUser = User::factory()->create();
+        $rootUser->assignRole('root');
+        $this->actingAs($rootUser);
+
+        $customerUser = User::factory()->create(['name' => 'John Doe']);
+        $customer = Customer::factory()->create(['user_id' => $customerUser->id]);
+        $card = CardRepository::createForCustomer($customer->id);
+
+        $response = $this->get(route('admin.cards.index', [
+            'search' => 'John',
+            'status' => 'active',
+            'assignment' => 'assigned',
+            'sort' => 'id',
+            'direction' => 'desc',
+        ]));
+
+        $response->assertStatus(200);
+        $response->assertSee('John Doe');
+        $response->assertSee($card->card_number);
+        $response->assertSee(route('admin.cards.download', $card->id));
+    }
+
+    public function test_admin_can_download_card_pdf(): void
+    {
+        Role::firstOrCreate(['name' => 'root']);
+        $rootUser = User::factory()->create();
+        $rootUser->assignRole('root');
+        $this->actingAs($rootUser);
+
+        $card = CardRepository::create([
+            'card_number' => CardRepository::generateUniqueNumber(),
+            'is_active' => true,
+        ]);
+
+        $response = $this->get(route('admin.cards.download', $card->id));
+
+        $response->assertStatus(200);
+        $this->assertSame('application/pdf', $response->headers->get('Content-Type'));
+        $this->assertStringContainsString('attachment', (string) $response->headers->get('Content-Disposition'));
+    }
+
+    public function test_admin_can_preview_card_pdf(): void
+    {
+        Role::firstOrCreate(['name' => 'root']);
+        $rootUser = User::factory()->create();
+        $rootUser->assignRole('root');
+        $this->actingAs($rootUser);
+
+        $card = CardRepository::create([
+            'card_number' => CardRepository::generateUniqueNumber(),
+            'is_active' => true,
+        ]);
+
+        $response = $this->get(route('admin.cards.download', [$card->id, 'preview' => 1]));
+
+        $response->assertStatus(200);
+        $this->assertSame('application/pdf', $response->headers->get('Content-Type'));
+        $this->assertStringContainsString('inline', (string) $response->headers->get('Content-Disposition'));
+    }
+
     private function makeOrderFixture(int $price): array
     {
         Cache::forget('generale_setting');
