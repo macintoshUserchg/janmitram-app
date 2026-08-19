@@ -144,6 +144,10 @@ class PayoutController extends Controller
         $mpdf = new Mpdf([
             'mode' => 'utf-8',
             'format' => 'A4',
+            'margin_left' => 12,
+            'margin_right' => 12,
+            'margin_top' => 12,
+            'margin_bottom' => 12,
             'tempDir' => storage_path('app/public/mpdf_tmp'),
         ]);
 

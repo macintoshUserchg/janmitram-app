@@ -1,217 +1,183 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Purchase License</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>{{ __('Digital Product License Certificate') }}</title>
     <style>
         body {
-            font-family: 'Arial', sans-serif;
-            margin: -15px;
+            font-family: "DejaVu Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+            color: #1e293b;
+            background-color: #ffffff;
+            font-size: 12px;
+            line-height: 1.4;
+            margin: 0;
+            padding: 0;
         }
 
-        body p {
-            font-size: 16px !important;
+        table {
+            width: 100%;
+            border-collapse: collapse;
         }
 
-
-        .header {
-            text-align: center;
-            margin-bottom: -5px;
+        p, h1, h2, h3, h4, h5, h6 {
+            margin: 0;
+            padding: 0;
         }
 
-        .logo {
-            width: 220px;
-            margin-bottom: 10px;
+        .text-left { text-align: left; }
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+
+        .text-muted { color: #64748b; }
+        .text-dark { color: #0f172a; }
+        .text-primary { color: #d97706; }
+
+        .fw-normal { font-weight: normal; }
+        .fw-medium { font-weight: 500; }
+        .fw-bold { font-weight: bold; }
+
+        /* Header */
+        .header-table {
+            margin-bottom: 20px;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 16px;
         }
 
-        .header h2 {
-            margin: 10px 0 5px;
-            font-size: 25px;
+        .company-logo {
+            max-height: 60px;
+            max-width: 150px;
+            object-fit: contain;
+        }
+
+        .cert-badge {
+            display: inline-block;
+            background-color: #0f172a;
+            color: #ffffff;
+            font-size: 15px;
             font-weight: bold;
-            color: #24262d;
+            letter-spacing: 0.8px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            margin-bottom: 6px;
         }
 
-        .header p {
-            color: #555;
-        }
-
-        .header a {
-            color: #007bff;
-            font-size: 16px;
-            text-decoration: none;
-        }
-
-        .details {
-            margin-bottom: 30px;
-        }
-
-        .row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            font-size: 18px;
-        }
-
-        .row span:first-child {
-            font-weight: bold;
-            color: #333;
-        }
-
-        .row span:last-child {
-            max-width: 70%;
-            text-align: right;
-            color: #666;
-            word-break: break-word;
-        }
-
-        .purchase-code a {
-            color: #007bff;
-            font-weight: bold;
-        }
-
-        .footer-note {
-            text-align: center;
-            color: #555;
-            margin-bottom: 30px;
-            margin-top: 30px
-        }
-
-        .footer-note a {
-            font-size: 17px;
-            color: #007bff;
-            text-decoration: none;
-        }
-
-        .invoice-note {
-            text-align: center;
-            font-size: 22px;
-            position: relative;
-            color: var(--Gray-500, #687387);
-            font-style: normal;
-            font-weight: 700;
-            line-height: 28px;
-            margin-top: 70px;
-        }
-
-        .author {
-            position: absolute;
-            right: 20px;
-            bottom: -25px;
-            background: #ecf0ff;
-            padding: 5px 10px;
+        /* License Box */
+        .license-box {
+            background-color: #f8fafc;
+            border: 2px dashed #0f172a;
             border-radius: 10px;
-            font-size: 14px;
-            color: #7b61ff;
+            padding: 16px;
+            text-align: center;
+            margin: 18px 0;
+        }
+
+        .license-key {
+            font-family: monospace;
+            font-size: 18px;
+            font-weight: bold;
+            color: #d97706;
+            letter-spacing: 1.5px;
+            margin-top: 4px;
+        }
+
+        /* Info Card */
+        .info-card {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 16px;
+        }
+
+        .info-card-title {
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #64748b;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 5px;
+            margin-bottom: 8px;
         }
 
         .footer {
+            margin-top: 30px;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 14px;
+            font-size: 10px;
+            color: #64748b;
             text-align: center;
-            font-size: 16px;
-            color: #555;
-            position: fixed;
-            bottom: -40px;
-            left: 0;
-            width: 100%;
         }
-
-        .contact-info {
-            display: flex;
-            justify-content: space-between;
-            gap: 80px;
-            flex-wrap: wrap;
-            margin-top: 10px;
-        }
-
-        .contact-info img {
-            width: 24px;
-            height: 24px;
-        }
-
-        .contact-info span {
-            font-size: 20px;
-            margin-bottom: 4px;
-            display: inline-block;
-            /* width: 48%; */
-        }
-
-        .clearfix::after {
-            content: "";
-            display: table;
-            clear: both;
-        }
-
-        .license-box {
-            text-align: center;
-            font-size: 20px;
-            font-weight: bold;
-            border: 2px dashed #000;
-            padding: 15px;
-            background: #f5f5f5;
-            margin: 6px 0;
-        }
-    </style>
-
     </style>
 </head>
-
 <body>
 
-    <div class="header">
-        <img src="{{ $logo }}" alt="Logo" class="logo">
-        <hr style="border:0.5px solid #f1f1f1">
-        <h2>{{ __('Purchase License') }}</h2>
-        <p>
-            {{ __('Thank you for buying the') }} <a href="#"
-                style="color: #007bff;font-weight: bold; text-decoration: none;">{{ __('Regular') }}
-                {{ __('LICENSE') }}</a>.
-        </p>
-        <p style="margin-top:-7px;">
-            {{ __('To see the full license details, head over to your Downloads page.') }}
-        </p>
+    <!-- Header Section -->
+    <table class="header-table">
+        <tr>
+            <td style="width: 55%; vertical-align: top;">
+                @if(!empty($logo))
+                    <img src="{{ $logo }}" alt="Logo" class="company-logo" />
+                @else
+                    <h1 style="font-size: 22px; color: #0f172a; font-weight: bold;">{{ config('app.name', 'Janmitram') }}</h1>
+                @endif
+                <p class="text-muted" style="font-size: 10.5px; margin-top: 4px;">
+                    Official Software & Digital Asset License Certificate
+                </p>
+            </td>
+            <td style="width: 45%; vertical-align: top;" class="text-right">
+                <div class="cert-badge">{{ __('LICENSE CERTIFICATE') }}</div>
+                <p class="text-muted" style="font-size: 11px; margin-top: 4px;">
+                    Issued On: <strong class="text-dark">{{ now()->format('d M Y') }}</strong>
+                </p>
+            </td>
+        </tr>
+    </table>
 
-        <hr style="border:0.5px solid #f1f1f1">
+    <!-- Licensee & Product Details -->
+    <div class="info-card">
+        <div class="info-card-title">{{ __('Licensed Asset & Grantee Information') }}</div>
+        <table style="width: 100%;">
+            <tr>
+                <td style="width: 25%; padding: 4px 0;" class="text-muted">{{ __('Licensee Name') }}:</td>
+                <td style="width: 75%; padding: 4px 0;" class="fw-bold text-dark">{{ $licenseData->user?->name ?? 'Valued Customer' }}</td>
+            </tr>
+            <tr>
+                <td style="padding: 4px 0;" class="text-muted">{{ __('Licensed Product') }}:</td>
+                <td style="padding: 4px 0;" class="fw-bold text-dark">{{ $licenseData->product?->name ?? 'Digital Product' }}</td>
+            </tr>
+            <tr>
+                <td style="padding: 4px 0;" class="text-muted">{{ __('License Type') }}:</td>
+                <td style="padding: 4px 0;" class="fw-medium text-dark">Standard Commercial License (Single Domain / Device)</td>
+            </tr>
+            <tr>
+                <td style="padding: 4px 0;" class="text-muted">{{ __('Issuing Platform') }}:</td>
+                <td style="padding: 4px 0;" class="text-dark">{{ config('app.url') }}</td>
+            </tr>
+        </table>
     </div>
-    <div style="margin-right:20px">
-        <div style="width:900px;margin:0 auto">
 
-            <div style="margin-top:20px;width: 100%; margin-bottom: 20px;">
-                <div style="width: 20%; float: left">{{ __('Owner Username') }}</div>
-                <div style="width: 4%; float: left">:</div>
-                <div style="width: 76%">{{ $licenseData->user?->name ?? 'N/A' }}</div>
-            </div>
-
-            <div style="width: 100%; margin-bottom: 20px;">
-                <div style="width: 20%; float: left">{{ __('Product name') }}</div>
-                <div style="width: 4%; float: left">:</div>
-                <div style="width: 76%">{{ $licenseData->product?->name ?? '' }}</div>
-            </div>
-
-            <div style="width: 100%; margin-bottom: 20px;">
-                <div style="width: 20%; float: left">{{ __('License Capability') }}</div>
-                <div style="width: 4%; float: left">:</div>
-                <div style="width: 76%">{{ __('One License') }} <small style="font-size: 12px;color:#555">(<strong
-                            style="color:red">{{ __('Note') }}</strong>:
-                        {{ __('Each license is valid for use on a single domain only') }})</small></div>
-            </div>
+    <!-- License Key Showcase -->
+    <div class="license-box">
+        <span class="text-muted" style="font-size: 11px; text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">
+            {{ __('Unique Purchase License Key') }}
+        </span>
+        <div class="license-key">
+            {{ $licenseData->product_license ?? 'N/A' }}
         </div>
     </div>
-    <hr style="border:0.5px solid #f1f1f1">
-    <div class="license-box">
-        {{ $licenseData->product_license ?? 'N/A' }}
-    </div>
-    <hr style="border:0.5px solid #f1f1f1">
-    <div class="footer-note">
-        <p>{{ __('For any queries related to this document or license please contact us.') }}</p>
-        <p style="margin-top:-7px;">{{ __('Support via') }} <a href="#">{{ config('app.url') }}</a></p>
+
+    <!-- Terms -->
+    <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; font-size: 10px; color: #64748b; line-height: 1.45;">
+        <strong class="text-dark">Terms of Use:</strong>
+        This digital certificate confirms valid authorization to deploy and utilize the licensed digital product in accordance with the terms agreed upon during purchase. Unauthorized distribution, copying, or reverse-engineering is strictly prohibited.
     </div>
 
+    <!-- Footer -->
     <div class="footer">
-        {{ __('Thank you for your purchase.') }}<br>
-        &copy; {{ date('Y') }} {{ config('app.name') }}. {{ __('All rights reserved.') }}.
+        {{ __('Thank you for choosing') }} {{ config('app.name', 'Janmitram') }}. &copy; {{ date('Y') }}. {{ __('All rights reserved.') }}
     </div>
 
 </body>
-
 </html>

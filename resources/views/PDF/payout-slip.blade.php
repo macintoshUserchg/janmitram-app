@@ -1,264 +1,367 @@
 @php
     $generaleSetting = function_exists('generaleSetting') ? generaleSetting('setting') : null;
     $siteName = ($generaleSetting && !empty($generaleSetting->name)) ? $generaleSetting->name : 'Janmitram';
+    $monthName = DateTime::createFromFormat('!m', $payout->month)?->format('F') ?? $payout->month;
 @endphp
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>Payout Statement - {{ $payout->shop?->name }} ({{ DateTime::createFromFormat('!m', $payout->month)?->format('F') }} {{ $payout->year }})</title>
+    <title>{{ __('Payout Statement') }} - {{ $payout->shop?->name }} ({{ $monthName }} {{ $payout->year }})</title>
     <style>
         body {
-            font-family: 'DejaVu Sans', sans-serif;
-            font-size: 13px;
-            color: #2D3748;
-            background-color: #FFFFFF;
+            font-family: "DejaVu Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+            color: #1e293b;
+            background-color: #ffffff;
+            font-size: 12px;
+            line-height: 1.4;
             margin: 0;
-            padding: 20px;
+            padding: 0;
         }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        p, h1, h2, h3, h4, h5, h6 {
+            margin: 0;
+            padding: 0;
+        }
+
+        .text-left { text-align: left; }
         .text-right { text-align: right; }
         .text-center { text-align: center; }
-        .font-bold { font-weight: bold; }
-        
+
+        .text-muted { color: #64748b; }
+        .text-dark { color: #0f172a; }
+        .text-primary { color: #d97706; }
+        .text-emerald { color: #059669; }
+
+        .fw-normal { font-weight: normal; }
+        .fw-medium { font-weight: 500; }
+        .fw-bold { font-weight: bold; }
+
+        /* Header */
         .header-table {
-            width: 100%;
-            border-bottom: 2px solid #25314C;
-            padding-bottom: 15px;
-            margin-bottom: 20px;
+            margin-bottom: 18px;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 14px;
         }
-        .company-name {
+
+        .company-logo {
+            max-height: 60px;
+            max-width: 150px;
+            object-fit: contain;
+        }
+
+        .payout-badge {
+            display: inline-block;
+            background-color: #0f172a;
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: bold;
+            letter-spacing: 0.8px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            margin-bottom: 6px;
+        }
+
+        .status-badge-settled {
+            display: inline-block;
+            background-color: #dcfce7;
+            color: #15803d;
+            font-size: 11px;
+            font-weight: bold;
+            padding: 3px 8px;
+            border-radius: 4px;
+            border: 1px solid #86efac;
+        }
+
+        /* Hero Highlight Card */
+        .hero-payout-card {
+            background-color: #f0fdf4;
+            border: 1.5px solid #86efac;
+            border-radius: 10px;
+            padding: 14px 18px;
+            margin-bottom: 18px;
+        }
+
+        .hero-amount {
             font-size: 24px;
             font-weight: bold;
-            color: #25314C;
-            letter-spacing: 1px;
-            margin-bottom: 2px;
-            text-transform: uppercase;
-        }
-        .company-tagline {
-            font-size: 11px;
-            font-weight: bold;
-            color: #4A5568;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 4px;
-        }
-        .company-info {
-            font-size: 11px;
-            color: #5E6470;
-            line-height: 15px;
-        }
-        .statement-title {
-            font-size: 18px;
-            font-weight: bold;
-            color: #1A202C;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .voucher-badge {
-            background-color: #EBF8FF;
-            color: #2B6CB0;
-            padding: 6px 12px;
-            border-radius: 4px;
-            font-weight: bold;
-            font-size: 12px;
-            display: inline-block;
-            margin-top: 5px;
+            color: #047857;
+            margin-top: 2px;
         }
 
-        .info-table {
-            width: 100%;
-            margin-bottom: 20px;
-            border-spacing: 0;
-        }
-        .info-box {
-            background: #F7FAFC;
-            border: 1px solid #E2E8F0;
-            border-radius: 6px;
-            padding: 12px;
+        /* Info Card */
+        .info-card {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px 14px;
             vertical-align: top;
         }
-        .box-title {
-            font-size: 12px;
-            font-weight: bold;
-            color: #4A5568;
-            text-transform: uppercase;
-            border-bottom: 1px solid #CBD5E0;
-            padding-bottom: 4px;
-            margin-bottom: 8px;
-        }
-        
-        .perf-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-        .perf-table th {
-            background-color: #EDF2F7;
-            color: #2D3748;
+
+        .info-card-title {
             font-size: 11px;
+            font-weight: bold;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #64748b;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 5px;
+            margin-bottom: 6px;
+        }
+
+        /* Line Items Table */
+        .items-table {
+            margin-top: 16px;
+            margin-bottom: 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .items-table th {
+            background-color: #0f172a;
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 9px 10px;
+        }
+
+        .items-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 11px;
+            color: #334155;
+            vertical-align: middle;
+        }
+
+        .items-table tr:nth-child(even) td {
+            background-color: #f8fafc;
+        }
+
+        .summary-total-row td {
+            border-top: 2px solid #047857;
+            border-bottom: 2px solid #047857;
+            background-color: #f0fdf4;
             padding: 8px;
-            border: 1px solid #CBD5E0;
-        }
-        .perf-table td {
-            padding: 10px;
-            border: 1px solid #E2E8F0;
-            text-align: center;
-            font-size: 12px;
-        }
-        
-        .breakdown-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 25px;
-        }
-        .breakdown-table th {
-            background-color: #25314C;
-            color: #FFFFFF;
-            font-size: 12px;
-            text-transform: uppercase;
-            padding: 10px;
-            text-align: left;
-        }
-        .breakdown-table td {
-            padding: 10px;
-            border-bottom: 1px solid #E2E8F0;
             font-size: 13px;
-        }
-        .total-row td {
             font-weight: bold;
-            font-size: 15px;
-            background-color: #EBF8FF;
-            color: #2B6CB0;
-            border-top: 2px solid #2B6CB0;
-            border-bottom: 2px solid #2B6CB0;
+            color: #047857;
         }
 
-        .badge-success {
-            background-color: #C6F6D5;
-            color: #22543D;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: bold;
+        /* Footer */
+        .payout-footer {
+            margin-top: 28px;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 14px;
+            font-size: 10px;
+            color: #64748b;
         }
 
-        .footer {
-            margin-top: 40px;
-            border-top: 1px solid #E2E8F0;
-            padding-top: 15px;
-            font-size: 11px;
-            color: #718096;
+        .seal-box {
             text-align: center;
+            float: right;
+            width: 180px;
+            border-top: 1px solid #94a3b8;
+            padding-top: 4px;
+            font-size: 10px;
+            font-weight: 500;
+            color: #475569;
         }
     </style>
 </head>
 <body>
 
-    <!-- Header Section with Official Janmitram Branding -->
+    <!-- Header Section -->
     <table class="header-table">
         <tr>
-            <td style="width: 60%;">
-                <div class="company-name">JANMITRAM</div>
-                <div class="company-tagline">Janmitram Partner Network Statement</div>
-                <div class="company-info">
-                    @if($generaleSetting?->email) <div>Email: {{ $generaleSetting->email }}</div> @else <div>Email: support@janmitram.com</div> @endif
-                    @if($generaleSetting?->mobile) <div>Contact: {{ $generaleSetting->mobile }}</div> @endif
-                    @if($generaleSetting?->address) <div>Address: {{ $generaleSetting->address }}</div> @endif
+            <!-- Company Details Left -->
+            <td style="width: 55%; vertical-align: top;">
+                <table style="width: 100%;">
+                    <tr>
+                        <td style="vertical-align: middle;">
+                            @if ($generaleSetting?->logo)
+                                <img src="{{ $generaleSetting->logo }}" alt="Logo" class="company-logo" />
+                            @else
+                                <h1 style="font-size: 22px; color: #0f172a; font-weight: bold; margin-bottom: 2px;">
+                                    {{ $siteName }}
+                                </h1>
+                            @endif
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding-top: 6px;">
+                            <p class="fw-bold text-dark" style="font-size: 12.5px;">{{ $siteName }} Partner Network</p>
+                            <p class="text-muted" style="font-size: 10.5px; max-width: 320px;">
+                                {{ $generaleSetting?->address ?? 'Corporate Finance Hub, Rajasthan, India' }}
+                            </p>
+                            <p class="text-muted" style="font-size: 10.5px; margin-top: 2px;">
+                                @if($generaleSetting?->email)<strong>Email:</strong> {{ $generaleSetting->email }} @endif
+                                @if($generaleSetting?->mobile) &nbsp;|&nbsp; <strong>Phone:</strong> {{ $generaleSetting->mobile }} @endif
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+
+            <!-- Payout Meta Right -->
+            <td style="width: 45%; vertical-align: top;" class="text-right">
+                <div class="payout-badge">{{ __('PAYOUT STATEMENT') }}</div>
+                <table style="width: 100%; margin-top: 4px;">
+                    <tr>
+                        <td class="text-right text-muted" style="font-size: 11px;">{{ __('Voucher Reference') }}:</td>
+                        <td class="text-right fw-bold text-dark" style="font-size: 11px; padding-left: 8px;">#PAY-{{ $payout->year }}{{ str_pad($payout->month, 2, '0', STR_PAD_LEFT) }}-{{ str_pad($payout->id, 5, '0', STR_PAD_LEFT) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-right text-muted" style="font-size: 11px;">{{ __('Statement Period') }}:</td>
+                        <td class="text-right fw-medium text-dark" style="font-size: 11px; padding-left: 8px;">{{ $monthName }} {{ $payout->year }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-right text-muted" style="font-size: 11px;">{{ __('Settlement Status') }}:</td>
+                        <td class="text-right" style="padding-left: 8px;">
+                            <span class="status-badge-settled">{{ __('CREDITED TO WALLET') }}</span>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Hero Settlement Summary Card -->
+    <div class="hero-payout-card">
+        <table style="width: 100%;">
+            <tr>
+                <td style="width: 50%; vertical-align: middle;">
+                    <span class="text-muted" style="font-size: 11px; text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">
+                        {{ __('Net Earnings Settled') }}
+                    </span>
+                    <div class="hero-amount">
+                        {{ showCurrency($payout->final_amount ?? $payout->total_amount ?? 0) }}
+                    </div>
+                </td>
+                <td style="width: 50%; vertical-align: middle; text-align: right;">
+                    <div style="font-size: 11px; color: #475569;">
+                        <strong>Partner Shop:</strong> {{ $payout->shop?->name }}<br>
+                        <strong>Settlement Date:</strong> {{ $payout->created_at ? $payout->created_at->format('d M Y') : now()->format('d M Y') }}
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Partner and Network Tier Context Cards -->
+    <table style="margin-bottom: 14px;">
+        <tr>
+            <!-- Partner Details -->
+            <td style="width: 49%; vertical-align: top;">
+                <div class="info-card">
+                    <div class="info-card-title">{{ __('Partner Shop Details') }}</div>
+                    <p class="fw-bold text-dark" style="font-size: 12px; margin-bottom: 2px;">{{ $payout->shop?->name }}</p>
+                    <p class="text-muted" style="font-size: 10.5px; line-height: 1.35; margin-bottom: 3px;">
+                        <strong>Owner:</strong> {{ $payout->shop?->user?->name ?? 'Partner' }}<br>
+                        <strong>Phone:</strong> {{ $payout->shop?->user?->phone ?? $payout->shop?->phone ?? 'N/A' }}<br>
+                        <strong>Email:</strong> {{ $payout->shop?->user?->email ?? 'N/A' }}
+                    </p>
                 </div>
             </td>
-            <td style="width: 40%;" class="text-right">
-                <div class="statement-title">Payout Statement</div>
-                <div class="voucher-badge">Voucher # PAY-{{ $payout->year }}{{ str_pad($payout->month, 2, '0', STR_PAD_LEFT) }}-{{ str_pad($payout->id, 5, '0', STR_PAD_LEFT) }}</div>
-                <div style="font-size: 11px; color: #718096; margin-top: 5px;">Period: {{ DateTime::createFromFormat('!m', $payout->month)?->format('F') }} {{ $payout->year }}</div>
-            </td>
-        </tr>
-    </table>
 
-    <!-- Info Section: Shop & Owner Details -->
-    <table class="info-table">
-        <tr>
-            <td style="width: 49%;" class="info-box">
-                <div class="box-title">Shop & Partner Details</div>
-                <div><strong>Shop Name:</strong> {{ $payout->shop?->name }}</div>
-                <div><strong>Owner Name:</strong> {{ $payout->shop?->user?->name ?? 'N/A' }}</div>
-                <div><strong>Email:</strong> {{ $payout->shop?->user?->email ?? 'N/A' }}</div>
-                <div><strong>Phone:</strong> {{ $payout->shop?->user?->phone ?? 'N/A' }}</div>
-                <div><strong>Shop ID:</strong> #{{ $payout->shop_id }}</div>
-            </td>
             <td style="width: 2%;"></td>
-            <td style="width: 49%;" class="info-box">
-                <div class="box-title">Statement & Status Info</div>
-                <div><strong>Payout Month:</strong> {{ DateTime::createFromFormat('!m', $payout->month)?->format('F') }} {{ $payout->year }}</div>
-                <div><strong>Credited On:</strong> {{ $payout->created_at ? $payout->created_at->format('d M Y') : 'N/A' }}</div>
-                <div><strong>Status:</strong> <span class="badge-success">CREDITED TO WALLET</span></div>
-                <div><strong>Sponsor Shop:</strong> {{ $payout->shop?->parent?->name ?? 'Root Network Node' }}</div>
-                <div><strong>Qualification Tier:</strong> {{ $payout->level ?? 'Level 0 (Member)' }}</div>
+
+            <!-- Tier & Parent Node -->
+            <td style="width: 49%; vertical-align: top;">
+                <div class="info-card">
+                    <div class="info-card-title">{{ __('Network & Tier Profile') }}</div>
+                    <p class="fw-bold text-dark" style="font-size: 12px; margin-bottom: 2px;">
+                        {{ $payout->level ?? 'Level Member' }}
+                    </p>
+                    <p class="text-muted" style="font-size: 10.5px; line-height: 1.35;">
+                        <strong>Sponsor Shop:</strong> {{ $payout->shop?->parent?->name ?? 'Root Node' }}<br>
+                        <strong>Shop ID:</strong> #{{ $payout->shop_id }}
+                    </p>
+                </div>
             </td>
         </tr>
     </table>
 
-    <!-- Qualification & Performance Matrix -->
-    <div style="font-size: 12px; font-weight: bold; color: #2D3748; margin-bottom: 8px; text-transform: uppercase;">1. Performance Summary & Qualification Matrix</div>
-    <table class="perf-table">
+    <!-- Commission & Earnings Breakdown Table -->
+    <table class="items-table">
         <thead>
             <tr>
-                <th>Tier Level</th>
-                <th>Personal Sales (₹)</th>
-                <th>Downline Group Sales (₹)</th>
-                <th>Downline Group Size</th>
+                <th style="width: 8%; text-align: center;">#</th>
+                <th style="width: 52%; text-align: left;">{{ __('Commission Component / Revenue Stream') }}</th>
+                <th style="width: 20%; text-align: center;">{{ __('Basis / Metrics') }}</th>
+                <th style="width: 20%; text-align: right;">{{ __('Settled Amount') }}</th>
             </tr>
         </thead>
         <tbody>
-            <tr>
-                <td><span class="font-bold" style="color: #25314C;">{{ $payout->level ?? 'Level 0' }}</span></td>
-                <td>₹{{ number_format((float) $payout->personal_sales, 2) }}</td>
-                <td>₹{{ number_format((float) $payout->group_sales, 2) }}</td>
-                <td>{{ number_format((int) $payout->group_size) }} Members</td>
+            @if(isset($payout->direct_commission) && $payout->direct_commission > 0)
+                <tr>
+                    <td class="text-center text-muted">1</td>
+                    <td><strong class="text-dark">{{ __('Direct Sales Commission') }}</strong></td>
+                    <td class="text-center text-muted">Direct Orders</td>
+                    <td class="text-right fw-bold text-dark">{{ showCurrency($payout->direct_commission) }}</td>
+                </tr>
+            @endif
+
+            @if(isset($payout->network_commission) && $payout->network_commission > 0)
+                <tr>
+                    <td class="text-center text-muted">2</td>
+                    <td><strong class="text-dark">{{ __('Sub-Shop / Network Commission') }}</strong></td>
+                    <td class="text-center text-muted">Downline Volume</td>
+                    <td class="text-right fw-bold text-dark">{{ showCurrency($payout->network_commission) }}</td>
+                </tr>
+            @endif
+
+            @if(isset($payout->bonus_amount) && $payout->bonus_amount > 0)
+                <tr>
+                    <td class="text-center text-muted">3</td>
+                    <td><strong class="text-dark">{{ __('Performance Bonus / Incentive') }}</strong></td>
+                    <td class="text-center text-muted">Tier Target Achieved</td>
+                    <td class="text-right fw-bold text-dark">{{ showCurrency($payout->bonus_amount) }}</td>
+                </tr>
+            @endif
+
+            @if(!isset($payout->direct_commission) && !isset($payout->network_commission))
+                <tr>
+                    <td class="text-center text-muted">1</td>
+                    <td><strong class="text-dark">{{ __('Monthly Partner Remittance') }}</strong></td>
+                    <td class="text-center text-muted">{{ $monthName }} {{ $payout->year }}</td>
+                    <td class="text-right fw-bold text-dark">{{ showCurrency($payout->final_amount ?? $payout->total_amount ?? 0) }}</td>
+                </tr>
+            @endif
+
+            <tr class="summary-total-row">
+                <td colspan="3" class="text-right fw-bold" style="border-radius: 6px 0 0 6px;">{{ __('Total Credited to Partner Wallet') }}:</td>
+                <td class="text-right fw-bold" style="border-radius: 0 6px 6px 0; font-size: 14px;">{{ showCurrency($payout->final_amount ?? $payout->total_amount ?? 0) }}</td>
             </tr>
         </tbody>
     </table>
 
-    <!-- Itemized Commission & Payout Breakdown -->
-    <div style="font-size: 12px; font-weight: bold; color: #2D3748; margin-bottom: 8px; text-transform: uppercase;">2. Itemized Earnings & Bonus Breakdown</div>
-    <table class="breakdown-table">
-        <thead>
-            <tr>
-                <th style="width: 10%;">#</th>
-                <th style="width: 60%;">Earnings Component Description</th>
-                <th style="width: 30%;" class="text-right">Amount (₹)</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>1</td>
-                <td>
-                    <strong>Phase 1 Direct Personal Sales Commission (10%)</strong><br/>
-                    <small style="color: #718096;">10% direct commission earned on personal delivered sales volume of ₹{{ number_format((float)$payout->personal_sales, 2) }}</small>
-                </td>
-                <td class="text-right font-bold">₹{{ number_format((float) $payout->phase1_amount, 2) }}</td>
-            </tr>
-            <tr>
-                <td>2</td>
-                <td>
-                    <strong>Phase 2 Downline Group Volume Bonus (Slab %)</strong><br/>
-                    <small style="color: #718096;">Group sales achievement slab bonus based on tier level {{ $payout->level ?? 'Level 0' }} across {{ number_format((int)$payout->group_size) }} downline shops</small>
-                </td>
-                <td class="text-right font-bold">₹{{ number_format((float) $payout->phase2_amount, 2) }}</td>
-            </tr>
-            <tr class="total-row">
-                <td colspan="2" class="text-right">Total Net Payout Credited:</td>
-                <td class="text-right">₹{{ number_format((float) $payout->total_payout, 2) }}</td>
-            </tr>
-        </tbody>
+    <!-- Footer -->
+    <table class="payout-footer">
+        <tr>
+            <td style="width: 65%; vertical-align: bottom;">
+                <p class="fw-bold text-dark" style="font-size: 10px; margin-bottom: 2px;">{{ __('Financial Note') }}</p>
+                <p class="text-muted" style="font-size: 9.5px; line-height: 1.35;">
+                    This statement is electronically generated by the {{ $siteName }} Finance & Settlements engine.<br>
+                    Settlement credits are directly deposited to the shop wallet balance.
+                </p>
+            </td>
+            <td style="width: 35%; vertical-align: bottom;" class="text-right">
+                <div class="seal-box">
+                    <p class="fw-bold text-dark">{{ $siteName }}</p>
+                    <p class="text-muted" style="font-size: 9px;">{{ __('Accounts & Settlement Department') }}</p>
+                </div>
+            </td>
+        </tr>
     </table>
-
-    <!-- Footer Section -->
-    <div class="footer">
-        <p>This statement is an official computer-generated monthly payout voucher issued by JANMITRAM.</p>
-        <p style="margin-top: 4px;">No physical signature is required. For any inquiries regarding payout calculations, please contact partner support.</p>
-    </div>
 
 </body>
 </html>

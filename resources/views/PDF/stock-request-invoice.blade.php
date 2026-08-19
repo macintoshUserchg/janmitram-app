@@ -1,311 +1,333 @@
 @php
     $directory = app()->getLocale() == 'ar' ? 'rtl' : 'ltr';
-    $setting = generaleSetting();
+    $setting = generaleSetting('setting');
 @endphp
 <!DOCTYPE html>
 <html lang="{{ app()->getLocale() }}" dir="{{ $directory }}">
-
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Janmitram Stock Dispatch Invoice #INV-SR-{{ str_pad((string)$stockRequest->id, 5, '0', STR_PAD_LEFT) }}</title>
+    <title>{{ __('Stock Dispatch Invoice') }} - #INV-SR-{{ str_pad((string)$stockRequest->id, 5, '0', STR_PAD_LEFT) }}</title>
     <style>
         body {
-            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-            color: #2D3748;
-            font-size: 13px;
-            line-height: 1.5;
-            margin: 0;
-            padding: 20px;
-            background-color: #F8FAFC;
-        }
-
-        .invoice-box {
-            max-width: 800px;
-            margin: auto;
-            padding: 25px;
+            font-family: "DejaVu Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+            color: #1e293b;
             background-color: #ffffff;
-            border: 2px solid #1E3A8A;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-
-        .table-full {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .header-title {
-            font-size: 20px;
-            font-weight: bold;
+            font-size: 12px;
+            line-height: 1.4;
             margin: 0;
+            padding: 0;
         }
 
-        .badge-completed {
-            background-color: #10B981;
-            color: #ffffff;
-            padding: 3px 10px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: bold;
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        p, h1, h2, h3, h4, h5, h6 {
+            margin: 0;
+            padding: 0;
+        }
+
+        .text-left { text-align: left; }
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+
+        .text-muted { color: #64748b; }
+        .text-dark { color: #0f172a; }
+        .text-primary { color: #d97706; }
+        .text-success { color: #059669; }
+
+        .fw-normal { font-weight: normal; }
+        .fw-medium { font-weight: 500; }
+        .fw-bold { font-weight: bold; }
+
+        /* Header */
+        .header-table {
+            margin-bottom: 18px;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 14px;
+        }
+
+        .company-logo {
+            max-height: 60px;
+            max-width: 150px;
+            object-fit: contain;
+        }
+
+        .invoice-badge {
             display: inline-block;
-            border: 1px solid #059669;
-        }
-
-        .section-box {
-            background-color: #F8FAFC;
-            border: 1px solid #CBD5E0;
-            border-radius: 8px;
-            padding: 15px;
-            margin-top: 15px;
-        }
-
-        .table-items {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            border: 1px solid #CBD5E0;
-        }
-
-        .table-items th {
-            background-color: #EDF2F7;
-            color: #2D3748;
-            font-size: 11px;
-            text-transform: uppercase;
-            padding: 10px;
-            border: 1px solid #CBD5E0;
-            text-align: left;
-        }
-
-        .table-items td {
-            padding: 10px;
-            border: 1px solid #E2E8F0;
-        }
-
-        .text-right {
-            text-align: right !important;
-        }
-
-        .text-center {
-            text-align: center !important;
-        }
-
-        .fw-bold {
+            background-color: #0f172a;
+            color: #ffffff;
+            font-size: 15px;
             font-weight: bold;
+            letter-spacing: 0.8px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            margin-bottom: 6px;
         }
 
-        .text-muted {
-            color: #718096;
+        .status-badge-dispatched {
+            display: inline-block;
+            background-color: #dcfce7;
+            color: #15803d;
+            font-size: 11px;
+            font-weight: bold;
+            padding: 3px 8px;
+            border-radius: 4px;
+            border: 1px solid #86efac;
         }
 
-        .footer-signatures {
-            margin-top: 35px;
-            width: 100%;
-            border-collapse: collapse;
+        /* Info Card */
+        .info-card {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px 14px;
+            vertical-align: top;
+        }
+
+        .info-card-title {
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #64748b;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 5px;
+            margin-bottom: 6px;
+        }
+
+        /* Line Items Table */
+        .items-table {
+            margin-top: 16px;
+            margin-bottom: 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .items-table th {
+            background-color: #0f172a;
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 9px 10px;
+        }
+
+        .items-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 11px;
+            color: #334155;
+            vertical-align: middle;
+        }
+
+        .items-table tr:nth-child(even) td {
+            background-color: #f8fafc;
+        }
+
+        .summary-total-row td {
+            border-top: 2px solid #0f172a;
+            border-bottom: 2px solid #0f172a;
+            background-color: #f8fafc;
+            padding: 8px;
+            font-size: 13px;
+            font-weight: bold;
+            color: #0f172a;
+        }
+
+        /* Footer */
+        .invoice-footer {
+            margin-top: 28px;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 14px;
+            font-size: 10px;
+            color: #64748b;
         }
 
         .signature-box {
-            border: 1px solid #CBD5E0;
-            border-radius: 8px;
-            padding: 15px;
-            background-color: #F8FAFC;
-        }
-
-        .signature-line {
-            border-top: 1px dashed #A0AEC0;
-            width: 80%;
-            margin: 30px auto 5px auto;
-            font-weight: bold;
-            color: #4A5568;
-        }
-
-        @media print {
-            .no-print {
-                display: none !important;
-            }
-            body {
-                padding: 0;
-                background-color: #ffffff;
-            }
-            .invoice-box {
-                border: 2px solid #000000;
-                box-shadow: none;
-            }
+            text-align: center;
+            float: right;
+            width: 180px;
+            border-top: 1px solid #94a3b8;
+            padding-top: 4px;
+            font-size: 10px;
+            font-weight: 500;
+            color: #475569;
         }
     </style>
 </head>
-
 <body>
-    <div class="no-print" style="margin-bottom: 20px; text-align: right; max-width: 800px; margin-left: auto; margin-right: auto;">
-        <button onclick="window.print()" style="background-color: #2563EB; color: white; border: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; cursor: pointer;">
-            🖨️ Print Dispatch Note
-        </button>
-    </div>
 
-    <div class="invoice-box">
-        <!-- Janmitram Brand Header Banner -->
-        <table class="table-full" style="border-bottom: 2px solid #1E3A8A; padding-bottom: 12px; margin-bottom: 15px;">
-            <tr>
-                <td style="width: 50%; vertical-align: middle;">
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        @if($setting?->logo)
-                            <img src="{{ $setting->logo }}" alt="Janmitram Logo" style="max-height: 50px; width: auto; object-fit: contain;">
-                        @endif
-                        <div>
-                            <h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #1E3A8A; letter-spacing: 0.5px;">{{ strtoupper($setting?->name ?? 'JANMITRAM') }}</h2>
-                            <div style="font-size: 11px; color: #4B5563; font-weight: 600;">Central Logistics & Retail Fulfillment Network</div>
-                        </div>
-                    </div>
-                </td>
-                <td class="text-right" style="width: 50%; vertical-align: middle;">
-                    <h1 class="header-title" style="color: #1E3A8A; font-size: 18px; margin-bottom: 4px;">INVOICE / GOODS DISPATCH NOTE</h1>
-                    <div style="font-size: 13px; font-weight: bold; color: #4B5563;">
-                        Invoice #: <span style="color: #2563EB;">INV-SR-{{ str_pad((string)$stockRequest->id, 5, '0', STR_PAD_LEFT) }}</span>
-                    </div>
-                    <div style="margin-top: 4px;">
-                        <span class="badge-completed">APPROVED & DISPATCHED</span>
-                        <span style="font-size: 11px; margin-left: 8px;" class="text-muted">
-                            {{ $stockRequest->updated_at ? $stockRequest->updated_at->format('d M, Y h:i A') : now()->format('d M, Y') }}
-                        </span>
-                    </div>
-                </td>
-            </tr>
-        </table>
-
-        <!-- Sender & Recipient Information Cards -->
-        <table class="table-full">
-            <tr>
-                <td style="width: 48%; vertical-align: top;">
-                    <div class="section-box">
-                        <div class="fw-bold" style="color: #1E3A8A; font-size: 13px; margin-bottom: 6px; border-bottom: 1px solid #CBD5E0; padding-bottom: 4px;">
-                            🏢 DISPATCHING WAREHOUSE (FROM)
-                        </div>
-                        <div><strong>{{ $stockRequest->warehouse?->name ?? 'Central Warehouse' }}</strong></div>
-                        @if($stockRequest->warehouse?->address)
-                            <div class="text-muted">{{ $stockRequest->warehouse->address }}</div>
-                        @endif
-                        <div class="text-muted" style="font-size: 11px; margin-top: 4px;">Type: Central Fulfillment Logistics Hub</div>
-                    </div>
-                </td>
-                <td style="width: 4%;"></td>
-                <td style="width: 48%; vertical-align: top;">
-                    <div class="section-box">
-                        <div class="fw-bold" style="color: #1E3A8A; font-size: 13px; margin-bottom: 6px; border-bottom: 1px solid #CBD5E0; padding-bottom: 4px;">
-                            🏪 RECEIVING SHOP (TO)
-                        </div>
-                        <div><strong>{{ $stockRequest->shop?->name ?? 'Recipient Shop' }}</strong></div>
-                        @if($stockRequest->shop?->address)
-                            <div class="text-muted">{{ $stockRequest->shop->address }}</div>
-                        @endif
-                        <div class="text-muted" style="font-size: 11px; margin-top: 4px;">Shop ID: #{{ $stockRequest->shop_id }}</div>
-                    </div>
-                </td>
-            </tr>
-        </table>
-
-        <!-- Itemized Products Table with Full Cell Borders -->
-        <table class="table-items">
-            <thead>
-                <tr>
-                    <th class="text-center" style="width: 40px;">#</th>
-                    <th>Product & Master SKU</th>
-                    <th>Category / Brand</th>
-                    <th class="text-center" style="width: 100px;">Dispatched Qty</th>
-                    <th class="text-right" style="width: 110px;">Unit Price</th>
-                    <th class="text-right" style="width: 120px;">Subtotal</th>
-                </tr>
-            </thead>
-            <tbody>
-                @php
-                    $totalQty = 0;
-                    $totalValuation = 0;
-                @endphp
-                @foreach($stockRequest->items as $index => $item)
-                    @php
-                        $qty = $item->quantity;
-                        $price = $item->product?->price ?? 0;
-                        $subtotal = $qty * $price;
-                        $totalQty += $qty;
-                        $totalValuation += $subtotal;
-                    @endphp
+    <!-- Header Section -->
+    <table class="header-table">
+        <tr>
+            <!-- Company Info Left -->
+            <td style="width: 55%; vertical-align: top;">
+                <table style="width: 100%;">
                     <tr>
-                        <td class="text-center">{{ $index + 1 }}</td>
-                        <td>
-                            <div class="fw-bold">{{ $item->product?->name ?? 'Product #'.$item->product_id }}</div>
-                            <div class="text-muted" style="font-size: 11px;">
-                                SKU: {{ $item->product?->code ?? 'N/A' }} | Master ID: #{{ $item->product_id }}
-                                @if($item->color) | Color: {{ $item->color->name }} @endif
-                                @if($item->size) | Size: {{ $item->size->name }} @endif
-                            </div>
+                        <td style="vertical-align: middle;">
+                            @if ($setting?->logo)
+                                <img src="{{ $setting->logo }}" alt="Logo" class="company-logo" />
+                            @else
+                                <h1 style="font-size: 22px; color: #0f172a; font-weight: bold; margin-bottom: 2px;">
+                                    {{ $setting?->name ?? 'Janmitram' }}
+                                </h1>
+                            @endif
                         </td>
-                        <td>
-                            {{ $item->product?->brand?->name ?? '—' }}
-                        </td>
-                        <td class="text-center fw-bold">{{ $qty }} units</td>
-                        <td class="text-right">{{ showCurrency($price) }}</td>
-                        <td class="text-right fw-bold">{{ showCurrency($subtotal) }}</td>
                     </tr>
-                @endforeach
-            </tbody>
-        </table>
+                    <tr>
+                        <td style="padding-top: 6px;">
+                            <p class="fw-bold text-dark" style="font-size: 12.5px;">{{ $setting?->name ?? 'Janmitram Central Logistics' }}</p>
+                            <p class="text-muted" style="font-size: 10.5px; max-width: 320px;">
+                                {{ $setting?->address ?? 'Central Hub, Rajasthan, India' }}
+                            </p>
+                            <p class="text-muted" style="font-size: 10.5px; margin-top: 2px;">
+                                @if($setting?->email)<strong>Email:</strong> {{ $setting->email }} @endif
+                                @if($setting?->mobile) &nbsp;|&nbsp; <strong>Phone:</strong> {{ $setting->mobile }} @endif
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
 
-        <!-- Financial & Quantity Summary Box -->
-        <table class="table-full" style="margin-top: 15px;">
+            <!-- Invoice Details Right -->
+            <td style="width: 45%; vertical-align: top;" class="text-right">
+                <div class="invoice-badge">{{ __('GOODS DISPATCH NOTE') }}</div>
+                <table style="width: 100%; margin-top: 4px;">
+                    <tr>
+                        <td class="text-right text-muted" style="font-size: 11px;">{{ __('Transfer Invoice #') }}:</td>
+                        <td class="text-right fw-bold text-dark" style="font-size: 11px; padding-left: 8px;">#INV-SR-{{ str_pad((string)$stockRequest->id, 5, '0', STR_PAD_LEFT) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-right text-muted" style="font-size: 11px;">{{ __('Dispatch Date') }}:</td>
+                        <td class="text-right fw-medium text-dark" style="font-size: 11px; padding-left: 8px;">{{ $stockRequest->updated_at ? $stockRequest->updated_at->format('d M Y, h:i A') : now()->format('d M Y') }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-right text-muted" style="font-size: 11px;">{{ __('Status') }}:</td>
+                        <td class="text-right" style="padding-left: 8px;">
+                            <span class="status-badge-dispatched">{{ strtoupper($stockRequest->status) }}</span>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Sender & Recipient Cards -->
+    <table style="margin-bottom: 14px;">
+        <tr>
+            <!-- Dispatching Warehouse -->
+            <td style="width: 49%; vertical-align: top;">
+                <div class="info-card">
+                    <div class="info-card-title">{{ __('Dispatching Hub (Source)') }}</div>
+                    <p class="fw-bold text-dark" style="font-size: 12px; margin-bottom: 2px;">{{ $stockRequest->warehouse?->name ?? 'Central Warehouse' }}</p>
+                    <p class="text-muted" style="font-size: 10.5px; line-height: 1.35;">
+                        {{ $stockRequest->warehouse?->address ?? 'Central Hub Warehouse, India' }}
+                    </p>
+                    <p class="text-muted" style="font-size: 10px; margin-top: 3px;">
+                        <strong>Type:</strong> Regional Logistics Hub
+                    </p>
+                </div>
+            </td>
+
+            <td style="width: 2%;"></td>
+
+            <!-- Receiving Shop -->
+            <td style="width: 49%; vertical-align: top;">
+                <div class="info-card">
+                    <div class="info-card-title">{{ __('Receiving Shop (Destination)') }}</div>
+                    <p class="fw-bold text-dark" style="font-size: 12px; margin-bottom: 2px;">{{ $stockRequest->shop?->name ?? 'Recipient Shop' }}</p>
+                    <p class="text-muted" style="font-size: 10.5px; line-height: 1.35;">
+                        {{ $stockRequest->shop?->address ?? 'Partner Retail Store, India' }}
+                    </p>
+                    <p class="text-muted" style="font-size: 10px; margin-top: 3px;">
+                        @if($stockRequest->shop?->phone)<strong>Phone:</strong> {{ $stockRequest->shop->phone }} @endif
+                    </p>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Line Items Table -->
+    @php
+        $totalItems = 0;
+        $totalQuantity = 0;
+        $totalValuation = 0;
+    @endphp
+    <table class="items-table">
+        <thead>
             <tr>
-                <td style="width: 55%; vertical-align: top;">
-                    @if($stockRequest->notes)
-                        <div class="section-box">
-                            <div class="fw-bold" style="font-size: 11px; text-transform: uppercase; color: #718096; border-bottom: 1px solid #CBD5E0; padding-bottom: 4px;">Dispatch Notes:</div>
-                            <div style="font-style: italic; margin-top: 6px;">{{ $stockRequest->notes }}</div>
-                        </div>
-                    @endif
-                </td>
-                <td style="width: 45%; vertical-align: top;">
-                    <div class="section-box" style="background-color: #EFF6FF; border: 1.5px solid #93C5FD;">
-                        <table class="table-full" style="font-size: 13px;">
-                            <tr>
-                                <td>Total SKU Lines:</td>
-                                <td class="text-right fw-bold">{{ $stockRequest->items->count() }} SKUs</td>
-                            </tr>
-                            <tr>
-                                <td>Total Dispatched Units:</td>
-                                <td class="text-right fw-bold">{{ $totalQty }} Physical Units</td>
-                            </tr>
-                            <tr style="border-top: 1.5px solid #3B82F6; font-size: 15px; font-weight: bold; color: #1E3A8A;">
-                                <td style="padding-top: 8px;">Total Dispatch Value:</td>
-                                <td class="text-right" style="padding-top: 8px;">{{ showCurrency($totalValuation) }}</td>
-                            </tr>
-                        </table>
-                    </div>
-                </td>
+                <th style="width: 5%; text-align: center;">#</th>
+                <th style="width: 45%; text-align: left;">{{ __('Product Description') }}</th>
+                <th style="width: 15%; text-align: center;">{{ __('Variant / SKU') }}</th>
+                <th style="width: 10%; text-align: center;">{{ __('Req Qty') }}</th>
+                <th style="width: 10%; text-align: center;">{{ __('Sent Qty') }}</th>
+                <th style="width: 15%; text-align: right;">{{ __('Est. Rate') }}</th>
             </tr>
-        </table>
-
-        <!-- Signatures Footer -->
-        <table class="footer-signatures">
-            <tr>
-                <td style="width: 48%; vertical-align: top;">
-                    <div class="signature-box text-center">
-                        <div class="signature-line">Authorized Warehouse Issuer</div>
-                        <div class="text-muted" style="font-size: 10px;">{{ $stockRequest->warehouse?->name ?? 'Central Logistics Hub' }}</div>
-                    </div>
-                </td>
-                <td style="width: 4%;"></td>
-                <td style="width: 48%; vertical-align: top;">
-                    <div class="signature-box text-center">
-                        <div class="signature-line">Receiving Shop Representative</div>
-                        <div class="text-muted" style="font-size: 10px;">{{ $stockRequest->shop?->name ?? 'Shop Manager' }}</div>
-                    </div>
-                </td>
+        </thead>
+        <tbody>
+            @forelse($stockRequest->items as $item)
+                @php
+                    $qty = $item->quantity;
+                    $sentQty = $item->approved_quantity ?? $qty;
+                    $rate = $item->unit_cost ?? $item->product?->price ?? 0;
+                    $totalItems++;
+                    $totalQuantity += $sentQty;
+                    $totalValuation += ($rate * $sentQty);
+                @endphp
+                <tr>
+                    <td class="text-center text-muted">{{ $loop->iteration }}</td>
+                    <td>
+                        <strong class="text-dark">{{ $item->product?->name ?? 'Product' }}</strong>
+                        @if($item->product?->brand)
+                            <div class="text-muted" style="font-size: 9.5px;">Brand: {{ $item->product->brand->name }}</div>
+                        @endif
+                    </td>
+                    <td class="text-center text-muted">
+                        @if($item->color || $item->size)
+                            {{ $item->color?->name ?? '' }} {{ $item->size?->name ? '('.$item->size->name.')' : '' }}
+                        @else
+                            Default
+                        @endif
+                    </td>
+                    <td class="text-center text-muted">{{ $qty }}</td>
+                    <td class="text-center fw-bold text-dark">{{ $sentQty }}</td>
+                    <td class="text-right fw-medium">{{ showCurrency($rate) }}</td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="6" class="text-center text-muted" style="padding: 16px;">{{ __('No items found in this dispatch note.') }}</td>
+                </tr>
+            @endforelse
+            <tr class="summary-total-row">
+                <td colspan="4" class="text-right fw-bold" style="border-radius: 6px 0 0 6px;">{{ __('Total Dispatched Inventory Units') }}:</td>
+                <td class="text-center fw-bold">{{ $totalQuantity }}</td>
+                <td class="text-right text-primary fw-bold" style="border-radius: 0 6px 6px 0;">{{ showCurrency($totalValuation) }}</td>
             </tr>
-        </table>
+        </tbody>
+    </table>
 
-        <!-- Janmitram Platform Footer Branding -->
-        <div style="margin-top: 25px; padding-top: 10px; border-top: 1px solid #E2E8F0; text-align: center; font-size: 10px; color: #718096;">
-            <strong>JANMITRAM</strong> • Official Stock Transfer & Logistics Fulfillment Document • Generated on {{ now()->format('d M, Y h:i A') }}
-        </div>
-    </div>
+    <!-- Footer & Signatures -->
+    <table class="invoice-footer">
+        <tr>
+            <td style="width: 50%; vertical-align: top;">
+                <div style="border-top: 1px dashed #94a3b8; width: 80%; padding-top: 4px;">
+                    <p class="fw-bold text-dark">{{ __('Dispatched By (Warehouse Logistics)') }}</p>
+                    <p class="text-muted" style="font-size: 9px;">Signature & Verification Stamp</p>
+                </div>
+            </td>
+            <td style="width: 50%; vertical-align: top;" class="text-right">
+                <div class="signature-box" style="float: right;">
+                    <p class="fw-bold text-dark">{{ __('Received By (Shop Manager)') }}</p>
+                    <p class="text-muted" style="font-size: 9px;">Signature & Store Seal</p>
+                </div>
+            </td>
+        </tr>
+    </table>
+
 </body>
-
 </html>

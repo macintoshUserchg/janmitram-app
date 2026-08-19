@@ -20,12 +20,13 @@ class ProductLicenseController extends Controller
 
         // Create mPDF instance
         $mpdf = new Mpdf([
-            'margin_top' => 20,
-            'margin_bottom' => 20,
-            'margin_left' => 15,
-            'margin_right' => 15,
+            'margin_top' => 12,
+            'margin_bottom' => 12,
+            'margin_left' => 12,
+            'margin_right' => 12,
             'default_font_size' => 12,
             'default_font' => 'dejavusans',
+            'tempDir' => storage_path('app/public/mpdf_tmp'),
         ]);
 
         $mpdf->WriteHTML($html);
