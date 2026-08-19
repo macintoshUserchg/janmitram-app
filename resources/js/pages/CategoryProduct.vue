@@ -351,8 +351,10 @@ import { useMaster } from '../stores/MasterStore';
 import VueSlider from "vue-slider-component";
 import "vue-slider-component/theme/default.css";
 import { useAuth } from '../stores/AuthStore';
+import { useLocationStore } from '../stores/LocationStore';
 
 const authStore = useAuth();
+const locationStore = useLocationStore();
 
 const isLoading = ref(true);
 const master = useMaster();
@@ -364,6 +366,10 @@ onMounted(() => {
     fetchProducts();
     fetchSubCategories();
     window.scrollTo(0, 0);
+});
+
+watch(() => locationStore.nearestShopId, () => {
+    fetchProducts();
 });
 
 watch(() => route.params.slug, () => {
@@ -451,13 +457,18 @@ const fetchProducts = async () => {
         behavior: "smooth",
     });
     isLoading.value = true;
+    const params = {
+        page: currentPage.value,
+        per_page: perPage,
+        sub_category_id: route.query.subcategory,
+        ...filterFormData.value,
+    };
+    if (locationStore.nearestShopId && !params.shop_id) {
+        params.shop_id = locationStore.nearestShopId;
+    }
+
     axios.get('/products', {
-        params: {
-            page: currentPage.value,
-            per_page: perPage,
-            sub_category_id: route.query.subcategory,
-            ...filterFormData.value,
-        },
+        params,
         headers: {
             "Accept-Language": master.locale || "en",
             Authorization: authStore.token

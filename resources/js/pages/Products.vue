@@ -283,6 +283,7 @@ import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot, } fr
 import { FunnelIcon, XMarkIcon, ArrowLeftIcon, } from "@heroicons/vue/24/outline";
 import { StarIcon } from "@heroicons/vue/24/solid";
 import ProductCard from "../components/ProductCard.vue";
+import { useLocationStore } from "../stores/LocationStore";
 import { useMaster } from "../stores/MasterStore";
 
 import VueSlider from "vue-slider-component";
@@ -292,6 +293,7 @@ import SkeletonLoader from "../components/SkeletonLoader.vue";
 const priceRange = ref([0, 1000]);
 
 const master = useMaster();
+const locationStore = useLocationStore();
 const isLoading = ref(true);
 
 onMounted(() => {
@@ -308,6 +310,10 @@ onBeforeUnmount(() => {
 const search = master.search;
 
 watch(() => master.search, () => {
+    fetchProducts();
+});
+
+watch(() => locationStore.nearestShopId, () => {
     fetchProducts();
 });
 
@@ -354,13 +360,18 @@ const fetchProducts = async () => {
         top: 0,
         behavior: "smooth",
     });
+    const params = {
+        page: currentPage.value,
+        per_page: perPage,
+        search: master.search,
+        ...filterFormData.value,
+    };
+    if (locationStore.nearestShopId && !params.shop_id) {
+        params.shop_id = locationStore.nearestShopId;
+    }
+
     axios.get("/products", {
-        params: {
-            page: currentPage.value,
-            per_page: perPage,
-            search: master.search,
-            ...filterFormData.value,
-        },
+        params,
         headers: {
             "Accept-Language": master.locale || "en",
         },
