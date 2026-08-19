@@ -41,7 +41,7 @@ class GoogleMapsService
             return [];
         }
 
-        // 1. Try Google Places API (New)
+        // 1. Try Google Places API (New) with Concurrent Pool
         if (! empty($this->apiKey)) {
             try {
                 $payload = [
@@ -67,15 +67,32 @@ class GoogleMapsService
                 if ($newResponse->successful()) {
                     $suggestions = $newResponse->json('suggestions', []);
                     if (! empty($suggestions)) {
+                        $topSuggestions = array_slice($suggestions, 0, $limit);
+                        $placeIds = [];
+                        foreach ($topSuggestions as $s) {
+                            $pid = $s['placePrediction']['placeId'] ?? null;
+                            if ($pid) {
+                                $placeIds[] = $pid;
+                            }
+                        }
+
+                        // Batch resolve coordinates concurrently in parallel
+                        $coordsMap = $this->getPlacesCoordinatesBatch($placeIds);
+
                         $results = [];
-                        foreach (array_slice($suggestions, 0, $limit) as $s) {
+                        foreach ($topSuggestions as $s) {
                             $pred = $s['placePrediction'] ?? [];
                             $placeId = $pred['placeId'] ?? null;
                             $text = $pred['text']['text'] ?? '';
-                            $coords = $this->getPlaceCoordinates($placeId);
+                            $mainText = $pred['structuredFormat']['mainText']['text'] ?? explode(',', $text)[0];
+                            $secondaryText = $pred['structuredFormat']['secondaryText']['text'] ?? '';
+
+                            $coords = $coordsMap[$placeId] ?? null;
 
                             $results[] = [
                                 'display_name' => $text,
+                                'main_text' => $mainText,
+                                'secondary_text' => $secondaryText,
                                 'place_id' => $placeId,
                                 'lat' => $coords['lat'] ?? null,
                                 'lng' => $coords['lng'] ?? null,
@@ -109,13 +126,19 @@ class GoogleMapsService
                 if ($legacyRes->successful()) {
                     $preds = $legacyRes->json('predictions', []);
                     if (! empty($preds)) {
+                        $topPreds = array_slice($preds, 0, $limit);
+                        $placeIds = array_filter(array_column($topPreds, 'place_id'));
+                        $coordsMap = $this->getPlacesCoordinatesBatch($placeIds);
+
                         $results = [];
-                        foreach (array_slice($preds, 0, $limit) as $pred) {
+                        foreach ($topPreds as $pred) {
                             $placeId = $pred['place_id'] ?? null;
-                            $coords = $this->getPlaceCoordinates($placeId);
+                            $coords = $coordsMap[$placeId] ?? null;
 
                             $results[] = [
                                 'display_name' => $pred['description'] ?? '',
+                                'main_text' => $pred['structured_formatting']['main_text'] ?? '',
+                                'secondary_text' => $pred['structured_formatting']['secondary_text'] ?? '',
                                 'place_id' => $placeId,
                                 'lat' => $coords['lat'] ?? null,
                                 'lng' => $coords['lng'] ?? null,
@@ -150,8 +173,12 @@ class GoogleMapsService
                 if (! empty($osmData)) {
                     $results = [];
                     foreach ($osmData as $item) {
+                        $displayName = $item['display_name'] ?? '';
+                        $parts = explode(',', $displayName);
                         $results[] = [
-                            'display_name' => $item['display_name'] ?? '',
+                            'display_name' => $displayName,
+                            'main_text' => trim($parts[0] ?? ''),
+                            'secondary_text' => trim(implode(',', array_slice($parts, 1))),
                             'place_id' => $item['place_id'] ?? null,
                             'lat' => (float) ($item['lat'] ?? 0),
                             'lng' => (float) ($item['lon'] ?? 0),
@@ -181,18 +208,21 @@ class GoogleMapsService
                     foreach ($features as $f) {
                         $coords = $f['geometry']['coordinates'] ?? [0, 0];
                         $props = $f['properties'] ?? [];
+                        $name = $props['name'] ?? '';
                         $nameParts = array_filter([
-                            $props['name'] ?? null,
                             $props['street'] ?? null,
                             $props['district'] ?? null,
                             $props['city'] ?? null,
                             $props['state'] ?? null,
                         ]);
-                        $displayName = implode(', ', $nameParts);
+                        $secondary = implode(', ', $nameParts);
+                        $displayName = $name ? ($secondary ? "{$name}, {$secondary}" : $name) : $secondary;
 
                         if (! empty($displayName)) {
                             $results[] = [
                                 'display_name' => $displayName,
+                                'main_text' => $name ?: $props['street'] ?? $displayName,
+                                'secondary_text' => $secondary,
                                 'place_id' => $props['osm_id'] ?? null,
                                 'lat' => (float) ($coords[1] ?? 0),
                                 'lng' => (float) ($coords[0] ?? 0),
@@ -214,57 +244,47 @@ class GoogleMapsService
     }
 
     /**
-     * Resolve Coordinates from Place ID via Google Place Details (New & Legacy).
+     * Batch resolve Coordinates for multiple Place IDs concurrently via HTTP Pool.
      */
-    protected function getPlaceCoordinates(?string $placeId): ?array
+    protected function getPlacesCoordinatesBatch(array $placeIds): array
     {
-        if (empty($placeId) || empty($this->apiKey)) {
-            return null;
+        if (empty($placeIds) || empty($this->apiKey)) {
+            return [];
         }
 
-        // 1. Try Google Place Details (New)
         try {
-            $res = Http::timeout(3)
-                ->withHeaders(['X-Goog-Api-Key' => $this->apiKey])
-                ->get("https://places.googleapis.com/v1/places/{$placeId}", [
-                    'fields' => 'location,displayName,formattedAddress',
-                ]);
+            $responses = Http::pool(function ($pool) use ($placeIds) {
+                $reqs = [];
+                foreach ($placeIds as $id) {
+                    $reqs[$id] = $pool->withHeaders(['X-Goog-Api-Key' => $this->apiKey])
+                        ->timeout(2.5)
+                        ->get("https://places.googleapis.com/v1/places/{$id}", [
+                            'fields' => 'location',
+                        ]);
+                }
+                return $reqs;
+            });
 
-            if ($res->successful()) {
-                $loc = $res->json('location');
-                if ($loc && isset($loc['latitude'], $loc['longitude'])) {
-                    return [
-                        'lat' => (float) $loc['latitude'],
-                        'lng' => (float) $loc['longitude'],
-                    ];
+            $coordsMap = [];
+            foreach ($placeIds as $id) {
+                $res = $responses[$id] ?? null;
+                if ($res && $res->successful()) {
+                    $loc = $res->json('location');
+                    if ($loc && isset($loc['latitude'], $loc['longitude'])) {
+                        $coordsMap[$id] = [
+                            'lat' => (float) $loc['latitude'],
+                            'lng' => (float) $loc['longitude'],
+                        ];
+                    }
                 }
             }
+
+            return $coordsMap;
         } catch (\Throwable $e) {
-            Log::debug('Google Place Details (New) error: ' . $e->getMessage());
+            Log::debug('getPlacesCoordinatesBatch error: ' . $e->getMessage());
         }
 
-        // 2. Try Google Place Details (Legacy)
-        try {
-            $res = Http::timeout(3)->get('https://maps.googleapis.com/maps/api/place/details/json', [
-                'place_id' => $placeId,
-                'fields' => 'geometry',
-                'key' => $this->apiKey,
-            ]);
-
-            if ($res->successful()) {
-                $loc = $res->json('result.geometry.location');
-                if ($loc && isset($loc['lat'], $loc['lng'])) {
-                    return [
-                        'lat' => (float) $loc['lat'],
-                        'lng' => (float) $loc['lng'],
-                    ];
-                }
-            }
-        } catch (\Throwable $e) {
-            Log::debug('Google Place Details (Legacy) error: ' . $e->getMessage());
-        }
-
-        return null;
+        return [];
     }
 
     /**

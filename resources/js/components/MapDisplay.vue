@@ -1,5 +1,5 @@
 <template>
-    <div class="google-map-component w-full select-none">
+    <div class="google-map-component w-full select-none" ref="mapWrapperRef">
         <!-- Top Search Bar & GPS Geolocation Control -->
         <div v-if="enableSetLocation" class="mb-3 flex flex-wrap gap-2 items-center">
             <!-- Search Autocomplete Input -->
@@ -10,7 +10,7 @@
                         type="text"
                         v-model="searchQuery"
                         @input="onSearchInput"
-                        @focus="showResults = searchResults.length > 0"
+                        @focus="onInputFocus"
                         @keydown.enter.prevent.stop="handleEnterSearch"
                         @keydown.down.prevent.stop="navigateResults(1)"
                         @keydown.up.prevent.stop="navigateResults(-1)"
@@ -19,13 +19,13 @@
                         class="w-full pl-10 pr-9 py-2.5 text-sm bg-white border border-slate-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all font-medium text-slate-800 placeholder:text-slate-400"
                     />
                     <!-- Search Icon -->
-                    <span class="absolute left-3.5 top-3 text-amber-500">
+                    <span class="absolute left-3.5 top-3 text-amber-500 pointer-events-none">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                     </span>
                     <!-- Spinner / Clear Icon -->
-                    <span v-if="isSearching" class="absolute right-3 top-3 text-amber-500">
+                    <span v-if="isSearching" class="absolute right-3 top-3 text-amber-500 pointer-events-none">
                         <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -44,7 +44,7 @@
                 <!-- Dropdown Search Results (Google Places) -->
                 <div
                     v-if="showResults && searchResults.length > 0"
-                    class="absolute z-[1000] left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-xl shadow-2xl max-h-64 overflow-y-auto divide-y divide-slate-100"
+                    class="absolute z-[1000] left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-xl shadow-2xl max-h-72 overflow-y-auto divide-y divide-slate-100"
                 >
                     <button
                         type="button"
@@ -60,8 +60,12 @@
                             </svg>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <p class="text-slate-800 font-semibold text-xs leading-snug">{{ item.display_name.split(',')[0] }}</p>
-                            <p class="text-slate-500 text-[11px] truncate leading-tight mt-0.5">{{ item.display_name }}</p>
+                            <p class="text-slate-900 font-semibold text-xs leading-snug">
+                                {{ item.main_text || item.display_name.split(',')[0] }}
+                            </p>
+                            <p class="text-slate-500 text-[11px] truncate leading-tight mt-0.5">
+                                {{ item.secondary_text || item.display_name }}
+                            </p>
                         </div>
                     </button>
                 </div>
@@ -213,12 +217,12 @@ const props = defineProps({
 
 const emit = defineEmits(["location-updated"]);
 
+const mapWrapperRef = ref(null);
 const mapContainer = ref(null);
 const searchInputRef = ref(null);
 
 let gMap = null;
 let gMarker = null;
-let gGeocoder = null;
 
 let lMap = null;
 let lMarker = null;
@@ -240,6 +244,10 @@ const isLocating = ref(false);
 const isGeocodingAddress = ref(false);
 const descriptiveAddress = ref("");
 const heuristicNotice = ref("");
+
+// Client-side instant in-memory search cache & AbortController
+const searchCache = new Map();
+let currentAbortController = null;
 
 // Default Jaipur, India coordinates
 const currentLat = ref(27.0056949);
@@ -303,7 +311,7 @@ async function reverseGeocodeCoords(lat, lng) {
         } finally {
             isGeocodingAddress.value = false;
         }
-    }, 400);
+    }, 300);
 }
 
 function updateLocation(lat, lng, triggerEmit = true, address = "") {
@@ -372,38 +380,62 @@ function applyManualCoordinates() {
     updateLocation(pLat, pLng, true);
 }
 
+function onInputFocus() {
+    if (searchResults.value.length > 0) {
+        showResults.value = true;
+    }
+}
+
 function onSearchInput() {
     clearTimeout(searchTimeout);
     selectedSearchIndex.value = -1;
 
-    if (!searchQuery.value || searchQuery.value.trim().length < 2) {
+    const val = (searchQuery.value || "").trim();
+    if (val.length < 2) {
         searchResults.value = [];
         showResults.value = false;
+        isSearching.value = false;
+        return;
+    }
+
+    // Check instant in-memory cache
+    if (searchCache.has(val)) {
+        searchResults.value = searchCache.get(val);
+        showResults.value = searchResults.value.length > 0;
         return;
     }
 
     isSearching.value = true;
     searchTimeout = setTimeout(async () => {
+        if (currentAbortController) {
+            currentAbortController.abort();
+        }
+        currentAbortController = new AbortController();
+
         try {
             const response = await axios.get("/maps/autocomplete", {
                 params: {
-                    input: searchQuery.value.trim(),
+                    input: val,
                     lat: currentLat.value,
                     lng: currentLng.value,
                     limit: 6,
                 },
+                signal: currentAbortController.signal,
             });
 
             if (response.data?.data) {
                 searchResults.value = response.data.data;
+                searchCache.set(val, response.data.data);
                 showResults.value = searchResults.value.length > 0;
             }
         } catch (e) {
-            console.warn("Autocomplete error:", e);
+            if (!axios.isCancel(e)) {
+                console.warn("Autocomplete notice:", e);
+            }
         } finally {
             isSearching.value = false;
         }
-    }, 300);
+    }, 180);
 }
 
 function navigateResults(dir) {
@@ -448,6 +480,7 @@ async function handleEnterSearch() {
 
         if (response.data?.data && response.data.data.length > 0) {
             searchResults.value = response.data.data;
+            searchCache.set(val, response.data.data);
             showResults.value = true;
             selectSearchResult(response.data.data[0]);
             return;
@@ -467,7 +500,7 @@ async function handleEnterSearch() {
             showResults.value = true;
             selectSearchResult(firstResult);
 
-            heuristicNotice.value = "🎯 Matched nearest area: " + (firstResult.display_name.split(',')[0] || val) + ". Drag pin to your exact building.";
+            heuristicNotice.value = "🎯 Matched nearest area: " + (firstResult.main_text || firstResult.display_name.split(',')[0] || val) + ". Drag pin to your exact building.";
             setTimeout(() => {
                 heuristicNotice.value = "";
             }, 6000);
@@ -500,6 +533,12 @@ function clearSearch() {
     searchResults.value = [];
     showResults.value = false;
     selectedSearchIndex.value = -1;
+}
+
+function handleDocumentClick(e) {
+    if (mapWrapperRef.value && !mapWrapperRef.value.contains(e.target)) {
+        showResults.value = false;
+    }
 }
 
 function detectCurrentGPSLocation() {
@@ -656,7 +695,6 @@ async function initMap() {
     inputLat.value = parseFloat(coords.lat.toFixed(7));
     inputLng.value = parseFloat(coords.lng.toFixed(7));
 
-    // Check if Google Maps API key is configured
     let googleKey = null;
     try {
         const configRes = await axios.get("/maps/config");
@@ -717,9 +755,14 @@ watch(
 
 onMounted(() => {
     initMap();
+    document.addEventListener("click", handleDocumentClick);
 });
 
 onUnmounted(() => {
+    document.removeEventListener("click", handleDocumentClick);
+    if (currentAbortController) {
+        currentAbortController.abort();
+    }
     if (resizeObserver) {
         resizeObserver.disconnect();
         resizeObserver = null;
