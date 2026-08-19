@@ -15,6 +15,8 @@
 
     <!-- App favicon -->
     <link rel="shortcut icon" type="image/png" href="{{ $generaleSetting?->favicon ?? asset('assets/favicon.png') }}" />
+    <link rel="icon" type="image/png" href="{{ $generaleSetting?->favicon ?? asset('assets/favicon.png') }}" />
+    <link rel="apple-touch-icon" href="{{ $generaleSetting?->favicon ?? asset('assets/favicon.png') }}" />
 
     <!-- App title -->
     <title>{{ $generaleSetting?->title ?? config('app.name', 'Janmitram') }} Admin Login</title>

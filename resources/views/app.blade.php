@@ -17,7 +17,9 @@
     <meta name="description" content="ecommerce website">
 
     <title>{{ $title }}</title>
-    <link rel="shortcut icon" href="{{ $favicon }}" type="image/x-icon">
+    <link rel="shortcut icon" href="{{ $favicon }}" type="image/png">
+    <link rel="icon" href="{{ $favicon }}" type="image/png">
+    <link rel="apple-touch-icon" href="{{ $favicon }}">
 
     @vite('resources/css/app.css')
 </head>

@@ -60,6 +60,8 @@ class GeneraleSetting extends Model
         $logo = asset('assets/favicon.png');
         if ($this->mediaAppLogo && Storage::exists($this->mediaAppLogo->src)) {
             $logo = Storage::url($this->mediaAppLogo->src);
+        } elseif ($this->mediaLogo && Storage::exists($this->mediaLogo->src)) {
+            $logo = Storage::url($this->mediaLogo->src);
         }
 
         return new Attribute(
@@ -72,6 +74,10 @@ class GeneraleSetting extends Model
         $favicon = asset('assets/favicon.png');
         if ($this->mediaFavicon && Storage::exists($this->mediaFavicon->src)) {
             $favicon = Storage::url($this->mediaFavicon->src);
+        } elseif ($this->mediaLogo && Storage::exists($this->mediaLogo->src)) {
+            $favicon = Storage::url($this->mediaLogo->src);
+        } elseif ($this->mediaAppLogo && Storage::exists($this->mediaAppLogo->src)) {
+            $favicon = Storage::url($this->mediaAppLogo->src);
         }
 
         return new Attribute(
