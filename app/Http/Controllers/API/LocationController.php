@@ -220,12 +220,26 @@ class LocationController extends Controller
 
         return Cache::remember($cacheKey, 60 * 24 * 7, function () use ($ip) {
             try {
-                $response = Http::timeout(3)->get("http://ip-api.com/json/{$ip}?fields=status,country,regionName,city,zip");
+                $response = Http::timeout(3)->get("http://ip-api.com/json/{$ip}?fields=status,country,countryCode,regionName,city,zip");
                 if ($response->successful() && $response->json('status') === 'success') {
+                    $countryCode = strtoupper((string) $response->json('countryCode'));
+                    // If outside India, default smoothly to Indian Central Hub (Jaipur)
+                    if (! empty($countryCode) && $countryCode !== 'IN') {
+                        return [
+                            'city' => self::DEFAULT_CITY,
+                            'state' => self::DEFAULT_STATE,
+                            'pincode' => self::DEFAULT_PINCODE,
+                            'country' => 'India',
+                            'is_international' => true,
+                        ];
+                    }
+
                     return [
                         'city' => $response->json('city') ?: self::DEFAULT_CITY,
                         'state' => $response->json('regionName') ?: self::DEFAULT_STATE,
                         'pincode' => $response->json('zip') ?: self::DEFAULT_PINCODE,
+                        'country' => 'India',
+                        'is_international' => false,
                     ];
                 }
             } catch (Exception $e) {
@@ -235,10 +249,23 @@ class LocationController extends Controller
             try {
                 $response = Http::timeout(3)->get("https://ipapi.co/{$ip}/json/");
                 if ($response->successful() && ! $response->json('error')) {
+                    $countryCode = strtoupper((string) $response->json('country_code'));
+                    if (! empty($countryCode) && $countryCode !== 'IN') {
+                        return [
+                            'city' => self::DEFAULT_CITY,
+                            'state' => self::DEFAULT_STATE,
+                            'pincode' => self::DEFAULT_PINCODE,
+                            'country' => 'India',
+                            'is_international' => true,
+                        ];
+                    }
+
                     return [
                         'city' => $response->json('city') ?: self::DEFAULT_CITY,
                         'state' => $response->json('region') ?: self::DEFAULT_STATE,
                         'pincode' => $response->json('postal') ?: self::DEFAULT_PINCODE,
+                        'country' => 'India',
+                        'is_international' => false,
                     ];
                 }
             } catch (Exception $e) {
