@@ -488,7 +488,39 @@
                 </div>
             </div>
         </div>
-        <!-- end loader -->
+
+        <!-- Sticky Mobile Bottom Action Bar -->
+        <div v-if="!isLoading && product?.id"
+            class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 px-4 py-3 sm:hidden shadow-2xl flex items-center justify-between gap-3">
+            <div class="flex flex-col">
+                <span class="text-[10px] text-slate-500 font-medium leading-tight">{{ $t('Total Price') }}</span>
+                <span class="text-primary text-lg font-bold leading-tight">
+                    {{ masterStore.showCurrency(parseFloat(product.discount_price > 0 ? product.discount_price : mainPrice).toFixed(2)) }}
+                </span>
+            </div>
+
+            <div class="flex items-center gap-2 grow justify-end">
+                <button v-if="!cartProduct && product?.is_digital == false"
+                    class="px-3.5 py-2.5 rounded-xl border border-primary text-primary font-medium text-xs flex items-center gap-1.5 shadow-sm active:scale-95 transition"
+                    @click="addToCart">
+                    <div class="w-4 h-4"><BagIcon /></div>
+                    <span>{{ $t('Add') }}</span>
+                </button>
+
+                <div v-else-if="cartProduct && product?.is_digital == false"
+                    class="flex items-center bg-emerald-50 border border-emerald-200 rounded-xl p-1">
+                    <button class="w-7 h-7 bg-white text-emerald-700 rounded-lg font-bold shadow-sm flex items-center justify-center text-sm" @click="decrementQty">-</button>
+                    <span class="px-2 text-xs font-bold text-emerald-800">{{ cartProduct.quantity }}</span>
+                    <button class="w-7 h-7 bg-emerald-600 text-white rounded-lg font-bold shadow-sm flex items-center justify-center text-sm" @click="incrementQty">+</button>
+                </div>
+
+                <button
+                    class="px-4 py-2.5 rounded-xl bg-primary text-white font-semibold text-xs shadow-md active:scale-95 transition flex items-center justify-center"
+                    @click="buyNow">
+                    {{ $t('Buy Now') }}
+                </button>
+            </div>
+        </div>
     </div>
 </template>
 

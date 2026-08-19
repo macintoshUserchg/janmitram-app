@@ -5,44 +5,82 @@
             <router-link to="/" class="w-[130px] md:w-[180px] lg:w-[240px]">
                 <img :src="master.logo" alt="" class="h-11">
             </router-link>
-            <div class="relative overflow-hidden grow max-w-[800px] hidden md:block">
-                <input type="text" v-model="search" :placeholder="$t('Search product')"
-                    class="px-2.5 py-2.5 block rounded-lg border border-slate-200 focus:border-primary w-full placeholder:text-gray-400 outline-none text-base font-normal leading-normal"
-                    @keyup.enter="searchProducts()">
-                <button class="bg-primary-600 h-full w-14 border-none absolute top-0 flex items-center justify-center"
-                    :class="master.langDirection == 'rtl' ? 'left-0 rounded-l-lg' : ' right-0 rounded-r-lg'"
-                    @click="searchProducts()">
-                    <MagnifyingGlassIcon class="w-6 h-6 text-white" />
-                </button>
+            <div class="relative grow max-w-[700px] hidden md:block" ref="searchContainerRef">
+                <div class="relative flex items-center">
+                    <input type="text" v-model="search" :placeholder="$t('Search products, categories...')"
+                        class="px-4 py-2.5 pr-24 block rounded-2xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 w-full placeholder:text-slate-400 outline-none text-sm transition shadow-sm bg-slate-50/50 focus:bg-white"
+                        @keyup.enter="searchProducts()"
+                        @focus="onSearchFocus"
+                    />
+                    <button v-if="search" class="absolute right-14 text-slate-400 hover:text-slate-600 p-1" @click="clearSearch">
+                        <XMarkIcon class="w-4 h-4" />
+                    </button>
+                    <button class="bg-primary hover:bg-primary-600 h-full w-12 border-none absolute right-0 top-0 rounded-r-2xl flex items-center justify-center text-white transition cursor-pointer"
+                        @click="searchProducts()">
+                        <MagnifyingGlassIcon class="w-5 h-5 text-white" />
+                    </button>
+                </div>
+
+                <!-- Desktop Live Search Dropdown -->
+                <div v-if="showLiveDropdown && (searchResults.length > 0 || isSearching)"
+                    class="absolute top-full left-0 right-0 mt-1.5 bg-white rounded-2xl shadow-2xl border border-slate-100 py-2 z-50 max-h-[420px] overflow-y-auto">
+                    <div v-if="isSearching" class="p-4 text-center text-slate-400 text-xs flex items-center justify-center gap-2">
+                        <div class="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                        <span>{{ $t('Searching...') }}</span>
+                    </div>
+                    <div v-else-if="searchResults.length > 0">
+                        <div class="px-3 py-1.5 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                            {{ $t('Products') }}
+                        </div>
+                        <div v-for="item in searchResults" :key="item.id" 
+                            @click="goToProduct(item.id)"
+                            class="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 cursor-pointer transition">
+                            <img :src="item.thumbnail" class="w-10 h-10 object-contain rounded-lg border border-slate-100 bg-slate-50 p-0.5 shrink-0" />
+                            <div class="grow min-w-0">
+                                <p class="text-xs font-medium text-slate-900 truncate">{{ item.name }}</p>
+                                <div class="flex items-center gap-2 mt-0.5">
+                                    <span class="text-xs font-bold text-primary">{{ master.showCurrency(item.discount_price > 0 ? item.discount_price : item.price) }}</span>
+                                    <span v-if="item.discount_price > 0" class="text-[10px] text-slate-400 line-through">{{ master.showCurrency(item.price) }}</span>
+                                    <span v-if="item.discount_percentage > 0" class="text-[10px] font-bold text-red-500 bg-red-50 px-1 rounded">{{ item.discount_percentage }}% OFF</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="border-t border-slate-100 mt-1 pt-1.5 px-3 text-center">
+                            <button @click="searchProducts()" class="text-xs font-semibold text-primary hover:underline">
+                                {{ $t('View all results') }} →
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
         <div class="hidden md:flex items-center justify-end md:gap-4 lg:gap-8">
             <div class="flex items-center md:gap-1 lg:gap-3">
-                <div class="p-2.5 cursor-pointer" @click="showWishlist()">
+                <div class="p-2.5 cursor-pointer hover:scale-105 transition" @click="showWishlist()">
                     <div class="w-6 h-6 relative">
                         <img :src="'/assets/icons/heart.svg'" class="w-6 h-6 text-primary" />
                         <span
-                            class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                            class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm">
                             {{ AuthStore.favoriteProducts }}
                         </span>
                     </div>
                 </div>
 
-                <button class="p-2.5" @click="master.basketCanvas = true">
+                <button class="p-2.5 hover:scale-105 transition" @click="master.basketCanvas = true">
                     <div class="w-6 h-6 relative">
                         <img :src="'/assets/icons/bag.svg'" class="w-6 h-6 text-primary" />
                         <span
-                            class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                            class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm">
                             {{ basketStore.total }}
                         </span>
                     </div>
                 </button>
             </div>
 
-            <button v-if="!AuthStore.user" class="flex items-center gap-2 lg:p-2.5 text-slate-600 hover:text-primary"
+            <button v-if="!AuthStore.user" class="flex items-center gap-2 lg:p-2.5 text-slate-600 hover:text-primary transition font-medium"
                 @click="showLoginDialog">
-                <span class="text-base font-normal leading-normal">{{ $t('Login') }}</span>
+                <span class="text-base font-medium leading-normal">{{ $t('Login') }}</span>
                 <UserIcon class="w-5 h-5" />
             </button>
             <div v-else>
@@ -54,7 +92,7 @@
         <div class="md:hidden flex items-center gap-4 relative">
 
             <!-- Search Icon -->
-            <div class="h-10 w-10 flex items-center justify-center bg-slate-100 rounded-[40px]" @click="toggleSearch">
+            <div class="h-10 w-10 flex items-center justify-center bg-slate-100 rounded-full cursor-pointer hover:bg-slate-200 transition" @click="toggleSearch">
                 <MagnifyingGlassIcon class="w-5 h-5 text-slate-950" />
             </div>
 
@@ -62,7 +100,7 @@
                 <div class="w-6 h-6 relative">
                     <img :src="'/assets/icons/bag.svg'" class="w-6 h-6 text-primary" />
                     <span
-                        class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                        class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm">
                         {{ basketStore.total }}
                     </span>
                 </div>
@@ -70,39 +108,54 @@
 
             <!-- search modal -->
             <TransitionRoot as="template" :show="showSearch">
-                <Dialog class="relative z-10" @close="showSearch = false">
+                <Dialog class="relative z-50" @close="showSearch = false">
                     <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0"
                         enter-to="opacity-100" leave="ease-in duration-200" leave-from="opacity-100"
                         leave-to="opacity-0">
-                        <div class="fixed inset-0 bg-gray-500/75 transition-opacity" />
+                        <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" />
                     </TransitionChild>
 
-                    <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
-                        <div class="flex min-h-full items-center justify-center p-4 text-center sm:items-center sm:p-0">
+                    <div class="fixed inset-0 z-50 w-screen overflow-y-auto">
+                        <div class="flex min-h-full items-start justify-center p-4 text-center">
                             <TransitionChild as="template" enter="ease-out duration-300"
-                                enter-from="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                                enter-to="opacity-100 translate-y-0 sm:scale-100" leave="ease-in duration-200"
-                                leave-from="opacity-100 translate-y-0 sm:scale-100"
-                                leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
+                                enter-from="opacity-0 -translate-y-4"
+                                enter-to="opacity-100 translate-y-0" leave="ease-in duration-200"
+                                leave-from="opacity-100 translate-y-0"
+                                leave-to="opacity-0 -translate-y-4">
                                 <DialogPanel
-                                    class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 w-full sm:w-full sm:max-w-lg">
-                                    <div class="bg-white px-4 pb-2 pt-5">
-                                        <div class="w-full flex items-center justify-between mb-3 border-b pb-2">
-                                            <span>{{ $t('Search') }}</span>
+                                    class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all my-4 w-full max-w-lg">
+                                    <div class="bg-white px-4 pb-2 pt-4">
+                                        <div class="w-full flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
+                                            <span class="font-semibold text-slate-900">{{ $t('Search Products') }}</span>
                                             <button type="button"
-                                                class="border border-slate-100 rounded-full p-1 outline-none"
+                                                class="border border-slate-100 rounded-full p-1.5 outline-none hover:bg-slate-100"
                                                 @click="showSearch = false">
-                                                <XMarkIcon class="w-5 h-5 text-slate-950" />
+                                                <XMarkIcon class="w-5 h-5 text-slate-700" />
                                             </button>
                                         </div>
-                                        <input type="text" v-model="search" :placeholder="$t('Search product')"
-                                            class="px-2 py-2.5 block rounded-lg border border-slate-200 focus:border-primary w-full placeholder:text-gray-400 outline-none text-base font-normal leading-normal"
-                                            @keyup.enter="showSearch = false; searchProducts()" />
+                                        <div class="relative flex items-center">
+                                            <input type="text" v-model="search" :placeholder="$t('Search product...')"
+                                                class="px-3.5 py-2.5 block rounded-xl border border-slate-200 focus:border-primary w-full placeholder:text-gray-400 outline-none text-sm font-normal"
+                                                @keyup.enter="showSearch = false; searchProducts()" />
+                                        </div>
+
+                                        <!-- Mobile live results -->
+                                        <div v-if="searchResults.length > 0" class="mt-3 max-h-60 overflow-y-auto divide-y divide-slate-100">
+                                            <div v-for="item in searchResults" :key="item.id" 
+                                                @click="showSearch = false; goToProduct(item.id)"
+                                                class="flex items-center gap-3 py-2 cursor-pointer">
+                                                <img :src="item.thumbnail" class="w-9 h-9 object-contain rounded-md border border-slate-100 p-0.5 shrink-0" />
+                                                <div class="grow min-w-0">
+                                                    <p class="text-xs font-medium text-slate-900 truncate">{{ item.name }}</p>
+                                                    <p class="text-xs font-bold text-primary">{{ master.showCurrency(item.discount_price > 0 ? item.discount_price : item.price) }}</p>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="bg-gray-50 px-4 py-3">
+                                    <div class="bg-slate-50 px-4 py-3">
                                         <button type="button"
-                                            class="inline-flex w-full justify-center rounded-md bg-primary px-3 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-600"
-                                            @click=" showSearch = false; searchProducts()">
+                                            class="inline-flex w-full justify-center rounded-xl bg-primary px-3 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-600 active:scale-98 transition"
+                                            @click="showSearch = false; searchProducts()">
                                             {{ $t('Search') }}
                                         </button>
                                     </div>
@@ -249,8 +302,9 @@
 import { Dialog, DialogPanel, TransitionChild, TransitionRoot } from '@headlessui/vue'
 import { Bars3Icon, ChevronRightIcon, UserIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import { MagnifyingGlassIcon } from '@heroicons/vue/24/solid'
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import axios from 'axios'
 import AuthUserDropdown from './AuthUserDropdown.vue'
 import LoginModal from './LoginModal.vue'
 
@@ -267,38 +321,99 @@ const master = useMaster();
 
 const search = ref('');
 const showSearch = ref(false);
+const searchContainerRef = ref(null);
+const searchResults = ref([]);
+const isSearching = ref(false);
+const showLiveDropdown = ref(false);
+let debounceTimeout = null;
+
+const onSearchFocus = () => {
+    if (searchResults.value.length > 0) {
+        showLiveDropdown.value = true;
+    }
+};
+
+const clearSearch = () => {
+    search.value = '';
+    searchResults.value = [];
+    showLiveDropdown.value = false;
+};
+
+const performLiveSearch = (query) => {
+    if (!query || query.trim().length < 2) {
+        searchResults.value = [];
+        showLiveDropdown.value = false;
+        isSearching.value = false;
+        return;
+    }
+
+    isSearching.value = true;
+    showLiveDropdown.value = true;
+
+    axios.get('/products', {
+        params: {
+            search: query.trim(),
+            per_page: 5
+        }
+    }).then((res) => {
+        isSearching.value = false;
+        searchResults.value = res.data?.data?.products || [];
+    }).catch(() => {
+        isSearching.value = false;
+        searchResults.value = [];
+    });
+};
+
+watch(search, (newVal) => {
+    clearTimeout(debounceTimeout);
+    debounceTimeout = setTimeout(() => {
+        performLiveSearch(newVal);
+    }, 250);
+});
+
+const handleClickOutside = (e) => {
+    if (searchContainerRef.value && !searchContainerRef.value.contains(e.target)) {
+        showLiveDropdown.value = false;
+    }
+};
+
+onMounted(() => {
+    document.addEventListener('click', handleClickOutside);
+    if (route.path == '/products') {
+        search.value = master.search;
+    } else {
+        search.value = '';
+    }
+});
+
+onUnmounted(() => {
+    document.removeEventListener('click', handleClickOutside);
+});
 
 const toggleSearch = () => {
-    showSearch.value = !showSearch.value
-}
+    showSearch.value = !showSearch.value;
+};
 
 const showMyCart = () => {
     mobileMenuOpen.value = false;
-    master.basketCanvas = true
-}
+    master.basketCanvas = true;
+};
 
 const showWishlist = () => {
     mobileMenuOpen.value = false;
     if (!AuthStore.token) {
         return showLoginDialog();
     }
-    router.push('/wishlist')
-}
+    router.push('/wishlist');
+};
 
 watch(() => route.path, () => {
     mobileMenuOpen.value = false;
+    showLiveDropdown.value = false;
     if (route.path == '/products') {
-        search.value = master.search
+        search.value = master.search;
     } else {
-        search.value = ''
-    }
-});
-
-onMounted(() => {
-    if (route.path == '/products') {
-        search.value = master.search
-    } else {
-        search.value = ''
+        search.value = '';
     }
 });
 
@@ -307,16 +422,22 @@ const mobileMenuOpen = ref(false);
 const showLoginDialog = () => {
     mobileMenuOpen.value = false;
     AuthStore.showLoginModal();
-}
+};
+
+const goToProduct = (id) => {
+    showLiveDropdown.value = false;
+    search.value = '';
+    router.push({ name: 'productDetails', params: { id } });
+};
 
 const searchProducts = () => {
-    master.search = search.value
+    showLiveDropdown.value = false;
+    master.search = search.value;
     if (route.path != '/products') {
         search.value = '';
     }
-    router.push({ name: 'products' })
-}
-
+    router.push({ name: 'products' });
+};
 </script>
 
 <style scoped>

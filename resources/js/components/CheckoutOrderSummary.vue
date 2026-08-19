@@ -312,6 +312,24 @@
             </button>
         </template>
 
+        <!-- Trust & Security Strip -->
+        <div class="mt-4 p-3 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-around text-center text-slate-500 text-[11px]">
+            <div class="flex flex-col items-center gap-1">
+                <span class="text-emerald-600 text-sm">🔒</span>
+                <span class="font-medium">100% Secure</span>
+            </div>
+            <div class="h-6 w-px bg-slate-200"></div>
+            <div class="flex flex-col items-center gap-1">
+                <span class="text-primary text-sm">⚡</span>
+                <span class="font-medium">Fast Dispatch</span>
+            </div>
+            <div class="h-6 w-px bg-slate-200"></div>
+            <div class="flex flex-col items-center gap-1">
+                <span class="text-amber-500 text-sm">✨</span>
+                <span class="font-medium">Direct Delivery</span>
+            </div>
+        </div>
+
         <!-- End Order Confirm Dialog Modal -->
         <OrderConfirmModal />
 

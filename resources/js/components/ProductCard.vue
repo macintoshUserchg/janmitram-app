@@ -1,145 +1,138 @@
 <template>
-    <div class="rounded-lg border transition-all duration-300 group bg-white overflow-hidden relative"
-        :class="props.product?.quantity > 0 ? 'hover:border-primary' : ''">
+    <div class="rounded-2xl border border-slate-100 transition-all duration-300 group bg-white overflow-hidden relative flex flex-col justify-between shadow-sm hover:shadow-xl hover:-translate-y-1"
+        :class="props.product?.quantity > 0 ? 'hover:border-primary/40' : ''">
 
         <div class="flex flex-col">
             <div class="bg-white">
-                <div class="w-full h-36 sm:h-52 overflow-hidden relative"
-                    :class="props.product?.quantity > 0 ? '' : 'opacity-30'">
-                    <div class="cursor-pointer w-full h-full" @click="showProductDetails">
+                <div class="w-full h-36 sm:h-52 overflow-hidden relative bg-slate-50/50 flex items-center justify-center p-2"
+                    :class="props.product?.quantity > 0 ? '' : 'opacity-40'">
+                    <div class="cursor-pointer w-full h-full flex items-center justify-center" @click="showProductDetails">
                         <!-- thumbnail -->
-                        <img :src="props.product?.thumbnail" class="w-full h-full group-hover:scale-110 transition duration-500 object-contain" loading="lazy" />
+                        <img :src="props.product?.thumbnail" class="w-full h-full group-hover:scale-105 transition duration-500 object-contain" loading="lazy" />
                     </div>
 
-                    <!--discount--->
+                    <!--discount badge--->
                     <div v-if="props.product?.discount_percentage > 0"
-                        class="px-1 py-0.5 bg-red-500 rounded-2xl text-white text-xs font-medium absolute top-2 left-2">
+                        class="px-2 py-0.5 bg-gradient-to-r from-red-500 to-rose-600 rounded-full text-white text-[11px] font-bold tracking-wide absolute top-2.5 left-2.5 shadow-sm">
                         {{ props.product?.discount_percentage }}% {{ $t('OFF') }}
                     </div>
 
                     <!--favorite-->
                     <button v-if="props.product?.is_favorite"
-                        class="absolute top-2 right-2 w-9 h-9 rounded-[10px] justify-center items-center flex cursor-pointer bg-white"
-                        @click="favoriteAddOrRemove">
-                        <HeartIcon class="w-6 h-6 text-red-500" />
+                        class="absolute top-2.5 right-2.5 w-8 h-8 rounded-full justify-center items-center flex cursor-pointer bg-white/90 backdrop-blur-sm shadow-sm transition hover:scale-110"
+                        @click.stop="favoriteAddOrRemove">
+                        <HeartIcon class="w-5 h-5 text-red-500" />
                     </button>
 
                     <!--unfavorite-->
                     <button v-else
-                        class="absolute flex sm:hidden group-hover:flex top-2 right-2 w-9 h-9 rounded-[10px] justify-center items-center cursor-pointer bg-white transition-all duration-300"
-                        @click="favoriteAddOrRemove">
-                        <HeartIconOutline class="w-6 h-6 text-slate-600" />
+                        class="absolute flex sm:hidden group-hover:flex top-2.5 right-2.5 w-8 h-8 rounded-full justify-center items-center cursor-pointer bg-white/90 backdrop-blur-sm shadow-sm transition-all duration-200 hover:scale-110"
+                        @click.stop="favoriteAddOrRemove">
+                        <HeartIconOutline class="w-5 h-5 text-slate-500 hover:text-red-500" />
                     </button>
 
                     <!-- Digital Product Badge -->
                     <span v-if="props.product?.is_digital == true"
-                        class="absolute bottom-1 right-2 inline-flex gap-1 items-center rounded-md bg-gradient-to-r from-green-600 to-green-800 px-1.5 py-0.5 text-[11px] font-bold text-white shadow-lg animate-badgePulse"
+                        class="absolute bottom-2 right-2 inline-flex gap-1 items-center rounded-lg bg-emerald-600/90 backdrop-blur-sm px-2 py-0.5 text-[11px] font-semibold text-white shadow-sm"
                     >
                     <ArrowDownTrayIcon class="w-3 h-3" />
-                        {{ $t('Quick Access') }}
+                        {{ $t('Digital') }}
                     </span>
-
-
                 </div>
-                <div class="cursor-pointer" @click="showProductDetails">
-                    <div class="bg-white p-2 flex flex-col items-start gap-2 col-span-2">
 
-                        <div class="text-slate-950 text-base font-normal leading-normal truncate w-full"
-                            :class="props.product?.quantity > 0 ? '' : 'opacity-30'">
+                <div class="cursor-pointer" @click="showProductDetails">
+                    <div class="bg-white p-3 flex flex-col items-start gap-1.5">
+
+                        <div class="text-slate-900 text-sm sm:text-base font-medium leading-snug line-clamp-2 w-full group-hover:text-primary transition-colors"
+                            :class="props.product?.quantity > 0 ? '' : 'opacity-40'">
                             {{ props.product?.name }}
                         </div>
 
-                        <div class="flex items-center gap-2 flex-wrap" :class="props.product?.quantity > 0 ? '' : 'opacity-30'">
+                        <div class="flex items-baseline gap-1.5 flex-wrap mt-0.5" :class="props.product?.quantity > 0 ? '' : 'opacity-40'">
                             <!-- price -->
-                            <div class="text-primary text-base font-bold leading-normal">
+                            <div class="text-primary text-base sm:text-lg font-bold">
                                 {{ masterStore.showCurrency(props.product?.discount_price > 0 ?
                                     props.product?.discount_price : props.product?.price) }}
                             </div>
                             <!-- unit -->
-                            <div v-if="props.product?.unit?.name" class="text-slate-800 text-xs font-bold bg-slate-100 px-1.5 py-0.5 rounded">
+                            <div v-if="props.product?.unit?.name" class="text-slate-600 text-[11px] font-medium bg-slate-100 px-1.5 py-0.5 rounded-md">
                                 {{ props.product?.unit?.name }}
                             </div>
                             <!-- discount price -->
                             <div v-if="props.product?.discount_price > 0"
-                                class="text-slate-400 text-sm font-normal line-through leading-tight">
+                                class="text-slate-400 text-xs font-normal line-through">
                                 {{ masterStore.showCurrency(props.product?.price) }}
                             </div>
                         </div>
 
-                        <div class="flex justify-between items-center w-full">
+                        <div class="flex justify-between items-center w-full pt-1 border-t border-slate-100 text-xs text-slate-500">
                             <div class="flex items-center gap-1"
-                                :class="props.product?.quantity > 0 ? '' : 'opacity-30'">
-                                <StarIcon class="w-4 h-4 text-yellow-400" />
-                                <!-- rating -->
-                                <div class="text-slate-950 text-sm font-bold leading-tight">
-                                    {{ props.product?.rating }}
-                                </div>
-                                <!-- Total Review -->
-                                <div class="text-slate-500 text-sm font-normal leading-tight">
-                                    ({{ props.product?.total_reviews }})
-                                </div>
+                                :class="props.product?.quantity > 0 ? '' : 'opacity-40'">
+                                <StarIcon class="w-3.5 h-3.5 text-amber-400" />
+                                <span class="text-slate-800 font-semibold">{{ props.product?.rating }}</span>
+                                <span>({{ props.product?.total_reviews }})</span>
                             </div>
 
-                            <div class="h-3 w-[0px] border border-slate-200"></div>
-                            <!-- total sold -->
-                            <div v-if="props.product?.quantity > 0"
-                                class="text-right text-slate-500 text-sm font-normal leading-tight">
+                            <div v-if="props.product?.quantity > 0" class="text-right text-slate-500 font-medium">
                                 {{ props.product?.total_sold }} {{ $t('Sold') }}
                             </div>
-                            <!-- Stock Out -->
-                            <div v-else class="text-right text-red-500 text-sm font-normal leading-tight">
-                                {{ $t('Stock Out') }}
+                            <div v-else class="text-right text-red-500 font-semibold">
+                                {{ $t('Out of Stock') }}
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <div class="w-full p-2">
-                <div v-if="props.product?.quantity > 0" class="justify-start items-center gap-3 flex w-full">
+        <div class="w-full p-2.5 pt-0">
+            <div v-if="props.product?.quantity > 0" class="w-full">
+                <!-- In-Card Quantity Stepper when already in cart -->
+                <div v-if="props.product?.is_digital == false && cartQty > 0" 
+                    class="flex items-center justify-between w-full bg-emerald-50 border border-emerald-200 rounded-xl p-1 shadow-sm">
+                    <button @click.stop="decrementQuantity" 
+                        class="w-8 h-8 flex items-center justify-center bg-white text-emerald-700 hover:bg-emerald-600 hover:text-white rounded-lg font-bold shadow-sm transition active:scale-95 text-base">
+                        -
+                    </button>
+                    <span class="text-emerald-800 font-bold text-xs sm:text-sm px-1">{{ cartQty }} {{ $t('in Cart') }}</span>
+                    <button @click.stop="incrementQuantity" 
+                        class="w-8 h-8 flex items-center justify-center bg-emerald-600 text-white hover:bg-emerald-700 rounded-lg font-bold shadow-sm transition active:scale-95 text-base">
+                        +
+                    </button>
+                </div>
+
+                <!-- Standard Actions when not yet in cart -->
+                <div v-else class="flex items-center gap-2 w-full">
                     <button v-if="props.product?.is_digital == false"
-                        class="cursor-pointer w-10 h-10 bg-white rounded-[10px] border border-primary-100 justify-center items-center flex"
-                        @click="addToBasket(props.product)">
+                        class="cursor-pointer w-10 h-10 bg-slate-50 hover:bg-primary hover:text-white text-slate-700 rounded-xl border border-slate-200 hover:border-primary justify-center items-center flex transition active:scale-95 shadow-sm"
+                        @click.stop="addToBasket(props.product)"
+                        :title="$t('Add to Cart')">
                         <div class="w-5 h-5">
                             <BagIcon />
                         </div>
                     </button>
 
                     <button
-                        class="justify-center items-center gap-0.5 flex border border-primary grow py-2.5 rounded-[10px]"
-                        @click="buyNow">
-                        <div class="text-primary text-sm font-normal leading-tight">{{ $t('Buy Now')}}</div>
+                        class="justify-center items-center flex bg-primary hover:bg-primary-600 text-white font-medium grow py-2.5 rounded-xl shadow-sm hover:shadow transition active:scale-95 text-sm"
+                        @click.stop="buyNow">
+                        {{ $t('Buy Now') }}
                     </button>
                 </div>
-                <button v-else
-                    class="justify-center items-center gap-0.5 flex border border-red-300 py-2.5 rounded-[10px] w-full"
-                    disabled>
-                    <div class="text-red-300 text-sm font-normal leading-tight">
-                        <!-- Request Stock -->
-                        {{ $t('Buy Now') }}
-                    </div>
-                </button>
             </div>
+            <button v-else
+                class="justify-center items-center flex border border-slate-200 bg-slate-50 py-2.5 rounded-xl w-full cursor-not-allowed"
+                disabled>
+                <span class="text-slate-400 text-xs font-medium">{{ $t('Out of Stock') }}</span>
+            </button>
         </div>
     </div>
 </template>
-
-<style scoped>
-@keyframes badgePulse {
-    0%, 100% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.1); opacity: 0.9; }
-}
-
-.animate-badgePulse {
-    animation: badgePulse 2s infinite ease-in-out;
-}
-</style>
 
 <script setup>
 import { HeartIcon as HeartIconOutline } from '@heroicons/vue/24/outline';
 import { HeartIcon, StarIcon } from '@heroicons/vue/24/solid';
 import { ArrowDownTrayIcon } from '@heroicons/vue/20/solid';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useToast } from 'vue-toastification';
 import BagIcon from '../icons/Bag.vue';
@@ -160,6 +153,8 @@ const props = defineProps({
     product: Object
 });
 
+const cartQty = computed(() => basketStore.getProductCartQuantity(props.product?.id));
+
 const orderData = {
     is_buy_now: false,
     product_id: props.product?.id,
@@ -170,16 +165,27 @@ const orderData = {
 };
 
 const addToBasket = (product) => {
-    // add product to basket
     basketStore.addToCart(orderData, product);
 };
 
-const buyNow = async () => {
-    // if (authStore.token === null) {
-    //     return authStore.loginModal = true;
-    // }
+const incrementQuantity = () => {
+    const item = basketStore.getCartProduct(props.product?.id);
+    if (item) {
+        basketStore.incrementQuantity(item);
+    } else {
+        addToBasket(props.product);
+    }
+};
 
-  await basketStore.addToCart({
+const decrementQuantity = () => {
+    const item = basketStore.getCartProduct(props.product?.id);
+    if (item) {
+        basketStore.decrementQuantity(item);
+    }
+};
+
+const buyNow = async () => {
+    await basketStore.addToCart({
         product_id: props.product?.id,
         is_buy_now: true,
         quantity: 1,
@@ -188,8 +194,7 @@ const buyNow = async () => {
         unit: null
     }, props.product);
 
-    basketStore.buyNowShopId = props.product?.shop.id;
-    // router.push({ name: 'buynow' })
+    basketStore.buyNowShopId = props.product?.shop?.id;
 };
 
 const isFavorite = ref(props.product?.is_favorite);
@@ -226,5 +231,4 @@ const showProductDetails = () => {
         router.push({ name: 'productDetails', params: { id: props.product.id } })
     }
 }
-
 </script>

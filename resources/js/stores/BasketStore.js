@@ -69,6 +69,28 @@ export const useBasketStore = defineStore("basketStore", {
             });
             return total;
         },
+
+        getProductCartQuantity: (state) => (productId) => {
+            if (!state.products || state.products.length === 0) return 0;
+            for (const shop of state.products) {
+                if (shop.products && shop.products.length > 0) {
+                    const item = shop.products.find((p) => p.id === productId || p.product_id === productId);
+                    if (item) return item.quantity;
+                }
+            }
+            return 0;
+        },
+
+        getCartProduct: (state) => (productId) => {
+            if (!state.products || state.products.length === 0) return null;
+            for (const shop of state.products) {
+                if (shop.products && shop.products.length > 0) {
+                    const item = shop.products.find((p) => p.id === productId || p.product_id === productId);
+                    if (item) return item;
+                }
+            }
+            return null;
+        },
     },
 
     actions: {
