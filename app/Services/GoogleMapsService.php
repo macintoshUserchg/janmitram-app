@@ -214,7 +214,7 @@ class GoogleMapsService
     }
 
     /**
-     * Resolve Coordinates from Place ID via Google Place Details.
+     * Resolve Coordinates from Place ID via Google Place Details (New & Legacy).
      */
     protected function getPlaceCoordinates(?string $placeId): ?array
     {
@@ -222,6 +222,28 @@ class GoogleMapsService
             return null;
         }
 
+        // 1. Try Google Place Details (New)
+        try {
+            $res = Http::timeout(3)
+                ->withHeaders(['X-Goog-Api-Key' => $this->apiKey])
+                ->get("https://places.googleapis.com/v1/places/{$placeId}", [
+                    'fields' => 'location,displayName,formattedAddress',
+                ]);
+
+            if ($res->successful()) {
+                $loc = $res->json('location');
+                if ($loc && isset($loc['latitude'], $loc['longitude'])) {
+                    return [
+                        'lat' => (float) $loc['latitude'],
+                        'lng' => (float) $loc['longitude'],
+                    ];
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::debug('Google Place Details (New) error: ' . $e->getMessage());
+        }
+
+        // 2. Try Google Place Details (Legacy)
         try {
             $res = Http::timeout(3)->get('https://maps.googleapis.com/maps/api/place/details/json', [
                 'place_id' => $placeId,
@@ -239,14 +261,14 @@ class GoogleMapsService
                 }
             }
         } catch (\Throwable $e) {
-            Log::debug('Google Place Details error: ' . $e->getMessage());
+            Log::debug('Google Place Details (Legacy) error: ' . $e->getMessage());
         }
 
         return null;
     }
 
     /**
-     * Multi-stage Heuristic Search for Unregistered / Complex / Niche Addresses.
+     * Multi-stage Heuristic Search for Complex Addresses.
      */
     public function heuristicSearch(string $query, ?float $lat = null, ?float $lng = null): array
     {
@@ -306,8 +328,41 @@ class GoogleMapsService
             return null;
         }
 
-        // 1. Google Geocoding API
+        // 1. Google Places (New) searchNearby
         if (! empty($this->apiKey)) {
+            try {
+                $response = Http::timeout(3)
+                    ->withHeaders([
+                        'Content-Type' => 'application/json',
+                        'X-Goog-Api-Key' => $this->apiKey,
+                        'X-Goog-FieldMask' => 'places.displayName,places.formattedAddress,places.location',
+                    ])
+                    ->post('https://places.googleapis.com/v1/places:searchNearby', [
+                        'locationRestriction' => [
+                            'circle' => [
+                                'center' => ['latitude' => $lat, 'longitude' => $lng],
+                                'radius' => 150.0,
+                            ],
+                        ],
+                        'maxResultCount' => 1,
+                    ]);
+
+                if ($response->successful()) {
+                    $firstPlace = $response->json('places.0');
+                    if ($firstPlace && ! empty($firstPlace['formattedAddress'])) {
+                        return [
+                            'display_name' => $firstPlace['formattedAddress'],
+                            'lat' => (float) ($firstPlace['location']['latitude'] ?? $lat),
+                            'lng' => (float) ($firstPlace['location']['longitude'] ?? $lng),
+                            'source' => 'google_maps_new',
+                        ];
+                    }
+                }
+            } catch (\Throwable $e) {
+                Log::debug('Google Places searchNearby notice: ' . $e->getMessage());
+            }
+
+            // 2. Google Geocoding API (Legacy)
             try {
                 $response = Http::timeout(3)->get('https://maps.googleapis.com/maps/api/geocode/json', [
                     'latlng' => "{$lat},{$lng}",
@@ -332,7 +387,7 @@ class GoogleMapsService
             }
         }
 
-        // 2. OpenStreetMap Fallback
+        // 3. OpenStreetMap Fallback
         try {
             $osmResponse = Http::timeout(3)
                 ->withHeaders(['User-Agent' => 'JanmitramApp/1.0'])
