@@ -1,649 +1,502 @@
 @php
     $directory = app()->getLocale() == 'ar' ? 'rtl' : 'ltr';
+    $generaleSetting = generaleSetting('setting');
+    $address = $order->address;
+    $user = $order->customer?->user;
+    $otherDiscount = max(0, (float)($order->discount ?? 0) - (float)($order->coupon_discount ?? 0) - (float)($order->card_discount ?? 0));
+    $payment = $order->payments()?->latest()->first();
+    $paymentStatus = is_object($order->payment_status) ? $order->payment_status->value : (string)$order->payment_status;
+    $paymentMethod = is_object($order->payment_method) ? $order->payment_method->value : (string)$order->payment_method;
 @endphp
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="en" dir="{{ $directory }}">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invoice</title>
+    <title>{{ __('Tax Invoice') }} - #{{ $order->prefix . $order->order_code }}</title>
     <style>
         body {
-            position: relative;
-            color: #303042;
-            font-family: "freeSerif", "kalpurush", serif;
-            background-color: #F9FAFC;
-            font-size: 16px;
-            font-weight: 400;
-            font-style: normal;
+            font-family: "DejaVu Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+            color: #1e293b;
+            background-color: #ffffff;
+            font-size: 12px;
+            line-height: 1.4;
             margin: 0;
-            padding: 16px;
+            padding: 24px 30px;
         }
 
-        p,
-        h2,
-        h1,
-        h3,
-        h4,
-        h5,
-        h6 {
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        p, h1, h2, h3, h4, h5, h6 {
             margin: 0;
+            padding: 0;
         }
 
-        .header {
-            width: 100%;
-            color: #5E6470;
-            padding: 12px;
+        .text-left { text-align: left; }
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+
+        .text-muted { color: #64748b; }
+        .text-dark { color: #0f172a; }
+        .text-primary { color: #d97706; }
+        .text-success { color: #059669; }
+        .text-danger { color: #dc2626; }
+
+        .fw-normal { font-weight: normal; }
+        .fw-medium { font-weight: 500; }
+        .fw-bold { font-weight: bold; }
+
+        /* Header Bar */
+        .header-table {
+            margin-bottom: 20px;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 16px;
         }
 
-        .header .row {
-            width: 50%;
-        }
-
-        .header .logo {
-            width: 90px;
-            height: 90px;
-        }
-
-        .header img {
-            width: 100%;
-            height: 100%;
+        .company-logo {
+            max-height: 65px;
+            max-width: 160px;
             object-fit: contain;
         }
 
-        .text-right {
-            text-align: right !important;
-        }
-
-        .pl-3 {
-            padding-left: 12px;
-        }
-
-        .pt-2 {
-            padding: 5px;
-        }
-
-        .pt-1-5 {
-            padding-top: 2px;
-        }
-
-        .pt-1 {
-            padding-top: 4px;
-        }
-
-        .pt-3 {
-            padding-top: 12px;
-        }
-
-        .site-name {
+        .invoice-badge {
+            display: inline-block;
+            background-color: #0f172a;
+            color: #ffffff;
             font-size: 18px;
-            font-weight: 600;
-            color: #303042;
-            line-height: normal;
+            font-weight: bold;
+            letter-spacing: 1px;
+            padding: 6px 16px;
+            border-radius: 6px;
+            margin-bottom: 8px;
         }
 
-        .text-gray {
-            color: #5E6470;
+        .status-badge-paid {
+            display: inline-block;
+            background-color: #dcfce7;
+            color: #15803d;
+            font-size: 11px;
+            font-weight: bold;
+            padding: 3px 8px;
+            border-radius: 4px;
+            border: 1px solid #86efac;
         }
 
-        .fz-14 {
-            font-size: 14px;
-            line-height: 16px
+        .status-badge-pending {
+            display: inline-block;
+            background-color: #fef3c7;
+            color: #b45309;
+            font-size: 11px;
+            font-weight: bold;
+            padding: 3px 8px;
+            border-radius: 4px;
+            border: 1px solid #fcd34d;
         }
 
-        .contains {
-            position: absolute;
-            padding: 12px;
-            background: #fff;
-            left: 16px;
-            right: 16px;
-            bottom: 16px;
-            top: 120px;
-            border-radius: 16px;
+        /* Information Boxes */
+        .info-card {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px 14px;
+            vertical-align: top;
         }
 
-        .fw-400 {
-            font-weight: 400 !important;
+        .info-card-title {
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #64748b;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 5px;
+            margin-bottom: 6px;
         }
 
-        .fw-500 {
-            font-weight: 500;
+        /* Meta Table */
+        .meta-table td {
+            padding: 2px 0;
+            font-size: 11px;
         }
 
-        .w-full {
-            width: 100%;
-        }
-
-        .payAmount {
-            font-size: 20px;
-            font-style: normal;
-            font-weight: 700;
-            line-height: 28px;
-        }
-
-        .qrCode {
-            width: 61px;
-            height: 60px;
-        }
-
-        .invoice-details {
-            width: 100% !important;
-            margin-top: 40px;
-            margin-left: 30px
-        }
-
-        .invoice-details tr th {
-            color: #5E6470;
-        }
-
+        /* Items Table */
         .items-table {
-            width: 100%;
-            margin-top: 20px;
-            border-collapse: collapse;
-            margin-left: 30px;
-        }
-
-        .items-table tr th {
-            padding: 12px;
-            background: #3546AE;
-            color: #fff;
-            font-style: normal;
-        }
-
-        .items-table tr {
-            border-right: 0.5px solid #CFCFCF;
-            border-bottom: 0.5px solid #CFCFCF;
-            border-left: 0.5px solid #CFCFCF;
-            border-top: 0;
-        }
-
-        .items-table tr td {
-            padding: 12px;
-            background: #FFF;
-        }
-
-        .text-center {
-            text-align: center !important;
-        }
-
-        .product-des {
-            font-size: 10px;
-            font-weight: 400;
-        }
-
-        .invoice-total {
-            width: 320px;
-            float: {{ $directory == 'rtl' ? 'left' : 'right' }};
-            margin-top: 8px;
-        }
-
-        .border-top {
-            border-top: 1px solid #CFCFCF;
-            margin-top: 6px;
-        }
-
-        .total {
-            font-size: 16px;
-            font-weight: 700;
-        }
-
-        .footer {
-            width: 90%;
-            position: absolute;
-            left: 32px;
-            right: 0;
-            bottom: 16px;
-            color: #303042;
-            padding: 8px;
-        }
-
-        .footer .signature {
-            border: 1px solid #303042;
-            background-clip: border-box;
-            padding: 0 8px;
-        }
-
-        .float-left {
-            float: left !important;
-        }
-
-        .float-right {
-            float: right !important;
-        }
-
-        .pt-4 {
-            padding-top: 20px;
-        }
-
-        .text-left {
-            text-align: left !important;
-        }
-
-        .text-right {
-            text-align: right !important;
-        }
-
-        .overflow-hidden {
+            margin-top: 18px;
+            margin-bottom: 16px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
             overflow: hidden;
         }
 
-        .w-50 {
-            width: 50%;
+        .items-table th {
+            background-color: #0f172a;
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 10px 10px;
         }
 
-        .text {
-            color: #5E6470;
+        .items-table td {
+            padding: 9px 10px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 11px;
+            color: #334155;
+            vertical-align: middle;
         }
 
-        .address span {
-            color: #5E6470;
-            font-size: 13px;
+        .items-table tr:nth-child(even) td {
+            background-color: #f8fafc;
         }
 
-        .address_name {
-            color: #5E6470;
-            font-size: 12px;
+        .product-thumbnail {
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+            border: 1px solid #e2e8f0;
+            object-fit: cover;
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+
+        .sku-tag {
+            font-size: 9px;
+            font-family: monospace;
+            background-color: #e2e8f0;
+            color: #475569;
+            padding: 1px 4px;
+            border-radius: 3px;
+        }
+
+        /* Summary Table */
+        .summary-container {
+            margin-top: 10px;
+        }
+
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .summary-table td {
+            padding: 5px 8px;
+            font-size: 11px;
+        }
+
+        .summary-total-row td {
+            border-top: 2px solid #0f172a;
+            border-bottom: 2px solid #0f172a;
+            background-color: #f8fafc;
+            padding: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #0f172a;
+        }
+
+        /* QR & Verification Area */
+        .qr-box {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 10px;
+            background-color: #f8fafc;
+            text-align: center;
+        }
+
+        .qr-image {
+            width: 75px;
+            height: 75px;
+        }
+
+        /* Footer */
+        .invoice-footer {
+            margin-top: 30px;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 14px;
+            font-size: 10px;
+            color: #64748b;
+        }
+
+        .signature-box {
+            text-align: center;
+            float: right;
+            width: 180px;
+            border-top: 1px solid #94a3b8;
+            padding-top: 4px;
+            font-size: 10px;
+            font-weight: 500;
+            color: #475569;
         }
     </style>
-    @if ($directory == 'rtl')
-        <style>
-            body {
-                direction: rtl !important;
-            }
-
-            .items-table tr td {
-                font-weight: normal !important;
-            }
-
-            .items-table tr th {
-                font-weight: normal !important;
-            }
-
-            .items-table tr th.text-left {
-                text-align: right !important;
-            }
-
-            .invoice-details tr th {
-                text-align: right;
-                font-weight: normal !important;
-            }
-
-            .invoice-details tr td {
-                font-weight: normal !important;
-            }
-        </style>
-    @else
-        <style>
-            body {
-                direction: ltr !important;
-            }
-
-            .items-table tr td {
-                font-weight: 500;
-            }
-
-            .items-table tr th {
-                font-weight: 600;
-            }
-        </style>
-    @endif
 </head>
-
 <body>
-    <div class="header">
-        <div class="row float-left">
-            <div class="clearfix">
-                <div class="logo float-left">
-                    <img src="{{ $generaleSetting?->favicon ?? asset('assets/favicon.png') }}" alt="logo" />
-                </div>
-                <div class="pl-3 pt-4 text-left float-left">
-                    @if ($generaleSetting?->name)
-                        <h2 class="site-name">{{ __($generaleSetting->name) }}</h2>
-                    @else
-                        <h2 class="site-name">Janmitram</h2>
-                    @endif
-                    @if ($generaleSetting?->email)
-                        <p class="pt-1-5">{{ $generaleSetting->email }}</p>
-                    @endif
-                    @if ($generaleSetting?->mobile)
-                        <p class="pt-1-5">{{ $generaleSetting->mobile }}</p>
-                    @endif
-                </div>
-            </div>
-        </div>
 
-        <div class="pt-4 {{ $directory == 'rtl' ? '' : 'text-right' }} float-right">
-            <p class="fz-14">{{ __('Business Address') }}</p>
-            <p class="fz-14 pt-1-5">{{ __($generaleSetting?->address) }}</p>
-        </div>
-    </div>
-
-    <div class="contains">
-        @php
-            $address = $order->address;
-            $user = $order->customer?->user;
-        @endphp
-
-        <div class="w-full overflow-hidden">
-            <div class="float-left" style="width: 60%;">
-                <div class="text-gray">{{ __('Bill To') }}:</div>
-                <p class="fw-500 pt-1">{{ $user?->name }}</p>
-                <div class="text-gray pt-1">{{ __('Address') }}:</div>
-                <p class="fw-500 pt-1 address">
-                    @if ($address?->address_type)
-                        {{ __($address?->address_type) }}
-                    @endif
-                    @if ($address?->address_line)
-                        ,{{ $address->address_line }}
-                    @endif
-                    @if ($address?->address_line2)
-                        ,{{ $address->address_line2 }}
-                    @endif
-                    @if ($address?->area)
-                        ,{{ $address?->area }}
-                    @endif
-                </p>
-
-                <div class="text-gray pt-1">
-                    {{ __('Email') }}:
-                    <span class="fw-500 pt-1" style="color:  #000">{{ $user?->email }}</span>
-                </div>
-                <div class="text-gray pt-1">
-                    {{ __('Phone') }}:
-                    <span class="fw-500 pt-1" style="color:  #000">{{ $user?->phone }}</span>
-                </div>
-            </div>
-
-            <div class="{{ $directory == 'rtl' ? '' : 'text-right' }}">
-                <p>{{ __('Invoice of') }} ({{ $generaleSetting?->currency ?? '₹' }})</p>
-                <h3 class="payAmount">{{ showCurrency($order->payable_amount) }}</h3>
-                <div class="pt-2">
-                    <img class="qrCode" src="{{ $qrCodeImage }}" alt="">
-                </div>
-            </div>
-        </div>
-
-        <div class="clearfix w-full">
-
-            <table class="invoice-details">
-                <tr>
-                    <th class="text-left">{{ __('Payment Method') }}</th>
-                    <th class="text-left">
-                        {{ __('Invoice Number') }}
-                    </th>
-                    <th class="text-left">
-                        {{ __('Invoice Date') }}
-                    </th>
-                    <th class="text-right">
-                        {{ __('Order Date') }}
-                    </th>
-                </tr>
-                <tr>
-                    <td>{{ $order->payment_method->value }}</td>
-                    <td>#{{ $order->prefix . $order->order_code }}</td>
-                    <td>{{ now()->format('d F, Y') }}</td>
-                    <td class="text-right">{{ $order->created_at->format('d F, Y') }}</td>
-                </tr>
-            </table>
-
-            <table class="items-table">
-                <thead>
+    <!-- Header Section -->
+    <table class="header-table">
+        <tr>
+            <!-- Company Info Left -->
+            <td style="width: 55%; vertical-align: top;">
+                <table style="width: 100%;">
                     <tr>
-                        <th class="text-left">
-                            {{ __('Item') }}
-                        </th>
-                        <th class="text-left">
-                            {{ __('Item Name') }}
-                        </th>
-                        <th class="text-center">
-                            {{ __('Rate') }}
-                        </th>
-                        <th class="text-center">
-                            {{ __('Quantity') }}
-                        </th>
-                        <th class="text-center">
-                            {{ __('Unit') }}
-                        </th>
-                        <th class="text-center">
-                            {{ __('Size') }}
-                        </th>
-                        <th class="text-center">
-                            {{ __('Color') }}
-                        </th>
-                        <th class="text-right">
-                            {{ __('Price') }}
-                        </th>
+                        <td style="vertical-align: middle;">
+                            @if ($generaleSetting?->logo)
+                                <img src="{{ $generaleSetting->logo }}" alt="Logo" class="company-logo" />
+                            @else
+                                <h1 style="font-size: 24px; color: #0f172a; font-weight: bold; margin-bottom: 2px;">
+                                    {{ $generaleSetting?->name ?? 'Janmitram' }}
+                                </h1>
+                            @endif
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    @foreach ($order->products ?? [] as $product)
-                        @php
-                            $price = $product->discount_price > 0 ? $product->discount_price : $product->price;
+                    <tr>
+                        <td style="padding-top: 6px;">
+                            <p class="fw-bold text-dark" style="font-size: 13px;">{{ $generaleSetting?->name ?? 'Janmitram Multipurpose Platform' }}</p>
+                            <p class="text-muted" style="font-size: 10.5px; max-width: 320px;">
+                                {{ $generaleSetting?->address ?? 'Corporate Headquarters, Rajasthan, India' }}
+                            </p>
+                            <p class="text-muted" style="font-size: 10.5px; margin-top: 2px;">
+                                @if($generaleSetting?->email)<strong>Email:</strong> {{ $generaleSetting->email }} @endif
+                                @if($generaleSetting?->mobile) &nbsp;|&nbsp; <strong>Phone:</strong> {{ $generaleSetting->mobile }} @endif
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
 
-                            $name = $product->name;
-                            $shortDescription = $product->short_description ?? '';
+            <!-- Invoice Title & Details Right -->
+            <td style="width: 45%; vertical-align: top;" class="text-right">
+                <div class="invoice-badge">{{ __('TAX INVOICE') }}</div>
+                <table class="meta-table" style="width: 100%; margin-top: 4px;">
+                    <tr>
+                        <td class="text-right text-muted">{{ __('Invoice Number') }}:</td>
+                        <td class="text-right fw-bold text-dark" style="padding-left: 8px;">#{{ $order->prefix . $order->order_code }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-right text-muted">{{ __('Invoice Date') }}:</td>
+                        <td class="text-right fw-medium text-dark" style="padding-left: 8px;">{{ now()->format('d M Y') }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-right text-muted">{{ __('Order Date') }}:</td>
+                        <td class="text-right fw-medium text-dark" style="padding-left: 8px;">{{ $order->created_at->format('d M Y, h:i A') }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-right text-muted">{{ __('Payment Method') }}:</td>
+                        <td class="text-right fw-medium text-dark" style="padding-left: 8px;">{{ $paymentMethod }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-right text-muted">{{ __('Payment Status') }}:</td>
+                        <td class="text-right" style="padding-left: 8px;">
+                            @if(strtolower($paymentStatus) === 'paid')
+                                <span class="status-badge-paid">{{ __('PAID') }}</span>
+                            @else
+                                <span class="status-badge-pending">{{ strtoupper($paymentStatus) }}</span>
+                            @endif
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 
-                            if ($directory == 'rtl') {
-                                $translation = $product->translations()?->where('lang', 'ar')->first();
-                                $name = $translation?->name ?? $name;
-                                $shortDescription = $translation?->short_description ?? $shortDescription;
-                            }
-                            $plainShortDescription = strip_tags($shortDescription);
-                        @endphp
+    <!-- Billing & Shipping Information Cards -->
+    <table style="margin-bottom: 14px;">
+        <tr>
+            <!-- Bill To Customer -->
+            <td style="width: 49%; vertical-align: top;">
+                <div class="info-card">
+                    <div class="info-card-title">{{ __('Billed / Delivered To') }}</div>
+                    <p class="fw-bold text-dark" style="font-size: 12px; margin-bottom: 2px;">{{ $user?->name ?? 'Valued Customer' }}</p>
+                    <p class="text-muted" style="font-size: 10.5px; line-height: 1.35; margin-bottom: 3px;">
+                        @if ($address?->address_line) {{ $address->address_line }}, @endif
+                        @if ($address?->address_line2) {{ $address->address_line2 }}, @endif
+                        @if ($address?->area) {{ $address->area }}, @endif
+                        @if ($address?->address_type) ({{ $address->address_type }}) @endif
+                        @if ($address?->address) {{ $address->address }} @endif
+                    </p>
+                    <p style="font-size: 10.5px; margin-top: 3px;">
+                        @if($user?->phone) <span class="text-muted">{{ __('Phone') }}:</span> <strong class="text-dark">{{ $user->phone }}</strong><br> @endif
+                        @if($user?->email) <span class="text-muted">{{ __('Email') }}:</span> <span class="text-dark">{{ $user->email }}</span> @endif
+                    </p>
+                </div>
+            </td>
+
+            <td style="width: 2%;"></td>
+
+            <!-- Merchant / Fulfilled By -->
+            <td style="width: 49%; vertical-align: top;">
+                <div class="info-card">
+                    <div class="info-card-title">{{ __('Sold & Dispatched By') }}</div>
+                    <p class="fw-bold text-dark" style="font-size: 12px; margin-bottom: 2px;">{{ $order->shop?->name ?? $generaleSetting?->name ?? 'Janmitram Verified Partner' }}</p>
+                    <p class="text-muted" style="font-size: 10.5px; line-height: 1.35; margin-bottom: 3px;">
+                        {{ $order->shop?->address ?? $generaleSetting?->address ?? 'Rajasthan Central Hub, India' }}
+                    </p>
+                    <p style="font-size: 10.5px; margin-top: 3px;">
+                        @if($order->shop?->phone) <span class="text-muted">{{ __('Support') }}:</span> <strong class="text-dark">{{ $order->shop->phone }}</strong><br> @endif
+                        <span class="text-muted">{{ __('Fulfillment Status') }}:</span> <strong class="text-dark">{{ $order->order_status->value ?? $order->order_status }}</strong>
+                    </p>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Line Items Table -->
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th style="width: 5%; text-align: center;">#</th>
+                <th style="width: 45%; text-align: left;">{{ __('Product Description') }}</th>
+                <th style="width: 14%; text-align: right;">{{ __('Unit Price') }}</th>
+                <th style="width: 8%; text-align: center;">{{ __('Qty') }}</th>
+                <th style="width: 10%; text-align: center;">{{ __('Unit / Size') }}</th>
+                <th style="width: 18%; text-align: right;">{{ __('Net Amount') }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse ($order->products ?? [] as $product)
+                @php
+                    $price = $product->discount_price > 0 ? $product->discount_price : $product->price;
+                    $qty = $product->pivot->quantity ?? 1;
+                    $rowTotal = $price * $qty;
+                    $unitStr = $product->pivot->unit ?? $product->unit?->name ?? '';
+                    $sizeStr = $product->pivot->size ?? '';
+                    $spec = array_filter([$unitStr, $sizeStr ? "Size: $sizeStr" : null]);
+                @endphp
+                <tr>
+                    <td class="text-center text-muted">{{ $loop->iteration }}</td>
+                    <td>
+                        <strong class="text-dark" style="font-size: 11.5px;">{{ $product->name }}</strong>
+                        @if (!empty($product->pivot->sku))
+                            <span class="sku-tag">#{{ $product->pivot->sku }}</span>
+                        @endif
+                        @if (!empty($product->short_description))
+                            <div class="text-muted" style="font-size: 9.5px; margin-top: 2px;">{{ Str::limit(strip_tags($product->short_description), 80) }}</div>
+                        @endif
+                    </td>
+                    <td class="text-right fw-medium">{{ showCurrency($price) }}</td>
+                    <td class="text-center fw-bold">{{ $qty }}</td>
+                    <td class="text-center text-muted">{{ !empty($spec) ? implode(' / ', $spec) : '1 Item' }}</td>
+                    <td class="text-right fw-bold text-dark">{{ showCurrency($rowTotal) }}</td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="6" class="text-center text-muted" style="padding: 20px;">{{ __('No products found in this order.') }}</td>
+                </tr>
+            @endforelse
+        </tbody>
+    </table>
+
+    <!-- Financial Breakdown & QR Code Section -->
+    <table class="summary-container">
+        <tr>
+            <!-- Left Side: QR Code & Payment Verification Note -->
+            <td style="width: 45%; vertical-align: top;">
+                <div class="qr-box">
+                    <table style="width: 100%;">
                         <tr>
-                            <td>{{ $loop->iteration }}.</td>
-                            <td style="border: none !important">
-                                <table>
-                                    <tr>
-                                        <td style="width: 40px !important; padding: 0 !important">
-                                            <img src="{{ $product->thumbnail }}" alt=""
-                                                style="width: 40px; height: 40px">
-                                        </td>
-                                        <td style="padding: 3px">
-                                            <span style="text-transform: capitalize">
-                                                {{ $name }}
-                                                @if (module_exists('purchase') && !empty($product->pivot->sku))
-                                                    <span class="fw-bold">
-                                                        #SKU:
-                                                        <span class="text-primary">({{ $product->pivot->sku }})</span>
-                                                    </span>
-                                                @endif
-                                            </span>
-                                            <p class="pt-1 text-gray product-des">
-                                                {{ $plainShortDescription }}
-                                            </p>
-                                        </td>
-                                    </tr>
-                                </table>
+                            <td style="width: 85px; vertical-align: middle; text-align: center;">
+                                @if(!empty($qrCodeImage))
+                                    <img src="{{ $qrCodeImage }}" alt="Order QR" class="qr-image" />
+                                @endif
                             </td>
-                            <td class="text-center fw-400">{{ showCurrency($price) }}</td>
-                            <td class="text-center">{{ $product->pivot->quantity }}</td>
-                            <td class="text-center">{{ $product->pivot->unit ?? $product->unit?->name ?? '--' }}</td>
-                            <td class="text-center">{{ $product->pivot->size ?? '--' }}</td>
-                            <td class="text-center">{{ $product->pivot->color ?? '--' }}</td>
-                            <td class="text-right">{{ showCurrency($price * $product->pivot->quantity) }}</td>
+                            <td style="vertical-align: middle; text-align: left; padding-left: 10px;">
+                                <p class="fw-bold text-dark" style="font-size: 11.5px;">{{ __('Digitally Verified') }}</p>
+                                <p class="text-muted" style="font-size: 9.5px; margin-top: 2px;">
+                                    Scan QR code to verify invoice authenticity & order status.
+                                </p>
+                                @if($payment?->payment_token)
+                                    <p class="text-muted" style="font-size: 9px; font-family: monospace; margin-top: 4px;">
+                                        Ref: {{ Str::limit($payment->payment_token, 20) }}
+                                    </p>
+                                @endif
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </td>
+
+            <td style="width: 5%;"></td>
+
+            <!-- Right Side: Financial Calculation Summary -->
+            <td style="width: 50%; vertical-align: top;">
+                <table class="summary-table">
+                    <tr>
+                        <td class="text-muted">{{ __('Items Subtotal') }}:</td>
+                        <td class="text-right fw-bold text-dark">{{ showCurrency($order->total_amount) }}</td>
+                    </tr>
+
+                    @if ($order->coupon_discount > 0)
+                        <tr>
+                            <td class="text-danger">{{ __('Coupon Discount') }} {{ $order->coupon ? '(' . $order->coupon->code . ')' : '' }}:</td>
+                            <td class="text-right fw-bold text-danger">-{{ showCurrency($order->coupon_discount) }}</td>
+                        </tr>
+                    @endif
+
+                    @if ($order->card_discount > 0)
+                        <tr>
+                            <td class="text-danger">{{ __('Card Discount') }} {{ $order->card ? '(' . $order->card->card_number . ')' : '' }}:</td>
+                            <td class="text-right fw-bold text-danger">-{{ showCurrency($order->card_discount) }}</td>
+                        </tr>
+                    @endif
+
+                    @if ($otherDiscount > 0)
+                        <tr>
+                            <td class="text-danger">{{ __('Special Discount') }}:</td>
+                            <td class="text-right fw-bold text-danger">-{{ showCurrency($otherDiscount) }}</td>
+                        </tr>
+                    @endif
+
+                    <tr>
+                        <td class="text-muted">{{ __('Delivery / Shipping Charge') }}:</td>
+                        <td class="text-right fw-medium text-dark">{{ showCurrency($order->delivery_charge) }}</td>
+                    </tr>
+
+                    @foreach ($order->vatTaxes ?? [] as $vatTax)
+                        <tr>
+                            <td class="text-muted">{{ $vatTax->name }} ({{ $vatTax->percentage }}%):</td>
+                            <td class="text-right fw-medium text-dark">{{ showCurrency($vatTax->amount) }}</td>
                         </tr>
                     @endforeach
-                </tbody>
-            </table>
-        </div>
 
-        @php
-            $otherDiscount = max(0, (float)($order->discount ?? 0) - (float)($order->coupon_discount ?? 0) - (float)($order->card_discount ?? 0));
-        @endphp
+                    @if ($order->tax_amount > 0 && count($order->vatTaxes ?? []) <= 0)
+                        <tr>
+                            <td class="text-muted">{{ __('GST / Taxes') }}:</td>
+                            <td class="text-right fw-medium text-dark">{{ showCurrency($order->tax_amount) }}</td>
+                        </tr>
+                    @endif
 
-        @if ($directory != 'rtl')
-            <div class="invoice-total">
-                <div class="pt-2 w-full">
-                    <p class="float-left w-50">
-                        {{ __('Sub Total') }}
-                    </p>
-                    <p class="w-50 text-right fw-500">
-                        {{ showCurrency($order->total_amount) }}
-                    </p>
-                </div>
-                @if ($order->coupon_discount > 0)
-                    <div class="w-full pt-2">
-                        <p class="w-50 float-left">
-                            {{ __('Coupon Discount') }} {{ $order->coupon ? '(' . $order->coupon->code . ')' : '' }}
-                        </p>
-                        <p class="w-50 text-right fw-500" style="color: #dc2626;">
-                            -{{ showCurrency($order->coupon_discount) }}
-                        </p>
-                    </div>
-                @endif
-                @if ($order->card_discount > 0)
-                    <div class="w-full pt-2">
-                        <p class="w-50 float-left">
-                            {{ __('Card Discount') }} {{ $order->card ? '(' . $order->card->card_number . ')' : '' }}
-                        </p>
-                        <p class="w-50 text-right fw-500" style="color: #dc2626;">
-                            -{{ showCurrency($order->card_discount) }}
-                        </p>
-                    </div>
-                @endif
-                @if ($otherDiscount > 0)
-                    <div class="w-full pt-2">
-                        <p class="w-50 float-left">
-                            {{ __('Special Discount') }}
-                        </p>
-                        <p class="w-50 text-right fw-500" style="color: #dc2626;">
-                            -{{ showCurrency($otherDiscount) }}
-                        </p>
-                    </div>
-                @endif
-                <div class="w-full pt-2">
-                    <p class="w-50 float-left">
-                        {{ __('Delivery Charge') }}
-                    </p>
-                    <p class="w-50 text-right fw-500">
-                        {{ showCurrency($order->delivery_charge) }}
-                    </p>
-                </div>
+                    <tr class="summary-total-row">
+                        <td style="border-radius: 6px 0 0 6px;">{{ __('Grand Total Payable') }}:</td>
+                        <td class="text-right text-primary" style="border-radius: 0 6px 6px 0; font-size: 15px;">
+                            {{ showCurrency($order->payable_amount) }}
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 
-                @foreach ($order->vatTaxes ?? [] as $vatTax)
-                    <div class="w-full pt-2">
-                        <p class="w-50 float-left">
-                            {{ $vatTax->name }} ({{ $vatTax->percentage }}%)
-                        </p>
-                        <p class="w-50 text-right fw-500">
-                            {{ showCurrency($vatTax->amount) }}
-                        </p>
-                    </div>
-                @endforeach
-                @if ($order->tax_amount > 0 && count($order->vatTaxes ?? []) <= 0)
-                    <div class="w-full pt-2">
-                        <p class="w-50 float-left">
-                            {{ __('GST / Tax') }}
-                        </p>
-                        <p class="w-50 text-right fw-500">
-                            {{ showCurrency($order->tax_amount) }}
-                        </p>
-                    </div>
-                @endif
-                <div class="w-full pt-2 border-top">
-                    <p class="w-50 float-left">
-                        {{ __('Total Amount') }}
-                    </p>
-                    <p class="w-50 text-right total">
-                        {{ showCurrency($order->payable_amount) }}
-                    </p>
+    <!-- Footer Terms & Authorized Signature -->
+    <table class="invoice-footer">
+        <tr>
+            <td style="width: 65%; vertical-align: bottom;">
+                <p class="fw-bold text-dark" style="font-size: 10.5px; margin-bottom: 2px;">{{ __('Terms & Conditions') }}:</p>
+                <p class="text-muted" style="font-size: 9.5px; line-height: 1.4;">
+                    1. Goods once sold can be returned according to Janmitram Return & Refund Policy.<br>
+                    2. This is a computer-generated tax invoice and does not require a physical signature.<br>
+                    3. For questions or support, contact <strong>{{ $generaleSetting?->email ?? 'support@janmitram.com' }}</strong>
+                </p>
+            </td>
+            <td style="width: 35%; vertical-align: bottom;" class="text-right">
+                <div class="signature-box">
+                    <p class="fw-bold text-dark">{{ $generaleSetting?->name ?? 'Janmitram' }}</p>
+                    <p class="text-muted" style="font-size: 9px;">{{ __('Authorized Signatory') }}</p>
                 </div>
-            </div>
-        @else
-            <div class="invoice-total" style="margin-left: 30px">
-                <div class="pt-2 w-full" style="padding-left: 20px">
-                    <p class="w-50 float-left text-left">
-                        {{ showCurrency($order->total_amount) }}
-                    </p>
-                    <p class="w-50">
-                        {{ __('Sub Total') }}
-                    </p>
-
-                </div>
-                @if ($order->coupon_discount > 0)
-                    <div class="w-full pt-2" style="padding-left: 20px">
-                        <p class="w-50 float-left text-left" style="color: #dc2626;">
-                            -{{ showCurrency($order->coupon_discount) }}
-                        </p>
-                        <p class="w-50">
-                            {{ __('Coupon Discount') }} {{ $order->coupon ? '(' . $order->coupon->code . ')' : '' }}
-                        </p>
-                    </div>
-                @endif
-                @if ($order->card_discount > 0)
-                    <div class="w-full pt-2" style="padding-left: 20px">
-                        <p class="w-50 float-left text-left" style="color: #dc2626;">
-                            -{{ showCurrency($order->card_discount) }}
-                        </p>
-                        <p class="w-50">
-                            {{ __('Card Discount') }} {{ $order->card ? '(' . $order->card->card_number . ')' : '' }}
-                        </p>
-                    </div>
-                @endif
-                @if ($otherDiscount > 0)
-                    <div class="w-full pt-2" style="padding-left: 20px">
-                        <p class="w-50 float-left text-left" style="color: #dc2626;">
-                            -{{ showCurrency($otherDiscount) }}
-                        </p>
-                        <p class="w-50">
-                            {{ __('Special Discount') }}
-                        </p>
-                    </div>
-                @endif
-                <div class="w-full pt-2" style="padding-left: 20px">
-                    <p class="w-50 float-left text-left">
-                        {{ showCurrency($order->delivery_charge) }}
-                    </p>
-                    <p class="w-50">
-                        {{ __('Delivery Charge') }}
-                    </p>
-                </div>
-                @foreach ($order->vatTaxes ?? [] as $vatTax)
-                    <div class="w-full pt-2" style="padding-left: 20px">
-                        <p class="w-50 float-left text-left">
-                            {{ showCurrency($vatTax->amount) }}
-                        </p>
-                        <p class="w-50">
-                            {{ $vatTax->name }} ({{ $vatTax->percentage }}%)
-                        </p>
-                    </div>
-                @endforeach
-                @if ($order->tax_amount > 0 && count($order->vatTaxes ?? []) <= 0)
-                    <div class="w-full pt-2" style="padding-left: 20px">
-                        <p class="w-50 float-left text-left">
-                            {{ showCurrency($order->tax_amount) }}
-                        </p>
-                        <p class="w-50">
-                            {{ __('GST / Tax') }}
-                        </p>
-                    </div>
-                @endif
-                <div class="w-full pt-2 border-top" style="padding-left: 20px">
-                    <p class="w-50 float-left total text-left">
-                        {{ showCurrency($order->payable_amount) }}
-                    </p>
-                    <p class="w-50 total">
-                        {{ __('Total Amount') }}
-                    </p>
-                </div>
-            </div>
-        @endif
-    </div>
-
-    <div class="footer">
-        <p class="w-50 float-left">
-            {{ __('Thanks for the business.') }}
-        </p>
-        <div class="w-50 text-right float-left">
-            <span class="signature">
-                {{ __('Signature') }}
-            </span>
-        </div>
-    </div>
+            </td>
+        </tr>
+    </table>
 
 </body>
-
 </html>

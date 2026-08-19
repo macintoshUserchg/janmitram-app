@@ -200,7 +200,16 @@ class OrderController extends Controller
         $tmpDir = storage_path('app/public/mpdf_tmp');
         File::ensureDirectoryExists($tmpDir);
 
-        $order = Order::findOrFail($id);
+        $order = Order::withoutGlobalScopes()->with([
+            'products.unit',
+            'vatTaxes',
+            'coupon',
+            'card',
+            'customer.user',
+            'address',
+            'shop',
+            'payments',
+        ])->findOrFail($id);
 
         // pdf config
         $defaultConfig = (new ConfigVariables)->getDefaults();
