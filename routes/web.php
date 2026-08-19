@@ -360,7 +360,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:root'])->group
     Route::put('google-recaptcha', [GoogleReCaptchaController::class, 'update'])->name('googleReCaptcha.update');
 
     Route::get('payment-gateway', [App\Http\Controllers\Admin\PaymentGatewayController::class, 'index'])->name('paymentGateway.index');
-    Route::put('payment-gateway/{paymentGateway}', [App\Http\Controllers\Admin\PaymentGatewayController::class, 'update'])->name('paymentGateway.update');
+    Route::match(['PUT', 'POST'], 'payment-gateway/{paymentGateway}', [App\Http\Controllers\Admin\PaymentGatewayController::class, 'update'])->name('paymentGateway.update');
     Route::get('payment-gateway/{paymentGateway}/toggle', [App\Http\Controllers\Admin\PaymentGatewayController::class, 'toggle'])->name('paymentGateway.toggle');
 
     Route::get('verification', [VerifyManageController::class, 'index'])->name('verification.index');

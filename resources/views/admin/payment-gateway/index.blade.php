@@ -45,6 +45,7 @@
 
                             <form action="{{ route('admin.paymentGateway.update', $paymentGateway->id) }}" method="POST" enctype="multipart/form-data">
                                 @csrf
+                                @method('PUT')
                                 <div class="mt-3">
                                     <x-select name="mode" label="Mode">
                                         <option value="test" {{ $paymentGateway->mode == 'test' ? 'selected' : '' }}>
