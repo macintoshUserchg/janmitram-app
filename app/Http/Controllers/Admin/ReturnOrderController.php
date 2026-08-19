@@ -47,13 +47,11 @@ class ReturnOrderController extends Controller
 
     private function updateWalletAndTransaction($returnOrder)
     {
-
         $generaleSetting = generaleSetting('setting');
 
         $commission = 0;
 
-        if ($generaleSetting?->commission_charge != 'monthly') {
-
+        if ($generaleSetting?->business_based_on == 'commission' && $generaleSetting?->commission_charge != 'monthly') {
             if ($generaleSetting?->commission_type != 'fixed') {
                 $commission = $returnOrder->amount * $generaleSetting->commission / 100;
             } else {
@@ -66,7 +64,9 @@ class ReturnOrderController extends Controller
 
         WalletRepository::updateByRequest($wallet, $amount, 'debit');
 
-        TransactionRepository::storeByRefundRequest($wallet, $commission, 'credit', true, true, 'admin commission removal for refund order', 'refundorder');
+        if ($generaleSetting?->business_based_on == 'commission' && $commission > 0) {
+            TransactionRepository::storeByRefundRequest($wallet, $commission, 'credit', true, true, 'admin commission removal for refund order', 'refundorder');
+        }
     }
 
     public function returnReject(ReturnOrder $returnOrder, Request $request)

@@ -251,13 +251,11 @@ class OrderController extends Controller
 
     private function updateWalletAndTransaction($order)
     {
-
         $generaleSetting = generaleSetting('setting');
 
         $commission = 0;
 
-        if ($generaleSetting?->commission_charge != 'monthly') {
-
+        if ($generaleSetting?->business_based_on == 'commission' && $generaleSetting?->commission_charge != 'monthly') {
             if ($generaleSetting?->commission_type != 'fixed') {
                 $commission = $order->total_amount * $generaleSetting->commission / 100;
             } else {
@@ -274,6 +272,10 @@ class OrderController extends Controller
 
         $wallet = $order->shop->user->wallet;
 
+        if ($wallet == null) {
+            $wallet = \App\Repositories\WalletRepository::storeByRequest($order->shop->user);
+        }
+
         TransactionRepository::storeByRequest(
             $wallet,
             $order->payable_amount,
@@ -284,6 +286,8 @@ class OrderController extends Controller
             "Order sale proceeds for order #{$order->prefix}{$order->order_code}"
         );
 
-        TransactionRepository::storeByRequest($wallet, $commission, 'debit', true, true, 'admin commission', 'order');
+        if ($generaleSetting?->business_based_on == 'commission' && $commission > 0) {
+            TransactionRepository::storeByRequest($wallet, $commission, 'debit', true, true, 'admin commission', 'order');
+        }
     }
 }

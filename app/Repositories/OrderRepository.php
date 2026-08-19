@@ -781,7 +781,7 @@ class OrderRepository extends Repository
                 "Order sale proceeds for order #{$order->prefix}{$order->order_code}"
             );
 
-            if ($generaleSetting?->business_based_on == 'commission') {
+            if ($generaleSetting?->business_based_on == 'commission' && $commission > 0) {
                 TransactionRepository::storeByRequest($wallet, $commission, 'debit', true, true, 'admin commission added', 'order commission added in admin wallet');
             }
 
