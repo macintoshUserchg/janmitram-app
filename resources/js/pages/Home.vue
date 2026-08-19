@@ -2,7 +2,6 @@
     <div>
         <HeroBanner :banners="banner" :ads="ads" :isLoading="isLoading" />
         <AboutSupport :isLoading="isLoading" />
-        <Categories :categories="categories" :isLoading="isLoginCategory" />
         <div v-if="incomingFlashSale">
             <FlashSaleIncoming :flashSale="incomingFlashSale" />
         </div>
