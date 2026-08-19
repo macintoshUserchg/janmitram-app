@@ -17,7 +17,6 @@ use App\Repositories\BannerRepository;
 use App\Repositories\CategoryRepository;
 use App\Repositories\FlashSaleRepository;
 use App\Repositories\ProductRepository;
-use App\Repositories\ShopRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -35,25 +34,8 @@ class HomeController extends Controller
         $skip = ($page * $perPage) - $perPage;
         $generaleSetting = generaleSetting('setting');
         $rootShop = generaleSetting('rootShop');
-        $shop = null;
-
-        if ($generaleSetting?->shop_type == 'single') {
-            $shop = $rootShop;
-        } elseif ($request->filled('shop_id')) {
-            $shop = Shop::where('status', 1)->find($request->shop_id);
-        } elseif ($request->filled('latitude') && $request->filled('longitude')) {
-            $lat = (float) $request->latitude;
-            $lng = (float) $request->longitude;
-            $allShops = Shop::where('status', 1)->whereNotNull('latitude')->whereNotNull('longitude')->get();
-            if ($allShops->isNotEmpty()) {
-                $closest = $allShops->sortBy(function ($s) use ($lat, $lng) {
-                    return haversineKm($lat, $lng, (float) $s->latitude, (float) $s->longitude);
-                })->first();
-                if ($closest) {
-                    $shop = $closest;
-                }
-            }
-        }
+        $targetBranchShops = $this->getEligibleBranchShops($request, $rootShop);
+        $targetShopIds = $targetBranchShops->pluck('id')->toArray();
 
         $banners = BannerRepository::query()->whereNull('shop_id')->active()->get();
 
@@ -66,46 +48,70 @@ class HomeController extends Controller
                 return $product->where('is_active', true);
             })->withCount('products')->orderByDesc('products_count')->take(10)->get();
 
-        $popularProducts = ProductRepository::query()->isActive()
-            ->when($shop, function ($query) use ($shop) {
-                return $query->where('shop_id', $shop->id);
-            })->when(! $shop, function ($query) {
-                return $query->whereIn('id', function ($subQuery) {
-                    $subQuery->selectRaw('MAX(id)')
-                        ->from('products')
-                        ->where('is_active', true)
-                        ->where('is_approve', true)
-                        ->whereNull('deleted_at')
-                        ->groupBy('name');
-                });
-            })->withCount('orders as orders_count')
-            ->withAvg('reviews as average_rating', 'rating')
-            ->orderByDesc('average_rating')
-            ->orderByDesc('orders_count')
-            ->take(6)->get();
+        // Round-robin selection across local branch shops (1 top product per shop in sequence without redundancy)
+        $popularProducts = collect([]);
+        $usedProductNames = collect([]);
 
-        $justForYou = ProductRepository::query()->isActive()->latest('id')
-            ->when($shop, function ($query) use ($shop) {
-                return $query->where('shop_id', $shop->id);
-            })->when(! $shop, function ($query) {
-                return $query->whereIn('id', function ($subQuery) {
-                    $subQuery->selectRaw('MAX(id)')
-                        ->from('products')
-                        ->where('is_active', true)
-                        ->where('is_approve', true)
-                        ->whereNull('deleted_at')
-                        ->groupBy('name');
-                });
-            });
-        $total = $justForYou->count();
-        $justForYou = $justForYou->skip($skip)->take($perPage)->get();
+        if (! empty($targetShopIds)) {
+            $shopProductsMap = [];
+            foreach ($targetBranchShops as $bShop) {
+                $shopProductsMap[$bShop->id] = ProductRepository::query()
+                    ->isActive()
+                    ->where('shop_id', $bShop->id)
+                    ->withCount('orders as orders_count')
+                    ->withAvg('reviews as average_rating', 'rating')
+                    ->orderByDesc('average_rating')
+                    ->orderByDesc('orders_count')
+                    ->take(10)
+                    ->get();
+            }
+
+            for ($round = 0; $round < 10; $round++) {
+                $addedInRound = false;
+                foreach ($targetBranchShops as $bShop) {
+                    if ($popularProducts->count() >= 12) {
+                        break 2;
+                    }
+                    $items = $shopProductsMap[$bShop->id] ?? collect([]);
+                    foreach ($items as $product) {
+                        $normName = strtolower(trim($product->name));
+                        if (! $usedProductNames->contains($normName)) {
+                            $popularProducts->push($product);
+                            $usedProductNames->push($normName);
+                            $addedInRound = true;
+                            break;
+                        }
+                    }
+                }
+                if (! $addedInRound) {
+                    break;
+                }
+            }
+        }
+
+        // Just For You curated across active branch shops in vicinity without redundancy (excluding Shop 1)
+        $justForYouQuery = ProductRepository::query()->isActive()
+            ->when(! empty($targetShopIds), function ($query) use ($targetShopIds) {
+                return $query->whereIn('shop_id', $targetShopIds)
+                    ->whereIn('id', function ($subQuery) use ($targetShopIds) {
+                        $subQuery->selectRaw('MAX(id)')
+                            ->from('products')
+                            ->where('is_active', true)
+                            ->where('is_approve', true)
+                            ->whereNull('deleted_at')
+                            ->whereIn('shop_id', $targetShopIds)
+                            ->groupBy('name');
+                    });
+            })
+            ->latest('id');
+
+        $total = $justForYouQuery->count();
+        $justForYou = $justForYouQuery->skip($skip)->take($perPage)->get();
 
         $shops = collect([]);
 
         if ($generaleSetting?->shop_type != 'single') {
-            $shops = ShopRepository::query()->isActive()->whereHas('products', function ($query) {
-                return $query->isActive();
-            })->withCount('orders')->withAvg('reviews as average_rating', 'rating')->orderByDesc('average_rating')->orderByDesc('orders_count')->take(8)->get();
+            $shops = $targetBranchShops->take(8);
         }
 
         $ads = Ad::where('status', 1)->latest('id')->take(2)->get();
@@ -157,5 +163,43 @@ class HomeController extends Controller
         return $this->json('recently viewed products', [
             'products' => ProductResource::collection($products),
         ]);
+    }
+
+    /**
+     * Get eligible branch shops for the vicinity/city, strictly excluding Main Shop (Shop 1).
+     */
+    protected function getEligibleBranchShops(Request $request, ?Shop $rootShop)
+    {
+        $rootShopIds = array_values(array_unique(array_filter([1, $rootShop?->id])));
+
+        $baseQuery = Shop::where('status', 1)
+            ->whereNotIn('id', $rootShopIds)
+            ->where('name', 'not like', '%Main Janmitram%');
+
+        $city = $request->city;
+
+        if (! empty($city)) {
+            $cityTerm = strtolower(trim($city));
+            $searchTerms = [$cityTerm];
+            if (str_contains($cityTerm, 'jaipur')) {
+                $searchTerms[] = 'jpr';
+            } elseif ($cityTerm === 'jpr') {
+                $searchTerms[] = 'jaipur';
+            }
+
+            $cityShops = (clone $baseQuery)->where(function ($q) use ($searchTerms) {
+                foreach ($searchTerms as $term) {
+                    $q->orWhere('name', 'like', "%{$term}%")
+                        ->orWhere('address', 'like', "%{$term}%");
+                }
+            })->get();
+
+            if ($cityShops->isNotEmpty()) {
+                return $cityShops;
+            }
+        }
+
+        // If no city specified or no local branch in that city, return all other active branch shops
+        return $baseQuery->get();
     }
 }

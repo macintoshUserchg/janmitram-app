@@ -44,10 +44,8 @@ const isLoading = ref(true);
 const isLoginCategory = ref(true);
 const isLoginRecentlyView = ref(false);
 
-watch(() => locationStore.nearestShopId, (newShopId, oldShopId) => {
-    if (newShopId !== oldShopId) {
-        getData();
-    }
+watch([() => locationStore.nearestShopId, () => locationStore.city], () => {
+    getData();
 });
 
 onMounted(() => {
@@ -77,12 +75,10 @@ const getData = () => {
     const params = {
         page: 1,
         per_page: 12,
+        city: locationStore.city || "Jaipur",
     };
     if (locationStore.nearestShopId) {
-        params.shop_id = locationStore.nearestShopId;
-    } else if (locationStore.latitude && locationStore.longitude) {
-        params.latitude = locationStore.latitude;
-        params.longitude = locationStore.longitude;
+        params.nearest_shop_id = locationStore.nearestShopId;
     }
 
     axios.get("/home", {
