@@ -87,7 +87,7 @@
             </button>
         </div>
 
-        <!-- Interactive Map Container with Layer Toggle & Descriptive Overlays -->
+        <!-- Google Map Container with Layer Toggle & Descriptive Overlays -->
         <div class="relative rounded-2xl overflow-hidden shadow-md border border-slate-300 bg-slate-100">
             <!-- Map Mount Div -->
             <div
@@ -122,7 +122,7 @@
                 </button>
             </div>
 
-            <!-- Helpful Drag Instruction Tip -->
+            <!-- Drag Instruction Tip -->
             <div v-if="enableSetLocation && !heuristicNotice" class="absolute top-3 left-3 z-[400] bg-slate-900/80 backdrop-blur-md text-white px-3 py-1.5 rounded-lg text-[11px] font-medium shadow flex items-center gap-1.5 pointer-events-none">
                 <span class="animate-bounce">📍</span>
                 <span>Drag pin or click map to set exact delivery doorstep</span>
@@ -186,8 +186,6 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, watch, nextTick } from "vue";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
 import axios from "axios";
 
 const props = defineProps({
@@ -223,14 +221,6 @@ const searchInputRef = ref(null);
 
 let gMap = null;
 let gMarker = null;
-
-let lMap = null;
-let lMarker = null;
-let lStreetsLayer = null;
-let lSatelliteLayer = null;
-let lSatelliteLabelsLayer = null;
-
-let isGoogleMapActive = false;
 let resizeObserver = null;
 
 const activeLayer = ref("streets");
@@ -258,26 +248,6 @@ const inputLng = ref(currentLng.value);
 
 let searchTimeout = null;
 let geocodeTimeout = null;
-
-// Modern SVG Location Pin for Leaflet
-const customPinHtml = `
-    <div style="position: relative; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;">
-        <div style="position: absolute; width: 16px; height: 16px; background: rgba(245, 158, 11, 0.4); border-radius: 50%; bottom: 0; filter: blur(3px); animation: pulse 2s infinite;"></div>
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 6px 8px rgba(0,0,0,0.35)); transform: translateY(-6px);">
-            <path d="M12 2C8.13401 2 5 5.13401 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13401 15.866 2 12 2Z" fill="#ea4335" stroke="#ffffff" stroke-width="1.8"/>
-            <circle cx="12" cy="9" r="3.8" fill="#ffffff"/>
-            <circle cx="12" cy="9" r="2" fill="#c5221f"/>
-        </svg>
-    </div>
-`;
-
-const modernPinIcon = L.divIcon({
-    html: customPinHtml,
-    className: "modern-custom-pin",
-    iconSize: [44, 44],
-    iconAnchor: [22, 40],
-    popupAnchor: [0, -38],
-});
 
 function sanitizeCoords(lat, lng) {
     let pLat = parseFloat(lat);
@@ -325,13 +295,10 @@ function updateLocation(lat, lng, triggerEmit = true, address = "") {
         descriptiveAddress.value = address;
     }
 
-    if (isGoogleMapActive && gMap && gMarker) {
+    if (gMap && gMarker && window.google && window.google.maps) {
         const gLatLng = new window.google.maps.LatLng(coords.lat, coords.lng);
         gMarker.setPosition(gLatLng);
         gMap.panTo(gLatLng);
-    } else {
-        if (lMarker) lMarker.setLatLng([coords.lat, coords.lng]);
-        if (lMap) lMap.setView([coords.lat, coords.lng], lMap.getZoom() || 16);
     }
 
     if (triggerEmit) {
@@ -350,22 +317,12 @@ function updateLocation(lat, lng, triggerEmit = true, address = "") {
 function setMapLayer(layerType) {
     activeLayer.value = layerType;
 
-    if (isGoogleMapActive && gMap) {
+    if (gMap && window.google && window.google.maps) {
         gMap.setMapTypeId(
             layerType === "satellite"
                 ? window.google.maps.MapTypeId.HYBRID
                 : window.google.maps.MapTypeId.ROADMAP
         );
-    } else if (lMap) {
-        if (layerType === "satellite") {
-            if (lMap.hasLayer(lStreetsLayer)) lMap.removeLayer(lStreetsLayer);
-            if (!lMap.hasLayer(lSatelliteLayer)) lSatelliteLayer.addTo(lMap);
-            if (!lMap.hasLayer(lSatelliteLabelsLayer)) lSatelliteLabelsLayer.addTo(lMap);
-        } else {
-            if (lMap.hasLayer(lSatelliteLayer)) lMap.removeLayer(lSatelliteLayer);
-            if (lMap.hasLayer(lSatelliteLabelsLayer)) lMap.removeLayer(lSatelliteLabelsLayer);
-            if (!lMap.hasLayer(lStreetsLayer)) lStreetsLayer.addTo(lMap);
-        }
     }
 }
 
@@ -643,65 +600,11 @@ async function initGoogleMap(apiKey, coords) {
             });
         }
 
-        isGoogleMapActive = true;
         return true;
     } catch (e) {
-        console.warn("Could not initialize Google Maps SDK, using fallback:", e);
+        console.warn("Could not initialize Google Maps SDK:", e);
         return false;
     }
-}
-
-function initLeafletFallback(coords) {
-    if (!mapContainer.value) return;
-
-    if (lMap) {
-        lMap.remove();
-        lMap = null;
-    }
-
-    lMap = L.map(mapContainer.value, {
-        center: [coords.lat, coords.lng],
-        zoom: 16,
-        zoomControl: false,
-        attributionControl: false,
-    });
-
-    L.control.zoom({ position: "bottomright" }).addTo(lMap);
-
-    lStreetsLayer = L.tileLayer(
-        "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
-        { maxZoom: 20, subdomains: "abcd" }
-    );
-
-    lSatelliteLayer = L.tileLayer(
-        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-        { maxZoom: 19 }
-    );
-
-    lSatelliteLabelsLayer = L.tileLayer(
-        "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png",
-        { maxZoom: 20, subdomains: "abcd" }
-    );
-
-    lStreetsLayer.addTo(lMap);
-
-    lMarker = L.marker([coords.lat, coords.lng], {
-        draggable: props.enableSetLocation,
-        icon: modernPinIcon,
-    }).addTo(lMap);
-
-    if (props.enableSetLocation) {
-        lMarker.on("dragend", () => {
-            const pos = lMarker.getLatLng();
-            updateLocation(pos.lat, pos.lng, true);
-        });
-
-        lMap.on("click", (e) => {
-            updateLocation(e.latlng.lat, e.latlng.lng, true);
-        });
-    }
-
-    isGoogleMapActive = false;
 }
 
 async function initMap() {
@@ -723,23 +626,20 @@ async function initMap() {
         console.warn("Could not fetch maps config:", e);
     }
 
-    let googleLoaded = false;
-    if (googleKey) {
-        googleLoaded = await initGoogleMap(googleKey, coords);
+    if (!googleKey) {
+        googleKey = import.meta.env.VITE_GOOGLE_MAPS_KEY || "";
     }
 
-    if (!googleLoaded) {
-        initLeafletFallback(coords);
+    if (googleKey) {
+        await initGoogleMap(googleKey, coords);
     }
 
     reverseGeocodeCoords(coords.lat, coords.lng);
 
     if (window.ResizeObserver && mapContainer.value) {
         resizeObserver = new ResizeObserver(() => {
-            if (isGoogleMapActive && gMap && window.google) {
+            if (gMap && window.google) {
                 window.google.maps.event.trigger(gMap, "resize");
-            } else if (lMap) {
-                lMap.invalidateSize();
             }
         });
         resizeObserver.observe(mapContainer.value);
@@ -747,10 +647,8 @@ async function initMap() {
 
     nextTick(() => {
         setTimeout(() => {
-            if (isGoogleMapActive && gMap && window.google) {
+            if (gMap && window.google) {
                 window.google.maps.event.trigger(gMap, "resize");
-            } else if (lMap) {
-                lMap.invalidateSize();
             }
         }, 300);
     });
@@ -785,38 +683,10 @@ onUnmounted(() => {
         resizeObserver.disconnect();
         resizeObserver = null;
     }
-    if (lMap) {
-        lMap.remove();
-        lMap = null;
+    if (gMarker) {
+        gMarker.setMap(null);
+        gMarker = null;
     }
+    gMap = null;
 });
 </script>
-
-<style>
-.modern-custom-pin {
-    background: transparent !important;
-    border: none !important;
-}
-.leaflet-control-zoom {
-    border: none !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-    border-radius: 12px !important;
-    overflow: hidden;
-    margin-bottom: 24px !important;
-    margin-right: 12px !important;
-}
-.leaflet-control-zoom a {
-    background-color: #ffffff !important;
-    color: #334155 !important;
-    border: none !important;
-    width: 34px !important;
-    height: 34px !important;
-    line-height: 34px !important;
-    font-size: 15px !important;
-    font-weight: bold !important;
-}
-.leaflet-control-zoom a:hover {
-    background-color: #fef3c7 !important;
-    color: #d97706 !important;
-}
-</style>

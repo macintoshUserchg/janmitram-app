@@ -10,7 +10,6 @@
     <link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/font-awesome.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/css/leaflet.css') }}">
 </head>
 <style>
     body {
@@ -445,7 +444,7 @@
 
     <script src="{{ asset('assets/scripts/jquery-3.6.3.min.js') }}"></script>
     <script src="{{ asset('assets/scripts/sweetalert2.min.js') }}"></script>
-    <script src="{{ asset('assets/scripts/leaflet.js') }}"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ config('services.google_maps.key') }}&libraries=places,geometry"></script>
     <script src="{{ asset('assets/scripts/janmitram-map-helper.js') }}"></script>
     <script>
         let isRegistrationConfirmed = false;
@@ -462,8 +461,8 @@
                 $('#indicator1').removeClass('active');
                 $('#indicator2').addClass('active');
 
-                if (window.janmitramMapObj) {
-                    window.janmitramMapObj.invalidateSize();
+                if (window.janmitramMapObj && window.google && window.google.maps) {
+                    window.google.maps.event.trigger(window.janmitramMapObj, 'resize');
                 }
             });
 
@@ -530,8 +529,8 @@
                     $('#indicator1').removeClass('active');
                     $('#indicator3').removeClass('active');
                     $('#indicator2').addClass('active');
-                    if (window.janmitramMapObj) {
-                        window.janmitramMapObj.invalidateSize();
+                    if (window.janmitramMapObj && window.google && window.google.maps) {
+                        window.google.maps.event.trigger(window.janmitramMapObj, 'resize');
                     }
                 @elseif($errors->has('aadhaar_card') || $errors->has('aadhaar_number') || $errors->has('pan_card') || $errors->has('pan_number') || $errors->has('date_of_birth') || $errors->has('qualification') || $errors->has('bank_name') || $errors->has('ifsc') || $errors->has('account_number') || $errors->has('other_documents'))
                     $('#step1').hide();

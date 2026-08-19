@@ -186,9 +186,10 @@
 </script>
 
 
+<script src="https://maps.googleapis.com/maps/api/js?key={{ config('services.google_maps.key') }}&libraries=places,geometry"></script>
 <script>
-    let map = null;
-    let riderMarker = null;
+    let gRiderMap = null;
+    let gRiderLiveMarker = null;
     let riderId = null;
     let riderChannel = null;
 
@@ -196,53 +197,52 @@
         lat = parseFloat(lat) || 27.005694931660006;
         lng = parseFloat(lng) || 75.77754972401056;
 
-        map = L.map('map').setView([lat, lng], 15);
+        const mapEl = document.getElementById('map');
+        if (!mapEl || !window.google || !window.google.maps) return;
 
-        const mainTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            subdomains: ['a', 'b', 'c'],
-            attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(map);
+        const riderLatLng = new google.maps.LatLng(lat, lng);
 
-        let tileErrors = 0;
-        mainTiles.on('tileerror', function() {
-            tileErrors++;
-            if (tileErrors === 3) {
-                map.removeLayer(mainTiles);
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                    maxZoom: 19,
-                    subdomains: 'abcd'
-                }).addTo(map);
+        gRiderMap = new google.maps.Map(mapEl, {
+            center: riderLatLng,
+            zoom: 16,
+            mapTypeId: google.maps.MapTypeId.ROADMAP,
+            zoomControl: true,
+            mapTypeControl: false,
+            streetViewControl: false,
+        });
+
+        gRiderLiveMarker = new google.maps.Marker({
+            position: riderLatLng,
+            map: gRiderMap,
+            title: "Rider Live Location",
+            icon: {
+                url: "{{ asset('assets/icons/pin-map.png') }}",
+                scaledSize: new google.maps.Size(42, 42),
             }
         });
 
-        riderMarker = L.marker([lat, lng], {
-            icon: L.icon({
-                iconUrl: '{{ asset('assets/icons/pin-map.png') }}',
-                iconSize: [35, 35],
-                iconAnchor: [17, 35]
-            })
-        }).addTo(map).bindPopup('Rider Live Location');
+        const info = new google.maps.InfoWindow({
+            content: '<div class="fw-bold fs-6">Rider Live Location</div>'
+        });
+        info.open(gRiderMap, gRiderLiveMarker);
     }
 
     function subscribeToRiderLocation(riderId) {
-
+        if (!gRiderLiveMarker || typeof pusher === 'undefined') return;
 
         riderChannel = pusher.subscribe('rider-location.' + riderId);
 
         riderChannel.bind('rider.location.updated', function (data) {
-
-            if (!riderMarker || data.location.driver_id !== riderId) {
+            if (!gRiderLiveMarker || data.location.driver_id !== riderId) {
                 return;
             }
 
-            const latitude = data.location.latitude;
-            const longitude = data.location.longitude;
+            const latitude = parseFloat(data.location.latitude);
+            const longitude = parseFloat(data.location.longitude);
+            const riderLatLng = new google.maps.LatLng(latitude, longitude);
 
-            moveMarkerSmooth(riderMarker, latitude, longitude, 2000);
-
-            // riderMarker.setLatLng([latitude, longitude]);
-            map.panTo([latitude, longitude], { animate: true });
+            gRiderLiveMarker.setPosition(riderLatLng);
+            if (gRiderMap) gRiderMap.panTo(riderLatLng);
         });
     }
 
@@ -252,36 +252,25 @@
         $('#riderLocationModal').modal('show');
 
         $.get("{{ route('admin.rider.location', ':id') }}".replace(':id', riderId), function (res) {
-            console.log(res.data.location,'res');
-
             const { latitude, longitude } = res.data.location;
 
             $('#riderLocationModal').on('shown.bs.modal', function () {
-
-                if (map) {
-                    map.remove();
-                    map = null;
-                }
-
                 initMap(latitude, longitude);
                 subscribeToRiderLocation(riderId);
-
-                setTimeout(() => map.invalidateSize(), 300);
             });
         });
     });
 
     $('#riderLocationModal').on('hidden.bs.modal', function () {
-
-        if (riderChannel) {
+        if (riderChannel && typeof pusher !== 'undefined') {
             pusher.unsubscribe('rider-location.' + riderId);
             riderChannel = null;
         }
-
-        if (map) {
-            map.remove();
-            map = null;
+        if (gRiderLiveMarker) {
+            gRiderLiveMarker.setMap(null);
+            gRiderLiveMarker = null;
         }
+        gRiderMap = null;
     });
 </script>
 

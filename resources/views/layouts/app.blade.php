@@ -62,11 +62,6 @@
     <link rel="stylesheet" href="{{ asset('assets/css/jquery-ui.css') }}" type="text/css">
     <link rel="stylesheet" type="text/css" href="{{ asset('assets/css/daterangepicker.css') }}" />
 
-    <link rel="stylesheet" href="{{ asset('assets/css/leaflet.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/css/leaflet-routing-machine.css') }}">
-    <!-- MapLibre GL / Ola Maps Vector Stylesheet -->
-    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
-
     @stack('css')
 
     <style>
@@ -504,10 +499,8 @@
     <script src="{{ asset('assets/scripts/jquery.timepicker.min.js') }}"></script>
     <script src="{{ asset('assets/scripts/jquery-ui.js') }}"></script>
 
-    <script src="{{ asset('assets/scripts/leaflet.js') }}"></script>
-    <script src="{{ asset('assets/scripts/leaflet-routing-machine.js') }}"></script>
-    <!-- MapLibre GL / Ola Maps Web SDK -->
-    <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+    <!-- Google Maps JavaScript SDK & Places Library -->
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ config('services.google_maps.key') }}&libraries=places,geometry"></script>
     <script src="{{ asset('assets/scripts/janmitram-map-helper.js') }}"></script>
     {{-- daterange-picker --}}
     <script type="text/javascript" src="{{ asset('assets/scripts/moment.min.js') }}"></script>

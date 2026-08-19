@@ -15,8 +15,6 @@ import "vue-toastification/dist/index.css";
 import VueSelect from "vue-select";
 import "vue-select/dist/vue-select.css";
 
-import "leaflet/dist/leaflet.css";
-
 import { createPinia } from "pinia";
 import piniaPluginPersistedstate from "pinia-plugin-persistedstate";
 

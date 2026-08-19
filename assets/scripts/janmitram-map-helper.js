@@ -1,7 +1,7 @@
 /**
- * Janmitram Ola Maps / MapLibre GL Interactive Geolocation Helper
- * Provides Address Search (Ola Places Autocomplete / Nominatim fallback),
- * GPS Current Location Detection, Draggable Pin Markers, and Bi-directional Coordinate Sync.
+ * Janmitram Google Maps Interactive Geolocation Helper
+ * Provides Address Search (Google Places Autocomplete), GPS Current Location Detection,
+ * Draggable Pin Markers, and Bi-directional Coordinate Sync.
  */
 
 window.initJanmitramMap = function(config) {
@@ -11,10 +11,9 @@ window.initJanmitramMap = function(config) {
 
     var defaultLat = parseFloat(config.lat) || 27.005694931660006;
     var defaultLng = parseFloat(config.lng) || 75.77754972401056;
-    var zoom = config.zoom || 13;
+    var zoom = config.zoom || 15;
     var isDraggable = config.draggable !== false;
 
-    // Sanitize coordinates
     if (isNaN(defaultLat) || isNaN(defaultLng) || (defaultLat === 0 && defaultLng === 0)) {
         defaultLat = 27.005694931660006;
         defaultLng = 75.77754972401056;
@@ -33,43 +32,42 @@ window.initJanmitramMap = function(config) {
 
     updateInputs(defaultLat, defaultLng);
 
-    // If MapLibre GL is loaded, initialize vector map
-    if (typeof maplibregl !== 'undefined') {
-        var mapStyle = config.tilesUrl || 'https://demotiles.maplibre.org/style.json';
-        if (config.apiKey) {
-            mapStyle = (config.tilesUrl || 'https://api.olamaps.io/tiles/vector/v1/styles/default-light-standard/style.json') + '?api_key=' + config.apiKey;
-        }
+    // If Google Maps is loaded, initialize native Google Map
+    if (typeof google !== 'undefined' && google.maps) {
+        var centerLatLng = new google.maps.LatLng(defaultLat, defaultLng);
 
-        var map = new maplibregl.Map({
-            container: containerId,
-            style: mapStyle,
-            center: [defaultLng, defaultLat],
+        var map = new google.maps.Map(mapEl, {
+            center: centerLatLng,
             zoom: zoom,
-            attributionControl: false
+            mapTypeId: google.maps.MapTypeId.ROADMAP,
+            zoomControl: true,
+            mapTypeControl: false,
+            streetViewControl: false,
         });
 
-        map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
-
-        var marker = new maplibregl.Marker({
+        var marker = new google.maps.Marker({
+            position: centerLatLng,
+            map: map,
             draggable: isDraggable,
-            color: '#ff6b00' // Ola Orange
-        })
-        .setLngLat([defaultLng, defaultLat])
-        .addTo(map);
+            animation: google.maps.Animation.DROP,
+        });
 
         if (config.popupText) {
-            marker.setPopup(new maplibregl.Popup({ offset: 25 }).setHTML(config.popupText));
+            var infoWindow = new google.maps.InfoWindow({
+                content: config.popupText,
+            });
+            infoWindow.open(map, marker);
         }
 
         if (isDraggable) {
-            marker.on('dragend', function() {
-                var lngLat = marker.getLngLat();
-                updateInputs(lngLat.lat, lngLat.lng);
+            marker.addListener('dragend', function() {
+                var pos = marker.getPosition();
+                updateInputs(pos.lat(), pos.lng());
             });
 
-            map.on('click', function(e) {
-                marker.setLngLat([e.lngLat.lng, e.lngLat.lat]);
-                updateInputs(e.lngLat.lat, e.lngLat.lng);
+            map.addListener('click', function(e) {
+                marker.setPosition(e.latLng);
+                updateInputs(e.latLng.lat(), e.latLng.lng());
             });
 
             function onManualInputChange() {
@@ -77,8 +75,9 @@ window.initJanmitramMap = function(config) {
                 var nLat = parseFloat(latInput.value);
                 var nLng = parseFloat(lngInput.value);
                 if (!isNaN(nLat) && !isNaN(nLng) && nLat !== 0 && nLng !== 0) {
-                    map.flyTo({ center: [nLng, nLat], zoom: map.getZoom() });
-                    marker.setLngLat([nLng, nLat]);
+                    var newPos = new google.maps.LatLng(nLat, nLng);
+                    map.panTo(newPos);
+                    marker.setPosition(newPos);
                 }
             }
 
@@ -88,43 +87,16 @@ window.initJanmitramMap = function(config) {
 
         // Render Search & GPS controls if enabled
         if (config.showControls !== false) {
-            injectMapControls(mapEl, map, marker, updateInputs);
+            injectGoogleMapControls(mapEl, map, marker, updateInputs);
         }
-
-        setTimeout(function() {
-            if (map) map.resize();
-        }, 300);
 
         return map;
-    }
-
-    // Leaflet fallback if MapLibre GL is unavailable
-    if (typeof L !== 'undefined') {
-        var lMap = L.map(containerId).setView([defaultLat, defaultLng], zoom);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(lMap);
-
-        var lMarker = L.marker([defaultLat, defaultLng], { draggable: isDraggable }).addTo(lMap);
-
-        if (isDraggable) {
-            lMarker.on('dragend', function() {
-                var pos = lMarker.getLatLng();
-                updateInputs(pos.lat, pos.lng);
-            });
-            lMap.on('click', function(e) {
-                lMarker.setLatLng(e.latlng);
-                updateInputs(e.latlng.lat, e.latlng.lng);
-            });
-        }
-        return lMap;
     }
 
     return null;
 };
 
-function injectMapControls(mapEl, map, marker, updateInputs) {
+function injectGoogleMapControls(mapEl, map, marker, updateInputs) {
     var parent = mapEl.parentNode;
     if (!parent) return;
 
@@ -138,102 +110,122 @@ function injectMapControls(mapEl, map, marker, updateInputs) {
     var searchInput = document.createElement('input');
     searchInput.type = 'text';
     searchInput.className = 'form-control form-control-sm';
-    searchInput.placeholder = 'Search area, landmark, or street in India...';
+    searchInput.placeholder = 'Search address or place in India...';
+    searchInput.autocomplete = 'off';
 
     var dropdown = document.createElement('div');
-    dropdown.className = 'position-absolute w-100 bg-white border rounded shadow-sm overflow-auto';
-    dropdown.style.maxHeight = '200px';
-    dropdown.style.zIndex = '1050';
-    dropdown.style.display = 'none';
+    dropdown.className = 'list-group position-absolute w-100 shadow-lg';
+    dropdown.style.cssText = 'z-index: 1050; max-height: 220px; overflow-y: auto; display: none; top: 100%; left: 0;';
 
     searchWrapper.appendChild(searchInput);
     searchWrapper.appendChild(dropdown);
 
     var gpsBtn = document.createElement('button');
     gpsBtn.type = 'button';
-    gpsBtn.className = 'btn btn-sm btn-outline-primary d-flex align-items-center gap-1';
-    gpsBtn.innerHTML = '<i class="bi bi-geo-alt-fill"></i> Use My GPS';
+    gpsBtn.className = 'btn btn-outline-secondary btn-sm d-flex align-items-center gap-1';
+    gpsBtn.innerHTML = '<i class="fas fa-crosshairs text-success"></i> My Location';
+    gpsBtn.title = 'Detect My GPS Location';
 
     controlDiv.appendChild(searchWrapper);
     controlDiv.appendChild(gpsBtn);
     parent.insertBefore(controlDiv, mapEl);
 
-    // Search Autocomplete Handler
-    var searchTimer = null;
+    // Google Places Search
+    var searchTimeout = null;
     searchInput.addEventListener('input', function() {
-        clearTimeout(searchTimer);
-        var val = searchInput.value.trim();
-        if (val.length < 2) {
+        clearTimeout(searchTimeout);
+        var q = searchInput.value.trim();
+        if (q.length < 2) {
             dropdown.style.display = 'none';
             return;
         }
 
-        searchTimer = setTimeout(function() {
-            fetch('/api/maps/autocomplete?input=' + encodeURIComponent(val) + '&limit=5')
-                .then(function(res) { return res.json(); })
-                .then(function(resData) {
+        searchTimeout = setTimeout(function() {
+            var currentPos = marker ? marker.getPosition() : null;
+            var lat = currentPos ? currentPos.lat() : 27.0056949;
+            var lng = currentPos ? currentPos.lng() : 75.7775497;
+
+            fetch('/api/maps/autocomplete?input=' + encodeURIComponent(q) + '&lat=' + lat + '&lng=' + lng + '&limit=5')
+                .then(function(r) { return r.json(); })
+                .then(function(res) {
                     dropdown.innerHTML = '';
-                    var results = resData.data || [];
+                    var results = res.data || [];
                     if (results.length === 0) {
                         dropdown.style.display = 'none';
                         return;
                     }
 
                     results.forEach(function(item) {
-                        var opt = document.createElement('a');
-                        opt.href = 'javascript:void(0)';
-                        opt.className = 'd-block px-2 py-1.5 small text-dark text-decoration-none border-bottom hover-bg-light';
-                        opt.textContent = item.display_name;
-                        opt.addEventListener('click', function() {
+                        var btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'list-group-item list-group-item-action text-start py-2 px-3 small';
+                        btn.innerHTML = '<i class="fas fa-map-marker-alt text-danger me-2"></i>' + (item.display_name || '');
+                        btn.addEventListener('click', function(e) {
+                            e.preventDefault();
                             searchInput.value = item.display_name;
                             dropdown.style.display = 'none';
+
                             if (item.lat && item.lng) {
-                                map.flyTo({ center: [item.lng, item.lat], zoom: 14 });
-                                marker.setLngLat([item.lng, item.lat]);
+                                var newPos = new google.maps.LatLng(item.lat, item.lng);
+                                map.panTo(newPos);
+                                map.setZoom(16);
+                                marker.setPosition(newPos);
                                 updateInputs(item.lat, item.lng);
+                            } else if (item.place_id) {
+                                fetch('/api/maps/place-details?place_id=' + encodeURIComponent(item.place_id))
+                                    .then(function(pr) { return pr.json(); })
+                                    .then(function(pres) {
+                                        if (pres.data && pres.data.lat && pres.data.lng) {
+                                            var nPos = new google.maps.LatLng(pres.data.lat, pres.data.lng);
+                                            map.panTo(nPos);
+                                            map.setZoom(16);
+                                            marker.setPosition(nPos);
+                                            updateInputs(pres.data.lat, pres.data.lng);
+                                        }
+                                    });
                             }
                         });
-                        dropdown.appendChild(opt);
+                        dropdown.appendChild(btn);
                     });
                     dropdown.style.display = 'block';
                 })
-                .catch(function(e) { console.warn('Search error:', e); });
-        }, 350);
+                .catch(function() {
+                    dropdown.style.display = 'none';
+                });
+        }, 200);
     });
 
-    // GPS Button Click
+    document.addEventListener('click', function(e) {
+        if (!searchWrapper.contains(e.target)) {
+            dropdown.style.display = 'none';
+        }
+    });
+
     gpsBtn.addEventListener('click', function() {
         if (!navigator.geolocation) {
-            alert('Geolocation not supported by your browser.');
+            alert('Geolocation is not supported by your browser.');
             return;
         }
+
+        gpsBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Locating...';
         gpsBtn.disabled = true;
-        gpsBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Locating...';
 
         navigator.geolocation.getCurrentPosition(
             function(pos) {
+                gpsBtn.innerHTML = '<i class="fas fa-crosshairs text-success"></i> My Location';
                 gpsBtn.disabled = false;
-                gpsBtn.innerHTML = '<i class="bi bi-geo-alt-fill"></i> Use My GPS';
-                var lat = pos.coords.latitude;
-                var lng = pos.coords.longitude;
-                map.flyTo({ center: [lng, lat], zoom: 14 });
-                marker.setLngLat([lng, lat]);
-                updateInputs(lat, lng);
-
-                fetch('/api/maps/reverse-geocode?lat=' + lat + '&lng=' + lng)
-                    .then(function(r) { return r.json(); })
-                    .then(function(rd) {
-                        if (rd.data && rd.data.display_name) {
-                            searchInput.value = rd.data.display_name;
-                        }
-                    });
+                var gPos = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+                map.panTo(gPos);
+                map.setZoom(16);
+                marker.setPosition(gPos);
+                updateInputs(pos.coords.latitude, pos.coords.longitude);
             },
             function(err) {
+                gpsBtn.innerHTML = '<i class="fas fa-crosshairs text-success"></i> My Location';
                 gpsBtn.disabled = false;
-                gpsBtn.innerHTML = '<i class="bi bi-geo-alt-fill"></i> Use My GPS';
                 alert('Could not detect GPS location. Please check browser permissions.');
             },
-            { enableHighAccuracy: true, timeout: 10000 }
+            { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
         );
     });
 }

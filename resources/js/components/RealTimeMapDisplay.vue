@@ -3,24 +3,22 @@
         <div
             ref="mapContainer"
             :style="{ width: width, height: height, minHeight: '400px' }"
-            class="rounded-xl overflow-hidden shadow-sm border border-gray-300 bg-slate-100 relative z-0"
+            class="rounded-2xl overflow-hidden shadow-md border border-slate-200 bg-slate-100 relative z-0"
         ></div>
 
         <!-- Floating Status Badge -->
-        <div class="absolute top-3 left-3 z-[1000] bg-white/95 backdrop-blur px-3 py-1.5 rounded-lg shadow-md border border-gray-200 flex items-center gap-2 text-xs">
+        <div class="absolute top-3 left-3 z-[1000] bg-white/95 backdrop-blur px-3.5 py-2 rounded-xl shadow-lg border border-slate-200/80 flex items-center gap-2 text-xs">
             <span class="relative flex h-2.5 w-2.5">
                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
             </span>
-            <span class="font-semibold text-gray-700">Live Delivery Tracking</span>
+            <span class="font-bold text-slate-800">Live Delivery Tracking</span>
         </div>
     </div>
 </template>
 
 <script setup>
 import { ref, onMounted, onUnmounted, watch, nextTick } from "vue";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
 import axios from "axios";
 
 const props = defineProps({
@@ -39,24 +37,11 @@ const props = defineProps({
 });
 
 const mapContainer = ref(null);
-let map = null;
+let gMap = null;
 let riderMarker = null;
 let customerMarker = null;
 let routePolyline = null;
-
-const customerIcon = L.icon({
-    iconUrl: "/assets/icons/home.png",
-    iconSize: [38, 38],
-    iconAnchor: [19, 38],
-    popupAnchor: [0, -35],
-});
-
-const riderIcon = L.icon({
-    iconUrl: "/assets/icons/pin-map.png",
-    iconSize: [42, 42],
-    iconAnchor: [21, 42],
-    popupAnchor: [0, -38],
-});
+let resizeObserver = null;
 
 function isValidCoord(loc) {
     if (!loc) return false;
@@ -65,80 +50,130 @@ function isValidCoord(loc) {
     return !isNaN(lat) && !isNaN(lng) && (lat !== 0 || lng !== 0);
 }
 
+function loadGoogleMapsSdk(apiKey) {
+    return new Promise((resolve, reject) => {
+        if (window.google && window.google.maps) {
+            resolve(window.google.maps);
+            return;
+        }
+
+        const existing = document.getElementById("google-maps-sdk");
+        if (existing) {
+            existing.addEventListener("load", () => resolve(window.google.maps));
+            existing.addEventListener("error", reject);
+            return;
+        }
+
+        const script = document.createElement("script");
+        script.id = "google-maps-sdk";
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,geometry`;
+        script.async = true;
+        script.defer = true;
+        script.onload = () => resolve(window.google.maps);
+        script.onerror = reject;
+        document.head.appendChild(script);
+    });
+}
+
 function updateMapLayers() {
-    if (!map) return;
+    if (!gMap || !window.google || !window.google.maps) return;
 
     const rValid = isValidCoord(props.riderLocation);
     const cValid = isValidCoord(props.customerLocation);
 
-    const latLngs = [];
+    const bounds = new window.google.maps.LatLngBounds();
+    let pointsCount = 0;
 
-    // Customer Marker
+    // Customer Doorstep Marker
     if (cValid) {
         const cLat = parseFloat(props.customerLocation.lat);
         const cLng = parseFloat(props.customerLocation.lng);
-        const cLatLng = L.latLng(cLat, cLng);
+        const cPos = new window.google.maps.LatLng(cLat, cLng);
 
         if (!customerMarker) {
-            customerMarker = L.marker(cLatLng, { icon: customerIcon })
-                .bindPopup("<div class='font-semibold text-xs'>Your Delivery Address</div>")
-                .addTo(map);
+            customerMarker = new window.google.maps.Marker({
+                position: cPos,
+                map: gMap,
+                title: "Your Delivery Address",
+                icon: {
+                    url: "/assets/icons/home.png",
+                    scaledSize: new window.google.maps.Size(40, 40),
+                },
+            });
         } else {
-            customerMarker.setLatLng(cLatLng);
+            customerMarker.setPosition(cPos);
         }
-        latLngs.push(cLatLng);
+        bounds.extend(cPos);
+        pointsCount++;
     }
 
-    // Rider Marker
+    // Rider Live Location Marker
     if (rValid) {
         const rLat = parseFloat(props.riderLocation.lat);
         const rLng = parseFloat(props.riderLocation.lng);
-        const rLatLng = L.latLng(rLat, rLng);
+        const rPos = new window.google.maps.LatLng(rLat, rLng);
 
         if (!riderMarker) {
-            riderMarker = L.marker(rLatLng, { icon: riderIcon })
-                .bindPopup("<div class='font-semibold text-xs'>Delivery Rider</div>")
-                .addTo(map);
+            riderMarker = new window.google.maps.Marker({
+                position: rPos,
+                map: gMap,
+                title: "Delivery Rider",
+                icon: {
+                    url: "/assets/icons/pin-map.png",
+                    scaledSize: new window.google.maps.Size(42, 42),
+                },
+            });
         } else {
-            riderMarker.setLatLng(rLatLng);
+            riderMarker.setPosition(rPos);
         }
-        latLngs.push(rLatLng);
+        bounds.extend(rPos);
+        pointsCount++;
     }
 
-    // Draw route line
+    // Route Polyline
     if (rValid && cValid) {
-        const rLat = parseFloat(props.riderLocation.lat);
-        const rLng = parseFloat(props.riderLocation.lng);
-        const cLat = parseFloat(props.customerLocation.lat);
-        const cLng = parseFloat(props.customerLocation.lng);
+        const rPos = new window.google.maps.LatLng(parseFloat(props.riderLocation.lat), parseFloat(props.riderLocation.lng));
+        const cPos = new window.google.maps.LatLng(parseFloat(props.customerLocation.lat), parseFloat(props.customerLocation.lng));
+
+        const path = [rPos, cPos];
 
         if (!routePolyline) {
-            routePolyline = L.polyline([[rLat, rLng], [cLat, cLng]], {
-                color: "#ff6b00",
-                weight: 4,
-                opacity: 0.9,
-                dashArray: "8, 6",
-            }).addTo(map);
+            routePolyline = new window.google.maps.Polyline({
+                path: path,
+                geodesic: true,
+                strokeColor: "#f59e0b",
+                strokeOpacity: 0.85,
+                strokeWeight: 4,
+                map: gMap,
+            });
         } else {
-            routePolyline.setLatLngs([[rLat, rLng], [cLat, cLng]]);
+            routePolyline.setPath(path);
         }
 
-        if (latLngs.length > 0) {
-            const bounds = L.latLngBounds(latLngs);
-            map.fitBounds(bounds, { padding: [60, 60], maxZoom: 16 });
-        }
-    } else if (cValid) {
-        map.setView([parseFloat(props.customerLocation.lat), parseFloat(props.customerLocation.lng)], 14);
+        gMap.fitBounds(bounds, 70);
+    } else if (pointsCount === 1) {
+        gMap.setCenter(bounds.getCenter());
+        gMap.setZoom(16);
     }
 }
 
-function initMap() {
+async function initMap() {
     if (!mapContainer.value) return;
 
-    if (map) {
-        map.remove();
-        map = null;
+    let googleKey = "";
+    try {
+        const configRes = await axios.get("/maps/config");
+        googleKey = configRes.data?.data?.api_key || "";
+    } catch (e) {
+        console.warn("Maps config error:", e);
     }
+
+    if (!googleKey) {
+        googleKey = import.meta.env.VITE_GOOGLE_MAPS_KEY || "";
+    }
+
+    await loadGoogleMapsSdk(googleKey);
+    if (!mapContainer.value || !window.google || !window.google.maps) return;
 
     const rValid = isValidCoord(props.riderLocation);
     const cValid = isValidCoord(props.customerLocation);
@@ -146,61 +181,38 @@ function initMap() {
     const defaultLat = rValid ? parseFloat(props.riderLocation.lat) : (cValid ? parseFloat(props.customerLocation.lat) : 27.0056949);
     const defaultLng = rValid ? parseFloat(props.riderLocation.lng) : (cValid ? parseFloat(props.customerLocation.lng) : 75.7775497);
 
-    map = L.map(mapContainer.value).setView([defaultLat, defaultLng], 13);
-
-    const primaryTiles = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: 19,
-        subdomains: ["a", "b", "c"],
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    });
-
-    const fallbackTiles = L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-        maxZoom: 19,
-        subdomains: "abcd",
-        attribution: "&copy; CartoDB &copy; OpenStreetMap",
-    });
-
-    primaryTiles.addTo(map);
-
-    let tileErrors = 0;
-    primaryTiles.on("tileerror", () => {
-        tileErrors++;
-        if (tileErrors >= 3 && !map.hasLayer(fallbackTiles)) {
-            map.removeLayer(primaryTiles);
-            fallbackTiles.addTo(map);
-        }
+    gMap = new window.google.maps.Map(mapContainer.value, {
+        center: { lat: defaultLat, lng: defaultLng },
+        zoom: 14,
+        mapTypeId: window.google.maps.MapTypeId.ROADMAP,
+        disableDefaultUI: false,
+        zoomControl: true,
+        mapTypeControl: false,
+        streetViewControl: false,
     });
 
     updateMapLayers();
 
+    if (window.ResizeObserver && mapContainer.value) {
+        resizeObserver = new ResizeObserver(() => {
+            if (gMap && window.google) {
+                window.google.maps.event.trigger(gMap, "resize");
+            }
+        });
+        resizeObserver.observe(mapContainer.value);
+    }
+
     nextTick(() => {
         setTimeout(() => {
-            if (map) map.invalidateSize();
-        }, 200);
-        setTimeout(() => {
-            if (map) map.invalidateSize();
-        }, 500);
+            if (gMap && window.google) {
+                window.google.maps.event.trigger(gMap, "resize");
+            }
+        }, 300);
     });
 }
 
 watch(
-    () => props.riderLocation,
-    (newLoc) => {
-        if (isValidCoord(newLoc) && riderMarker) {
-            riderMarker.setLatLng([parseFloat(newLoc.lat), parseFloat(newLoc.lng)]);
-            if (routePolyline && isValidCoord(props.customerLocation)) {
-                routePolyline.setLatLngs([
-                    [parseFloat(newLoc.lat), parseFloat(newLoc.lng)],
-                    [parseFloat(props.customerLocation.lat), parseFloat(props.customerLocation.lng)],
-                ]);
-            }
-        }
-    },
-    { deep: true }
-);
-
-watch(
-    () => props.customerLocation,
+    () => [props.riderLocation, props.customerLocation],
     () => {
         updateMapLayers();
     },
@@ -212,9 +224,22 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-    if (map) {
-        map.remove();
-        map = null;
+    if (resizeObserver) {
+        resizeObserver.disconnect();
+        resizeObserver = null;
     }
+    if (routePolyline) {
+        routePolyline.setMap(null);
+        routePolyline = null;
+    }
+    if (riderMarker) {
+        riderMarker.setMap(null);
+        riderMarker = null;
+    }
+    if (customerMarker) {
+        customerMarker.setMap(null);
+        customerMarker = null;
+    }
+    gMap = null;
 });
 </script>

@@ -224,18 +224,18 @@
                     </div>
                     <h5 class="card-title mb-0 fw-bold">{{ __('Interactive Map & Geolocation Controls') }}</h5>
                 </div>
-                <span class="badge bg-warning text-dark">{{ __('Leaflet + GPS') }}</span>
+                <span class="badge bg-warning text-dark">{{ __('Google Maps + GPS') }}</span>
             </div>
             <div class="card-body p-4">
                 <p class="text-muted small mb-3">
-                    {{ __('Provides precise coordinate detection and manual Latitude/Longitude editing across all address forms.') }}
+                    {{ __('Provides precise coordinate detection, Google Places autocomplete, and manual Latitude/Longitude editing across all address forms.') }}
                 </p>
                 <ul class="list-group list-group-flush small">
                     <li class="list-group-item px-0 py-2 border-0 d-flex justify-content-between align-items-center">
-                        <span><i class="fas fa-check-circle text-warning me-2"></i><strong>{{ __('Leaflet OpenStreetMap') }}:</strong> {{ __('Interactive map with marker drag, click pin placement, and Nominatim search.') }}</span>
+                        <span><i class="fas fa-check-circle text-warning me-2"></i><strong>{{ __('Google Maps SDK') }}:</strong> {{ __('Interactive map with marker drag, click doorstep pin placement, and Google Places (New) search.') }}</span>
                     </li>
                     <li class="list-group-item px-0 py-2 border-0 d-flex justify-content-between align-items-center">
-                        <span><i class="fas fa-check-circle text-warning me-2"></i><strong>{{ __('GPS Auto-Location') }}:</strong> {{ __('1-click browser geolocation ("Use My Location") filling Lat/Lng fields.') }}</span>
+                        <span><i class="fas fa-check-circle text-warning me-2"></i><strong>{{ __('GPS Auto-Location') }}:</strong> {{ __('1-click browser geolocation ("Use My GPS") filling exact Lat/Lng doorstep.') }}</span>
                     </li>
                     <li class="list-group-item px-0 py-2 border-0 d-flex justify-content-between align-items-center">
                         <span><i class="fas fa-check-circle text-warning me-2"></i><strong>{{ __('Bi-Directional Input Sync') }}:</strong> {{ __('Pasting or typing coordinates moves the map marker; dragging the marker updates Lat/Lng inputs.') }}</span>
