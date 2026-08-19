@@ -753,69 +753,107 @@ const openPaymentPopupWindow = (url) => {
         ",left=" +
         left;
 
-    let win = window.open(url, null, options);
+    let win = window.open(url, "JanmitramPaymentWindow", options);
 
-    win.title = "Payment Window Screen - Make Payment";
+    if (win) {
+        win.focus();
+    }
 
-    win.onload = () => {
-        win.title = "Payment Window Screen - Make Payment";
+    let isCompleted = false;
+
+    const cleanup = () => {
+        clearInterval(intervalID);
+        window.removeEventListener("message", handlePaymentMessage);
+        window.removeEventListener("storage", handleStorageEvent);
     };
 
-    win.focus();
+    const handleSuccess = () => {
+        if (isCompleted) return;
+        isCompleted = true;
+        cleanup();
+        try {
+            if (win && !win.closed) win.close();
+        } catch (e) {}
+        basketStore.showOrderConfirmModal = true;
+    };
 
-    var intervalID = setInterval(trackURLChanges, 1000);
+    const handleCancel = (msg = "Payment Canceled") => {
+        if (isCompleted) return;
+        isCompleted = true;
+        cleanup();
+        try {
+            if (win && !win.closed) win.close();
+        } catch (e) {}
+        basketStore.orderPaymentCancelModal = true;
+        toast.error(msg, {
+            position:
+                master.langDirection === "rtl" ? "bottom-right" : "bottom-left",
+        });
+        router.push({ name: "home" });
+    };
+
+    const handlePaymentMessage = (event) => {
+        if (event.data?.type === "PAYMENT_SUCCESS") {
+            handleSuccess();
+        } else if (event.data?.type === "PAYMENT_FAILED") {
+            handleCancel(event.data?.error);
+        }
+    };
+
+    const handleStorageEvent = (event) => {
+        if (event.key === "janmitram_payment_event" && event.newValue) {
+            try {
+                const data = JSON.parse(event.newValue);
+                if (data.status === "success") {
+                    handleSuccess();
+                } else if (data.status === "failed") {
+                    handleCancel(data.error);
+                }
+            } catch (e) {}
+        }
+    };
+
+    window.addEventListener("message", handlePaymentMessage);
+    window.addEventListener("storage", handleStorageEvent);
+
+    var intervalID = setInterval(trackURLChanges, 800);
 
     function trackURLChanges() {
         try {
-            // check if the window is closed
-            if (win.closed || !win) {
-                clearInterval(intervalID);
-                win.close();
-                basketStore.orderPaymentCancelModal = true;
-                toast.error("Payment Canceled", {
-                    position:
-                        master.langDirection === "rtl"
-                            ? "bottom-right"
-                            : "bottom-left",
-                });
-                router.push({ name: "home" });
+            if (win && win.closed && !isCompleted) {
+                handleCancel();
                 return;
             }
 
-            const pathname = win.location.pathname;
-
-            var currentPath = pathname.replace(/\/order\/\d+/, "");
-
-            if (currentPath == "/payment/cancel") {
-                clearInterval(intervalID);
-                setTimeout(() => {
-                    win.close();
-                    basketStore.orderPaymentCancelModal = true;
-                    toast.error("Sorry! Payment Canceled", {
-                        position:
-                            master.langDirection === "rtl"
-                                ? "bottom-right"
-                                : "bottom-left",
-                    });
-                    router.push({ name: "home" });
-                }, 8000);
-                return;
-            }
-
-            if (currentPath == "/payment/success") {
-                win.close();
-                clearInterval(intervalID);
-                basketStore.showOrderConfirmModal = true;
-                return;
+            if (win && win.location) {
+                const pathname = win.location.pathname || "";
+                if (
+                    pathname.includes("/payment/success") ||
+                    pathname.includes("/order/payment/success")
+                ) {
+                    handleSuccess();
+                    return;
+                }
+                if (
+                    pathname.includes("/payment/cancel") ||
+                    pathname.includes("/order/payment/cancel")
+                ) {
+                    handleCancel();
+                    return;
+                }
             }
         } catch (error) {}
     }
 
-    // payment close after 3 minutes
+    // Timeout fallback after 4 minutes
     setTimeout(() => {
-        clearInterval(intervalID);
-        win.close();
-    }, 180000);
+        if (!isCompleted) {
+            cleanup();
+            try {
+                if (win && !win.closed) win.close();
+            } catch (e) {}
+        }
+    }, 240000);
 };
 
 const ApplyCard = () => {

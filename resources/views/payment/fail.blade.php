@@ -76,17 +76,40 @@
     </div>
 
     <script>
+        // Post message to opener window
+        try {
+            if (window.opener && !window.opener.closed) {
+                window.opener.postMessage({
+                    type: 'PAYMENT_FAILED',
+                    error: "{{ $request->error ?? 'Payment was not completed' }}"
+                }, '*');
+            }
+        } catch (e) {}
+
+        // Broadcast via localStorage
+        try {
+            localStorage.setItem('janmitram_payment_event', JSON.stringify({
+                status: 'failed',
+                error: "{{ $request->error ?? 'Payment was not completed' }}",
+                timestamp: Date.now()
+            }));
+        } catch (e) {}
+
         // Countdown Timer Logic
         let countdownElement = document.getElementById('countdown');
-        let countdownValue = 10;
+        let countdownValue = 3;
 
         const interval = setInterval(() => {
             countdownValue--;
-            countdownElement.textContent = countdownValue;
+            if (countdownElement) countdownElement.textContent = countdownValue;
 
-            if (countdownValue === 0) {
+            if (countdownValue <= 0) {
                 clearInterval(interval);
-                window.close();
+                if (window.opener && !window.opener.closed) {
+                    window.close();
+                } else {
+                    window.location.href = '/checkout';
+                }
             }
         }, 1000);
     </script>

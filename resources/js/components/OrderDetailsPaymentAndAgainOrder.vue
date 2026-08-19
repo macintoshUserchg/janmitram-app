@@ -256,91 +256,118 @@ const openPaymentPopupWindow = (url) => {
 
     let options = "popup,resizable,height=" + winHeight + ",width=" + winWidth + ",top=" + top + ",left=" + left;
 
-    var win = window.open(url, null, options);
+    var win = window.open(url, "JanmitramPaymentWindow", options);
 
-    win.title = "Payment Window Screen - Make Payment";
+    if (win) {
+        win.focus();
+    }
 
-    win.onload = () => {
-        win.title = "Payment Window Screen - Make Payment";
+    let isCompleted = false;
+
+    const cleanup = () => {
+        clearInterval(intervalID);
+        window.removeEventListener("message", handlePaymentMessage);
+        window.removeEventListener("storage", handleStorageEvent);
     };
 
-    win.focus();
+    const handleSuccess = () => {
+        if (isCompleted) return;
+        isCompleted = true;
+        cleanup();
+        try {
+            if (win && !win.closed) win.close();
+        } catch (e) {}
 
-    if (win.closed) {
-        toast.error('Payment Canceled', {
+        toast(content, {
+            type: "default",
+            hideProgressBar: true,
+            icon: false,
+            position: master.langDirection === 'rtl' ? "bottom-right" : "bottom-left",
+            toastClassName: "vue-toastification-alert",
+            timeout: 2000,
+        });
+
+        if (againPayment.value) {
+            againPayment.value = false;
+            emit('update:paymentSuccess', true);
+            return;
+        }
+
+        router.push('/order-history');
+    };
+
+    const handleCancel = (msg = 'Payment Canceled') => {
+        if (isCompleted) return;
+        isCompleted = true;
+        cleanup();
+        try {
+            if (win && !win.closed) win.close();
+        } catch (e) {}
+        againPayment.value = false;
+        basketStore.orderPaymentCancelModal = true;
+        toast.error(msg, {
             position: master.langDirection === 'rtl' ? "bottom-right" : "bottom-left",
         });
-        againPayment.value = false;
         router.push('/order-history');
-        return
-    }
+    };
 
-    var intervalID = setInterval(trackURLChanges, 1000);
+    const handlePaymentMessage = (event) => {
+        if (event.data?.type === "PAYMENT_SUCCESS") {
+            handleSuccess();
+        } else if (event.data?.type === "PAYMENT_FAILED") {
+            handleCancel(event.data?.error);
+        }
+    };
+
+    const handleStorageEvent = (event) => {
+        if (event.key === "janmitram_payment_event" && event.newValue) {
+            try {
+                const data = JSON.parse(event.newValue);
+                if (data.status === "success") {
+                    handleSuccess();
+                } else if (data.status === "failed") {
+                    handleCancel(data.error);
+                }
+            } catch (e) {}
+        }
+    };
+
+    window.addEventListener("message", handlePaymentMessage);
+    window.addEventListener("storage", handleStorageEvent);
+
+    var intervalID = setInterval(trackURLChanges, 800);
     function trackURLChanges() {
         try {
-            // check if the window is closed
-            if (win.closed || !win) {
-                clearInterval(intervalID);
-                win.close();
-                basketStore.orderPaymentCancelModal = true
-                toast.error('Payment Canceled', {
-                    position: master.langDirection === 'rtl' ? "bottom-right" : "bottom-left",
-                });
-                againPayment.value = false;
-                router.push('/order-history');
-                return
+            if (win && win.closed && !isCompleted) {
+                handleCancel();
+                return;
             }
 
-            const pathname = win.location.pathname;
-
-            var currentPath = pathname.replace(/\/order\/\d+/, "");
-
-            if (currentPath == '/payment/cancel') {
-                clearInterval(intervalID);
-                againPayment.value = false;
-                setTimeout(() => {
-                    win.close();
-                    basketStore.orderPaymentCancelModal = true
-                    toast.error('Payment Canceled', {
-                        position: master.langDirection === 'rtl' ? "bottom-right" : "bottom-left",
-                    });
-                    router.push('/order-history');
-                }, 8000);
-                return
-            }
-
-            if (currentPath == '/payment/success') {
-                win.close();
-                clearInterval(intervalID);
-                toast(content, {
-                    type: "default",
-                    hideProgressBar: true,
-                    icon: false,
-                    position: master.langDirection === 'rtl' ? "bottom-right" : "bottom-left",
-                    toastClassName: "vue-toastification-alert",
-                    timeout: 2000,
-                });
-
-                if (againPayment.value) {
-                    againPayment.value = false;
-                    emit('update:paymentSuccess', true);
-                    return
+            if (win && win.location) {
+                const pathname = win.location.pathname || "";
+                if (pathname.includes("/payment/success") || pathname.includes("/order/payment/success")) {
+                    handleSuccess();
+                    return;
                 }
-
-                router.push('/order-history');
-                return
+                if (pathname.includes("/payment/cancel") || pathname.includes("/order/payment/cancel")) {
+                    handleCancel();
+                    return;
+                }
             }
-        } catch (e) { }
+        } catch (e) {
+            // Cross-origin blocked
+        }
     }
 
-    // payment close after 3 minutes
+    // Timeout fallback after 4 minutes
     setTimeout(() => {
-        clearInterval(intervalID);
-        win.close();
-        againPayment.value = false;
-        router.push('/order-history');
-    }, 180000);
-
+        if (!isCompleted) {
+            cleanup();
+            try {
+                if (win && !win.closed) win.close();
+            } catch (e) {}
+        }
+    }, 240000);
 };
 
 </script>
