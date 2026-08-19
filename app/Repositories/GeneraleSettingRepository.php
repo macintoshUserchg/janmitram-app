@@ -211,10 +211,10 @@ class GeneraleSettingRepository extends Repository
         return self::query()->updateOrCreate([
             'id' => $generaleSetting?->id ?? null,
         ], [
-            'business_based_on' => $request->business_based_on,
-            'commission' => $request->commission,
-            'commission_type' => $request->commission_type,
-            'commission_charge' => $request->commission_charge,
+            'business_based_on' => $request->business_based_on ?? 'none',
+            'commission' => $request->business_based_on == 'commission' ? ($request->commission ?? 0) : 0,
+            'commission_type' => $request->commission_type ?? 'percentage',
+            'commission_charge' => $request->commission_charge ?? 'per_order',
             'new_product_approval' => $request->new_product_approval ? true : false,
             'update_product_approval' => $request->update_product_approval ? true : false,
             'shop_allocation_radius_km' => $request->shop_allocation_radius_km ?? 50,
