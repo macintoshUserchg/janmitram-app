@@ -387,16 +387,39 @@
             </div>
         </form>
     @endif
-    <!--Order Modal -->
+    <!--Order Location Modal -->
     <div class="modal fade" id="orderLocationModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
         aria-labelledby="staticBackdropLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="staticBackdropLabel">Order Location</h5>
+                <div class="modal-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="modal-title fw-bold" id="staticBackdropLabel">
+                            <i class="fa-solid fa-location-dot text-danger me-2"></i>{{ __('Order Live Location') }} - #{{ $order->prefix . $order->order_code }}
+                        </h5>
+                        <small class="text-muted">{{ $order->address->address ?? 'Doorstep Location' }}</small>
+                    </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body p-0 position-relative">
+                    <div class="p-3 bg-light border-bottom d-flex flex-wrap align-items-center justify-content-between gap-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-primary px-3 py-2 fs-6">
+                                <i class="fa fa-home me-1"></i> {{ __('Customer') }}: <span id="adminOrderCoords">{{ number_format($order->address->latitude ?? 27.0056949, 6) }}, {{ number_format($order->address->longitude ?? 75.7775497, 6) }}</span>
+                            </span>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="copyAdminOrderCoords" title="{{ __('Copy') }}">
+                                <i class="fa-regular fa-copy"></i>
+                            </button>
+                        </div>
+                        <div id="adminRiderCoordsWrap" class="d-none d-flex align-items-center gap-2">
+                            <span class="badge bg-warning text-dark px-3 py-2 fs-6">
+                                <i class="fa-solid fa-motorcycle me-1"></i> {{ __('Rider') }}: <span id="adminRiderCoords"></span>
+                            </span>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="copyAdminRiderCoords" title="{{ __('Copy') }}">
+                                <i class="fa-regular fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
                     <div id="map" style="height: 70vh; width: 100%;"></div>
                 </div>
             </div>
@@ -773,6 +796,7 @@
                 const riderLatLng = new google.maps.LatLng(latitude, longitude);
                 const orderLatLng = new google.maps.LatLng(orderLat, orderLng);
 
+                $('#adminOrderCoords').text(orderLat.toFixed(6) + ', ' + orderLng.toFixed(6));
                 gRiderMarker.setPosition(riderLatLng);
                 updateRouteLine(riderLatLng, orderLatLng);
             });
@@ -782,6 +806,8 @@
             $('#orderLocationModal').modal('show');
 
             $('#orderLocationModal').one('shown.bs.modal', function() {
+                $('#adminOrderCoords').text(orderLat.toFixed(6) + ', ' + orderLng.toFixed(6));
+
                 initMap(orderLat, orderLng);
 
                 if (!canShowRiderLocation() || !riderId) {
@@ -794,7 +820,13 @@
                         if (!res?.data?.location || !gOrderMap) return;
 
                         let { latitude, longitude } = res.data.location;
-                        const riderLatLng = new google.maps.LatLng(parseFloat(latitude), parseFloat(longitude));
+                        const latNum = parseFloat(latitude);
+                        const lngNum = parseFloat(longitude);
+
+                        $('#adminRiderCoords').text(latNum.toFixed(6) + ', ' + lngNum.toFixed(6));
+                        $('#adminRiderCoordsWrap').removeClass('d-none');
+
+                        const riderLatLng = new google.maps.LatLng(latNum, lngNum);
                         const orderLatLng = new google.maps.LatLng(orderLat, orderLng);
 
                         if (!gRiderMarker) {
@@ -818,6 +850,27 @@
             });
         });
 
+        function copyCoordinates(text) {
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(() => {
+                    toastr.success('Coordinates copied');
+                });
+            } else {
+                var $tmp = $('<textarea>').val(text).appendTo('body').select();
+                document.execCommand('copy');
+                $tmp.remove();
+                toastr.success('Coordinates copied');
+            }
+        }
+
+        $(document).on('click', '#copyAdminOrderCoords', function() {
+            copyCoordinates($('#adminOrderCoords').text());
+        });
+
+        $(document).on('click', '#copyAdminRiderCoords', function() {
+            copyCoordinates($('#adminRiderCoords').text());
+        });
+
         $('#orderLocationModal').on('hidden.bs.modal', function() {
             if (trackingInterval) {
                 clearInterval(trackingInterval);
@@ -836,6 +889,8 @@
                 gCustomerMarker = null;
             }
             gOrderMap = null;
+
+            $('#adminRiderCoordsWrap').addClass('d-none');
         });
     </script>
 @endpush

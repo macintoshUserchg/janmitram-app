@@ -470,10 +470,12 @@
         });
     </script>
 
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ config('services.google_maps.key') }}&libraries=places,geometry"></script>
     <script>
-        let map;
-        let riderMarker;
-        let routingControl;
+        let gShopOrderMap = null;
+        let gShopCustomerMarker = null;
+        let gShopRiderMarker = null;
+        let gShopRoutePolyline = null;
         let trackingInterval = null;
         let riderId = @json($order->driverOrder->driver_id ?? null);
         let riderChannel = null;
@@ -496,124 +498,115 @@
         }
 
         function initMap(riderLat, riderLng) {
-            map = L.map('map').setView([orderLat, orderLng], 14);
+            const mapEl = document.getElementById('map');
+            if (!mapEl || !window.google || !window.google.maps) return;
 
-            const mainTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                subdomains: ['a', 'b', 'c'],
-                attribution: '&copy; OpenStreetMap contributors'
-            }).addTo(map);
+            const orderLatLng = new google.maps.LatLng(orderLat, orderLng);
 
-            let tileErrors = 0;
-            mainTiles.on('tileerror', function() {
-                tileErrors++;
-                if (tileErrors === 3) {
-                    map.removeLayer(mainTiles);
-                    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                        maxZoom: 19,
-                        subdomains: 'abcd'
-                    }).addTo(map);
+            gShopOrderMap = new google.maps.Map(mapEl, {
+                center: orderLatLng,
+                zoom: 15,
+                mapTypeId: google.maps.MapTypeId.ROADMAP,
+                zoomControl: true,
+                mapTypeControl: false,
+                streetViewControl: false,
+            });
+
+            gShopCustomerMarker = new google.maps.Marker({
+                position: orderLatLng,
+                map: gShopOrderMap,
+                title: "Customer Doorstep",
+                icon: {
+                    url: "{{ asset('assets/icons/home.png') }}",
+                    scaledSize: new google.maps.Size(40, 40),
                 }
             });
 
-            const orderIcon = L.icon({
-                iconUrl: '{{ asset('assets/icons/home.png') }}',
-                iconSize: [35, 35],
-                iconAnchor: [17, 35],
-                popupAnchor: [0, -30],
-                shadowUrl: null
+            const customerInfoWindow = new google.maps.InfoWindow({
+                content: '<div class="fw-bold fs-6">Customer Doorstep</div>'
             });
+            customerInfoWindow.open(gShopOrderMap, gShopCustomerMarker);
 
-            L.marker([orderLat, orderLng], {
-                    icon: orderIcon
-                })
-                .addTo(map)
-                .bindPopup('Customer Location')
-                .openPopup();
-
-            if (!canShowRiderLocation()) {
+            if (!canShowRiderLocation() || !riderLat || !riderLng) {
                 return;
             }
 
-            const riderIcon = L.icon({
-                iconUrl: '{{ asset('assets/icons/pin-map.png') }}',
-                iconSize: [35, 35],
-                iconAnchor: [17, 35],
-                popupAnchor: [0, -30],
-                shadowUrl: null
+            const riderLatLng = new google.maps.LatLng(parseFloat(riderLat), parseFloat(riderLng));
+
+            gShopRiderMarker = new google.maps.Marker({
+                position: riderLatLng,
+                map: gShopOrderMap,
+                title: "Delivery Rider",
+                icon: {
+                    url: "{{ asset('assets/icons/pin-map.png') }}",
+                    scaledSize: new google.maps.Size(42, 42),
+                }
             });
 
-            riderMarker = L.marker([riderLat, riderLng], {
-                    icon: riderIcon
-                })
-                .addTo(map);
+            updateRouteLine(riderLatLng, orderLatLng);
+        }
 
-            routingControl = L.Routing.control({
-                waypoints: [
-                    L.latLng(riderLat, riderLng),
-                    L.latLng(orderLat, orderLng)
-                ],
-                addWaypoints: false,
-                draggableWaypoints: false,
-                fitSelectedRoutes: true,
-                show: false,
-                createMarker: function() {
-                    return null;
-                }
-            }).addTo(map);
+        function updateRouteLine(riderLatLng, orderLatLng) {
+            if (!gShopOrderMap || !window.google) return;
+
+            const bounds = new google.maps.LatLngBounds();
+            bounds.extend(riderLatLng);
+            bounds.extend(orderLatLng);
+
+            const path = [riderLatLng, orderLatLng];
+
+            if (!gShopRoutePolyline) {
+                gShopRoutePolyline = new google.maps.Polyline({
+                    path: path,
+                    geodesic: true,
+                    strokeColor: "#f59e0b",
+                    strokeOpacity: 0.85,
+                    strokeWeight: 4,
+                    map: gShopOrderMap,
+                });
+            } else {
+                gShopRoutePolyline.setPath(path);
+            }
+
+            gShopOrderMap.fitBounds(bounds, 60);
         }
 
         function subscribeToRiderLocation(riderId) {
-
-            if (!canShowRiderLocation() || !riderMarker) return;
+            if (!canShowRiderLocation() || !gShopRiderMarker || typeof pusher === 'undefined') return;
             riderChannel = pusher.subscribe('rider-location.' + riderId);
 
             riderChannel.bind('rider.location.updated', function(data) {
+                if (!gShopRiderMarker || data.location.driver_id !== riderId) return;
 
-                if (!riderMarker || data.location.driver_id !== riderId) {
-                    return;
-                }
+                const latitude = parseFloat(data.location.latitude);
+                const longitude = parseFloat(data.location.longitude);
+                const riderLatLng = new google.maps.LatLng(latitude, longitude);
+                const orderLatLng = new google.maps.LatLng(orderLat, orderLng);
 
-                const latitude = data.location.latitude;
-                const longitude = data.location.longitude;
+                $('#riderCoords').text(latitude.toFixed(6) + ', ' + longitude.toFixed(6));
+                $('#riderCoordsWrap').removeClass('d-none');
 
-                moveMarkerSmooth(riderMarker, latitude, longitude, 5000);
-
-                // riderMarker.setLatLng([latitude, longitude]);
-                routingControl.setWaypoints([
-                    L.latLng(latitude, longitude),
-                    L.latLng(orderLat, orderLng)
-                ]);
-                map.panTo([latitude, longitude], {
-                    animate: true
-                });
+                gShopRiderMarker.setPosition(riderLatLng);
+                updateRouteLine(riderLatLng, orderLatLng);
             });
         }
 
         $(document).on('click', '#orderLocation', function() {
-
             $('#orderLocationModal').modal('show');
 
             $('#orderLocationModal').one('shown.bs.modal', function() {
-
-                if (map) map.remove();
-
                 $('#orderCoords').text(orderLat.toFixed(6) + ', ' + orderLng.toFixed(6));
 
                 initMap(orderLat, orderLng);
-
-                setTimeout(() => map.invalidateSize(), 300);
-
 
                 if (!canShowRiderLocation() || !riderId) {
                     return;
                 }
 
-                // Rider exists → fetch live location
                 $.ajax({
                     url: "{{ route('shop.rider.location', ':id') }}".replace(':id', riderId),
                     success: function(res) {
-                        if (!res?.data?.location || !riderMarker || !routingControl) return;
+                        if (!res?.data?.location || !gShopOrderMap) return;
 
                         const latitude = parseFloat(res.data.location.latitude);
                         const longitude = parseFloat(res.data.location.longitude);
@@ -621,13 +614,24 @@
                         $('#riderCoords').text(latitude.toFixed(6) + ', ' + longitude.toFixed(6));
                         $('#riderCoordsWrap').removeClass('d-none');
 
-                        riderMarker.setLatLng([latitude, longitude]);
+                        const riderLatLng = new google.maps.LatLng(latitude, longitude);
+                        const orderLatLng = new google.maps.LatLng(orderLat, orderLng);
 
-                        routingControl.setWaypoints([
-                            L.latLng(latitude, longitude),
-                            L.latLng(orderLat, orderLng)
-                        ]);
-                        // Live tracking
+                        if (!gShopRiderMarker) {
+                            gShopRiderMarker = new google.maps.Marker({
+                                position: riderLatLng,
+                                map: gShopOrderMap,
+                                title: "Delivery Rider",
+                                icon: {
+                                    url: "{{ asset('assets/icons/pin-map.png') }}",
+                                    scaledSize: new google.maps.Size(42, 42),
+                                }
+                            });
+                        } else {
+                            gShopRiderMarker.setPosition(riderLatLng);
+                        }
+
+                        updateRouteLine(riderLatLng, orderLatLng);
                         subscribeToRiderLocation(riderId);
                     }
                 });
@@ -637,13 +641,13 @@
         function copyCoordinates(text) {
             if (navigator.clipboard && window.isSecureContext) {
                 navigator.clipboard.writeText(text).then(() => {
-                    toastr.success(__('Coordinates copied'));
+                    toastr.success('Coordinates copied');
                 });
             } else {
                 var $tmp = $('<textarea>').val(text).appendTo('body').select();
                 document.execCommand('copy');
                 $tmp.remove();
-                toastr.success(__('Coordinates copied'));
+                toastr.success('Coordinates copied');
             }
         }
 
@@ -655,17 +659,24 @@
             copyCoordinates($('#riderCoords').text());
         });
 
-
         $('#orderLocationModal').on('hidden.bs.modal', function() {
             if (trackingInterval) {
                 clearInterval(trackingInterval);
                 trackingInterval = null;
             }
-
-            if (map) {
-                map.remove();
-                map = null;
+            if (gShopRoutePolyline) {
+                gShopRoutePolyline.setMap(null);
+                gShopRoutePolyline = null;
             }
+            if (gShopRiderMarker) {
+                gShopRiderMarker.setMap(null);
+                gShopRiderMarker = null;
+            }
+            if (gShopCustomerMarker) {
+                gShopCustomerMarker.setMap(null);
+                gShopCustomerMarker = null;
+            }
+            gShopOrderMap = null;
 
             $('#riderCoordsWrap').addClass('d-none');
         });
