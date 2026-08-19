@@ -38,10 +38,10 @@
                                 <div>
                                     <div class="flex items-center gap-2">
                                         <span class="text-xs font-semibold uppercase tracking-wider text-emerald-800">
-                                            {{ $t('Current Vicinity') }}
+                                            {{ $t('Current Location') }}
                                         </span>
                                         <span class="text-[10px] px-2 py-0.5 rounded-full font-medium bg-emerald-100 text-emerald-800">
-                                            {{ locationStore.source === 'ip' ? 'Auto-Detected via IP' : (locationStore.source === 'gps' ? 'Precise GPS' : 'Selected Location') }}
+                                            {{ locationStore.source === 'ip' ? 'Auto-Detected (IP)' : 'Selected Location' }}
                                         </span>
                                     </div>
                                     <p class="text-base font-bold text-slate-900 mt-1">
@@ -50,7 +50,6 @@
                                     <p v-if="locationStore.nearestShop" class="text-xs text-slate-600 mt-1 flex items-center gap-1.5">
                                         <span>🏬 {{ $t('Fulfilling Store') }}:</span>
                                         <strong class="text-slate-900">{{ locationStore.nearestShop.name }}</strong>
-                                        <span class="text-emerald-700 font-semibold">({{ locationStore.nearestShop.distance_km }} km away)</span>
                                     </p>
                                 </div>
                             </div>
@@ -75,23 +74,13 @@
                                 </div>
                             </div>
 
-                            <!-- Or Use GPS Button -->
-                            <div class="mt-4 pt-4 border-t border-slate-100">
-                                <button @click="locationStore.detectGPSLocation"
-                                    :disabled="locationStore.isResolving"
-                                    class="w-full py-2.5 px-4 rounded-xl border border-slate-200 hover:border-primary bg-white hover:bg-slate-50 text-slate-800 font-medium text-xs sm:text-sm flex items-center justify-center gap-2 transition shadow-sm">
-                                    <span class="text-primary text-base">🎯</span>
-                                    <span>{{ $t('Use Current GPS Location (High Accuracy)') }}</span>
-                                </button>
-                            </div>
-
-                            <!-- Nearest Janmitram Branches in Vicinity -->
-                            <div v-if="locationStore.nearbyShops.length > 0" class="mt-5">
+                            <!-- Stores in Vicinity -->
+                            <div v-if="locationStore.nearbyShops.length > 0" class="mt-5 pt-3 border-t border-slate-100">
                                 <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-2">
-                                    {{ $t('Nearby Janmitram Stores in Your Area') }}
+                                    {{ $t('Stores Available in Your Vicinity') }}
                                 </span>
-                                <div class="max-h-48 overflow-y-auto divide-y divide-slate-100 pr-1">
-                                    <div v-for="shop in locationStore.nearbyShops.slice(0, 5)" :key="shop.id"
+                                <div class="max-h-52 overflow-y-auto divide-y divide-slate-100 pr-1">
+                                    <div v-for="shop in locationStore.nearbyShops" :key="shop.id"
                                         @click="locationStore.selectShopDirectly(shop)"
                                         class="py-2.5 px-2 flex items-center justify-between hover:bg-slate-50 rounded-xl cursor-pointer transition">
                                         <div class="min-w-0 pr-2">
@@ -99,8 +88,7 @@
                                             <p class="text-[11px] text-slate-500 truncate">{{ shop.address }}</p>
                                         </div>
                                         <div class="text-right shrink-0">
-                                            <span class="text-xs font-bold text-emerald-600 block">{{ shop.distance_km }} km</span>
-                                            <span class="text-[10px] text-slate-400">{{ shop.estimated_delivery_time }}</span>
+                                            <span class="text-xs font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">{{ shop.estimated_delivery_time || 'Available' }}</span>
                                         </div>
                                     </div>
                                 </div>

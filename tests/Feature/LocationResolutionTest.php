@@ -20,16 +20,14 @@ class LocationResolutionTest extends TestCase
         $this->seed(PermissionSeeder::class);
     }
 
-    public function test_location_resolve_returns_default_hub_when_ip_is_local(): void
+    public function test_location_resolve_returns_shops_in_user_city_via_ip_geolocation(): void
     {
         $user = User::factory()->create(['is_active' => true]);
         $shop = Shop::create([
             'name' => 'Jaipur Main Shop',
             'user_id' => $user->id,
             'status' => true,
-            'latitude' => 26.9985869,
-            'longitude' => 75.7680702,
-            'address' => 'Jaipur, Rajasthan',
+            'address' => 'Badharna road harmada jaipur',
         ]);
 
         $response = $this->getJson('/api/location/resolve');
@@ -37,60 +35,49 @@ class LocationResolutionTest extends TestCase
         $response->assertOk()
             ->assertJsonPath('data.city', 'Jaipur')
             ->assertJsonPath('data.state', 'Rajasthan')
-            ->assertJsonPath('data.nearest_shop.name', 'Jaipur Main Shop')
-            ->assertJsonPath('data.nearest_shop.distance_km', 0.0);
+            ->assertJsonPath('data.nearest_shop.name', 'Jaipur Main Shop');
     }
 
-    public function test_location_resolve_ranks_closest_shop_accurately_with_coordinates(): void
+    public function test_location_resolve_filters_by_user_selected_city(): void
     {
         $user = User::factory()->create(['is_active' => true]);
 
-        $jaipurShop = Shop::create([
+        Shop::create([
             'name' => 'Jaipur Shop',
             'user_id' => $user->id,
             'status' => true,
-            'latitude' => 26.9985869,
-            'longitude' => 75.7680702,
+            'address' => 'Sanganer, Jaipur',
         ]);
 
-        $mumbaiShop = Shop::create([
+        Shop::create([
             'name' => 'Mumbai Shop',
             'user_id' => $user->id,
             'status' => true,
-            'latitude' => 18.9899017,
-            'longitude' => 72.8942871,
+            'address' => 'Andheri West, Mumbai',
         ]);
 
-        // Query with coordinates close to Mumbai (18.96, 72.82)
-        $response = $this->getJson('/api/location/resolve?latitude=18.96&longitude=72.82');
+        $response = $this->getJson('/api/location/resolve?city=Mumbai');
 
         $response->assertOk()
+            ->assertJsonPath('data.city', 'Mumbai')
             ->assertJsonPath('data.nearest_shop.name', 'Mumbai Shop');
     }
 
-    public function test_nearest_shops_endpoint_returns_sorted_shops(): void
+    public function test_pincode_resolution_returns_matching_city_shops(): void
     {
         $user = User::factory()->create(['is_active' => true]);
 
-        $shop1 = Shop::create([
-            'name' => 'Shop Far',
+        Shop::create([
+            'name' => 'Jaipur Main Shop',
             'user_id' => $user->id,
             'status' => true,
-            'latitude' => 28.6139,
-            'longitude' => 77.2090, // Delhi
+            'address' => 'Harmada Jaipur',
         ]);
 
-        $shop2 = Shop::create([
-            'name' => 'Shop Close',
-            'user_id' => $user->id,
-            'status' => true,
-            'latitude' => 26.9124,
-            'longitude' => 75.7873, // Jaipur
-        ]);
-
-        $response = $this->getJson('/api/location/nearest-shops?latitude=26.92&longitude=75.79');
+        $response = $this->getJson('/api/location/by-pincode?pincode=302013');
 
         $response->assertOk()
-            ->assertJsonPath('data.nearest_shop.name', 'Shop Close');
+            ->assertJsonPath('data.city', 'Jaipur')
+            ->assertJsonPath('data.nearest_shop.name', 'Jaipur Main Shop');
     }
 }
