@@ -23,14 +23,26 @@ class MailConfigurationController extends Controller
      */
     public function update(Request $request)
     {
+        $request->validate([
+            'mailer' => 'required',
+            'host' => 'required',
+            'port' => 'required',
+            'username' => 'required',
+            'password' => 'required',
+            'from_address' => 'required|email',
+        ]);
+
         try {
             $this->setEnv('MAIL_MAILER', $request->mailer);
             $this->setEnv('MAIL_HOST', $request->host);
             $this->setEnv('MAIL_PORT', $request->port);
             $this->setEnv('MAIL_USERNAME', $request->username);
             $this->setEnv('MAIL_PASSWORD', $request->password);
-            $this->setEnv('MAIL_ENCRYPTION', $request->encryption);
+            $this->setEnv('MAIL_ENCRYPTION', $request->encryption ?? 'tls');
             $this->setEnv('MAIL_FROM_ADDRESS', $request->from_address);
+            if ($request->filled('from_name')) {
+                $this->setEnv('MAIL_FROM_NAME', $request->from_name);
+            }
 
             Artisan::call('config:clear');
             Artisan::call('cache:clear');
@@ -54,6 +66,6 @@ class MailConfigurationController extends Controller
             return back()->with('messageError', $th->getMessage());
         }
 
-        return back()->with('success', __('Test mail sent successfully.'));
+        return back()->with('success', __('Test mail sent successfully. Check recipient inbox/spam.'));
     }
 }

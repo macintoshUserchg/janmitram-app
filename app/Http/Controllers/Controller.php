@@ -29,17 +29,23 @@ class Controller extends BaseController
     {
         try {
             $envFile = app()->environmentFilePath();
+            if (! file_exists($envFile)) {
+                return ['type' => 'error', 'message' => '.env file not found'];
+            }
             $str = file_get_contents($envFile);
 
-            // Check if the key exists in the .env file
-            if (strpos($str, "{$key}=") === false) {
-                $str .= "{$key}={$value}\n";
-            } else {
-                $str = preg_replace("/{$key}=.*/", "{$key}={$value}", $str);
+            $formattedValue = $value;
+            if (is_string($value) && (preg_match('/\s|#|\$|"/', $value) || empty($value))) {
+                $escaped = str_replace('"', '\"', $value);
+                $formattedValue = "\"{$escaped}\"";
             }
 
-            // Trim both key and value to remove leading/trailing whitespaces
-            $str = rtrim($str)."\n";
+            // Check if the key exists in the .env file
+            if (preg_match("/^{$key}=.*/m", $str)) {
+                $str = preg_replace("/^{$key}=.*/m", "{$key}={$formattedValue}", $str);
+            } else {
+                $str .= "\n{$key}={$formattedValue}\n";
+            }
 
             // Update the .env file
             file_put_contents($envFile, $str);

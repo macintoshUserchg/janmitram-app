@@ -71,33 +71,37 @@
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-lg-6 mb-4">
-                                    <x-input :value="config('app.mail_mailer')" name="mailer" type="text" placeholder="smtp"
-                                        label="{{ __('Mail Mailer') }}" />
+                                    <x-input :value="config('mail.default') ?? env('MAIL_MAILER', 'smtp')" name="mailer" type="text" placeholder="smtp"
+                                        label="{{ __('Mail Mailer') }}" required="true" />
                                 </div>
                                 <div class="col-lg-6 mb-4">
-                                    <x-input :value="config('app.mail_host')" name="host" type="text"
-                                        placeholder="ex: smtp.gmail.com" label="{{ __('Mail Host') }}" />
+                                    <x-input :value="config('mail.mailers.smtp.host') ?? env('MAIL_HOST')" name="host" type="text"
+                                        placeholder="ex: smtp.hostinger.com / smtp.gmail.com" label="{{ __('Mail Host') }}" required="true" />
                                 </div>
                                 <div class="col-lg-6 mb-4">
-                                    <x-input :value="config('app.mail_port')" name="port" type="text" placeholder="ex: 465"
-                                        label="{{ __('Mail Port') }}" />
+                                    <x-input :value="config('mail.mailers.smtp.port') ?? env('MAIL_PORT', 587)" name="port" type="text" placeholder="ex: 465 (SSL) / 587 (TLS)"
+                                        label="{{ __('Mail Port') }}" required="true" />
                                 </div>
                                 <div class="col-lg-6 mb-4">
-                                    <x-input :value="config('app.mail_username')" name="username" type="text"
-                                        placeholder="ex: example@gmail.com" label="{{ __('Mail User Name') }}" />
+                                    <x-input :value="config('mail.mailers.smtp.username') ?? env('MAIL_USERNAME')" name="username" type="text"
+                                        placeholder="ex: no-reply@janmitram.com" label="{{ __('Mail User Name / Email') }}" required="true" />
                                 </div>
                                 <div class="col-lg-6 mb-4">
-                                    <x-input :value="config('app.mail_password')" name="password" type="text"
-                                        placeholder="Your app password" label="{{ __('Mail Password') }}" />
+                                    <x-input :value="config('mail.mailers.smtp.password') ?? env('MAIL_PASSWORD')" name="password" type="password"
+                                        placeholder="Your SMTP password / App password" label="{{ __('Mail Password') }}" required="true" />
                                 </div>
                                 <div class="col-lg-6 mb-4">
-                                    <x-input :value="config('app.mail_encryption')" name="encryption" type="text" placeholder="tls or ssl"
-                                        label="{{ __('Mail Encryption') }}" />
+                                    <x-input :value="config('mail.mailers.smtp.encryption') ?? env('MAIL_ENCRYPTION', 'tls')" name="encryption" type="text" placeholder="tls or ssl"
+                                        label="{{ __('Mail Encryption') }}" required="true" />
                                 </div>
-                                <div class="col-lg-6">
-                                    <x-input :value="config('app.mail_from_address')" name="from_address" type="text"
-                                        placeholder="from email address" label="{{ __('Mail From Address') }}"
-                                        required />
+                                <div class="col-lg-6 mb-4">
+                                    <x-input :value="config('mail.from.address') ?? env('MAIL_FROM_ADDRESS')" name="from_address" type="email"
+                                        placeholder="no-reply@janmitram.com" label="{{ __('Mail From Address') }}"
+                                        required="true" />
+                                </div>
+                                <div class="col-lg-6 mb-4">
+                                    <x-input :value="config('mail.from.name') ?? env('MAIL_FROM_NAME', config('app.name', 'Janmitram'))" name="from_name" type="text"
+                                        placeholder="Janmitram" label="{{ __('Mail From Name') }}" />
                                 </div>
                             </div>
 
