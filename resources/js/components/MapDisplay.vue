@@ -518,13 +518,31 @@ async function handleEnterSearch() {
     }
 }
 
-function selectSearchResult(item) {
+async function selectSearchResult(item) {
+    searchQuery.value = item.display_name;
+    descriptiveAddress.value = item.display_name;
+    showResults.value = false;
+    selectedSearchIndex.value = -1;
+
     if (item.lat && item.lng) {
-        searchQuery.value = item.display_name;
-        descriptiveAddress.value = item.display_name;
-        showResults.value = false;
-        selectedSearchIndex.value = -1;
         updateLocation(item.lat, item.lng, true, item.display_name);
+    } else if (item.place_id) {
+        isSearching.value = true;
+        try {
+            const res = await axios.get("/maps/place-details", {
+                params: { place_id: item.place_id },
+            });
+            if (res.data?.data?.lat && res.data?.data?.lng) {
+                const lat = res.data.data.lat;
+                const lng = res.data.data.lng;
+                const addr = res.data.data.formatted_address || item.display_name;
+                updateLocation(lat, lng, true, addr);
+            }
+        } catch (e) {
+            console.warn("Place details lookup notice:", e);
+        } finally {
+            isSearching.value = false;
+        }
     }
 }
 

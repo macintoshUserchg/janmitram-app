@@ -256,11 +256,12 @@ class GoogleMapsService
             $responses = Http::pool(function ($pool) use ($placeIds) {
                 $reqs = [];
                 foreach ($placeIds as $id) {
-                    $reqs[$id] = $pool->withHeaders(['X-Goog-Api-Key' => $this->apiKey])
+                    $reqs[$id] = $pool->withHeaders([
+                        'X-Goog-Api-Key' => $this->apiKey,
+                        'X-Goog-FieldMask' => 'location',
+                    ])
                         ->timeout(2.5)
-                        ->get("https://places.googleapis.com/v1/places/{$id}", [
-                            'fields' => 'location',
-                        ]);
+                        ->get("https://places.googleapis.com/v1/places/{$id}");
                 }
                 return $reqs;
             });
@@ -285,6 +286,41 @@ class GoogleMapsService
         }
 
         return [];
+    }
+
+    /**
+     * Get single place details with coordinates.
+     */
+    public function getPlaceDetails(string $placeId): ?array
+    {
+        if (empty($placeId) || empty($this->apiKey)) {
+            return null;
+        }
+
+        try {
+            $res = Http::timeout(3)
+                ->withHeaders([
+                    'X-Goog-Api-Key' => $this->apiKey,
+                    'X-Goog-FieldMask' => 'location,displayName,formattedAddress',
+                ])
+                ->get("https://places.googleapis.com/v1/places/{$placeId}");
+
+            if ($res->successful()) {
+                $loc = $res->json('location');
+                if ($loc && isset($loc['latitude'], $loc['longitude'])) {
+                    return [
+                        'lat' => (float) $loc['latitude'],
+                        'lng' => (float) $loc['longitude'],
+                        'formatted_address' => $res->json('formattedAddress'),
+                        'display_name' => $res->json('displayName.text'),
+                    ];
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::debug('getPlaceDetails error: ' . $e->getMessage());
+        }
+
+        return null;
     }
 
     /**

@@ -656,6 +656,7 @@ Route::match(['get', 'post'], 'admin/pwa-setting', function () {
 Route::prefix('maps')->group(function () {
     Route::get('config', [MapController::class, 'config']);
     Route::get('autocomplete', [MapController::class, 'autocomplete']);
+    Route::get('place-details', [MapController::class, 'placeDetails']);
     Route::get('heuristic-search', [MapController::class, 'heuristicSearch']);
     Route::get('reverse-geocode', [MapController::class, 'reverseGeocode']);
     Route::get('directions', [MapController::class, 'directions']);

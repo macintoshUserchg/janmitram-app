@@ -58,6 +58,20 @@ class MapController extends Controller
     }
 
     /**
+     * Get Place Details (Coordinates & formatted address).
+     */
+    public function placeDetails(Request $request): JsonResponse
+    {
+        $placeId = (string) $request->input('place_id', '');
+        $details = $this->mapService->getPlaceDetails($placeId);
+
+        return response()->json([
+            'success' => $details !== null,
+            'data' => $details,
+        ]);
+    }
+
+    /**
      * Reverse Geocode (Lat/Lng -> Address).
      */
     public function reverseGeocode(Request $request): JsonResponse
