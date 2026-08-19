@@ -65,8 +65,14 @@ class PaymentGatewayController extends Controller
             'payment_status' => PaymentStatus::PAID->value,
         ]);
 
+        $paymentToken = $request->razorpay_payment_id
+            ?? $request->payment_id
+            ?? $request->transaction_id
+            ?? $payment->payment_token;
+
         $payment->update([
             'is_paid' => true,
+            'payment_token' => $paymentToken,
         ]);
 
         return to_route('order.payment.success', $payment);

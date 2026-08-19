@@ -6,7 +6,7 @@
     <div class="container-fluid mb-3">
 
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-            <h4 class="m-0">{{ __('Payment Gateways') }}</h4>sdfsdf
+            <h4 class="m-0">{{ __('Payment Gateways') }}</h4>
         </div>
 
         <div class="row">
@@ -50,7 +50,7 @@
                                         <option value="test" {{ $paymentGateway->mode == 'test' ? 'selected' : '' }}>
                                             Test
                                         </option>
-                                        <option value="live" {{ $paymentGateway->mode == 'live' ? 'selected' : '' }} {{ app()->environment('local') ? 'disabled' : '' }}>
+                                        <option value="live" {{ $paymentGateway->mode == 'live' ? 'selected' : '' }}>
                                             Live
                                         </option>
                                     </x-select>
@@ -65,7 +65,7 @@
                                     <div class="mt-3">
                                         <x-input :value="$value" name="config[{{ $key }}]" type="text"
                                             placeholder="{{ $label }}" label="{{ $label }}"
-                                            required="true" readonly="{{ app()->environment('local') ? 'true' : '' }}"/>
+                                            required="true"/>
                                     </div>
                                     @else
                                         <div class="alert alert-warning mt-3">
@@ -76,7 +76,7 @@
 
                                 <div class="mt-3">
                                     <x-input name="title" type="text" label="Payment Gateway Title" :value="$paymentGateway->title"
-                                        required="true" readonly="{{ app()->environment('local') ? 'true' : '' }}"/>
+                                        required="true"/>
                                 </div>
 
                                 <div class="mt-3">
