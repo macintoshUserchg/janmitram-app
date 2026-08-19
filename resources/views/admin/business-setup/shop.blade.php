@@ -24,6 +24,28 @@
             </div>
             <div class="card-body">
                 <div class="d-flex flex-wrap gap-3 mb-3">
+                    <!-- Direct / None (Zero Fee) -->
+                    <label for="none"
+                        class="payment-card border p-3 rounded {{ in_array($generaleSetting?->business_based_on, ['none', 'direct']) ? 'selected' : '' }}">
+                        <div class="d-flex align-items-center">
+                            <div class="me-3 fs-3">🏢</div>
+                            <span class="fw-semibold">
+                                {{ __('Direct / None (Zero Fee)') }}
+                            </span>
+                        </div>
+                        <div class="mt-2 d-flex align-items-center gap-1">
+                            <span class="fw-semibold text-muted">
+                                {{ in_array($generaleSetting?->business_based_on, ['none', 'direct']) ? __('Enable') : __('Disable') }}
+                            </span>
+                            <label class="switch mb-0">
+                                <input id="none" name="business_based_on" type="radio" value="none"
+                                    {{ in_array($generaleSetting?->business_based_on, ['none', 'direct']) ? 'checked' : '' }}>
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                        <div class="check-icon">✅</div>
+                    </label>
+
                     <!-- Commission -->
                     <label for="commission"
                         class="payment-card border p-3 rounded {{ $generaleSetting?->business_based_on == 'commission' ? 'selected' : '' }}">
@@ -69,7 +91,7 @@
                     </label>
                 </div>
 
-                <div id="commission-settings" class="row gy-3" style="{{ $generaleSetting?->business_based_on == 'subscription' ? 'display: none;' : '' }}">
+                <div id="commission-settings" class="row gy-3" style="{{ $generaleSetting?->business_based_on == 'commission' ? '' : 'display: none;' }}">
 
                     <div class="col-lg-4">
                         <label for="" class="form-label">{{ __('Commission') }}</label>
@@ -261,27 +283,20 @@
             });
         });
 
-        $('#commission').on('change', function() {
+        $('input[name="business_based_on"]').on('change', function() {
+            $('.payment-card').removeClass('selected');
+            $('.payment-card').find('.text-muted').text("{{ __('Disable') }}");
+            
             if ($(this).is(':checked')) {
-                $(this).closest('.payment-card').addClass('selected');
-                $('#subscription').closest('.payment-card').removeClass('selected');
-                $('#commission-settings').show();
-            } else {
-                $(this).closest('.payment-card').removeClass('selected');
-                $('#subscription').closest('.payment-card').addClass('selected');
-                $('#commission-settings').hide();
-            }
-        });
-
-        $('#subscription').on('change', function() {
-            if ($(this).is(':checked')) {
-                $(this).closest('.payment-card').addClass('selected');
-                $('#commission').closest('.payment-card').removeClass('selected');
-                $('#commission-settings').hide();
-            } else {
-                $(this).closest('.payment-card').removeClass('selected');
-                $('#commission').closest('.payment-card').addClass('selected');
-                $('#commission-settings').show();
+                const card = $(this).closest('.payment-card');
+                card.addClass('selected');
+                card.find('.text-muted').text("{{ __('Enable') }}");
+                
+                if ($(this).val() === 'commission') {
+                    $('#commission-settings').slideDown();
+                } else {
+                    $('#commission-settings').slideUp();
+                }
             }
         });
     </script>
