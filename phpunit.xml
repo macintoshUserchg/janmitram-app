@@ -18,6 +18,7 @@
         </include>
     </source>
     <php>
+        <ini name="memory_limit" value="512M"/>
         <env name="APP_ENV" value="testing"/>
         <!-- Root URL: tests must not inherit the /janmitram-app subdirectory
              from .env, or admin HTTP requests fall through to the SPA catch-all. -->
