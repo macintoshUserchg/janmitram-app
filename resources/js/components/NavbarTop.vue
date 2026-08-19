@@ -3,25 +3,12 @@
         <div class="main-container flex justify-between items-center py-2 text-white">
 
             <div class="flex sm:items-center flex-col sm:flex-row gap-1 sm:gap-4">
-                <!-- Delivering To Pill -->
-                <div class="flex items-center gap-1.5 cursor-pointer bg-white/10 hover:bg-white/20 px-2.5 py-1 rounded-full text-xs transition"
-                    @click="locationStore.showLocationModal = true">
-                    <MapPinIcon class="w-3.5 h-3.5 text-amber-300 shrink-0" />
-                    <span class="font-normal opacity-90">{{ $t('Delivering to') }}:</span>
-                    <span class="font-bold underline decoration-dotted">{{ locationStore.currentLocationLabel }}</span>
-                    <span v-if="locationStore.nearestShop" class="hidden lg:inline-block text-[11px] bg-emerald-600/90 px-1.5 py-0.5 rounded text-white font-medium ml-1">
-                        ⚡ {{ locationStore.nearestShop.name }} ({{ locationStore.nearestShop.distance_km }} km)
-                    </span>
-                </div>
-
-                <div class="w-[0] h-3 border border-primary-500 hidden sm:block"></div>
-
                 <a v-if="master.getMultiVendor" :href="basePath + 'shop/register'"
-                    class="text-white text-xs sm:text-sm font-normal font-['Roboto'] leading-tight">
+                    class="text-white text-sm font-normal font-['Roboto'] leading-tight">
                     {{ $t('Become a Seller') }}
                 </a>
                 <div v-if="master.getMultiVendor" class="w-[0] h-3 border border-primary-500 hidden sm:block"></div>
-                <div class="text-white text-xs sm:text-sm font-normal font-['Roboto'] leading-tight hidden md:block">
+                <div class="text-white text-sm font-normal font-['Roboto'] leading-tight">
                     {{ $t('Hotline') }}: {{ master.mobile }}
                 </div>
             </div>
@@ -92,14 +79,11 @@
 <script setup>
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue'
 import { ChevronDownIcon } from '@heroicons/vue/20/solid'
-import { MapPinIcon } from '@heroicons/vue/24/outline'
 import localization from '../localization';
 
-import { useLocationStore } from '../stores/LocationStore';
 import { useMaster } from "../stores/MasterStore";
 import { onMounted, ref, watch } from 'vue';
 const master = useMaster();
-const locationStore = useLocationStore();
 
 // Base path for the SPA when served from a subdirectory (e.g. /janmitram-app/).
 // Same pattern as router/index.js, bootstrap.js, localization.js.
