@@ -13,6 +13,7 @@ use App\Http\Resources\ReviewResource;
 use App\Http\Resources\SizeResource;
 use App\Models\FlashSale;
 use App\Models\Review;
+use App\Models\Shop;
 use App\Repositories\ProductRepository;
 use App\Repositories\ReviewRepository;
 use Illuminate\Http\JsonResponse;
@@ -51,6 +52,20 @@ class ProductController extends Controller
         $shop = null;
         if ($generaleSetting?->shop_type == 'single') {
             $shop = generaleSetting('rootShop');
+        } elseif ($shopID) {
+            $shop = Shop::where('status', 1)->find($shopID);
+        } elseif ($request->filled('latitude') && $request->filled('longitude')) {
+            $lat = (float) $request->latitude;
+            $lng = (float) $request->longitude;
+            $allShops = Shop::where('status', 1)->whereNotNull('latitude')->whereNotNull('longitude')->get();
+            if ($allShops->isNotEmpty()) {
+                $closest = $allShops->sortBy(function ($s) use ($lat, $lng) {
+                    return haversineKm($lat, $lng, (float) $s->latitude, (float) $s->longitude);
+                })->first();
+                if ($closest) {
+                    $shop = $closest;
+                }
+            }
         }
 
         // get data for

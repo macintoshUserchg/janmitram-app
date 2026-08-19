@@ -1,11 +1,28 @@
 <template>
     <div class="main-container py-2 flex items-center justify-between gap-8">
-
-        <div class="flex items-center gap-8 grow">
-            <router-link to="/" class="w-[130px] md:w-[180px] lg:w-[240px]">
+        <div class="flex items-center gap-6 grow">
+            <router-link to="/" class="w-[130px] md:w-[170px] lg:w-[220px] shrink-0">
                 <img :src="master.logo" alt="" class="h-11">
             </router-link>
-            <div class="relative grow max-w-[700px] hidden md:block" ref="searchContainerRef">
+
+            <!-- Delivery Location Pill (Desktop) -->
+            <div class="hidden xl:flex items-center gap-2.5 cursor-pointer px-3 py-1.5 rounded-2xl border border-slate-200/80 hover:border-primary/40 bg-slate-50/70 hover:bg-white transition shrink-0 shadow-sm"
+                @click="locationStore.showLocationModal = true">
+                <div class="w-8 h-8 rounded-xl bg-emerald-50 text-primary flex items-center justify-center">
+                    <MapPinIcon class="w-4 h-4 text-primary" />
+                </div>
+                <div class="text-left leading-tight">
+                    <div class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider flex items-center gap-1">
+                        <span>{{ $t('Deliver to') }}</span>
+                    </div>
+                    <div class="text-xs font-bold text-slate-900 flex items-center gap-1">
+                        <span class="max-w-[120px] truncate">{{ locationStore.currentLocationLabel }}</span>
+                        <ChevronDownIcon class="w-3 h-3 text-slate-400" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="relative grow max-w-[650px] hidden md:block" ref="searchContainerRef">
                 <div class="relative flex items-center">
                     <input type="text" v-model="search" :placeholder="$t('Search products, categories...')"
                         class="px-4 py-2.5 pr-24 block rounded-2xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 w-full placeholder:text-slate-400 outline-none text-sm transition shadow-sm bg-slate-50/50 focus:bg-white"
@@ -300,7 +317,7 @@
 
 <script setup>
 import { Dialog, DialogPanel, TransitionChild, TransitionRoot } from '@headlessui/vue'
-import { Bars3Icon, ChevronRightIcon, UserIcon, XMarkIcon } from '@heroicons/vue/24/outline'
+import { Bars3Icon, ChevronDownIcon, ChevronRightIcon, MapPinIcon, UserIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import { MagnifyingGlassIcon } from '@heroicons/vue/24/solid'
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -310,11 +327,13 @@ import LoginModal from './LoginModal.vue'
 
 import { useAuth } from '../stores/AuthStore'
 import { useBasketStore } from '../stores/BasketStore'
+import { useLocationStore } from '../stores/LocationStore'
 import { useMaster } from '../stores/MasterStore'
 
 const route = useRoute();
 const router = useRouter();
 const basketStore = useBasketStore();
+const locationStore = useLocationStore();
 
 const AuthStore = useAuth();
 const master = useMaster();

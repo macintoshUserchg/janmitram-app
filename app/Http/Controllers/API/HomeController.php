@@ -11,6 +11,7 @@ use App\Http\Resources\ProductResource;
 use App\Http\Resources\ShopResource;
 use App\Models\Ad;
 use App\Models\GeneraleSetting;
+use App\Models\Shop;
 use App\Models\User;
 use App\Repositories\BannerRepository;
 use App\Repositories\CategoryRepository;
@@ -35,8 +36,23 @@ class HomeController extends Controller
         $generaleSetting = generaleSetting('setting');
         $rootShop = generaleSetting('rootShop');
         $shop = null;
+
         if ($generaleSetting?->shop_type == 'single') {
             $shop = $rootShop;
+        } elseif ($request->filled('shop_id')) {
+            $shop = Shop::where('status', 1)->find($request->shop_id);
+        } elseif ($request->filled('latitude') && $request->filled('longitude')) {
+            $lat = (float) $request->latitude;
+            $lng = (float) $request->longitude;
+            $allShops = Shop::where('status', 1)->whereNotNull('latitude')->whereNotNull('longitude')->get();
+            if ($allShops->isNotEmpty()) {
+                $closest = $allShops->sortBy(function ($s) use ($lat, $lng) {
+                    return haversineKm($lat, $lng, (float) $s->latitude, (float) $s->longitude);
+                })->first();
+                if ($closest) {
+                    $shop = $closest;
+                }
+            }
         }
 
         $banners = BannerRepository::query()->whereNull('shop_id')->active()->get();

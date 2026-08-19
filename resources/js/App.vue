@@ -2,13 +2,16 @@
     <component :is="$route.meta.layout">
         <RouterView />
     </component>
+    <LocationPickerModal />
 </template>
 
 
 <script setup>
 import axios from 'axios';
 import { onMounted, onBeforeUnmount, watch } from 'vue';
+import LocationPickerModal from './components/LocationPickerModal.vue';
 import { useAuth } from './stores/AuthStore';
+import { useLocationStore } from './stores/LocationStore';
 import { useMaster } from './stores/MasterStore';
 import { useChat } from './stores/ChatStore';
 import Pusher from 'pusher-js';
@@ -16,12 +19,14 @@ import { useRoute } from 'vue-router';
 
 
 const authStore = useAuth();
+const locationStore = useLocationStore();
 const masterStore = useMaster();
 const chatStore = useChat();
 const route = useRoute();
 
 
 onMounted(() => {
+    locationStore.initLocation();
     if (authStore.token) {
         startLastSeenUpdater(); // Start interval
         callLastSeenUpdater();  // Immediate call on mount

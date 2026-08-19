@@ -18,7 +18,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from "vue";
+import { onMounted, ref, watch } from "vue";
 import AboutSupport from "../components/AboutSupport.vue";
 import Categories from "../components/Categories.vue";
 import FlashSaleIncoming from "../components/FlashSaleIncoming.vue";
@@ -29,6 +29,7 @@ import PopularProducts from "../components/PopularProducts.vue";
 import RecentlyViews from "../components/RecentlyViews.vue";
 import TopRatedShops from "../components/TopRatedShops.vue";
 import { useBasketStore } from "../stores/BasketStore";
+import { useLocationStore } from "../stores/LocationStore";
 import { useMaster } from "../stores/MasterStore";
 
 import axios from "axios";
@@ -36,11 +37,18 @@ import { useAuth } from "../stores/AuthStore";
 
 const master = useMaster();
 const basketStore = useBasketStore();
+const locationStore = useLocationStore();
 
 const authStore = useAuth();
 const isLoading = ref(true);
 const isLoginCategory = ref(true);
 const isLoginRecentlyView = ref(false);
+
+watch(() => locationStore.nearestShopId, (newShopId, oldShopId) => {
+    if (newShopId !== oldShopId) {
+        getData();
+    }
+});
 
 onMounted(() => {
     getData();
@@ -66,7 +74,19 @@ const ads = ref([]);
 
 const getData = () => {
     isLoading.value = true;
-    axios.get("/home?page=1&per_page=12", {
+    const params = {
+        page: 1,
+        per_page: 12,
+    };
+    if (locationStore.nearestShopId) {
+        params.shop_id = locationStore.nearestShopId;
+    } else if (locationStore.latitude && locationStore.longitude) {
+        params.latitude = locationStore.latitude;
+        params.longitude = locationStore.longitude;
+    }
+
+    axios.get("/home", {
+        params,
         headers: {
             Authorization: authStore.token,
         },

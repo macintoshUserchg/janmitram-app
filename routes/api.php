@@ -14,6 +14,7 @@ use App\Http\Controllers\API\CouponController;
 use App\Http\Controllers\API\FlashSaleController;
 use App\Http\Controllers\API\HomeController;
 use App\Http\Controllers\API\LegalPageController;
+use App\Http\Controllers\API\LocationController;
 use App\Http\Controllers\API\MapController;
 use App\Http\Controllers\API\MasterController;
 use App\Http\Controllers\API\OrderController;
@@ -60,6 +61,9 @@ use Illuminate\Support\Facades\Route;
 
 // ---- Public ----
 Route::get('master', [MasterController::class, 'index']);            // app settings / master data
+Route::get('location/resolve', [LocationController::class, 'resolve']); // Automated IP-First Geolocation & vicinity resolver
+Route::get('location/nearest-shops', [LocationController::class, 'nearestShops']);
+Route::get('location/by-pincode', [LocationController::class, 'byPincode']);
 Route::get('home', [HomeController::class, 'index']);
 Route::get('categories', [CategoryController::class, 'index']);
 Route::get('sub-categories', [SubCategoryController::class, 'index']);
