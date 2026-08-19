@@ -22,7 +22,7 @@
             font-size: 12px;
             line-height: 1.4;
             margin: 0;
-            padding: 24px 30px;
+            padding: 0;
         }
 
         table {

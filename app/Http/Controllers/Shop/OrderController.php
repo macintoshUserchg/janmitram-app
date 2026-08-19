@@ -175,10 +175,10 @@ class OrderController extends Controller
 
         $mPdf = new Mpdf([
             'mode' => 'UTF-8',
-            'margin_left' => 0,
-            'margin_right' => 0,
-            'margin_top' => 0,
-            'margin_bottom' => 0,
+            'margin_left' => 12,
+            'margin_right' => 12,
+            'margin_top' => 12,
+            'margin_bottom' => 12,
             'autoScriptToLang' => true,
             'autoLangToFont' => true,
             'tempDir' => $tmpDir,
@@ -226,10 +226,10 @@ class OrderController extends Controller
 
         $mPdf = new Mpdf([
             'mode' => 'UTF-8',
-            'margin_left' => 0,
-            'margin_right' => 0,
-            'margin_top' => 0,
-            'margin_bottom' => 0,
+            'margin_left' => 12,
+            'margin_right' => 12,
+            'margin_top' => 12,
+            'margin_bottom' => 12,
             'autoScriptToLang' => true,
             'autoLangToFont' => true,
             'tempDir' => $tmpDir,
