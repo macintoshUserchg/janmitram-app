@@ -21,13 +21,16 @@ class PaymentGatewayController extends Controller
      */
     public function payment(Payment $payment, Request $request)
     {
-        $gateway = $request->gateway;
+        $gateway = $request->gateway ?? $payment->payment_method;
 
         if ($payment->is_paid) {
             return to_route('order.payment.cancel', ['payment' => $payment, 'error' => 'Order already paid']);
         }
 
-        $paymentGateway = PaymentGateway::where('name', $gateway)->first();
+        $paymentGateway = PaymentGateway::where('name', $gateway)
+            ->orWhere('alias', $gateway)
+            ->orWhereRaw('LOWER(name) = ?', [strtolower((string) $gateway)])
+            ->first();
 
         if (! $paymentGateway || ! $paymentGateway->is_active) {
             $message = $paymentGateway ? 'Payment gateway not active' : 'Payment gateway not found';

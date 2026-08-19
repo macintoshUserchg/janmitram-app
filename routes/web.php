@@ -110,6 +110,7 @@ Route::get('change-language', [LanguageController::class, 'changeLanguage'])->na
 
 /* ===================== Payment gateway callbacks ===================== */
 Route::controller(PaymentGatewayController::class)->group(function () {
+    Route::match(['get', 'post'], 'order/payment/{payment}', 'payment')->name('order.payment');
     Route::match(['get', 'post'], 'payment/{payment}/pay', 'payment')->name('payment');
     Route::get('payment/success/{payment?}', 'success')->name('payment.success');
     Route::post('payment/success', 'success')->name('payment.success.post');
