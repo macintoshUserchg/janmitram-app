@@ -87,14 +87,14 @@
                         </label>
 
                     </div>
-                    <!-- Payment Gateways -->
+                    <!-- Payment Gateways (Only shown when multiple gateways exist) -->
                     <Transition leave-active-class="transition ease-in duration-300"
                         enter-active-class="transition ease-out duration-300"
                         enter-from-class="transform opacity-0 scale-95" enter-to-class="transform opacity-100 scale-100"
                         leave-from-class="transform opacity-100 scale-100"
                         leave-to-class="transform opacity-0 scale-95">
 
-                        <div v-if="paymentType === 'card'" class="mt-5 border-t border-slate-200">
+                        <div v-if="paymentType === 'card' && master.paymentGateways && master.paymentGateways.length > 1" class="mt-5 border-t border-slate-200">
                             <span class="text-slate-600 pt-2 block text-md font-medium leading-7">
                                 {{ $t('Available Payment Gateways') }}
                             </span>
@@ -153,10 +153,23 @@ const paymentMethod = ref(null);
 
 const paymentGateway = ref(null);
 
+const autoSelectGateway = () => {
+    if (master.paymentGateways && master.paymentGateways.length > 0) {
+        if (!paymentGateway.value || master.paymentGateways.length === 1) {
+            paymentGateway.value = master.paymentGateways[0].name;
+        }
+    }
+};
+
 onMounted(() => {
     window.scrollTo(0, 0);
     basketStore.coupon_code = "";
-    paymentMethod.value = paymentType.value;
+    autoSelectGateway();
+    if (paymentType.value === 'card') {
+        paymentMethod.value = paymentGateway.value || (master.paymentGateways[0]?.name ?? 'razorpay');
+    } else {
+        paymentMethod.value = paymentType.value;
+    }
     if (!AuthStore.user && !AuthStore.access_token) {
         router.push({ name: 'home' });
     }
@@ -164,7 +177,8 @@ onMounted(() => {
 
 watch(paymentType, () => {
     if (paymentType.value === 'card') {
-        paymentMethod.value = paymentGateway.value;
+        autoSelectGateway();
+        paymentMethod.value = paymentGateway.value || (master.paymentGateways[0]?.name ?? 'razorpay');
     } else {
         paymentMethod.value = paymentType.value;
     }
@@ -175,6 +189,13 @@ watch(paymentGateway, () => {
         paymentMethod.value = paymentGateway.value;
     }
 });
+
+watch(() => master.paymentGateways, () => {
+    autoSelectGateway();
+    if (paymentType.value === 'card') {
+        paymentMethod.value = paymentGateway.value || (master.paymentGateways[0]?.name ?? 'razorpay');
+    }
+}, { deep: true });
 </script>
 <style scoped>
 .form-label {

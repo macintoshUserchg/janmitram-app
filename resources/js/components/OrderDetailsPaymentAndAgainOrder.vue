@@ -121,14 +121,24 @@ const againPayment = ref(false);
 
 const emit = defineEmits(['update:makePayment', 'update:orderAgain', 'update:paymentSuccess']);
 
+const autoSelectGateway = () => {
+    if (master.paymentGateways && master.paymentGateways.length > 0) {
+        if (!paymentGateway.value || master.paymentGateways.length === 1) {
+            paymentGateway.value = master.paymentGateways[0].name;
+        }
+    }
+};
+
 watch(() => props.makePayment, () => {
     if (props.makePayment === true) {
+        autoSelectGateway();
         showPaymentModal.value = true;
     }
 });
 
 watch(() => props.againOrder, () => {
     if (props.againOrder === true) {
+        autoSelectGateway();
         showPaymentModal.value = true;
     }
 });
