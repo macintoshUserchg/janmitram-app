@@ -33,34 +33,40 @@ class ProcessController extends Controller
         $successUrl = $cancelUrl = null;
 
         if ($info) {
-            $email = $info['email'] ?? 'example@gmail.com';
-            $phone = $info['phone'] ?? '01870******';
-            $name = $info['name'] ?? 'Example Name';
-            $description = $info['description'];
+            $email = $info['email'] ?? 'customer@janmitram.com';
+            $phone = $info['phone'] ?? '';
+            $name = $info['name'] ?? 'Janmitram Customer';
+            $description = $info['description'] ?? 'Janmitram Order Payment';
 
             $successUrl = route('payment.success', $payment->id);
             $cancelUrl = route('payment.cancel', $payment->id);
         } else {
-            $name = $payment->orders[0]->customer?->user?->name ?? '';
-            $email = $payment->orders[0]->customer?->user?->email ?? '';
-            $phone = $payment->orders[0]->customer?->user?->phone ?? '';
-            $description = 'Total order '.$payment->orders->count().' total amount '.$payment->amount.'INR';
+            $user = $payment->orders[0]->customer?->user;
+            $name = $user?->name ?? 'Janmitram Customer';
+            $email = $user?->email ?? 'customer@janmitram.com';
+            $phone = $user?->phone ?? '';
+            $description = 'Order payment of '.$payment->amount.' INR (Total Orders: '.$payment->orders->count().')';
             $successUrl = route('payment.success', $payment->id);
             $cancelUrl = route('payment.cancel', $payment->id);
         }
 
-        try {
+        // Sanitize phone number (digits only, minimum 10 digits for Indian standard)
+        $cleanPhone = preg_replace('/[^0-9]/', '', (string) $phone);
+        $customer = [
+            'name' => $name,
+            'email' => $email,
+        ];
+        if (strlen($cleanPhone) >= 10 && ! preg_match('/^(\d)\1+$/', $cleanPhone)) {
+            $customer['contact'] = $cleanPhone;
+        }
 
+        try {
             $paymentLink = $razorpay->invoice->create([
                 'type' => 'link',
-                'amount' => $amount * 100, // amount in paisa
+                'amount' => (int) round($amount * 100), // amount in paisa
                 'currency' => $currency,
                 'description' => $description,
-                'customer' => [
-                    'name' => $name,
-                    'email' => $email,
-                    'contact' => $phone,
-                ],
+                'customer' => $customer,
                 'callback_url' => $successUrl,
                 'redirect' => true,
                 'callback_method' => 'get',
