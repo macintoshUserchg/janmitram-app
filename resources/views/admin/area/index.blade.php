@@ -46,11 +46,12 @@
 
                                 <td>
                                     @hasPermission('admin.area.toggle')
-                                        <a href="{{ route('admin.area.toggle', $area->id) }}">
-                                            <span class="badge {{ $area->is_active ? 'bg-success' : 'bg-danger' }}">
-                                                {{ $area->is_active ? __('Active') : __('Inactive') }}
-                                            </span>
-                                        </a>
+                                        <label class="switch mb-0">
+                                            <a href="{{ route('admin.area.toggle', $area->id) }}">
+                                                <input type="checkbox" {{ $area->is_active ? 'checked' : '' }}>
+                                                <span class="slider round"></span>
+                                            </a>
+                                        </label>
                                     @else
                                         <span class="badge {{ $area->is_active ? 'bg-success' : 'bg-danger' }}">
                                             {{ $area->is_active ? __('Active') : __('Inactive') }}
@@ -59,14 +60,14 @@
                                 </td>
                                 <td class="text-center">
                                     <div class="d-flex gap-2 justify-content-center">
-                                        @hasPermission('admin.area.create')
+                                        @hasPermission(['admin.area.edit', 'admin.area.create'])
                                             <button type="button" class="btn btn-outline-primary circleIcon btn-sm"
-                                                onclick="openAreaUpdateModal({{ $area }})">
+                                                onclick="openAreaUpdateModal({{ $area->id }}, '{{ addslashes($area->name) }}', '{{ $area->delivery_amount }}')">
                                                 <img src="{{ asset('assets/icons-admin/edit.svg') }}" alt="edit"
                                                     loading="lazy" />
                                             </button>
                                         @endhasPermission
-                                        @hasPermission('admin.area.delete')
+                                        @hasPermission(['admin.area.destroy', 'admin.area.delete'])
                                             <a href="{{ route('admin.area.destroy', $area->id) }}"
                                                 class="circleIcon btn btn-outline-danger btn-sm deleteConfirm">
                                                 <img src="{{ asset('assets/icons-admin/trash.svg') }}" alt="delete"
@@ -171,13 +172,10 @@
 
 @push('scripts')
     <script>
-        const openAreaUpdateModal = (area) => {
-
-            $("#update_name").val(area.name);
-            $("#update_delivery_amount").val(area.delivery_amount);
-            $("#updateAreaForm").attr('action', `{{ route('admin.area.update', ':id') }}`.replace(':id', area
-                .id));
-
+        const openAreaUpdateModal = (id, name, deliveryAmount) => {
+            $("#update_name").val(name);
+            $("#update_delivery_amount").val(deliveryAmount);
+            $("#updateAreaForm").attr('action', `{{ url('admin/area') }}/${id}`);
             $("#updateArea").modal('show');
         }
     </script>
