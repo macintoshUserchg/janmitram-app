@@ -185,9 +185,7 @@ class ProductController extends Controller
      */
     public function update(ProductRequest $request, Product $product)
     {
-        $shop = generaleSetting('shop');
-
-        $skuCode = $shop?->products()->where('code', $request->code)->where('id', '!=', $product->id)->exists();
+        $skuCode = Product::where('code', $request->code)->where('id', '!=', $product->id)->exists();
 
         if ($skuCode) {
             return back()->withInput()->withErrors(['code' => __('Product code already exists!')])->with('error', __('Product code already exists!'));

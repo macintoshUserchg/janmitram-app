@@ -119,7 +119,7 @@ class ShopController extends Controller
         $product = ProductRepository::find($request->product_id);
         $shop = $product->shop;
 
-        $products = $shop->products()->where('id', '!=', $product->id)->isActive()
+        $products = $shop->products()->where('products.id', '!=', $product->id)->isActive()
             ->withCount('orders')
             ->withAvg('reviews as average_rating', 'rating')
             ->orderByDesc('orders_count')->orderByDesc('average_rating')->take(6)->get();

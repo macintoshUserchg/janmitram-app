@@ -240,14 +240,14 @@ class ProductController extends Controller
 
         $relatedProducts = ProductRepository::query()->whereHas('categories', function ($query) use ($product) {
             $query->whereIn('categories.id', $product->categories->pluck('id'));
-        })->where('id', '!=', $product->id)
+        })->where('products.id', '!=', $product->id)
             ->isActive()
             ->inRandomOrder()
             ->limit(6)->get();
 
         $shop = $product->shop;
 
-        $popularProducts = $shop->products()->isActive()->where('id', '!=', $product->id)->withCount('orders')->withAvg('reviews as average_rating', 'rating')->orderByDesc('average_rating')->orderByDesc('orders_count')->take(6)->get();
+        $popularProducts = $shop ? $shop->products()->isActive()->where('products.id', '!=', $product->id)->withCount('orders')->withAvg('reviews as average_rating', 'rating')->orderByDesc('average_rating')->orderByDesc('orders_count')->take(6)->get() : collect();
 
         return $this->json('product details', [
             'product' => ProductDetailsResource::make($product),

@@ -152,9 +152,7 @@ class ProductController extends Controller
          * @var user $user
          */
         $user = auth()->user();
-        $shop = generaleSetting('shop');
-
-        $skuCode = $shop?->products()->where('code', $request->code)->where('id', '!=', $product->id)->exists();
+        $skuCode = Product::where('code', $request->code)->where('id', '!=', $product->id)->exists();
 
         if ($skuCode) {
             return $this->json('Product code already exists', [
