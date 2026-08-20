@@ -572,6 +572,7 @@ const setThumbsSwiper = (swiper) => {
 
 const formData = ref({
     product_id: route.params.id,
+    shop_id: route.query.shop_id || null,
     size: null,
     color: null,
     unit: null,
@@ -660,6 +661,7 @@ const buyNow = () => {
     // }
     basketStore.addToCart({
         product_id: formData.value.product_id,
+        shop_id: product.value?.shop?.id || formData.value.shop_id,
         is_buy_now: true,
         quantity: 1,
         size: formData.value.size,
@@ -667,7 +669,7 @@ const buyNow = () => {
         unit: null
     }, product.value);
 
-    basketStore.buyNowShopId = product.value?.shop.id;
+    basketStore.buyNowShopId = product.value?.shop?.id;
     // router.push({ name: "buynow" });
 };
 
@@ -678,6 +680,7 @@ watch(route, async () => {
     aboutProduct.value = true;
     review.value = false;
     formData.value.product_id = route.params.id;
+    formData.value.shop_id = route.query.shop_id || null;
     findProductInCart(route.params.id);
 });
 
@@ -783,13 +786,20 @@ const showReview = () => {
 const flashSale = ref({});
 const fetchProductDetails = async () => {
     isLoading.value = true;
+    const params = { product_id: route.params.id };
+    if (route.query.shop_id) {
+        params.shop_id = route.query.shop_id;
+    }
     axios.get("/product-details", {
-        params: { product_id: route.params.id },
+        params: params,
         headers: {
             Authorization: authStore.token,
         },
     }).then((response) => {
         product.value = response.data.data.product;
+        if (product.value?.shop?.id) {
+            formData.value.shop_id = product.value.shop.id;
+        }
         relatedProducts.value = response.data.data.related_products;
         popularProducts.value = response.data.data.popular_products;
         flashSale.value = response.data.data.product.flash_sale;

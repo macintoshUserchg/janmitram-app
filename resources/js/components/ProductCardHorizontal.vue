@@ -154,6 +154,7 @@ const decrementQuantity = () => {
 const buyNow = () => {
     basketStore.addToCart({
         product_id: props.product?.id,
+        shop_id: props.product?.shop?.id,
         is_buy_now: true,
         quantity: 1,
         size: null,
@@ -166,7 +167,8 @@ const buyNow = () => {
 
 const showProductDetails = () => {
     if (props.product.quantity > 0) {
-        router.push({ name: 'productDetails', params: { id: props.product.id } });
+        const query = props.product?.shop?.id ? { shop_id: props.product.shop.id } : {};
+        router.push({ name: 'productDetails', params: { id: props.product.id }, query });
     }
 };
 </script>

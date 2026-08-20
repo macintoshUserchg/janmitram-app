@@ -157,7 +157,7 @@ class CartRepository extends Repository
 
         return self::create([
             'product_id' => $request->product_id,
-            'shop_id' => $product->shop->id,
+            'shop_id' => $request->shop_id ?? $product->shop->id,
             'is_buy_now' => $isBuyNow,
             // 'customer_id' => $customer->id,
             'customer_id' => $tokens['customer_id'] ?? null,
