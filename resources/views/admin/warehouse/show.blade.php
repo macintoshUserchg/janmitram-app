@@ -13,23 +13,49 @@
         <p class="text-muted small mb-0">{{ __('Physical Stock Allocation & Inventory Ledger Control') }}</p>
     </div>
     <div class="d-flex gap-2">
-        @if($stocks->count() > 0)
-            <form action="{{ route('admin.warehouse.stock.clear', $warehouse->id) }}" method="POST" onsubmit="return confirm('{{ __('Are you sure you want to remove ALL stock items from this warehouse?') }}')">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="btn btn-outline-danger shadow-sm">
-                    <i class="fas fa-trash-alt me-1"></i> {{ __('Clear All Stock') }}
-                </button>
-            </form>
+        @if($warehouse->isCentralHub())
+            @if($stocks->count() > 0)
+                <form action="{{ route('admin.warehouse.stock.clear', $warehouse->id) }}" method="POST" onsubmit="return confirm('{{ __('Are you sure you want to remove ALL stock items from this warehouse?') }}')">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-outline-danger shadow-sm">
+                        <i class="fas fa-trash-alt me-1"></i> {{ __('Clear All Stock') }}
+                    </button>
+                </form>
+            @endif
+            <a href="{{ route('admin.warehouse.stock', $warehouse->id) }}" class="btn btn-success shadow-sm">
+                <i class="fas fa-plus me-1"></i> {{ __('Add Stock Item') }}
+            </a>
+        @else
+            <a href="{{ route('admin.warehouse-transfer.create') }}" class="btn btn-primary shadow-sm">
+                <i class="fas fa-dolly me-1"></i> {{ __('Transfer Stock from Central Hub') }}
+            </a>
         @endif
-        <a href="{{ route('admin.warehouse.stock', $warehouse->id) }}" class="btn btn-success shadow-sm">
-            <i class="fas fa-plus me-1"></i> {{ __('Add Stock Item') }}
-        </a>
     </div>
 </div>
 
 @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm mb-4">{{ session('success') }}</div>
+@endif
+@if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm mb-4">{{ session('error') }}</div>
+@endif
+
+@if(!$warehouse->isCentralHub())
+    <div class="alert alert-info border-0 shadow-sm rounded-12 mb-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div class="d-flex align-items-center gap-3">
+            <div class="p-2 bg-info-subtle rounded-circle text-info fs-4">
+                <i class="fas fa-network-wired"></i>
+            </div>
+            <div>
+                <div class="fw-bold text-dark">{{ __('Sub-Warehouse Stock Distribution Mode') }}</div>
+                <div class="small text-muted">{{ __('Sub-warehouses receive stock exclusively through Warehouse Transfers dispatched from Central Logistics Hub.') }}</div>
+            </div>
+        </div>
+        <a href="{{ route('admin.warehouse-transfer.create') }}" class="btn btn-sm btn-primary fw-bold">
+            <i class="fas fa-dolly me-1"></i> {{ __('New Stock Transfer') }}
+        </a>
+    </div>
 @endif
 
 <!-- Warehouse Profile Card -->
@@ -157,7 +183,18 @@
                         <tr>
                             <td colspan="7" class="text-center py-5 text-muted">
                                 <i class="fas fa-boxes fs-1 mb-3 d-block text-secondary"></i>
-                                {{ __('No stock inventory records found in this warehouse.') }}
+                                <h6 class="fw-bold text-dark">{{ __('No stock inventory records found in this warehouse.') }}</h6>
+                                @if(!$warehouse->isCentralHub())
+                                    <p class="small text-muted mb-3">{{ __('Use Warehouse Transfers to dispatch inventory from Central Logistics Hub into this Sub-Warehouse.') }}</p>
+                                    <a href="{{ route('admin.warehouse-transfer.create') }}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-dolly me-1"></i> {{ __('Transfer Stock from Central Hub') }}
+                                    </a>
+                                @else
+                                    <p class="small text-muted mb-3">{{ __('Add new inward inventory batches received at the Central Logistics Hub.') }}</p>
+                                    <a href="{{ route('admin.warehouse.stock', $warehouse->id) }}" class="btn btn-sm btn-success">
+                                        <i class="fas fa-plus me-1"></i> {{ __('Add Stock Item') }}
+                                    </a>
+                                @endif
                             </td>
                         </tr>
                     @endforelse

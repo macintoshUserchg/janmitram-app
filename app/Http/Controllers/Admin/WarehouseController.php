@@ -91,6 +91,11 @@ class WarehouseController extends Controller
 
     public function stock(Warehouse $warehouse)
     {
+        if (! $warehouse->isCentralHub()) {
+            return redirect()->route('admin.warehouse.show', $warehouse->id)
+                ->with('error', __('Direct stock inward addition is only permitted for Central Warehouse Hub. Use Warehouse Transfers to distribute stock to Sub-Warehouses.'));
+        }
+
         $warehouseStocks = WarehouseStock::where('warehouse_id', $warehouse->id)
             ->get()
             ->groupBy('product_id')
@@ -112,6 +117,11 @@ class WarehouseController extends Controller
 
     public function addStock(Warehouse $warehouse)
     {
+        if (! $warehouse->isCentralHub()) {
+            return redirect()->route('admin.warehouse.show', $warehouse->id)
+                ->with('error', __('Direct stock inward addition is only permitted for Central Warehouse Hub. Use Warehouse Transfers to distribute stock to Sub-Warehouses.'));
+        }
+
         request()->validate([
             'product_id' => 'required|exists:products,id',
             'color_id' => 'nullable|exists:colors,id',

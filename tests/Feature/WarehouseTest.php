@@ -21,6 +21,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class WarehouseTest extends TestCase
@@ -411,5 +412,58 @@ class WarehouseTest extends TestCase
         $shopInv = ShopInventory::where('shop_id', $requestShop->id)->where('product_id', $product->id)->first();
         $this->assertNotNull($shopInv);
         $this->assertSame(75, $shopInv->quantity);
+    }
+
+    public function test_sub_warehouse_cannot_add_direct_inward_stock(): void
+    {
+        $role = Role::firstOrCreate(['name' => 'root']);
+        $admin = User::factory()->create();
+        $admin->assignRole($role);
+
+        $shop = Shop::factory()->create();
+        $brand = Brand::create(['name' => 'Sub Test Brand']);
+        $media = Media::factory()->create();
+
+        $centralWarehouse = Warehouse::create([
+            'name' => 'Central Hub',
+            'is_default' => true,
+        ]);
+
+        $subWarehouse = Warehouse::create([
+            'name' => 'Sanganer Sub Warehouse',
+            'is_default' => false,
+        ]);
+
+        $product = Product::create([
+            'shop_id' => $shop->id,
+            'brand_id' => $brand->id,
+            'media_id' => $media->id,
+            'name' => 'Sub Warehouse Product',
+            'price' => 150.00,
+            'quantity' => 0,
+            'is_digital' => false,
+            'is_stock_managed' => true,
+            'is_active' => true,
+            'is_approve' => true,
+        ]);
+
+        // Attempting to access stock page for sub-warehouse redirects with error
+        $response = $this->actingAs($admin)->get(route('admin.warehouse.stock', $subWarehouse->id));
+        $response->assertRedirect(route('admin.warehouse.show', $subWarehouse->id));
+        $response->assertSessionHas('error');
+
+        // Attempting to post direct stock addition to sub-warehouse redirects with error
+        $postResponse = $this->actingAs($admin)->post(route('admin.warehouse.stock.add', $subWarehouse->id), [
+            'product_id' => $product->id,
+            'quantity' => 20,
+        ]);
+        $postResponse->assertRedirect(route('admin.warehouse.show', $subWarehouse->id));
+        $postResponse->assertSessionHas('error');
+
+        // No warehouse stock created
+        $this->assertDatabaseMissing('warehouse_stock', [
+            'warehouse_id' => $subWarehouse->id,
+            'product_id' => $product->id,
+        ]);
     }
 }
