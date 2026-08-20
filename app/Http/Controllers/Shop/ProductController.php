@@ -35,10 +35,7 @@ class ProductController extends Controller
         $user = auth()->user();
         $shop = $user?->shop ?? $user?->myShop ?? generaleSetting('shop');
 
-        $query = Product::where(function ($q) use ($shop) {
-            $q->where('shop_id', $shop?->id)
-                ->orWhereNull('master_product_id');
-        });
+        $query = Product::query();
 
         // filter products based on category, brand, color and search
         $products = $query->when($brand, function ($query) use ($brand) {

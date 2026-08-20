@@ -38,11 +38,20 @@ class PermissionServiceProvider extends ServiceProvider
                 return true;
             }
 
-            $userRole = $user->getRoleNames()->toArray()[0];
+            $roleNames = $user->getRoleNames();
+            if ($roleNames->isEmpty()) {
+                return false;
+            }
+
+            $userRole = $roleNames->first();
 
             $role = Cache::remember('role_'.$userRole, 60 * 24 * 60, function () use ($userRole) {
                 return Role::where('name', $userRole)->first();
             });
+
+            if (! $role) {
+                return false;
+            }
 
             $rolePermissions = Cache::remember('role_permissions_'.$role->id, 60 * 24 * 30, function () use ($role) {
 

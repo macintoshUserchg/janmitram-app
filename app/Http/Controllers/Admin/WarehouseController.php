@@ -96,7 +96,6 @@ class WarehouseController extends Controller
             ->keyBy('product_id');
 
         $products = Product::where('is_digital', false)
-            ->whereNull('master_product_id')
             ->get()
             ->map(function ($product) use ($warehouseStocks) {
                 $product->current_wh_qty = $warehouseStocks->get($product->id)?->quantity ?? 0;

@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Product;
 use App\Models\Shop;
+use App\Models\ShopInventory;
 use App\Models\StockLedger;
 use App\Models\StockRequest;
 use App\Models\User;
@@ -82,9 +83,9 @@ class ShopInventoryAssignmentTest extends TestCase
         $this->assertSame(45, $product->refresh()->quantity); // master decremented
         $this->assertSame(15, WarehouseStock::where('warehouse_id', $warehouse->id)->where('product_id', $product->id)->first()->quantity);
 
-        $shopCopy = Product::where('master_product_id', $product->id)->where('shop_id', $shop->id)->first();
-        $this->assertNotNull($shopCopy);
-        $this->assertSame(5, $shopCopy->quantity); // shop copy incremented
+        $shopInv = ShopInventory::where('product_id', $product->id)->where('shop_id', $shop->id)->first();
+        $this->assertNotNull($shopInv);
+        $this->assertSame(5, $shopInv->quantity); // shop inventory incremented
 
         $request = StockRequest::where('shop_id', $shop->id)->latest()->first();
         $this->assertNotNull($request);

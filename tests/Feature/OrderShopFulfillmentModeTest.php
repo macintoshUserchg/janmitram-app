@@ -14,6 +14,7 @@ use App\Models\GeneraleSetting;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Shop;
+use App\Models\ShopInventory;
 use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -108,33 +109,22 @@ class OrderShopFulfillmentModeTest extends TestCase
             'is_digital' => false,
         ]);
 
-        $this->productInNearShop = Product::create([
-            'master_product_id' => $this->masterProduct->id,
+        ShopInventory::create([
             'shop_id' => $this->shopNear->id,
-            'name' => 'Master Premium Tea',
-            'brand_id' => $brand->id,
-            'unit_id' => $unit->id,
-            'price' => 250.0,
+            'product_id' => $this->masterProduct->id,
             'quantity' => 20,
-            'is_stock_managed' => true,
             'is_active' => true,
-            'is_approve' => true,
-            'is_digital' => false,
         ]);
 
-        $this->productInFarShop = Product::create([
-            'master_product_id' => $this->masterProduct->id,
+        ShopInventory::create([
             'shop_id' => $this->shopFar->id,
-            'name' => 'Master Premium Tea',
-            'brand_id' => $brand->id,
-            'unit_id' => $unit->id,
-            'price' => 250.0,
+            'product_id' => $this->masterProduct->id,
             'quantity' => 20,
-            'is_stock_managed' => true,
             'is_active' => true,
-            'is_approve' => true,
-            'is_digital' => false,
         ]);
+
+        $this->productInNearShop = $this->masterProduct;
+        $this->productInFarShop = $this->masterProduct;
     }
 
     public function test_strict_mode_delivers_strictly_from_selected_shop_even_if_another_shop_is_closer(): void
@@ -167,8 +157,8 @@ class OrderShopFulfillmentModeTest extends TestCase
         ]);
 
         // Far shop stock was decremented from 20 -> 17; Near shop remains 20
-        $this->assertSame(17, $this->productInFarShop->fresh()->quantity);
-        $this->assertSame(20, $this->productInNearShop->fresh()->quantity);
+        $this->assertSame(17, $this->masterProduct->getStockForShop($this->shopFar->id));
+        $this->assertSame(20, $this->masterProduct->getStockForShop($this->shopNear->id));
     }
 
     public function test_auto_nearest_mode_reallocates_to_closer_shop(): void
@@ -201,14 +191,14 @@ class OrderShopFulfillmentModeTest extends TestCase
         ]);
 
         // Near shop stock was decremented from 20 -> 17; Far shop remains 20
-        $this->assertSame(17, $this->productInNearShop->fresh()->quantity);
-        $this->assertSame(20, $this->productInFarShop->fresh()->quantity);
+        $this->assertSame(17, $this->masterProduct->getStockForShop($this->shopNear->id));
+        $this->assertSame(20, $this->masterProduct->getStockForShop($this->shopFar->id));
     }
 
     public function test_strict_mode_rejects_order_if_selected_shop_has_insufficient_stock(): void
     {
         // Set far shop stock to 0
-        $this->productInFarShop->update(['quantity' => 0]);
+        ShopInventory::where('shop_id', $this->shopFar->id)->where('product_id', $this->masterProduct->id)->update(['quantity' => 0]);
 
         Cart::create([
             'customer_id' => $this->customer->id,
@@ -245,19 +235,14 @@ class OrderShopFulfillmentModeTest extends TestCase
             'is_digital' => false,
         ]);
 
-        $product2InNearShop = Product::create([
-            'master_product_id' => $product2->id,
+        ShopInventory::create([
             'shop_id' => $this->shopNear->id,
-            'name' => 'Master Biscuit Pack',
-            'brand_id' => $product2->brand_id,
-            'unit_id' => $product2->unit_id,
-            'price' => 50.0,
+            'product_id' => $product2->id,
             'quantity' => 15,
-            'is_stock_managed' => true,
             'is_active' => true,
-            'is_approve' => true,
-            'is_digital' => false,
         ]);
+
+        $product2InNearShop = $product2;
 
         // Cart item 1: Tea from Far Shop
         Cart::create([
@@ -291,7 +276,7 @@ class OrderShopFulfillmentModeTest extends TestCase
         $this->assertDatabaseHas('orders', ['shop_id' => $this->shopFar->id]);
         $this->assertDatabaseHas('orders', ['shop_id' => $this->shopNear->id]);
 
-        $this->assertSame(18, $this->productInFarShop->fresh()->quantity);
-        $this->assertSame(11, $product2InNearShop->fresh()->quantity);
+        $this->assertSame(18, $this->masterProduct->getStockForShop($this->shopFar->id));
+        $this->assertSame(11, $product2->getStockForShop($this->shopNear->id));
     }
 }

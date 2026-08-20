@@ -112,9 +112,11 @@ class Shop extends Model
     /**
      * Get all of the products for the Shop.
      */
-    public function products(): HasMany
+    public function products(): BelongsToMany
     {
-        return $this->hasMany(Product::class);
+        return $this->belongsToMany(Product::class, 'shop_inventories')
+            ->withPivot(['quantity', 'is_active'])
+            ->withTimestamps();
     }
 
     /**
@@ -373,7 +375,8 @@ class Shop extends Model
      */
     public function hasReceivedStock(): bool
     {
-        return $this->stockRequests()->where('status', 'completed')->exists();
+        return $this->stockRequests()->where('status', 'completed')->exists()
+            || $this->inventories()->where('quantity', '>', 0)->exists();
     }
 
     /**

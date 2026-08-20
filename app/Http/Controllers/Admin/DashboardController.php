@@ -38,13 +38,13 @@ class DashboardController extends Controller
         if (! $generaleSetting || $generaleSetting?->shop_type != 'single') {
             $totalShop = Shop::count();
             $totalOrder = Order::count();
-            $totalProduct = Product::whereNull('master_product_id')->count();
+            $totalProduct = Product::count();
             $totalCategories = Category::count();
         } else {
             $shop = generaleSetting('shop');
             $totalShop = 0;
             $totalOrder = Order::where('shop_id', $shop?->id)->count();
-            $totalProduct = Product::where('shop_id', $shop?->id)->whereNull('master_product_id')->count();
+            $totalProduct = Product::count();
             $totalCategories = Category::whereHas('shops', function ($query) use ($shop) {
                 $query->where('id', $shop?->id);
             })->count();
@@ -54,9 +54,7 @@ class DashboardController extends Controller
 
         $topCustomers = Customer::withCount('orders')->orderBy('orders_count', 'desc')->limit(8)->get();
 
-        $productObject = Product::when($shop, function ($query) use ($shop) {
-            return $query->where('shop_id', $shop?->id);
-        });
+        $productObject = Product::query();
 
         $topSellingProducts = (clone $productObject)->withCount('orders')->orderBy('orders_count', 'desc')->limit(8)->get();
 

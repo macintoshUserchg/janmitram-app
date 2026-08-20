@@ -570,7 +570,7 @@ class ProductRepository extends Repository
         ];
 
         return DB::transaction(function () use ($rootShop, $sku, $data, $categoryIds, $subCategoryIds, $colorIds, $sizeIds, $vatTaxId) {
-            $product = $rootShop->products()->where('code', $sku)->first();
+            $product = Product::where('code', $sku)->first();
 
             if ($product) {
                 self::update($product, $data);

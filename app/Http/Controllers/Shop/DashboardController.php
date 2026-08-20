@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Shop;
 use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\Product;
 use App\Models\StockRequest;
 use App\Repositories\FlashSaleRepository;
 use Illuminate\Support\Str;
@@ -17,7 +18,7 @@ class DashboardController extends Controller
         $shop = $user?->shop ?? $user?->myShop ?? generaleSetting('shop');
 
         $totalOrder = $shop->orders()->count();
-        $totalProduct = $shop->products()->where('is_digital', false)->count();
+        $totalProduct = $shop ? $shop->products()->where('is_digital', false)->count() : Product::count();
 
         $totalStockRequests = StockRequest::where('shop_id', $shop->id)->count();
         $pendingStockRequests = StockRequest::where('shop_id', $shop->id)->where('status', 'pending')->count();
@@ -25,7 +26,7 @@ class DashboardController extends Controller
 
         $orderStatuses = OrderStatus::cases();
 
-        $productObject = $shop->products();
+        $productObject = Product::query();
         $orderObject = $shop->orders();
 
         $topSellingProducts = (clone $productObject)->whereHas('orders')->withCount('orders')->orderBy('orders_count', 'desc')->limit(8)->get();

@@ -32,7 +32,6 @@ class WarehouseTransferController extends Controller
         $warehouses = Warehouse::all();
         $products = Product::with(['warehouseStocks'])
             ->where('is_digital', false)
-            ->whereNull('master_product_id')
             ->get();
 
         return view('admin.warehouse-transfer.create', compact('warehouses', 'products'));

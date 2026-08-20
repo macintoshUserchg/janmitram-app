@@ -44,7 +44,6 @@ class StockAssignmentController extends Controller
             });
         $products = Product::where('is_digital', false)
             ->where('is_active', true)
-            ->whereNull('master_product_id')
             ->with('warehouseStocks')
             ->orderBy('name')
             ->get()

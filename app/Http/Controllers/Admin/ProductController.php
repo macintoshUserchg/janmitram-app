@@ -29,7 +29,12 @@ class ProductController extends Controller
         })->when($approve, function ($query) {
             return $query->where('is_approve', true)->where('is_active', true);
         })->when($shop, function ($query) use ($shop) {
-            return $query->where('shop_id', $shop);
+            return $query->where(function ($q) use ($shop) {
+                $q->where('shop_id', $shop)
+                    ->orWhereHas('shopInventories', function ($si) use ($shop) {
+                        $si->where('shop_id', $shop);
+                    });
+            });
         })->paginate(20);
 
         $shops = ShopRepository::query()->isActive()->get();

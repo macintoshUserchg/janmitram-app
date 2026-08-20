@@ -120,7 +120,6 @@ class StockRequestController extends Controller
             ->keyBy('product_id');
 
         $query = Product::where('is_digital', false)
-            ->whereNull('master_product_id')
             ->with(['brand', 'categories']);
 
         if ($search) {
