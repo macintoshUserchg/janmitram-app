@@ -1,5 +1,5 @@
 <template>
-    <div class="min-h-screen flex flex-col">
+    <div class="min-h-screen flex flex-col pb-16 md:pb-0">
         <NavbarTop />
         <Navbar />
 
@@ -10,6 +10,7 @@
         <div>
             <Footer />
             <BasketCard />
+            <MobileBottomNav />
         </div>
     </div>
 </template>
@@ -20,6 +21,7 @@ import NavbarTop from "../components/NavbarTop.vue"
 import Navbar from "../components/Navbar.vue";
 import Footer from "../components/Footer.vue";
 import BasketCard from '../components/BasketCard.vue';
+import MobileBottomNav from '../components/MobileBottomNav.vue';
 
 import { useMaster } from '../stores/MasterStore';
 const master = useMaster();

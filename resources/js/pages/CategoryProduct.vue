@@ -81,9 +81,9 @@
              </div>
         </div>
 
-        <div class="main-container py-12">
+        <div class="main-container py-6 sm:py-10 md:py-12">
             <div
-                class="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6 items-start">
+                class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2.5 sm:gap-4 md:gap-6 items-start">
 
                 <div v-if="!isLoading" v-for="product in products" :key="product.id" class="w-full">
                     <ProductCard :product="product" />
@@ -91,7 +91,7 @@
 
                 <!-- loading -->
                 <div v-else v-for="i in 12" :key="i">
-                    <SkeletonLoader class="w-full h-[220px] sm:h-[330px] rounded-lg" />
+                    <SkeletonLoader class="w-full h-[200px] sm:h-[300px] rounded-2xl" />
                 </div>
             </div>
             <div v-if="products.length == 0 && !isLoading" class="flex justify-center items-center w-full mt-8">

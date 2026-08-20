@@ -303,44 +303,40 @@
                             </div>
                         </div>
 
-                        <div class="flex flex-wrap gap-4">
+                        <div class="flex items-center gap-3 w-full flex-wrap sm:flex-nowrap pt-2">
                             <!-- Quantity Increase Or Decrease -->
                             <div v-if="cartProduct"
-                                class="p-2 rounded-[10px] border border-slate-100 inline-flex gap-4">
-                                <button class="bg-slate-200 p-2 rounded" @click="decrementQty">
-                                    <MinusIcon class="w-6 h-6 text-slate-800" />
+                                class="p-1.5 rounded-xl border border-slate-200 inline-flex items-center gap-3 bg-slate-50 shrink-0">
+                                <button class="bg-white shadow-xs p-1.5 rounded-lg hover:bg-slate-100 transition active:scale-95" @click="decrementQty">
+                                    <MinusIcon class="w-5 h-5 text-slate-800" />
                                 </button>
 
                                 <div
-                                    class="w-6 flex items-center justify-center text-center text-slate-950 text-base font-medium leading-normal">
+                                    class="min-w-6 flex items-center justify-center text-center text-slate-950 text-base font-bold">
                                     {{ cartProduct.quantity }}
                                 </div>
 
-                                <button class="bg-slate-100 p-2 rounded" @click="incrementQty">
-                                    <PlusIcon class="w-6 h-6 text-slate-800" />
+                                <button class="bg-primary text-white p-1.5 rounded-lg hover:bg-primary-600 transition active:scale-95 shadow-xs" @click="incrementQty">
+                                    <PlusIcon class="w-5 h-5 text-white" />
                                 </button>
                             </div>
 
                             <!-- Add to Cart -->
                             <button v-if="!cartProduct && product?.is_digital == false"
-                                class="grow max-w-56 justify-center items-center text-primary flex gap-2 px-6 py-4 rounded-[10px] border border-primary"
+                                class="flex-1 min-w-[130px] justify-center items-center text-primary bg-primary-50/50 hover:bg-primary-100/70 flex gap-2 px-4 sm:px-6 py-3 sm:py-3.5 rounded-xl border border-primary/40 font-semibold text-sm sm:text-base transition active:scale-95 shadow-xs"
                                 @click="addToCart">
                                 <div class="w-5 h-5">
                                     <BagIcon />
                                 </div>
-                                <div class="text-base font-medium leading-normal">
-                                    {{ $t("Add to Cart") }}
-                                </div>
+                                <span>{{ $t("Add to Cart") }}</span>
                             </button>
 
                             <!-- Buy Now -->
                             <button
-                                class="grow text-white bg-primary px-6 py-4 rounded-[10px] border border-primary max-w-[50%]"
-                                :class="product?.is_digital == true ? 'my-4' : ''"
+                                class="flex-1 min-w-[130px] text-white bg-primary hover:bg-primary-600 px-4 sm:px-6 py-3 sm:py-3.5 rounded-xl border border-primary font-semibold text-sm sm:text-base transition active:scale-95 shadow-xs flex items-center justify-center"
+                                :class="product?.is_digital == true ? 'my-2' : ''"
                                 @click="buyNow">
-                                <span class="text-base font-medium leading-normal">
-                                    {{ $t("Buy Now") }}
-                                </span>
+                                <span>{{ $t("Buy Now") }}</span>
                             </button>
                         </div>
                     </div>

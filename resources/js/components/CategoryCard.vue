@@ -1,13 +1,11 @@
 <template>
-    <router-link :to="routeUrl" class="w-full">
-        <div
-            class="p-3 bg-white rounded-2xl border border-slate-100 hover:border-primary transition duration-300 group">
-            <div class="w-full overflow-hidden 2xl:h-32 xl:h-24 lg:h-24 md:h-36 sm:h-36 h-28 rounded">
+    <router-link :to="routeUrl" class="w-full block group">
+        <div class="p-2 sm:p-3 bg-white rounded-2xl border border-slate-100 group-hover:border-primary shadow-xs transition duration-300 flex flex-col items-center">
+            <div class="w-full overflow-hidden h-16 sm:h-20 md:h-24 rounded-xl bg-slate-50 flex items-center justify-center p-1.5">
                 <img :src="props.category?.thumbnail"
-                    class="w-full h-full object-contain transition duration-500 group-hover:scale-110 rounded" loading="lazy" />
+                    class="w-full h-full object-contain transition duration-500 group-hover:scale-110" loading="lazy" />
             </div>
-            <div
-                class="text-center text-slate-600 group-hover:text-primary transition-all text-base font-medium leading-normal truncate mt-1">
+            <div class="text-center text-slate-700 group-hover:text-primary transition-colors text-xs sm:text-sm font-semibold leading-tight truncate mt-1.5 w-full">
                 {{ props.category?.name }}
             </div>
         </div>

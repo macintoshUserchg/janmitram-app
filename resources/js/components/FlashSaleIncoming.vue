@@ -1,59 +1,57 @@
 <template>
-    <div class="mb-12">
-        <!-- <div class="main-container py-12"> -->
-        <div class="w-full h-[100px] relative bg-primary-900 flex flex-col items-center justify-center">
-            <img :src="'/assets/images/flashIncomingLeft.svg'" alt="left" class="absolute bottom-0 left-0" />
-            <img :src="'/assets/images/flashIncomingRight.svg'" alt="left" class="absolute bottom-0 right-0" />
-            <div class="flex flex-col sm:flex-row justify-center items-center gap-3 z-[4]">
-                <span class="text-white text-xl font-bold uppercase">
+    <div class="mb-8 sm:mb-12">
+        <div class="w-full min-h-[90px] py-3 px-4 relative bg-primary-900 flex flex-col items-center justify-center overflow-hidden">
+            <img :src="'/assets/images/flashIncomingLeft.svg'" alt="left" class="absolute bottom-0 left-0 opacity-40 sm:opacity-100" />
+            <img :src="'/assets/images/flashIncomingRight.svg'" alt="left" class="absolute bottom-0 right-0 opacity-40 sm:opacity-100" />
+            <div class="flex flex-col sm:flex-row justify-center items-center gap-2.5 sm:gap-4 z-[4]">
+                <span class="text-white text-sm sm:text-xl font-bold uppercase tracking-wider text-center">
                     {{ $t("Flash Sale Incoming") }}
                 </span>
-                <div class="flex justify-center items-center gap-2 text-white">
+                <div class="flex justify-center items-center gap-1.5 sm:gap-2 text-white">
                     <div v-if="endDay > 0"
-                        class="w-10 h-10 sm:w-11 sm:h-11 p-[5.18px] bg-white rounded-md shadow-inner flex-col justify-center items-center flex">
-                        <div class="text-center text-primary text-lg font-bold leading-tight">
+                        class="w-8 h-8 sm:w-11 sm:h-11 p-1 bg-white rounded-lg shadow-inner flex-col justify-center items-center flex">
+                        <div class="text-center text-primary text-sm sm:text-lg font-bold leading-tight">
                             {{ endDay }}
                         </div>
-                        <div class="text-center text-[#687387] text-[9px] font-normal leading-none">
+                        <div class="text-center text-slate-500 text-[8px] sm:text-[9px] font-normal leading-none">
                             {{ $t("Days") }}
                         </div>
                     </div>
 
-                    <span v-if="endDay > 0" class="text-white text-2xl font-bold">:</span>
+                    <span v-if="endDay > 0" class="text-white text-lg sm:text-2xl font-bold">:</span>
                     <div
-                        class="w-10 h-10 sm:w-11 sm:h-11 p-[5.18px] bg-white rounded-md shadow-inner flex-col justify-center items-center flex">
-                        <div class="text-center text-primary text-lg font-bold leading-tight">
+                        class="w-8 h-8 sm:w-11 sm:h-11 p-1 bg-white rounded-lg shadow-inner flex-col justify-center items-center flex">
+                        <div class="text-center text-primary text-sm sm:text-lg font-bold leading-tight">
                             {{ endHour }}
                         </div>
-                        <div class="text-center text-[#687387] text-[9px] font-normal leading-none">
+                        <div class="text-center text-slate-500 text-[8px] sm:text-[9px] font-normal leading-none">
                             {{ $t("Hours") }}
                         </div>
                     </div>
 
-                    <span class="text-white text-2xl font-bold">:</span>
+                    <span class="text-white text-lg sm:text-2xl font-bold">:</span>
                     <div
-                        class="w-10 h-10 sm:w-11 sm:h-11 p-[5.18px] bg-white rounded-md shadow-inner flex-col justify-center items-center flex">
-                        <div class="text-center text-primary text-lg font-bold leading-tight">
+                        class="w-8 h-8 sm:w-11 sm:h-11 p-1 bg-white rounded-lg shadow-inner flex-col justify-center items-center flex">
+                        <div class="text-center text-primary text-sm sm:text-lg font-bold leading-tight">
                             {{ endMinute }}
                         </div>
-                        <div class="text-center text-[#687387] text-[9px] font-normal leading-none">
-                            {{ $t("Minutes") }}
+                        <div class="text-center text-slate-500 text-[8px] sm:text-[9px] font-normal leading-none">
+                            {{ $t("Mins") }}
                         </div>
                     </div>
 
-                    <span class="text-white text-2xl font-bold">:</span>
-                    <div class=" w-10 h-10 sm:w-11 sm:h-11 p-[5.18px] bg-white rounded-md shadow-inner flex-col justify-center items-center flex">
-                        <div class="text-center text-primary text-lg font-bold leading-tight">
+                    <span class="text-white text-lg sm:text-2xl font-bold">:</span>
+                    <div class="w-8 h-8 sm:w-11 sm:h-11 p-1 bg-white rounded-lg shadow-inner flex-col justify-center items-center flex">
+                        <div class="text-center text-primary text-sm sm:text-lg font-bold leading-tight">
                             {{ endSecond }}
                         </div>
-                        <div class="text-center text-[#687387] text-[9px] font-normal leading-none">
-                            {{ $t("Seconds") }}
+                        <div class="text-center text-slate-500 text-[8px] sm:text-[9px] font-normal leading-none">
+                            {{ $t("Secs") }}
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <!-- </div> -->
     </div>
 </template>
 

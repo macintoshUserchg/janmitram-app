@@ -1,37 +1,37 @@
 <template>
-    <div class="main-container bg-white py-12">
+    <div class="main-container bg-white py-6 sm:py-10 md:py-12">
 
-        <div v-if="!isLoading" class="text-slate-800 text-lg md:text-3xl font-bold leading-9">
+        <div v-if="!isLoading" class="text-slate-900 text-lg md:text-3xl font-bold leading-9">
             {{ $t('Just For You') }}
         </div>
         <!-- loading -->
-        <SkeletonLoader v-else class="w-48 sm:w-60 md:w-72 lg:w-96 h-12 rounded-lg" />
+        <SkeletonLoader v-else class="w-48 sm:w-60 md:w-72 lg:w-96 h-10 sm:h-12 rounded-lg" />
 
         <!-- Products -->
         <div v-if="!isLoading && products"
-            class="mt-4 md:mt-8 grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-3 md:gap-6 items-start">
+            class="mt-4 sm:mt-6 md:mt-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-2.5 sm:gap-4 md:gap-6 items-start">
             <div v-for="product in products" :key="product.id" class="w-full">
                 <ProductCard :product="product" />
             </div>
         </div>
 
         <!-- loading -->
-         <div v-if="isLoading" class="mt-4 md:mt-8 grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-3 md:gap-6 items-start">
+         <div v-if="isLoading" class="mt-4 sm:mt-6 md:mt-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-2.5 sm:gap-4 md:gap-6 items-start">
              <div v-for="i in 6" :key="i">
-                 <SkeletonLoader class="w-full h-[220px] sm:h-[330px]" />
+                 <SkeletonLoader class="w-full h-[200px] sm:h-[300px] rounded-2xl" />
             </div>
         </div>
 
         <!-- Load More Products -->
-        <div v-if="!isLoading" class="mt-4 md:mt-8 w-full flex justify-center">
+        <div v-if="!isLoading" class="mt-6 md:mt-10 w-full flex justify-center">
             <button v-if="hasMoreProducts && !loadMore"
-                class="md:w-72 px-6 py-2 md:py-3.5 rounded-[10px] border border-primary text-primary text-base font-medium leading-normal"
+                class="w-full sm:w-72 px-6 py-2.5 sm:py-3.5 rounded-xl border-2 border-primary text-primary hover:bg-primary hover:text-white transition duration-300 text-sm sm:text-base font-semibold shadow-xs"
                 @click="loadMoreProducts()">
                 <span>{{ $t('Load More Products') }}</span>
             </button>
 
             <button v-if="loadMore"
-                class="md:w-72 px-6 py-2 md:py-3.5 rounded-[10px] border border-primary-200 text-primary flex items-center justify-center cursor-not-allowed"
+                class="w-full sm:w-72 px-6 py-2.5 sm:py-3.5 rounded-xl border border-primary-200 bg-primary-50 text-primary flex items-center justify-center cursor-not-allowed text-sm sm:text-base font-semibold"
                 disabled>
                 <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none"
                     viewBox="0 0 24 24">

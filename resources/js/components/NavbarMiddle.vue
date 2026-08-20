@@ -1,127 +1,163 @@
 <template>
-    <div class="main-container py-2 flex items-center justify-between gap-8">
-        <div class="flex items-center gap-6 grow">
-            <router-link to="/" class="w-[130px] md:w-[170px] lg:w-[220px] shrink-0">
-                <img :src="master.logo" alt="" class="h-11">
-            </router-link>
+    <div class="main-container py-2 flex flex-col gap-2">
+        <div class="flex items-center justify-between gap-3 md:gap-8 w-full">
+            <div class="flex items-center gap-3 sm:gap-6 grow">
+                <router-link to="/" class="w-[120px] sm:w-[150px] md:w-[170px] lg:w-[220px] shrink-0">
+                    <img :src="master.logo" alt="" class="h-9 sm:h-11 object-contain">
+                </router-link>
 
-            <!-- Delivery Location Pill (Desktop) -->
-            <div class="hidden xl:flex items-center gap-2.5 cursor-pointer px-3 py-1.5 rounded-2xl border border-slate-200/80 hover:border-primary/40 bg-slate-50/70 hover:bg-white transition shrink-0 shadow-sm"
-                @click="locationStore.showLocationModal = true">
-                <div class="w-8 h-8 rounded-xl bg-emerald-50 text-primary flex items-center justify-center">
-                    <MapPinIcon class="w-4 h-4 text-primary" />
-                </div>
-                <div class="text-left leading-tight">
-                    <div class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider flex items-center gap-1">
-                        <span>{{ $t('Deliver to') }}</span>
+                <!-- Delivery Location Pill (Desktop) -->
+                <div class="hidden xl:flex items-center gap-2.5 cursor-pointer px-3 py-1.5 rounded-2xl border border-slate-200/80 hover:border-primary/40 bg-slate-50/70 hover:bg-white transition shrink-0 shadow-xs"
+                    @click="locationStore.showLocationModal = true">
+                    <div class="w-8 h-8 rounded-xl bg-emerald-50 text-primary flex items-center justify-center">
+                        <MapPinIcon class="w-4 h-4 text-primary" />
                     </div>
-                    <div class="text-xs font-bold text-slate-900 flex items-center gap-1">
-                        <span class="max-w-[120px] truncate">{{ locationStore.currentLocationLabel }}</span>
-                        <ChevronDownIcon class="w-3 h-3 text-slate-400" />
+                    <div class="text-left leading-tight">
+                        <div class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider flex items-center gap-1">
+                            <span>{{ $t('Deliver to') }}</span>
+                        </div>
+                        <div class="text-xs font-bold text-slate-900 flex items-center gap-1">
+                            <span class="max-w-[120px] truncate">{{ locationStore.currentLocationLabel }}</span>
+                            <ChevronDownIcon class="w-3 h-3 text-slate-400" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Desktop Search -->
+                <div class="relative grow max-w-[650px] hidden md:block" ref="searchContainerRef">
+                    <div class="relative flex items-center">
+                        <input type="text" v-model="search" :placeholder="$t('Search products, categories...')"
+                            class="px-4 py-2.5 pr-24 block rounded-2xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 w-full placeholder:text-slate-400 outline-none text-sm transition shadow-xs bg-slate-50/50 focus:bg-white"
+                            @keyup.enter="searchProducts()"
+                            @focus="onSearchFocus"
+                        />
+                        <button v-if="search" class="absolute right-14 text-slate-400 hover:text-slate-600 p-1" @click="clearSearch">
+                            <XMarkIcon class="w-4 h-4" />
+                        </button>
+                        <button class="bg-primary hover:bg-primary-600 h-full w-12 border-none absolute right-0 top-0 rounded-r-2xl flex items-center justify-center text-white transition cursor-pointer"
+                            @click="searchProducts()">
+                            <MagnifyingGlassIcon class="w-5 h-5 text-white" />
+                        </button>
+                    </div>
+
+                    <!-- Desktop Live Search Dropdown -->
+                    <div v-if="showLiveDropdown && (searchResults.length > 0 || isSearching)"
+                        class="absolute top-full left-0 right-0 mt-1.5 bg-white rounded-2xl shadow-2xl border border-slate-100 py-2 z-50 max-h-[420px] overflow-y-auto">
+                        <div v-if="isSearching" class="p-4 text-center text-slate-400 text-xs flex items-center justify-center gap-2">
+                            <div class="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                            <span>{{ $t('Searching...') }}</span>
+                        </div>
+                        <div v-else-if="searchResults.length > 0">
+                            <div class="px-3 py-1.5 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                                {{ $t('Products') }}
+                            </div>
+                            <div v-for="item in searchResults" :key="item.id" 
+                                @click="goToProduct(item.id)"
+                                class="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 cursor-pointer transition">
+                                <img :src="item.thumbnail" class="w-10 h-10 object-contain rounded-lg border border-slate-100 bg-slate-50 p-0.5 shrink-0" />
+                                <div class="grow min-w-0">
+                                    <p class="text-xs font-medium text-slate-900 truncate">{{ item.name }}</p>
+                                    <div class="flex items-center gap-2 mt-0.5">
+                                        <span class="text-xs font-bold text-primary">{{ master.showCurrency(item.discount_price > 0 ? item.discount_price : item.price) }}</span>
+                                        <span v-if="item.discount_price > 0" class="text-[10px] text-slate-400 line-through">{{ master.showCurrency(item.price) }}</span>
+                                        <span v-if="item.discount_percentage > 0" class="text-[10px] font-bold text-red-500 bg-red-50 px-1 rounded">{{ item.discount_percentage }}% OFF</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="border-t border-slate-100 mt-1 pt-1.5 px-3 text-center">
+                                <button @click="searchProducts()" class="text-xs font-semibold text-primary hover:underline">
+                                    {{ $t('View all results') }} →
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="relative grow max-w-[650px] hidden md:block" ref="searchContainerRef">
-                <div class="relative flex items-center">
-                    <input type="text" v-model="search" :placeholder="$t('Search products, categories...')"
-                        class="px-4 py-2.5 pr-24 block rounded-2xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 w-full placeholder:text-slate-400 outline-none text-sm transition shadow-sm bg-slate-50/50 focus:bg-white"
-                        @keyup.enter="searchProducts()"
-                        @focus="onSearchFocus"
-                    />
-                    <button v-if="search" class="absolute right-14 text-slate-400 hover:text-slate-600 p-1" @click="clearSearch">
-                        <XMarkIcon class="w-4 h-4" />
-                    </button>
-                    <button class="bg-primary hover:bg-primary-600 h-full w-12 border-none absolute right-0 top-0 rounded-r-2xl flex items-center justify-center text-white transition cursor-pointer"
-                        @click="searchProducts()">
-                        <MagnifyingGlassIcon class="w-5 h-5 text-white" />
+            <div class="hidden md:flex items-center justify-end md:gap-4 lg:gap-8">
+                <div class="flex items-center md:gap-1 lg:gap-3">
+                    <div class="p-2.5 cursor-pointer hover:scale-105 transition" @click="showWishlist()">
+                        <div class="w-6 h-6 relative">
+                            <img :src="'/assets/icons/heart.svg'" class="w-6 h-6 text-primary" />
+                            <span
+                                class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-xs">
+                                {{ AuthStore.favoriteProducts }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <button class="p-2.5 hover:scale-105 transition" @click="master.basketCanvas = true">
+                        <div class="w-6 h-6 relative">
+                            <img :src="'/assets/icons/bag.svg'" class="w-6 h-6 text-primary" />
+                            <span
+                                class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-xs">
+                                {{ basketStore.total }}
+                            </span>
+                        </div>
                     </button>
                 </div>
 
-                <!-- Desktop Live Search Dropdown -->
-                <div v-if="showLiveDropdown && (searchResults.length > 0 || isSearching)"
-                    class="absolute top-full left-0 right-0 mt-1.5 bg-white rounded-2xl shadow-2xl border border-slate-100 py-2 z-50 max-h-[420px] overflow-y-auto">
-                    <div v-if="isSearching" class="p-4 text-center text-slate-400 text-xs flex items-center justify-center gap-2">
-                        <div class="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                        <span>{{ $t('Searching...') }}</span>
-                    </div>
-                    <div v-else-if="searchResults.length > 0">
-                        <div class="px-3 py-1.5 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                            {{ $t('Products') }}
-                        </div>
-                        <div v-for="item in searchResults" :key="item.id" 
-                            @click="goToProduct(item.id)"
-                            class="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 cursor-pointer transition">
-                            <img :src="item.thumbnail" class="w-10 h-10 object-contain rounded-lg border border-slate-100 bg-slate-50 p-0.5 shrink-0" />
-                            <div class="grow min-w-0">
-                                <p class="text-xs font-medium text-slate-900 truncate">{{ item.name }}</p>
-                                <div class="flex items-center gap-2 mt-0.5">
-                                    <span class="text-xs font-bold text-primary">{{ master.showCurrency(item.discount_price > 0 ? item.discount_price : item.price) }}</span>
-                                    <span v-if="item.discount_price > 0" class="text-[10px] text-slate-400 line-through">{{ master.showCurrency(item.price) }}</span>
-                                    <span v-if="item.discount_percentage > 0" class="text-[10px] font-bold text-red-500 bg-red-50 px-1 rounded">{{ item.discount_percentage }}% OFF</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="border-t border-slate-100 mt-1 pt-1.5 px-3 text-center">
-                            <button @click="searchProducts()" class="text-xs font-semibold text-primary hover:underline">
-                                {{ $t('View all results') }} →
-                            </button>
-                        </div>
-                    </div>
+                <button v-if="!AuthStore.user" class="flex items-center gap-2 lg:p-2.5 text-slate-600 hover:text-primary transition font-medium"
+                    @click="showLoginDialog">
+                    <span class="text-base font-medium leading-normal">{{ $t('Login') }}</span>
+                    <UserIcon class="w-5 h-5" />
+                </button>
+                <div v-else>
+                    <AuthUserDropdown />
                 </div>
+            </div>
+
+            <!--******=== Mobile View Navbar Top Bar ===********-->
+            <div class="md:hidden flex items-center gap-2 relative">
+                <!-- Delivery Location Pill (Mobile) -->
+                <div class="flex xl:hidden items-center gap-1 cursor-pointer px-2 py-1 rounded-full border border-slate-200 bg-slate-50 hover:bg-white text-slate-700 shadow-xs"
+                    @click="locationStore.showLocationModal = true">
+                    <MapPinIcon class="w-3.5 h-3.5 text-primary shrink-0" />
+                    <span class="max-w-[90px] truncate text-[11px] font-bold text-slate-800">{{ locationStore.currentLocationLabel }}</span>
+                    <ChevronDownIcon class="w-3 h-3 text-slate-400 shrink-0" />
+                </div>
+
+                <!-- Menu Icon -->
+                <button class="w-9 h-9 flex items-center justify-center bg-slate-100 rounded-full hover:bg-slate-200 transition" @click="mobileMenuOpen = true">
+                    <Bars3Icon class="w-5 h-5 text-slate-900" />
+                </button>
             </div>
         </div>
 
-        <div class="hidden md:flex items-center justify-end md:gap-4 lg:gap-8">
-            <div class="flex items-center md:gap-1 lg:gap-3">
-                <div class="p-2.5 cursor-pointer hover:scale-105 transition" @click="showWishlist()">
-                    <div class="w-6 h-6 relative">
-                        <img :src="'/assets/icons/heart.svg'" class="w-6 h-6 text-primary" />
-                        <span
-                            class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm">
-                            {{ AuthStore.favoriteProducts }}
-                        </span>
-                    </div>
-                </div>
-
-                <button class="p-2.5 hover:scale-105 transition" @click="master.basketCanvas = true">
-                    <div class="w-6 h-6 relative">
-                        <img :src="'/assets/icons/bag.svg'" class="w-6 h-6 text-primary" />
-                        <span
-                            class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm">
-                            {{ basketStore.total }}
-                        </span>
-                    </div>
+        <!-- Mobile Integrated Search Bar -->
+        <div class="md:hidden w-full relative" ref="searchContainerRef">
+            <div class="relative flex items-center">
+                <input type="text" v-model="search" :placeholder="$t('Search products, categories...')"
+                    class="px-3.5 py-2 pl-9 pr-8 block rounded-xl border border-slate-200 focus:border-primary w-full placeholder:text-slate-400 outline-none text-xs font-normal bg-slate-50/80 focus:bg-white shadow-xs transition"
+                    @keyup.enter="searchProducts()"
+                    @focus="onSearchFocus"
+                />
+                <MagnifyingGlassIcon class="w-4 h-4 text-slate-400 absolute left-3 pointer-events-none" />
+                <button v-if="search" class="absolute right-2 text-slate-400 hover:text-slate-600 p-1" @click="clearSearch">
+                    <XMarkIcon class="w-3.5 h-3.5" />
                 </button>
             </div>
 
-            <button v-if="!AuthStore.user" class="flex items-center gap-2 lg:p-2.5 text-slate-600 hover:text-primary transition font-medium"
-                @click="showLoginDialog">
-                <span class="text-base font-medium leading-normal">{{ $t('Login') }}</span>
-                <UserIcon class="w-5 h-5" />
-            </button>
-            <div v-else>
-                <AuthUserDropdown />
+            <!-- Mobile Live Search Results -->
+            <div v-if="showLiveDropdown && (searchResults.length > 0 || isSearching)"
+                class="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-50 max-h-[300px] overflow-y-auto">
+                <div v-if="isSearching" class="p-3 text-center text-slate-400 text-xs flex items-center justify-center gap-2">
+                    <div class="w-3.5 h-3.5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                    <span>{{ $t('Searching...') }}</span>
+                </div>
+                <div v-else-if="searchResults.length > 0">
+                    <div v-for="item in searchResults" :key="item.id" 
+                        @click="goToProduct(item.id)"
+                        class="flex items-center gap-2.5 px-3 py-2 hover:bg-slate-50 cursor-pointer border-b border-slate-50 last:border-b-0">
+                        <img :src="item.thumbnail" class="w-8 h-8 object-contain rounded-md border border-slate-100 bg-slate-50 p-0.5 shrink-0" />
+                        <div class="grow min-w-0">
+                            <p class="text-xs font-medium text-slate-900 truncate">{{ item.name }}</p>
+                            <p class="text-[11px] font-bold text-primary">{{ master.showCurrency(item.discount_price > 0 ? item.discount_price : item.price) }}</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-
-        <!--******=== Mobile View Navbar ===********-->
-        <div class="md:hidden flex items-center gap-4 relative">
-
-            <!-- Search Icon -->
-            <div class="h-10 w-10 flex items-center justify-center bg-slate-100 rounded-full cursor-pointer hover:bg-slate-200 transition" @click="toggleSearch">
-                <MagnifyingGlassIcon class="w-5 h-5 text-slate-950" />
-            </div>
-
-            <button class="pl-1" @click="master.basketCanvas = true">
-                <div class="w-6 h-6 relative">
-                    <img :src="'/assets/icons/bag.svg'" class="w-6 h-6 text-primary" />
-                    <span
-                        class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm">
-                        {{ basketStore.total }}
-                    </span>
-                </div>
-            </button>
 
             <!-- search modal -->
             <TransitionRoot as="template" :show="showSearch">
@@ -182,11 +218,6 @@
                     </div>
                 </Dialog>
             </TransitionRoot>
-
-            <!-- Menu Icon -->
-            <div class="h-10 w-10 flex items-center justify-end" @click="mobileMenuOpen = true">
-                <Bars3Icon class="w-6 h-6 text-slate-950" />
-            </div>
 
             <!-- Mobile Menu Canvas Drawer -->
             <TransitionRoot as="template" :show="mobileMenuOpen">
@@ -307,12 +338,11 @@
                     </div>
                 </Dialog>
             </TransitionRoot>
-        </div>
 
+        <!-- Login Dialog Modal -->
+        <LoginModal />
+        <!-- End Login Dialog Modal -->
     </div>
-    <!-- Login Dialog Modal -->
-    <LoginModal />
-    <!-- End Login Dialog Modal -->
 </template>
 
 <script setup>

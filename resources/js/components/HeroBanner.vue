@@ -3,33 +3,33 @@
         <div class="col-span-4 lg:col-span-3">
             <!-- Main Banner Slider -->
             <swiper :navigation="true" :pagination="{ clickable: true }" :slides-per-view="1" :space-between="20"
-                :modules="modules" class="mySwiper rounded-lg" :loop="false" :autoplay="{
+                :modules="modules" class="mySwiper rounded-xl overflow-hidden" :loop="false" :autoplay="{
                     delay: 4000,
                     disableOnInteraction: false
                 }">
 
                 <swiper-slide v-for="banner in banners" :key="banner.id">
-                    <img :src="banner.thumbnail" loading="lazy" class="w-full rounded-lg object-cover aspect-[9/4]" />
+                    <img :src="banner.thumbnail" loading="lazy" class="w-full rounded-xl object-cover aspect-[16/9] sm:aspect-[2/1] lg:aspect-[9/4]" />
                 </swiper-slide>
             </swiper>
         </div>
 
-        <!-- Banner Thumbnails -->
-        <div class="col-span-4 lg:col-span-1 grid sm:grid-cols-2 lg:grid-cols-1 gap-4 lg:gap-8 overflow-hidden">
-            <img v-for="ad in ads" :key="ad.id" :src="ad.thumbnail" loading="lazy" class="w-full h-[136px] sm:h-auto aspect-[9/6] object-cover rounded-lg" />
+        <!-- Banner Promo Ads -->
+        <div class="col-span-4 lg:col-span-1 grid grid-cols-2 lg:grid-cols-1 gap-3 sm:gap-4 lg:gap-8 overflow-hidden">
+            <img v-for="ad in ads" :key="ad.id" :src="ad.thumbnail" loading="lazy" class="w-full h-full aspect-[16/10] sm:aspect-[9/6] object-cover rounded-xl shadow-xs" />
         </div>
     </div>
 
     <!-- Skeleton loader -->
     <div v-else class="main-container mt-3 grid grid-cols-4 gap-3 lg:gap-8">
         <div class="col-span-4 lg:col-span-3">
-            <div class="w-full aspect-[9/4] object-cover rounded-lg">
-                <SkeletonLoader class="w-full h-full object-cover rounded-lg" />
+            <div class="w-full aspect-[16/9] sm:aspect-[2/1] lg:aspect-[9/4] object-cover rounded-xl">
+                <SkeletonLoader class="w-full h-full object-cover rounded-xl" />
             </div>
         </div>
-        <div class="col-span-4 lg:col-span-1 grid sm:grid-cols-2 lg:grid-cols-1 gap-4 lg:gap-8 overflow-hidden">
-            <div v-for="i in 2" :key="i" class="w-full h-[136px] sm:h-auto aspect-[9/6] object-cover rounded-lg">
-                <SkeletonLoader class="w-full h-full object-cover rounded-lg" />
+        <div class="col-span-4 lg:col-span-1 grid grid-cols-2 lg:grid-cols-1 gap-3 sm:gap-4 lg:gap-8 overflow-hidden">
+            <div v-for="i in 2" :key="i" class="w-full aspect-[16/10] sm:aspect-[9/6] object-cover rounded-xl">
+                <SkeletonLoader class="w-full h-full object-cover rounded-xl" />
             </div>
         </div>
     </div>
