@@ -195,8 +195,8 @@ class WarehouseService
         ?int $sizeId = null,
         ?int $transferId = null,
         ?string $notes = null
-    ): void {
-        DB::transaction(function () use ($from, $to, $product, $qty, $colorId, $sizeId, $transferId, $notes) {
+    ): array {
+        return DB::transaction(function () use ($from, $to, $product, $qty, $colorId, $sizeId, $transferId, $notes) {
             // Deduct from source warehouse
             $stockFrom = self::findStock($from, $product, $qty, $colorId, $sizeId);
 
@@ -251,6 +251,11 @@ class WarehouseService
                 'reference_id' => $transferId,
                 'notes' => $notes,
             ]);
+
+            return [
+                'color_id' => $targetColorId,
+                'size_id' => $targetSizeId,
+            ];
         });
     }
 

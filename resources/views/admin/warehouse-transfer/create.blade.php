@@ -43,7 +43,7 @@
             <hr class="my-4">
 
             <h6>{{ __('Transfer Items') }}</h6>
-            <div class="row mb-3">
+            <div class="row g-3 mb-3">
                 <div class="col-md-6">
                     <label class="form-label required">{{ __('Product') }}</label>
                     <select name="items[0][product_id]" class="form-select" required>
@@ -55,7 +55,27 @@
                     </select>
                 </div>
 
-                <div class="col-md-6">
+                <div class="col-md-2">
+                    <label class="form-label">{{ __('Color (Optional)') }}</label>
+                    <select name="items[0][color_id]" class="form-select">
+                        <option value="">{{ __('Any / Default') }}</option>
+                        @foreach($colors as $color)
+                            <option value="{{ $color->id }}">{{ $color->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label">{{ __('Size (Optional)') }}</label>
+                    <select name="items[0][size_id]" class="form-select">
+                        <option value="">{{ __('Any / Default') }}</option>
+                        @foreach($sizes as $size)
+                            <option value="{{ $size->id }}">{{ $size->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="col-md-2">
                     <label class="form-label required">{{ __('Quantity') }}</label>
                     <input type="number" name="items[0][quantity]" class="form-control" min="1" value="{{ request('quantity', 1) }}" required>
                 </div>

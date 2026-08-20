@@ -68,10 +68,32 @@
                 <tbody>
                     @foreach($warehouseTransfer->items as $item)
                         <tr>
-                            <td class="fw-bold">{{ $item->product?->name }}</td>
-                            <td>{{ $item->color?->name ?? '—' }}</td>
-                            <td>{{ $item->size?->name ?? '—' }}</td>
-                            <td><span class="badge bg-primary fs-6">{{ $item->quantity }}</span></td>
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    @if($item->product?->thumbnail)
+                                        <img src="{{ $item->product->thumbnail }}" width="45" height="45" class="rounded object-fit-cover shadow-sm">
+                                    @endif
+                                    <div>
+                                        <div class="fw-bold text-dark fs-6">{{ $item->product?->name }}</div>
+                                        <span class="small text-muted font-monospace">{{ __('ID:') }} #{{ $item->product_id }}</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                @if($item->color)
+                                    <span class="badge bg-light text-dark border"><i class="fas fa-palette me-1 text-primary"></i> {{ $item->color->name }}</span>
+                                @else
+                                    <span class="text-muted">—</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if($item->size)
+                                    <span class="badge bg-light text-dark border"><i class="fas fa-ruler me-1 text-info"></i> {{ $item->size->name }}</span>
+                                @else
+                                    <span class="text-muted">—</span>
+                                @endif
+                            </td>
+                            <td><span class="badge bg-primary fs-6 px-3 py-2 rounded-pill">{{ $item->quantity }} {{ __('units') }}</span></td>
                         </tr>
                     @endforeach
                 </tbody>

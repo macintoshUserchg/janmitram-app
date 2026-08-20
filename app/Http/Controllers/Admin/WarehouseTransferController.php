@@ -7,7 +7,9 @@ namespace App\Http\Controllers\Admin;
 use App\Exceptions\InsufficientStockException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\WarehouseTransferRequest;
+use App\Models\Color;
 use App\Models\Product;
+use App\Models\Size;
 use App\Models\Warehouse;
 use App\Models\WarehouseTransfer;
 use App\Services\WarehouseService;
@@ -33,8 +35,10 @@ class WarehouseTransferController extends Controller
         $products = Product::with(['warehouseStocks'])
             ->where('is_digital', false)
             ->get();
+        $colors = Color::all();
+        $sizes = Size::all();
 
-        return view('admin.warehouse-transfer.create', compact('warehouses', 'products'));
+        return view('admin.warehouse-transfer.create', compact('warehouses', 'products', 'colors', 'sizes'));
     }
 
     public function store(WarehouseTransferRequest $request)
@@ -49,8 +53,8 @@ class WarehouseTransferController extends Controller
         foreach ($request->items as $item) {
             $transfer->items()->create([
                 'product_id' => $item['product_id'],
-                'color_id' => $item['color_id'] ?? null,
-                'size_id' => $item['size_id'] ?? null,
+                'color_id' => ! empty($item['color_id']) ? (int) $item['color_id'] : null,
+                'size_id' => ! empty($item['size_id']) ? (int) $item['size_id'] : null,
                 'quantity' => $item['quantity'],
             ]);
         }
@@ -73,7 +77,7 @@ class WarehouseTransferController extends Controller
 
         try {
             foreach ($warehouseTransfer->items as $item) {
-                WarehouseService::transfer(
+                $resolved = WarehouseService::transfer(
                     $warehouseTransfer->fromWarehouse,
                     $warehouseTransfer->toWarehouse,
                     $item->product,
@@ -83,6 +87,13 @@ class WarehouseTransferController extends Controller
                     (int) $warehouseTransfer->id,
                     $warehouseTransfer->notes
                 );
+
+                if (! $item->color_id && ! empty($resolved['color_id'])) {
+                    $item->update(['color_id' => $resolved['color_id']]);
+                }
+                if (! $item->size_id && ! empty($resolved['size_id'])) {
+                    $item->update(['size_id' => $resolved['size_id']]);
+                }
             }
 
             $warehouseTransfer->update(['status' => 'completed']);
