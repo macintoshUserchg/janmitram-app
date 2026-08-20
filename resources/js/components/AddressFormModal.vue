@@ -253,98 +253,135 @@
                                             />
                                         </div>
 
+                                        <!-- State, City, PIN Code Dependent Grid -->
                                         <div
-                                            class="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6"
+                                            class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mt-6"
                                         >
+                                            <!-- State -->
                                             <div>
                                                 <label
-                                                    for="Area"
+                                                    for="StateModal"
                                                     class="form-label mb-2"
                                                 >
-                                                    {{ $t("Area") }}</label
-                                                >
+                                                    {{ $t("State") }}
+                                                    <small class="text-red-500">*</small>
+                                                </label>
                                                 <select
-                                                    id="Area"
-                                                    v-model="formData.area_id"
+                                                    id="StateModal"
+                                                    v-model="formData.state"
+                                                    @change="onStateChange"
                                                     :class="[
                                                         'form-input',
-                                                        errors && errors?.area
+                                                        errors && errors?.state
                                                             ? 'border-red-500'
                                                             : 'border-slate-200',
                                                     ]"
                                                 >
-                                                    <!-- Placeholder option (disabled so user must pick another option) -->
-                                                    <option
-                                                        value=""
-                                                        disabled
-                                                        selected
-                                                    >
-                                                        {{ $t("Enter Area") }}
-                                                    </option>
-
-                                                    <!-- Options -->
-                                                    <option
-                                                        v-for="area in areaOptions"
-                                                        :value="area.id"
-                                                    >
-                                                        {{ area.name }}
+                                                    <option value="" disabled>{{ $t("Select State") }}</option>
+                                                    <option v-for="state in INDIAN_STATES" :key="state" :value="state">
+                                                        {{ state }}
                                                     </option>
                                                 </select>
                                                 <span
-                                                    v-if="
-                                                        errors && errors?.area
-                                                    "
+                                                    v-if="errors && errors?.state"
                                                     class="text-red-500 text-sm"
-                                                    >{{ errors?.area[0] }}</span
+                                                    >{{ errors?.state[0] }}</span
                                                 >
                                             </div>
 
+                                            <!-- City (Dependent on State) -->
                                             <div>
                                                 <label
-                                                    for="address"
+                                                    for="CityModal"
                                                     class="form-label mb-2"
                                                 >
-                                                    {{ $t("Address Line ") }}
-                                                    <small class="text-red-500"
-                                                        >*</small
-                                                    >
+                                                    {{ $t("City") }}
+                                                    <small class="text-red-500">*</small>
+                                                </label>
+                                                <select
+                                                    id="CityModal"
+                                                    v-model="formData.city"
+                                                    :class="[
+                                                        'form-input',
+                                                        errors && errors?.city
+                                                            ? 'border-red-500'
+                                                            : 'border-slate-200',
+                                                    ]"
+                                                >
+                                                    <option value="" disabled>{{ formData.state ? $t("Select City") : $t("Select State first") }}</option>
+                                                    <option v-for="city in availableCities" :key="city" :value="city">
+                                                        {{ city }}
+                                                    </option>
+                                                    <option value="Other">{{ $t("Other (Type City)") }}</option>
+                                                </select>
+                                                <input
+                                                    v-if="formData.city === 'Other' || isCustomCity"
+                                                    type="text"
+                                                    v-model="customCityName"
+                                                    @input="formData.city = customCityName"
+                                                    :placeholder="$t('Type city name')"
+                                                    class="form-input mt-2"
+                                                />
+                                                <span
+                                                    v-if="errors && errors?.city"
+                                                    class="text-red-500 text-sm"
+                                                    >{{ errors?.city[0] }}</span
+                                                >
+                                            </div>
+
+                                            <!-- Postal / PIN Code -->
+                                            <div>
+                                                <label for="post_code_modal" class="form-label mb-2">
+                                                    {{ $t("PIN Code") }}
                                                 </label>
                                                 <input
                                                     type="text"
-                                                    id="address"
-                                                    v-model="
-                                                        formData.address_line
-                                                    "
-                                                    :placeholder="
-                                                        $t('Enter address ')
-                                                    "
+                                                    id="post_code_modal"
+                                                    v-model="formData.post_code"
+                                                    :placeholder="$t('Enter 6-digit PIN')"
+                                                    maxlength="6"
+                                                    @input="formData.post_code = formData.post_code.replace(/[^\d]/g, '')"
                                                     class="form-input"
-                                                    :class="
-                                                        errors &&
-                                                        errors?.address_line
+                                                    :class="[
+                                                        errors && errors?.post_code
                                                             ? 'border-red-500'
-                                                            : 'border-slate-200'
-                                                    "
+                                                            : 'border-slate-200',
+                                                    ]"
                                                 />
                                                 <span
-                                                    v-if="
-                                                        errors &&
-                                                        errors?.address_line
-                                                    "
+                                                    v-if="errors && errors?.post_code"
                                                     class="text-red-500 text-sm"
-                                                    >{{
-                                                        errors?.address_line[0]
-                                                    }}</span
+                                                    >{{ errors?.post_code[0] }}</span
                                                 >
                                             </div>
-                                            <!-- <div>
-                                                <label for="address2" class="form-label mb-2"> {{ $t('Address Line 2') }}</label>
-                                                <input type="text" id="address2" v-model="formData.address_line2"
-                                                    :placeholder="$t('Enter address 2')" value="" class="form-input"
-                                                    :class="errors && errors?.address_line2 ? 'border-red-500' : 'border-slate-200'" />
-                                                <span v-if="errors && errors?.address_line2"
-                                                    class="text-red-500 text-sm">{{ errors?.address_line2[0] }}</span>
-                                            </div> -->
+                                        </div>
+
+                                        <!-- Address Line -->
+                                        <div class="mt-4">
+                                            <label
+                                                for="address"
+                                                class="form-label mb-2"
+                                            >
+                                                {{ $t("House No. / Flat / Building / Street Address") }}
+                                                <small class="text-red-500">*</small>
+                                            </label>
+                                            <input
+                                                type="text"
+                                                id="address"
+                                                v-model="formData.address_line"
+                                                :placeholder="$t('Enter house no., building, street, landmark...')"
+                                                class="form-input"
+                                                :class="
+                                                    errors && errors?.address_line
+                                                        ? 'border-red-500'
+                                                        : 'border-slate-200'
+                                                "
+                                            />
+                                            <span
+                                                v-if="errors && errors?.address_line"
+                                                class="text-red-500 text-sm"
+                                                >{{ errors?.address_line[0] }}</span
+                                            >
                                         </div>
 
                                         <div class="mt-5">
@@ -493,20 +530,29 @@ import {
     TransitionRoot,
 } from "@headlessui/vue";
 import { XMarkIcon } from "@heroicons/vue/24/solid";
-import { onMounted, ref } from "vue";
+import { ref, computed } from "vue";
 
 import { useAuth } from "../stores/AuthStore";
 import { useToast } from "vue-toastification";
 import { useMaster } from "../stores/MasterStore";
 import MapDisplay from "./MapDisplay.vue";
+import {
+    INDIAN_STATES,
+    getCitiesForState,
+} from "../data/indiaStatesCities";
 
 const masterStore = useMaster();
 const toast = useToast();
 const authStore = useAuth();
 
+const customCityName = ref("");
+const isCustomCity = ref(false);
+
 const formData = ref({
     name: "",
     phone: "",
+    state: "Rajasthan",
+    city: "Jaipur",
     area_id: "",
     flat_no: "",
     post_code: "",
@@ -518,9 +564,24 @@ const formData = ref({
     is_default: false,
 });
 
-const errors = ref({});
+const availableCities = computed(() => {
+    return getCitiesForState(formData.value.state);
+});
 
-const areaOptions = ref([]);
+const onStateChange = () => {
+    const cities = availableCities.value;
+    if (cities.length > 0) {
+        if (!cities.includes(formData.value.city)) {
+            formData.value.city = cities[0];
+            customCityName.value = "";
+            isCustomCity.value = false;
+        }
+    } else {
+        formData.value.city = "";
+    }
+};
+
+const errors = ref({});
 
 const addressFormSubmit = () => {
     axios
@@ -539,15 +600,11 @@ const addressFormSubmit = () => {
             formData.value = {
                 name: "",
                 phone: "",
-                area_id: "",
-                flat_no: "",
-                post_code: "",
-                address_line: "",
-                address_line2: "",
+                state: "Rajasthan",
+                city: "Jaipur",
                 address_type: "home",
-                latitude: "",
-                longitude: "",
-                is_default: false,
+                address_line: "",
+                post_code: "",
             };
             authStore.fetchAddresses();
             authStore.showAddressModal = false;
@@ -564,34 +621,36 @@ const addressFormSubmit = () => {
         });
 };
 
-const getAreaOptions = () => {
-    axios
-        .get("/areas", formData.value, {
-            headers: {
-                Authorization: authStore.token,
-            },
-        })
-        .then((response) => {
-            areaOptions.value = response.data.data.areas;
-        })
-        .catch((error) => {
-            toast.error(error.response.data.message, {
-                position:
-                    masterStore.langDirection === "rtl"
-                        ? "bottom-right"
-                        : "bottom-left",
-            });
-        });
-};
-
 const updateLocation = (coords) => {
     formData.value.latitude = coords.lat;
     formData.value.longitude = coords.lng;
-};
 
-onMounted(() => {
-    getAreaOptions();
-});
+    if (coords.address) {
+        // Auto-detect PIN code
+        const pinMatch = coords.address.match(/\b\d{6}\b/);
+        if (pinMatch && !formData.value.post_code) {
+            formData.value.post_code = pinMatch[0];
+        }
+
+        // Auto-detect State & City from reverse geocode address
+        for (const state of INDIAN_STATES) {
+            const stateRegex = new RegExp(`\\b${state}\\b`, "i");
+            if (stateRegex.test(coords.address)) {
+                formData.value.state = state;
+                const cities = getCitiesForState(state);
+                for (const city of cities) {
+                    const cityRegex = new RegExp(`\\b${city}\\b`, "i");
+                    if (cityRegex.test(coords.address)) {
+                        formData.value.city = city;
+                        isCustomCity.value = false;
+                        break;
+                    }
+                }
+                break;
+            }
+        }
+    }
+};
 </script>
 
 <style scoped>

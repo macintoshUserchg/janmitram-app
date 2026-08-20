@@ -40,10 +40,12 @@ class AddressRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'min:5', 'max:100', 'regex:/^[a-zA-Z\s\.\'-]+$/', 'not_regex:/^\s*$/'],
             'phone' => ['required', 'digits_between:'.$min.','.$max],
+            'city' => 'nullable|string|max:100',
+            'state' => 'nullable|string|max:100',
             'area' => 'nullable|string|max:255',
             'flat_no' => 'nullable|string|max:255',
             'post_code' => 'nullable|string|max:255',
-            'address_line' => ['required', 'string', 'min:10', 'max:255', 'not_regex:/^\s*$/'],
+            'address_line' => ['required', 'string', 'min:5', 'max:255', 'not_regex:/^\s*$/'],
             'address_line2' => 'nullable|string|max:255',
             'address_type' => 'required|string|max:255',
             'is_default' => 'nullable|boolean',

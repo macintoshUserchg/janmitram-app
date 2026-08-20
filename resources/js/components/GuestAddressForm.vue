@@ -98,78 +98,101 @@
                 />
             </div>
 
-            <!-- <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-6">
+            <!-- State, City, PIN Code Dependent Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mt-6">
+                <!-- State -->
                 <div>
-                    <label for="Area" class="form-label mb-2">
-                        {{ $t("Area") }}
+                    <label for="GuestState" class="form-label mb-2">
+                        {{ $t("State") }}
+                        <small class="text-red-500">*</small>
                     </label>
-                    <input
-                        type="text"
-                        id="Area"
-                        :placeholder="$t('Enter Area')"
-                        class="form-input"
-                        v-model="guestAddressStore.area"
-                        :class="
+                    <select
+                        id="GuestState"
+                        v-model="guestAddressStore.state"
+                        @change="onStateChange"
+                        :class="[
+                            'form-input',
                             guestAddressStore.errors &&
-                            guestAddressStore.errors?.area
+                            guestAddressStore.errors?.state
                                 ? 'border-red-500'
-                                : 'border-slate-200'
-                        "
-                    />
+                                : 'border-slate-200',
+                        ]"
+                    >
+                        <option value="" disabled>{{ $t("Select State") }}</option>
+                        <option v-for="state in INDIAN_STATES" :key="state" :value="state">
+                            {{ state }}
+                        </option>
+                    </select>
                     <span
                         v-if="
                             guestAddressStore.errors &&
-                            guestAddressStore.errors?.area
+                            guestAddressStore.errors?.state
                         "
                         class="text-red-500 text-sm"
-                        >{{ guestAddressStore.errors?.area[0] }}</span
-                    >
-                </div>
-                <div>
-                    <label for="Flat" class="form-label mb-2">
-                        {{ $t("Flat") }}</label
-                    >
-                    <input
-                        type="text"
-                        id="Flat"
-                        :placeholder="$t('Enter Flat no')"
-                        value=""
-                        class="form-input"
-                        v-model="guestAddressStore.flat_no"
-                        :class="
-                            guestAddressStore.errors &&
-                            guestAddressStore.errors?.flat_no
-                                ? 'border-red-500'
-                                : 'border-slate-200'
-                        "
-                    />
-                    <span
-                        v-if="
-                            guestAddressStore.errors &&
-                            guestAddressStore.errors?.flat_no
-                        "
-                        class="text-red-500 text-sm"
-                        >{{ guestAddressStore.errors?.flat_no[0] }}</span
+                        >{{ guestAddressStore.errors?.state[0] }}</span
                     >
                 </div>
 
+                <!-- City (Dependent on State) -->
                 <div>
-                    <label for="Postal" class="form-label mb-2">
-                        {{ $t("Postal Code") }}
+                    <label for="GuestCity" class="form-label mb-2">
+                        {{ $t("City") }}
+                        <small class="text-red-500">*</small>
+                    </label>
+                    <select
+                        id="GuestCity"
+                        v-model="guestAddressStore.city"
+                        :class="[
+                            'form-input',
+                            guestAddressStore.errors &&
+                            guestAddressStore.errors?.city
+                                ? 'border-red-500'
+                                : 'border-slate-200',
+                        ]"
+                    >
+                        <option value="" disabled>{{ guestAddressStore.state ? $t("Select City") : $t("Select State first") }}</option>
+                        <option v-for="city in availableCities" :key="city" :value="city">
+                            {{ city }}
+                        </option>
+                        <option value="Other">{{ $t("Other (Type City)") }}</option>
+                    </select>
+                    <input
+                        v-if="guestAddressStore.city === 'Other' || isCustomCity"
+                        type="text"
+                        v-model="customCityName"
+                        @input="guestAddressStore.city = customCityName"
+                        :placeholder="$t('Type city name')"
+                        class="form-input mt-2"
+                    />
+                    <span
+                        v-if="
+                            guestAddressStore.errors &&
+                            guestAddressStore.errors?.city
+                        "
+                        class="text-red-500 text-sm"
+                        >{{ guestAddressStore.errors?.city[0] }}</span
+                    >
+                </div>
+
+                <!-- Postal / PIN Code -->
+                <div>
+                    <label for="guest_post_code" class="form-label mb-2">
+                        {{ $t("PIN Code") }}
                     </label>
                     <input
                         type="text"
-                        id="Postal"
+                        id="guest_post_code"
                         v-model="guestAddressStore.post_code"
-                        :placeholder="$t('Enter Postal Code')"
-                        value=""
+                        :placeholder="$t('Enter 6-digit PIN')"
+                        maxlength="6"
+                        @input="guestAddressStore.post_code = (guestAddressStore.post_code || '').replace(/[^\d]/g, '')"
                         class="form-input"
-                        :class="
+                        :class="[
                             guestAddressStore.errors &&
                             guestAddressStore.errors?.post_code
                                 ? 'border-red-500'
-                                : 'border-slate-200'
-                        "
+                                : 'border-slate-200',
+                        ]"
                     />
                     <span
                         v-if="
@@ -180,71 +203,37 @@
                         >{{ guestAddressStore.errors?.post_code[0] }}</span
                     >
                 </div>
-            </div> -->
+            </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
-                <div>
-                    <label for="Area" class="form-label mb-2">
-                        {{ $t("Area") }}</label
-                    >
-                    <select
-                        id="Area"
-                        v-model="guestAddressStore.area_id"
-                        :class="[
-                            'form-input',
-                            guestAddressStore.errors &&
-                            guestAddressStore.errors?.area
-                                ? 'border-red-500'
-                                : 'border-slate-200',
-                        ]"
-                    >
-                        <!-- Placeholder option (disabled so user must pick another option) -->
-                        <option value="" disabled selected>
-                            {{ $t("Enter Area") }}
-                        </option>
-
-                        <!-- Options -->
-                        <option v-for="area in areaOptions" :value="area.id">
-                            {{ area.name }}
-                        </option>
-                    </select>
-                    <span
-                        v-if="
-                            guestAddressStore.errors &&
-                            guestAddressStore.errors?.area
-                        "
-                        class="text-red-500 text-sm"
-                        >{{ guestAddressStore.errors?.area[0] }}</span
-                    >
-                </div>
-
-                <div>
-                    <label for="address" class="form-label mb-2">
-                        {{ $t("Address Line") }}
-                        <small class="text-red-500">*</small>
-                    </label>
-                    <input
-                        type="text"
-                        id="address"
-                        v-model="guestAddressStore.address_line"
-                        :placeholder="$t('Enter address')"
-                        class="form-input"
-                        :class="
-                            guestAddressStore.errors &&
-                            guestAddressStore.errors?.address_line
-                                ? 'border-red-500'
-                                : 'border-slate-200'
-                        "
-                    />
-                    <span
-                        v-if="
-                            guestAddressStore.errors &&
-                            guestAddressStore.errors?.address_line
-                        "
-                        class="text-red-500 text-sm"
-                        >{{ guestAddressStore.errors?.address_line[0] }}</span
-                    >
-                </div>
+            <!-- Address Line -->
+            <div class="mt-4">
+                <label for="address" class="form-label mb-2">
+                    {{ $t("House No. / Flat / Building / Street Address") }}
+                    <small class="text-red-500">*</small>
+                </label>
+                <input
+                    type="text"
+                    id="address"
+                    v-model="guestAddressStore.address_line"
+                    :placeholder="$t('Enter house no., building, street, landmark...')"
+                    class="form-input"
+                    :class="
+                        guestAddressStore.errors &&
+                        guestAddressStore.errors?.address_line
+                            ? 'border-red-500'
+                            : 'border-slate-200'
+                    "
+                />
+                <span
+                    v-if="
+                        guestAddressStore.errors &&
+                        guestAddressStore.errors?.address_line
+                    "
+                    class="text-red-500 text-sm"
+                    >{{
+                        guestAddressStore.errors?.address_line[0]
+                    }}</span
+                >
             </div>
 
             <div class="mt-4">
@@ -326,7 +315,7 @@
 
 <script setup>
 import axios from "axios";
-import { onMounted, ref, watch } from "vue";
+import { ref, computed, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useToast } from "vue-toastification";
 import { useAuth } from "../stores/AuthStore";
@@ -337,6 +326,10 @@ import LoadingSpin from "./LoadingSpin.vue";
 import { useMaster } from "../stores/MasterStore";
 import MapDisplay from "./MapDisplay.vue";
 import { useBasketStore } from "../stores/BasketStore";
+import {
+    INDIAN_STATES,
+    getCitiesForState,
+} from "../data/indiaStatesCities";
 
 const masterStore = useMaster();
 const guestAddressStore = useGuestAddress();
@@ -347,47 +340,56 @@ const route = useRoute();
 const router = useRouter();
 const authStore = useAuth();
 
-const areaOptions = ref([]);
+const customCityName = ref("");
+const isCustomCity = ref(false);
 
-const getAreaOptions = () => {
-    axios
-        .get("/areas", {
-            headers: {
-                Authorization: authStore.token,
-            },
-        })
-        .then((response) => {
-            areaOptions.value = response.data.data.areas;
-            guestAddressStore.area_id = response.data.data.areas[0].id;
-        })
-        .catch((error) => {
-            toast.error(error.response.data.message, {
-                position:
-                    masterStore.langDirection === "rtl"
-                        ? "bottom-right"
-                        : "bottom-left",
-            });
-        });
+const availableCities = computed(() => {
+    return getCitiesForState(guestAddressStore.state);
+});
+
+const onStateChange = () => {
+    const cities = availableCities.value;
+    if (cities.length > 0) {
+        if (!cities.includes(guestAddressStore.city)) {
+            guestAddressStore.city = cities[0];
+            customCityName.value = "";
+            isCustomCity.value = false;
+        }
+    } else {
+        guestAddressStore.city = "";
+    }
 };
 
 const updateLocation = (coords) => {
     guestAddressStore.latitude = coords.lat;
     guestAddressStore.longitude = coords.lng;
 
-    console.log(coords);
+    if (coords.address) {
+        // Auto-detect PIN code
+        const pinMatch = coords.address.match(/\b\d{6}\b/);
+        if (pinMatch && !guestAddressStore.post_code) {
+            guestAddressStore.post_code = pinMatch[0];
+        }
+
+        // Auto-detect State & City from reverse geocode address
+        for (const state of INDIAN_STATES) {
+            const stateRegex = new RegExp(`\\b${state}\\b`, "i");
+            if (stateRegex.test(coords.address)) {
+                guestAddressStore.state = state;
+                const cities = getCitiesForState(state);
+                for (const city of cities) {
+                    const cityRegex = new RegExp(`\\b${city}\\b`, "i");
+                    if (cityRegex.test(coords.address)) {
+                        guestAddressStore.city = city;
+                        isCustomCity.value = false;
+                        break;
+                    }
+                }
+                break;
+            }
+        }
+    }
 };
-
-onMounted(() => {
-    getAreaOptions();
-});
-
-watch(
-    () => guestAddressStore.area_id,
-    () => {
-        console.log(guestAddressStore.area_id);
-        basketStore.fetchCheckoutProducts(null, guestAddressStore.area_id);
-    },
-);
 </script>
 
 <style scoped>

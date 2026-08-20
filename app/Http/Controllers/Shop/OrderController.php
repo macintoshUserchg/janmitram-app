@@ -10,6 +10,7 @@ use App\Models\DriverLocation;
 use App\Models\Order;
 use App\Repositories\NotificationRepository;
 use App\Repositories\TransactionRepository;
+use App\Repositories\WalletRepository;
 use App\Services\NotificationServices;
 use Endroid\QrCode\QrCode as EndroidQrCode;
 use Endroid\QrCode\Writer\PngWriter;
@@ -273,7 +274,7 @@ class OrderController extends Controller
         $wallet = $order->shop->user->wallet;
 
         if ($wallet == null) {
-            $wallet = \App\Repositories\WalletRepository::storeByRequest($order->shop->user);
+            $wallet = WalletRepository::storeByRequest($order->shop->user);
         }
 
         TransactionRepository::storeByRequest(
