@@ -411,6 +411,12 @@ class OrderRepository extends Repository
 
     private static function getDeliveryAmount(?Shop $shop = null): float
     {
+        // 1. If Shop has explicit delivery charge (> 0), use shop delivery charge
+        if ($shop && (float) $shop->delivery_charge > 0) {
+            return (float) $shop->delivery_charge;
+        }
+
+        // 2. Check from selected customer address city
         if ($address = Address::find(request()->address_id)) {
             $addrDelivery = $address->deliveryAmount();
             if ($addrDelivery > 0) {
@@ -418,6 +424,7 @@ class OrderRepository extends Repository
             }
         }
 
+        // 3. Check from request city (e.g. guest checkout)
         $cityName = trim(request()->city ?? '');
         if (! empty($cityName)) {
             $cityRate = Area::where('is_active', true)
@@ -433,10 +440,7 @@ class OrderRepository extends Repository
             }
         }
 
-        if ($shop && $shop->delivery_charge > 0) {
-            return (float) $shop->delivery_charge;
-        }
-
+        // 4. Legacy area fallback
         if (request()->area_id) {
             return (float) (Area::find(request()->area_id)?->delivery_amount ?? 0);
         }
