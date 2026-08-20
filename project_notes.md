@@ -41,7 +41,7 @@ Docs-vs-Reality" near the end._
 | **Exports & Invoices** | maatwebsite/excel, mpdf (invoice PDF generation), milon/barcode, endroid/qr-code |
 | **DB** | MySQL (MAMP local: `janmitram`) via a single `mysql` connection |
 | **MLM** | Network-marketing payout engine (`PayoutService`) — referral codes, `parent_shop_id` tree, Phase-1 10% personal + Phase-2 tiered group-sales bonus, 90-day deactivation; added 2026-08-01 |
-| **Testing** | PHPUnit ^11 (170 automated feature test methods, 644 assertions) + Laravel Dusk ^8 (21 test classes, 89 test methods) |
+| **Testing** | PHPUnit ^11 (172 automated feature test methods, 639 assertions) + Laravel Dusk ^8 (21 test classes, 89 test methods) |
 | **Code style** | Laravel Pint ^1 |
 
 ---

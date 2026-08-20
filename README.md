@@ -56,7 +56,7 @@ npm run build
 ## Testing & Code Formatting
 
 ```bash
-# Run full automated PHPUnit test suite (170 tests / 644 assertions)
+# Run full automated PHPUnit test suite (172 tests / 639 assertions)
 php artisan test --compact
 
 # Run specific feature test suites
