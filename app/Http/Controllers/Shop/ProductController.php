@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductRequest;
 use App\Models\Media;
 use App\Models\Product;
+use App\Models\ShopInventory;
 use App\Models\SubCategory;
 use App\Models\User;
 use App\Repositories\FlashSaleRepository;
@@ -278,9 +279,22 @@ class ProductController extends Controller
             return back()->withError(__('Sorry! Your Product is not approved yet!'));
         }
 
-        $product->update([
-            'is_active' => ! $product->is_active,
-        ]);
+        $user = auth()->user();
+        $shop = $user?->shop ?? $user?->myShop ?? generaleSetting('shop');
+
+        if ($shop) {
+            $inv = ShopInventory::firstOrCreate(
+                ['shop_id' => $shop->id, 'product_id' => $product->id],
+                ['quantity' => 0, 'is_active' => true]
+            );
+            $inv->update([
+                'is_active' => ! $inv->is_active,
+            ]);
+        } else {
+            $product->update([
+                'is_active' => ! $product->is_active,
+            ]);
+        }
 
         return back()->withSuccess(__('Status updated successfully'));
     }

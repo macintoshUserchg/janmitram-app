@@ -529,6 +529,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:root'])->group
     Route::get('shop/{shop}/toggle', [ShopController::class, 'statusToggle'])->name('shop.status.toggle');
     Route::get('shop/{shop}/orders', [ShopController::class, 'orders'])->name('shop.orders');
     Route::get('shop/{shop}/products', [ShopController::class, 'products'])->name('shop.products');
+    Route::get('shop/{shop}/product/{product}/toggle', [ShopController::class, 'toggleProductStatus'])->name('shop.product.status.toggle');
     Route::get('shop/{shop}/reviews', [ShopController::class, 'reviews'])->name('shop.reviews');
     Route::post('shop/{shop}/reset-password', [ShopController::class, 'resetPassword'])->name('shop.reset.password');
     Route::delete('shop/{shop}', [ShopController::class, 'destroy'])->name('shop.destroy');

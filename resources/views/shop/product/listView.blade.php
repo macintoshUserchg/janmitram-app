@@ -45,7 +45,7 @@
                     <label class="switch mb-0" data-bs-toggle="tooltip" data-bs-placement="left"
                         data-bs-title="{{ __('Update product status') }}">
                         <a href="{{ route('shop.product.toggle', $product->id) }}">
-                            <input type="checkbox" {{ $product->is_active ? 'checked' : '' }}>
+                            <input type="checkbox" {{ ($product->pivot?->is_active ?? $product->is_active) ? 'checked' : '' }}>
                             <span class="slider round"></span>
                         </a>
                     </label>

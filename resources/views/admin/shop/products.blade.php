@@ -22,8 +22,10 @@
                                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                                         <label class="switch mb-0" data-bs-toggle="tooltip" data-bs-placement="left"
                                             data-bs-title="{{ __('Update product status') }}">
-                                                <input type="checkbox" {{ $product->is_active ? 'checked' : '' }}>
+                                            <a href="{{ route('admin.shop.product.status.toggle', ['shop' => $shop->id, 'product' => $product->id]) }}">
+                                                <input type="checkbox" {{ ($product->pivot?->is_active ?? $product->is_active) ? 'checked' : '' }}>
                                                 <span class="slider round"></span>
+                                            </a>
                                         </label>
                                         <div class="d-flex gap-2">
                                             @hasPermission('shop.product.show')

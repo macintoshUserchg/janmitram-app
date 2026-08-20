@@ -8,6 +8,7 @@ use App\Http\Requests\ShopPasswordResetRequest;
 use App\Models\Notification;
 use App\Models\Review;
 use App\Models\Shop;
+use App\Models\ShopInventory;
 use App\Models\Warehouse;
 use App\Repositories\ShopRepository;
 use Illuminate\Support\Facades\Hash;
@@ -198,5 +199,22 @@ class ShopController extends Controller
         $shop->delete();
 
         return redirect()->route('admin.shop.index')->withSuccess(__('Shop deleted successfully.'));
+    }
+
+    /**
+     * Toggle product active status for a specific shop.
+     */
+    public function toggleProductStatus(Shop $shop, Product $product)
+    {
+        $inv = ShopInventory::firstOrCreate(
+            ['shop_id' => $shop->id, 'product_id' => $product->id],
+            ['quantity' => 0, 'is_active' => true]
+        );
+
+        $inv->update([
+            'is_active' => ! $inv->is_active,
+        ]);
+
+        return back()->withSuccess(__('Product status for shop updated successfully.'));
     }
 }
