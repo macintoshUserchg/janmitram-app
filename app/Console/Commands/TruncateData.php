@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class TruncateData extends Command
 {
@@ -102,6 +103,7 @@ class TruncateData extends Command
         'return_orders',
         'reviews',
         'shop_categories',
+        'shop_inventories',
         'shop_user',
         'shop_user_chats',
         'sizes',
@@ -194,7 +196,9 @@ class TruncateData extends Command
 
         try {
             foreach (self::TRUNCATE_TABLES as $table) {
-                DB::table($table)->truncate();
+                if (Schema::hasTable($table)) {
+                    DB::table($table)->truncate();
+                }
                 $bar->advance();
             }
         } finally {
@@ -225,15 +229,22 @@ class TruncateData extends Command
             });
         }
 
-        // Force-delete non-default users (bypasses SoftDeletes so related
-        // data in Spatie tables is cleaned up by cascading events).
-        User::whereNotIn('email', self::KEEP_EMAILS)->each(function (User $user) {
-            $user->forceDelete();
-        });
+        DB::statement('SET FOREIGN_KEY_CHECKS = 0');
+        try {
+            User::whereNotIn('email', self::KEEP_EMAILS)->each(function (User $user) {
+                $user->forceDelete();
+            });
+        } finally {
+            DB::statement('SET FOREIGN_KEY_CHECKS = 1');
+        }
     }
 
     private function deleteOrphanShops(): void
     {
+        if (! Schema::hasTable('shops')) {
+            return;
+        }
+
         $keptUserIds = User::whereIn('email', self::KEEP_EMAILS)->pluck('id');
 
         $deleted = DB::table('shops')
@@ -249,18 +260,18 @@ class TruncateData extends Command
     {
         $cleanCount = 0;
 
-        // Only consider non-soft-deleted users as valid so orphaned
-        // rows from force-deleted users are caught.
         $validUserIds = function ($query) {
             $query->select('id')->from('users')->whereNull('deleted_at');
         };
 
         foreach (['model_has_roles', 'model_has_permissions'] as $table) {
-            $deleted = DB::table($table)
-                ->whereNotIn('model_id', $validUserIds)
-                ->delete();
+            if (Schema::hasTable($table)) {
+                $deleted = DB::table($table)
+                    ->whereNotIn('model_id', $validUserIds)
+                    ->delete();
 
-            $cleanCount += $deleted;
+                $cleanCount += $deleted;
+            }
         }
 
         if ($cleanCount > 0) {

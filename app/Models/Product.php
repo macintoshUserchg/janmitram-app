@@ -394,16 +394,6 @@ class Product extends Model
         return $this->buy_price;
     }
 
-    public function masterProduct(): BelongsTo
-    {
-        return $this->belongsTo(Product::class, 'master_product_id');
-    }
-
-    public function shopCopies(): HasMany
-    {
-        return $this->hasMany(Product::class, 'master_product_id');
-    }
-
     public function shopInventories(): HasMany
     {
         return $this->hasMany(ShopInventory::class, 'product_id');

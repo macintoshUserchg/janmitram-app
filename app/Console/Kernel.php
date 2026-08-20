@@ -15,6 +15,9 @@ class Kernel extends ConsoleKernel
         // Deactivation first, so the 1st's payout sees a cleaned tree.
         $schedule->command('mlm:deactivate-inactive')->dailyAt('00:30');
         $schedule->command('mlm:calculate-payouts')->monthlyOn(1, '01:00');
+
+        // Prune expired mobile and web API tokens weekly (older than 7 days)
+        $schedule->command('sanctum:prune-expired --hours=168')->weekly();
     }
 
     /**
