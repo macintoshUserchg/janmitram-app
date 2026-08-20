@@ -30,13 +30,19 @@ return new class extends Migration
         }
 
         if (Schema::hasTable('products') && Schema::hasColumn('products', 'master_product_id')) {
-            Schema::table('products', function (Blueprint $table) {
-                try {
+            try {
+                Schema::table('products', function (Blueprint $table) {
                     $table->dropForeign(['master_product_id']);
-                } catch (Throwable $e) {
-                }
-                $table->dropColumn('master_product_id');
-            });
+                });
+            } catch (Throwable $e) {
+            }
+
+            try {
+                Schema::table('products', function (Blueprint $table) {
+                    $table->dropColumn('master_product_id');
+                });
+            } catch (Throwable $e) {
+            }
         }
     }
 
