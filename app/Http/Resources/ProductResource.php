@@ -56,6 +56,10 @@ class ProductResource extends JsonResource
         $brandTranslation = $this->brand?->translations()?->where('lang', $lang)->first();
         $brandName = $brandTranslation?->name ?? $this->brand?->name;
 
+        $requestedShopId = $request->shop_id ?? $request->query('shop_id');
+        $effectiveShop = ($requestedShopId ? \App\Models\Shop::find($requestedShopId) : null) ?? $this->shop;
+        $effectiveQuantity = $requestedShopId ? $this->getStockForShop((int) $requestedShopId) : (int) ($flashSaleProduct ? $quantity : $this->quantity);
+
         return [
             'id' => $this->id,
             'is_digital' => (bool) $this->is_digital,
@@ -67,13 +71,13 @@ class ProductResource extends JsonResource
             'rating' => (float) $this->averageRating ?? 0.0,
             'total_reviews' => (string) Number::abbreviate($this->reviews?->count(), maxPrecision: 2),
             'total_sold' => (string) number_format($totalSold, 0, '.', ','),
-            'quantity' => (int) ($flashSaleProduct ? $quantity : $this->quantity),
+            'quantity' => $effectiveQuantity,
             'is_favorite' => (bool) $favorite,
             'sizes' => SizeResource::collection($this->sizes),
             'colors' => ColorResource::collection($this->colors),
             'unit' => $this->unit ? UnitResource::make($this->unit) : null,
             'brand' => $brandName,
-            'shop' => ProductShopResource::make($this->shop),
+            'shop' => ProductShopResource::make($effectiveShop),
         ];
     }
 }

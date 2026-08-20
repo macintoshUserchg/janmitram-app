@@ -58,7 +58,10 @@ class ProductDetailsResource extends JsonResource
 
         $brandTranslation = $this->brand?->translations()?->where('lang', $lang)->first();
         $brandName = $brandTranslation?->name ?? $this->brand?->name;
-        $shop = $this->shop;
+
+        $requestedShopId = $request->shop_id ?? $request->query('shop_id');
+        $effectiveShop = ($requestedShopId ? \App\Models\Shop::find($requestedShopId) : null) ?? $this->shop;
+        $effectiveQuantity = $requestedShopId ? $this->getStockForShop((int) $requestedShopId) : (int) ($quantity ?? $this->quantity);
 
         $lastOnline = $this->last_online >= now() ? true : false;
 
@@ -73,7 +76,7 @@ class ProductDetailsResource extends JsonResource
             'rating' => (float) $this->averageRating ?? 0.0,
             'total_reviews' => (string) Number::abbreviate($this->reviews?->count(), maxPrecision: 2),
             'total_sold' => (string) number_format($totalSold, 0, '.', ','),
-            'quantity' => (int) ($quantity ?? $this->quantity),
+            'quantity' => $effectiveQuantity,
             'is_favorite' => (bool) $favorite,
             'thumbnails' => $this->thumbnails(),
             'sizes' => SizeResource::collection($this->sizes),
@@ -82,12 +85,12 @@ class ProductDetailsResource extends JsonResource
             'unit' => $this->unit ? UnitResource::make($this->unit) : null,
             'description' => $description,
             'shop' => [
-                'id' => $shop?->id,
-                'name' => $shop?->name,
-                'logo' => $shop?->logo,
-                'rating' => (float) round($shop?->averageRating, 1),
-                'estimated_delivery_time' => (string) ($shop?->estimated_delivery_time ?? '2-4 days'),
-                'delivery_charge' => (float) (($shop?->delivery_charge > 0) ? $shop->delivery_charge : getDeliveryCharge(1)),
+                'id' => $effectiveShop?->id,
+                'name' => $effectiveShop?->name,
+                'logo' => $effectiveShop?->logo,
+                'rating' => (float) round($effectiveShop?->averageRating ?? 5.0, 1),
+                'estimated_delivery_time' => (string) ($effectiveShop?->estimated_delivery_time ?? '2-4 days'),
+                'delivery_charge' => (float) (($effectiveShop?->delivery_charge > 0) ? $effectiveShop->delivery_charge : getDeliveryCharge(1)),
                 'last_online' => $lastOnline,
             ],
             'flash_sale' => $flashSaleProduct ? FlashSaleResource::make($flashSale) : null,
