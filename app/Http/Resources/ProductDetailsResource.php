@@ -87,7 +87,7 @@ class ProductDetailsResource extends JsonResource
                 'logo' => $shop?->logo,
                 'rating' => (float) round($shop?->averageRating, 1),
                 'estimated_delivery_time' => (string) ($shop?->estimated_delivery_time ?? '2-4 days'),
-                'delivery_charge' => (float) getDeliveryCharge(1),
+                'delivery_charge' => (float) (($shop?->delivery_charge > 0) ? $shop->delivery_charge : getDeliveryCharge(1)),
                 'last_online' => $lastOnline,
             ],
             'flash_sale' => $flashSaleProduct ? FlashSaleResource::make($flashSale) : null,

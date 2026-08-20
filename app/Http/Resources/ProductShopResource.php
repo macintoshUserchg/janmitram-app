@@ -22,7 +22,7 @@ class ProductShopResource extends JsonResource
             'logo' => $this->logo,
             'rating' => (float) ($this->averageRating > 0) ? $this->averageRating : 5.0,
             'estimated_delivery_time' => (string) ($this->estimated_delivery_time ?? '2-3 days'),
-            'delivery_charge' => (float) getDeliveryCharge(1),
+            'delivery_charge' => (float) (($this->delivery_charge > 0) ? $this->delivery_charge : getDeliveryCharge(1)),
             'last_online' => $lastOnline,
         ];
     }

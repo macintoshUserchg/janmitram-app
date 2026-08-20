@@ -169,14 +169,43 @@ class CartRepository extends Repository
         ]);
     }
 
-    private static function getDeliveryAmount()
+    private static function getDeliveryAmount(?Shop $shop = null): float
     {
+        // 1. Check from selected customer address
         if ($address = Address::find(request()->address_id)) {
-            return $address->deliveryAmount() ?? 0;
+            $addrDelivery = $address->deliveryAmount();
+            if ($addrDelivery > 0) {
+                return (float) $addrDelivery;
+            }
         }
 
-        // Check for area if no address
-        return Area::find(request()->area_id)?->delivery_amount ?? 0;
+        // 2. Check from request city (e.g. guest checkout)
+        $cityName = trim(request()->city ?? '');
+        if (! empty($cityName)) {
+            $cityRate = Area::where('is_active', true)
+                ->where(function ($q) use ($cityName) {
+                    $q->whereRaw('LOWER(name) = ?', [strtolower($cityName)])
+                        ->orWhereRaw('LOWER(name) LIKE ?', ['%'.strtolower($cityName).'%'])
+                        ->orWhereRaw('? LIKE CONCAT("%", LOWER(name), "%")', [strtolower($cityName)]);
+                })
+                ->first();
+
+            if ($cityRate) {
+                return (float) $cityRate->delivery_amount;
+            }
+        }
+
+        // 3. Fallback to Shop delivery charge if set
+        if ($shop && $shop->delivery_charge > 0) {
+            return (float) $shop->delivery_charge;
+        }
+
+        // 4. Legacy area fallback
+        if (request()->area_id) {
+            return (float) (Area::find(request()->area_id)?->delivery_amount ?? 0);
+        }
+
+        return (float) ($shop?->delivery_charge ?? 0);
     }
 
     public static function checkoutByRequest($request, $carts)
@@ -252,7 +281,7 @@ class CartRepository extends Repository
 
             if ($productQty > 0) {
                 if ($cart->product?->is_digital != true) {
-                    $deliveryCharge = self::getDeliveryAmount();
+                    $deliveryCharge = self::getDeliveryAmount(Shop::find($shopId));
                 }
             }
         }

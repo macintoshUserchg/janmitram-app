@@ -2,7 +2,7 @@
 @section('content')
     <div class="d-flex align-items-center flex-wrap gap-3 justify-content-between px-3">
         <h4>
-            {{ __('Area List') }}
+            {{ __('City Delivery Rates') }}
         </h4>
     </div>
 
@@ -13,7 +13,7 @@
 
                 <form action="" class="d-flex align-items-center justify-content-between gap-3 mb-3 flex-column flex-md-row">
                     <div class="input-group" style="max-width: 400px">
-                        <input type="text" name="search" class="form-control" placeholder="{{ __('Search by name') }}"
+                        <input type="text" name="search" class="form-control" placeholder="{{ __('Search by city name') }}"
                             value="{{ request('search') }}">
                         <button type="submit" class="input-group-text btn btn-primary">
                             <i class="fa fa-search"></i> {{ __('Search') }}
@@ -21,7 +21,7 @@
                     </div>
                     <button type="button" data-bs-toggle="modal" data-bs-target="#createArea" class="btn py-2 btn-primary">
                         <i class="fa fa-plus-circle"></i>
-                        {{ __('Add Area') }}
+                        {{ __('Add City Rate') }}
                     </button>
                 </form>
 
@@ -30,8 +30,8 @@
                         <thead>
                             <tr>
                                 <th class="text-center">{{ __('SL') }}</th>
-                                <th>{{ __('Name') }}</th>
-                                <th>{{ __('Delivery Amount') }}</th>
+                                <th>{{ __('City Name') }}</th>
+                                <th>{{ __('Delivery Charge (₹)') }}</th>
                                 <th>{{ __('Status') }}</th>
                                 <th class="text-center">{{ __('Action') }}</th>
                             </tr>
@@ -40,9 +40,9 @@
                             <tr>
                                 <td class="text-center">{{ ++$key }}</td>
 
-                                <td>{{ $area->name }}</td>
+                                <td class="fw-semibold">{{ $area->name }}</td>
 
-                                <td>{{ $area->delivery_amount }}</td>
+                                <td>₹{{ number_format((float)$area->delivery_amount, 2) }}</td>
 
                                 <td>
                                     @hasPermission('admin.area.toggle')
@@ -93,7 +93,7 @@
 
     </div>
 
-    <!--=== Create Color Modal ===-->
+    <!--=== Create City Rate Modal ===-->
     <form action="{{ route('admin.area.store') }}" method="POST">
         @csrf
         <div class="modal fade" id="createArea">
@@ -101,19 +101,19 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">
-                            {{ __('Add New Area') }}
+                            {{ __('Add City Delivery Rate') }}
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
 
                         <div class="mb-3">
-                            <x-input type="text" name="name" label="Name" placeholder="Name" required="true" />
+                            <x-input type="text" name="name" label="City Name" placeholder="e.g. Jaipur or Jaipur, Rajasthan" required="true" />
                         </div>
 
                         <div class="mb-3">
-                            <x-input type="number" name="delivery_amount" label="Delivery Amount"
-                                placeholder="Delivery Amount" required="true" onlyNumber="true" />
+                            <x-input type="number" step="0.01" name="delivery_amount" label="Delivery Charge (₹)"
+                                placeholder="e.g. 30" required="true" onlyNumber="true" />
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -129,7 +129,7 @@
         </div>
     </form>
 
-    <!--=== update color Modal ===-->
+    <!--=== Update City Rate Modal ===-->
     <form action="" id="updateAreaForm" method="POST">
         @csrf
         @method('PUT')
@@ -139,20 +139,20 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">
-                            {{ __('Update Area') }}
+                            {{ __('Update City Delivery Rate') }}
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <div class="mb-3">
-                            <x-input type="text" id="update_name" name="name" label="Name" placeholder="Area Name"
+                            <x-input type="text" id="update_name" name="name" label="City Name" placeholder="City Name"
                                 required="true" />
                         </div>
 
                         <div class="mb-3">
                             <x-input type="text" id="update_delivery_amount" name="delivery_amount"
-                                label="Delivery Amount" placeholder="Delivery Amount" required="true" onlyNumber="true"
-                                min="1" />
+                                label="Delivery Charge (₹)" placeholder="Delivery Charge" required="true" onlyNumber="true"
+                                min="0" />
                         </div>
                     </div>
                     <div class="modal-footer">

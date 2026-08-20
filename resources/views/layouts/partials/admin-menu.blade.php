@@ -703,7 +703,7 @@
                 @hasPermission('admin.area.index')
                     <a href="{{ route('admin.area.index') }}"
                         class="subMenu hasCount {{ request()->routeIs('admin.area.*') ? 'active' : '' }}">
-                        {{ __('Area & Delivery') }}
+                        {{ __('City Delivery Rates') }}
                     </a>
                 @endhasPermission
             </div>

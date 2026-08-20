@@ -403,20 +403,45 @@ class OrderRepository extends Repository
             'address_id' => $request->address_id,
             'instruction' => $request->note,
             'payment_status' => PaymentStatus::PENDING->value,
-            'order_area' => $address->getArea->name ?? null,
+            'order_area' => $address?->city ?: ($address?->getArea?->name ?? $address?->area ?? null),
         ]);
 
         return $order;
     }
 
-    private static function getDeliveryAmount()
+    private static function getDeliveryAmount(?Shop $shop = null): float
     {
-        $address = Address::find(request()->address_id);
-        if (! $address) {
-            return 0;
+        if ($address = Address::find(request()->address_id)) {
+            $addrDelivery = $address->deliveryAmount();
+            if ($addrDelivery > 0) {
+                return (float) $addrDelivery;
+            }
         }
 
-        return $address->deliveryAmount();
+        $cityName = trim(request()->city ?? '');
+        if (! empty($cityName)) {
+            $cityRate = Area::where('is_active', true)
+                ->where(function ($q) use ($cityName) {
+                    $q->whereRaw('LOWER(name) = ?', [strtolower($cityName)])
+                        ->orWhereRaw('LOWER(name) LIKE ?', ['%'.strtolower($cityName).'%'])
+                        ->orWhereRaw('? LIKE CONCAT("%", LOWER(name), "%")', [strtolower($cityName)]);
+                })
+                ->first();
+
+            if ($cityRate) {
+                return (float) $cityRate->delivery_amount;
+            }
+        }
+
+        if ($shop && $shop->delivery_charge > 0) {
+            return (float) $shop->delivery_charge;
+        }
+
+        if (request()->area_id) {
+            return (float) (Area::find(request()->area_id)?->delivery_amount ?? 0);
+        }
+
+        return (float) ($shop?->delivery_charge ?? 0);
     }
 
     private static function getCartWiseAmounts(Shop $shop, $carts, $couponCode = null, $cardNumber = null): array
@@ -429,7 +454,7 @@ class OrderRepository extends Repository
         $perProduct = [];
 
         $orderQty = $carts->sum(fn ($l) => $l['cart']->quantity);
-        $deliveryCharge = $shop->delivery_charge > 0 ? (float) $shop->delivery_charge : self::getDeliveryAmount();
+        $deliveryCharge = self::getDeliveryAmount($shop);
 
         $allVatTaxes = [];
 

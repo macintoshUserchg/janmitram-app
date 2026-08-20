@@ -39,8 +39,29 @@ class Address extends Model
         return $this->hasOne(Area::class, 'id', 'area_id');
     }
 
-    public function deliveryAmount()
+    public function deliveryAmount(): float
     {
-        return $this->getArea->delivery_amount ?? 0;
+        // 1. Try resolving delivery fee by City
+        $cityName = trim($this->city ?? $this->area ?? '');
+        if (! empty($cityName)) {
+            $cityRate = Area::where('is_active', true)
+                ->where(function ($q) use ($cityName) {
+                    $q->whereRaw('LOWER(name) = ?', [strtolower($cityName)])
+                        ->orWhereRaw('LOWER(name) LIKE ?', ['%'.strtolower($cityName).'%'])
+                        ->orWhereRaw('? LIKE CONCAT("%", LOWER(name), "%")', [strtolower($cityName)]);
+                })
+                ->first();
+
+            if ($cityRate) {
+                return (float) $cityRate->delivery_amount;
+            }
+        }
+
+        // 2. Legacy fallback: area_id
+        if ($this->area_id && $this->getArea) {
+            return (float) ($this->getArea->delivery_amount ?? 0);
+        }
+
+        return 0.0;
     }
 }
