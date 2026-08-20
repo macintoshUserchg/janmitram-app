@@ -14,6 +14,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\Review;
 use App\Models\Shop;
+use App\Models\ShopInventory;
 use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -82,33 +83,22 @@ class ReviewApprovalAndModerationTest extends TestCase
             'is_digital' => false,
         ]);
 
-        $this->productCopy1 = Product::create([
-            'master_product_id' => $this->masterProduct->id,
+        ShopInventory::create([
             'shop_id' => $this->shop1->id,
-            'name' => 'Organic Green Tea',
-            'brand_id' => $brand->id,
-            'unit_id' => $unit->id,
-            'price' => 300.0,
+            'product_id' => $this->masterProduct->id,
             'quantity' => 20,
-            'is_stock_managed' => true,
             'is_active' => true,
-            'is_approve' => true,
-            'is_digital' => false,
         ]);
 
-        $this->productCopy2 = Product::create([
-            'master_product_id' => $this->masterProduct->id,
+        ShopInventory::create([
             'shop_id' => $this->shop2->id,
-            'name' => 'Organic Green Tea',
-            'brand_id' => $brand->id,
-            'unit_id' => $unit->id,
-            'price' => 300.0,
+            'product_id' => $this->masterProduct->id,
             'quantity' => 20,
-            'is_stock_managed' => true,
             'is_active' => true,
-            'is_approve' => true,
-            'is_digital' => false,
         ]);
+
+        $this->productCopy1 = $this->masterProduct;
+        $this->productCopy2 = $this->masterProduct;
 
         $area = Area::create(['name' => 'Jaipur Central', 'delivery_amount' => 20]);
         $address = Address::create([
