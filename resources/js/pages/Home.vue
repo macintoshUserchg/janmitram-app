@@ -92,7 +92,7 @@ const getData = () => {
         categories.value = response.data.data.categories;
         justForYou.value = response.data.data.just_for_you;
         popularProducts.value = response.data.data.popular_products;
-        topRatedShops.value = response.data.data.shops.slice(0, 4);
+        topRatedShops.value = response.data.data.shops.slice(0, 6);
         incomingFlashSale.value = response.data.data.incoming_flash_sale;
         runningFlashSale.value = response.data.data.running_flash_sale;
         isLoading.value = false;
