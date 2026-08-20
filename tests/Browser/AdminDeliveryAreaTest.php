@@ -36,13 +36,13 @@ class AdminDeliveryAreaTest extends DuskTestCase
             $name = 'Area Dusk '.time();
             $browser->loginAs($this->admin())
                 ->visit('/admin/area')
-                ->assertSee('Area List')
-                ->press('Add Area')
+                ->assertSee('City Delivery Rates')
+                ->press('Add City Rate')
                 ->waitFor('#createArea')
                 ->type('input[name="name"]', $name)
                 ->type('input[name="delivery_amount"]', '50')
                 ->press('Submit')
-                ->waitForText('Area created successfully', 10);
+                ->waitForText('City delivery rate created successfully', 10);
 
             $record = Area::where('name', $name)->first();
             $this->assertNotNull($record);
