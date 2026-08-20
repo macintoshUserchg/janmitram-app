@@ -76,7 +76,7 @@
                         v-model="formData.area_id"
                         :class="[
                             'form-input',
-                            errors && errors?.area
+                            errors && (errors?.area || errors?.area_id)
                                 ? 'border-red-500'
                                 : 'border-slate-200',
                         ]"
@@ -92,9 +92,9 @@
                         </option>
                     </select>
                     <span
-                        v-if="errors && errors?.area"
+                        v-if="errors && (errors?.area || errors?.area_id)"
                         class="text-red-500 text-sm"
-                        >{{ errors?.area[0] }}</span
+                        >{{ (errors?.area || errors?.area_id)[0] }}</span
                     >
                 </div>
 
