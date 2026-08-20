@@ -35,15 +35,7 @@ class ReviewController extends Controller
         $productIds = [];
         if ($productID) {
             $product = Product::find($productID);
-            if ($product) {
-                $masterId = $product->master_product_id ?? $product->id;
-                $productIds = Product::where('id', $masterId)
-                    ->orWhere('master_product_id', $masterId)
-                    ->pluck('id')
-                    ->toArray();
-            } else {
-                $productIds = [$productID];
-            }
+            $productIds = $product ? [$product->id] : [$productID];
         }
 
         $reviewsQuery = ReviewRepository::query()

@@ -438,62 +438,12 @@ class Product extends Model
     }
 
     /**
-     * Synchronize all child shop copies with the latest pricing, attributes, and variants of this master product.
+     * Synchronize all child shop copies (No-op in Normalized Single Catalog Architecture).
      */
     public function syncShopCopies(): void
     {
-        if ($this->master_product_id) {
-            return;
-        }
-
-        $copies = $this->shopCopies()->get();
-        if ($copies->isEmpty()) {
-            return;
-        }
-
-        $this->load(['colors', 'sizes', 'categories', 'subcategories', 'vatTaxes', 'medias']);
-
-        $colorData = [];
-        foreach ($this->colors as $color) {
-            $colorData[$color->id] = ['price' => $color->pivot->price ?? 0];
-        }
-
-        $sizeData = [];
-        foreach ($this->sizes as $size) {
-            $sizeData[$size->id] = ['price' => $size->pivot->price ?? 0];
-        }
-
-        $categoryIds = $this->categories->pluck('id')->toArray();
-        $subCategoryIds = $this->subcategories->pluck('id')->toArray();
-        $vatTaxIds = $this->vatTaxes->pluck('id')->toArray();
-        $galleryMediaIds = $this->medias->pluck('id')->toArray();
-
-        foreach ($copies as $copy) {
-            $copy->update([
-                'name' => $this->name,
-                'short_description' => $this->short_description,
-                'description' => $this->description,
-                'brand_id' => $this->brand_id,
-                'unit_id' => $this->unit_id,
-                'price' => (float) $this->price,
-                'discount_price' => $this->discount_price !== null ? (float) $this->discount_price : null,
-                'buy_price' => (float) ($this->buy_price ?? 0),
-                'min_order_quantity' => (int) ($this->min_order_quantity ?? 1),
-                'media_id' => $this->media_id,
-                'video_id' => $this->video_id,
-                'is_active' => (bool) $this->is_active,
-                'is_approve' => (bool) $this->is_approve,
-                'is_digital' => (bool) $this->is_digital,
-                'is_stock_managed' => (bool) $this->is_stock_managed,
-            ]);
-
-            $copy->categories()->sync($categoryIds);
-            $copy->subcategories()->sync($subCategoryIds);
-            $copy->colors()->sync($colorData);
-            $copy->sizes()->sync($sizeData);
-            $copy->vatTaxes()->sync($vatTaxIds);
-            $copy->medias()->sync($galleryMediaIds);
-        }
+        // In the normalized single catalog architecture, all shops directly query
+        // the canonical product record. No duplicate copy synchronization is needed.
     }
 
     protected static function booted(): void

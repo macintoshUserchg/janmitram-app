@@ -380,14 +380,17 @@ class PosCartRepository extends Repository
         ]);
 
         foreach ($posCart->products as $product) {
-            ShopInventory::where('shop_id', $shop->id)
+            $decremented = ShopInventory::where('shop_id', $shop->id)
                 ->where('product_id', $product->id)
+                ->where('quantity', '>=', $product->pivot->quantity)
                 ->decrement('quantity', $product->pivot->quantity);
 
-            $quantity = $product->quantity - $product->pivot->quantity;
-            $product->update([
-                'quantity' => ($quantity > 0) ? $quantity : 0,
-            ]);
+            if (! $decremented) {
+                Product::query()
+                    ->whereKey($product->id)
+                    ->where('quantity', '>=', $product->pivot->quantity)
+                    ->decrement('quantity', $product->pivot->quantity);
+            }
 
             $sku = $product->pivot->sku_no ? collect(json_decode($product->pivot->sku_no, true))->implode(', ') : null;
 

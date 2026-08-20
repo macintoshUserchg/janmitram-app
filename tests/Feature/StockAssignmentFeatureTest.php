@@ -11,6 +11,7 @@ use App\Models\Unit;
 use App\Models\User;
 use App\Models\Warehouse;
 use App\Models\WarehouseStock;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -193,5 +194,55 @@ class StockAssignmentFeatureTest extends TestCase
 
         $response2->assertRedirect();
         $this->assertTrue($inv->fresh()->is_active);
+    }
+
+    public function test_shop_inventory_unique_constraint_prevents_duplicate_records(): void
+    {
+        ShopInventory::create([
+            'shop_id' => $this->shop->id,
+            'product_id' => $this->product->id,
+            'quantity' => 10,
+            'is_active' => true,
+        ]);
+
+        $this->expectException(QueryException::class);
+
+        // Attempt to insert duplicate shop_id + product_id record
+        ShopInventory::create([
+            'shop_id' => $this->shop->id,
+            'product_id' => $this->product->id,
+            'quantity' => 20,
+            'is_active' => true,
+        ]);
+    }
+
+    public function test_atomic_stock_decrement_safety(): void
+    {
+        $inv = ShopInventory::create([
+            'shop_id' => $this->shop->id,
+            'product_id' => $this->product->id,
+            'quantity' => 5,
+            'is_active' => true,
+        ]);
+
+        // Attempt to decrement 6 units (exceeds available 5)
+        $decremented = ShopInventory::query()
+            ->where('shop_id', $this->shop->id)
+            ->where('product_id', $this->product->id)
+            ->where('quantity', '>=', 6)
+            ->decrement('quantity', 6);
+
+        $this->assertSame(0, $decremented);
+        $this->assertSame(5, $inv->fresh()->quantity);
+
+        // Attempt to decrement 3 units (within available 5)
+        $decrementedValid = ShopInventory::query()
+            ->where('shop_id', $this->shop->id)
+            ->where('product_id', $this->product->id)
+            ->where('quantity', '>=', 3)
+            ->decrement('quantity', 3);
+
+        $this->assertSame(1, $decrementedValid);
+        $this->assertSame(2, $inv->fresh()->quantity);
     }
 }

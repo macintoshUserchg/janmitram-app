@@ -14,6 +14,7 @@ use App\Support\Repositories\Repository;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -80,6 +81,12 @@ class ProductRepository extends Repository
         }
 
         return $product;
+    }
+
+    public static function clearCatalogCache(): void
+    {
+        Cache::forget('global_catalog_products');
+        Cache::forget('global_home_products');
     }
 
     /**
@@ -222,6 +229,8 @@ class ProductRepository extends Repository
         if ($request->filled('vat_tax_id')) {
             $product->vatTaxes()->sync([$request->vat_tax_id]);
         }
+
+        self::clearCatalogCache();
 
         return $product;
     }
@@ -387,6 +396,8 @@ class ProductRepository extends Repository
             }
         }
 
+        self::clearCatalogCache();
+
         return $product;
     }
 
@@ -475,6 +486,8 @@ class ProductRepository extends Repository
 
             $result[$outcome]++;
         }
+
+        self::clearCatalogCache();
 
         return $result;
     }
@@ -590,7 +603,7 @@ class ProductRepository extends Repository
             $product->sizes()->sync($sizeIds);
             $product->vatTaxes()->sync($vatTaxId ? [$vatTaxId] : []);
 
-            if (! $product->wasRecentlyCreated && ! $product->master_product_id) {
+            if (! $product->wasRecentlyCreated) {
                 $product->syncShopCopies();
             }
 
