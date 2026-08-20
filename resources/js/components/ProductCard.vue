@@ -1,5 +1,5 @@
 <template>
-    <div class="rounded-2xl border border-slate-100 transition-all duration-300 group bg-white overflow-hidden relative flex flex-col justify-between shadow-xs hover:shadow-lg hover:-translate-y-1"
+    <div class="product-card-container rounded-2xl border border-slate-100 transition-all duration-300 group bg-white overflow-hidden relative flex flex-col justify-between shadow-xs hover:shadow-lg hover:-translate-y-1 h-full"
         :class="props.product?.quantity > 0 ? 'hover:border-primary/40' : ''">
 
         <div class="flex flex-col">
@@ -43,12 +43,12 @@
                 <div class="cursor-pointer" @click="showProductDetails">
                     <div class="bg-white p-2.5 sm:p-3 flex flex-col items-start gap-1">
 
-                        <div class="text-slate-900 text-xs sm:text-base font-medium leading-snug line-clamp-2 w-full group-hover:text-primary transition-colors min-h-[32px] sm:min-h-[44px]"
+                        <div class="text-slate-900 text-xs sm:text-base font-medium leading-snug line-clamp-2 w-full group-hover:text-primary transition-colors min-h-[32px] sm:min-h-[44px] h-[32px] sm:h-[44px]"
                             :class="props.product?.quantity > 0 ? '' : 'opacity-40'">
                             {{ props.product?.name }}
                         </div>
 
-                        <div class="flex items-baseline gap-1 sm:gap-1.5 flex-wrap mt-0.5" :class="props.product?.quantity > 0 ? '' : 'opacity-40'">
+                        <div class="flex items-baseline gap-1 sm:gap-1.5 flex-wrap mt-0.5 h-6 sm:h-7" :class="props.product?.quantity > 0 ? '' : 'opacity-40'">
                             <!-- price -->
                             <div class="text-primary text-sm sm:text-lg font-bold">
                                 {{ masterStore.showCurrency(props.product?.discount_price > 0 ?
@@ -65,7 +65,7 @@
                             </div>
                         </div>
 
-                        <div class="flex justify-between items-center w-full pt-1 border-t border-slate-100 text-[11px] sm:text-xs text-slate-500 mt-0.5">
+                        <div class="flex justify-between items-center w-full pt-1 border-t border-slate-100 text-[11px] sm:text-xs text-slate-500 mt-0.5 h-5">
                             <div class="flex items-center gap-1"
                                 :class="props.product?.quantity > 0 ? '' : 'opacity-40'">
                                 <StarIcon class="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-400" />
@@ -89,7 +89,7 @@
             <div v-if="props.product?.quantity > 0" class="w-full">
                 <!-- In-Card Quantity Stepper when already in cart -->
                 <div v-if="props.product?.is_digital == false && cartQty > 0" 
-                    class="flex items-center justify-between w-full bg-emerald-50 border border-emerald-200 rounded-xl p-0.5 sm:p-1 shadow-xs">
+                    class="flex items-center justify-between w-full h-8 sm:h-10 bg-emerald-50 border border-emerald-200 rounded-xl p-0.5 sm:p-1 shadow-xs">
                     <button @click.stop="decrementQuantity" 
                         class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center bg-white text-emerald-700 hover:bg-emerald-600 hover:text-white rounded-lg font-bold shadow-xs transition active:scale-95 text-sm">
                         -
@@ -102,25 +102,23 @@
                 </div>
 
                 <!-- Standard Actions when not yet in cart -->
-                <div v-else class="flex items-center gap-1.5 sm:gap-2 w-full">
+                <div v-else class="flex items-center gap-1.5 sm:gap-2 w-full h-8 sm:h-10">
                     <button v-if="props.product?.is_digital == false"
-                        class="cursor-pointer w-8 h-8 sm:w-10 sm:h-10 bg-slate-50 hover:bg-primary hover:text-white text-slate-700 rounded-xl border border-slate-200 hover:border-primary justify-center items-center flex transition active:scale-95 shadow-xs shrink-0"
+                        class="cart-icon-wrapper cursor-pointer w-8 h-8 sm:w-10 sm:h-10 bg-slate-50 hover:bg-primary hover:text-white text-slate-700 rounded-xl border border-slate-200 hover:border-primary flex items-center justify-center transition active:scale-95 shadow-xs shrink-0 p-1.5"
                         @click.stop="addToBasket(props.product)"
                         :title="$t('Add to Cart')">
-                        <div class="w-4 h-4 sm:w-5 sm:h-5">
-                            <BagIcon />
-                        </div>
+                        <BagIcon class="w-full h-full text-slate-700 hover:text-white flex items-center justify-center" />
                     </button>
 
                     <button
-                        class="justify-center items-center flex bg-primary hover:bg-primary-600 text-white font-medium grow py-2 sm:py-2.5 rounded-xl shadow-xs hover:shadow transition active:scale-95 text-xs sm:text-sm"
+                        class="justify-center items-center flex bg-primary hover:bg-primary-600 text-white font-medium grow h-8 sm:h-10 rounded-xl shadow-xs hover:shadow transition active:scale-95 text-xs sm:text-sm"
                         @click.stop="buyNow">
                         {{ $t('Buy Now') }}
                     </button>
                 </div>
             </div>
             <button v-else
-                class="justify-center items-center flex border border-slate-200 bg-slate-50 py-2 sm:py-2.5 rounded-xl w-full cursor-not-allowed"
+                class="justify-center items-center flex border border-slate-200 bg-slate-50 h-8 sm:h-10 rounded-xl w-full cursor-not-allowed"
                 disabled>
                 <span class="text-slate-400 text-xs font-medium">{{ $t('Out of Stock') }}</span>
             </button>

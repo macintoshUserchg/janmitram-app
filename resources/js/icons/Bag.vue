@@ -1,6 +1,7 @@
 <template>
-    <div :class="colorClass">
-        <svg :width="width" :height="height" :viewBox="'0 0 ' + width + ' ' + height" fill="none"
+    <div :class="colorClass" class="flex items-center justify-center w-full h-full">
+        <svg :width="width" :height="height" viewBox="0 0 20 20" fill="none"
+            class="w-full h-full max-w-full max-h-full object-contain shrink-0"
             xmlns="http://www.w3.org/2000/svg">
             <path
                 d="M6.25 6.39167V5.58334C6.25 3.70834 7.75833 1.86667 9.63333 1.69167C11.8667 1.47501 13.75 3.23334 13.75 5.42501V6.57501"
