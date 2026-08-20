@@ -42,13 +42,11 @@ are not derivable from a fresh read of the code.
 - Mapping infrastructure uses Google Maps JavaScript SDK and Google Places API (New) with `GoogleMapsService`.
 - Customer browsing location is resolved via automated zero-permission IP Geolocation (`LocationController`, `LocationStore.js`), gracefully defaulting international IPs to Central Hub Jaipur (`302013`).
 
-## Homepage Product Distribution
-- Popular Products uses a fair round-robin distribution across active local branch shops in the user's city with strict deduplication (zero repeated product names).
-- Main Janmitram Shop (`Shop ID: 1` / Central Warehouse) is strictly excluded from homepage Popular Products and Just For You sections.
-
-## Master-to-Shop Pricing Synchronization
-- Editing a Master Product (`ProductRepository::updateByRequest`) or uploading bulk spreadsheets (`ProductRepository::importRows`) automatically cascades `price`, `discount_price`, `buy_price`, `unit_id`, `brand_id`, and variant extra prices (colors/sizes) to all child shop copies via `syncShopCopies()`.
-- `WarehouseService::cloneMasterToShop()` refreshes existing shop copies upon stock request fulfillments.
+## Single Global Catalog & Shop Inventory Architecture
+- All products are stored once in `products` (single canonical catalog).
+- Branch shop stock quantities and active statuses are tracked in `shop_inventories` (`shop_id`, `product_id`, `quantity`, `is_active`).
+- Editing a product updates 1 record in 1 query, immediately visible to all branches with 0 cascading delay.
+- Warehouse dispatches increment `shop_inventories` directly.
 
 ## Repository pattern
 - `app/Repositories/*` extend `App\Support\Repositories\Repository` (static `model()`,
@@ -60,7 +58,7 @@ are not derivable from a fresh read of the code.
 
 ## Frontend / verification
 - If a frontend change isn't reflected, run `npm run build`, `npm run dev`, or `composer run dev`.
-- PHPUnit test suite (162 tests / 618 assertions): run with `php artisan test --compact`.
+- PHPUnit test suite (170 tests / 644 assertions): run with `php artisan test --compact`.
 - Dusk browser tests: `tests/Browser/` — run with `php artisan dusk --filter=testName`.
 - After PHP edits, run `vendor/bin/pint --dirty --format agent`.
 

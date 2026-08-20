@@ -5,13 +5,13 @@
 
 ### 1. Executive System Overview
 
-The **Janmitram E-Commerce System** operates on **Option A: Strict Warehouse-Only Architecture**. 
+The **Janmitram E-Commerce System** operates on **Normalized Single Catalog Architecture with Dedicated Branch Inventory (`shop_inventories`)**. 
 
 Under this architecture:
-- **Centralized Master Catalog**: All physical products (`is_digital = false`) are created and managed centrally by Admin as Master Products (`master_product_id = null`).
-- **Warehouse Centralized Stocking**: Physical inventory is deposited directly into Central or Regional Logistics Hubs (`WarehouseStock`) rather than individual vendor shops.
-- **Master-Copy Cloning Pattern (`cloneMasterToShop`)**: Vendor shops do not create physical inventory from scratch. Instead, shops request stock dispatches from their **Linked Warehouse** (`warehouse_id`). Upon Admin fulfillment, physical stock is dispatched and cloned/updated into a **Shop Copy Product** (`master_product_id = masterProduct->id`, `shop_id = shop->id`) carrying full category, subcategory, brand, variant (colors/sizes), media, and translation attributes.
-- **Strict Ledger Auditing**: Warehouse-level stock movements (initial addition, warehouse transfer, shop request dispatch, manual adjustment) are immutably logged in `StockLedger`. Sales (online orders and POS) draw from the Shop Copy Product's inventory only — they decrement `products.quantity` and are **not** written to `StockLedger` (warehouse stock is consumed at stocking/dispatch time, not at sale time).
+- **Single Canonical Master Catalog (`products`)**: All products (`is_digital = false`) are created and managed centrally by Admin once. There are **zero duplicate product rows** across franchise branch shops.
+- **Warehouse Centralized Stocking**: Physical bulk inventory is deposited directly into Central or Regional Logistics Hubs (`WarehouseStock`).
+- **Branch Inventory Allocation (`shop_inventories`)**: When a branch shop requests or receives stock from its **Linked Warehouse** (`warehouse_id`), physical stock is dispatched and recorded into **`shop_inventories`** (`shop_id`, `product_id`, `quantity`, `is_active`). Full product attributes (media gallery, pricing, discounts, descriptions, categories) remain on the canonical product record.
+- **Strict Ledger Auditing**: Warehouse-level stock movements (initial addition, warehouse transfer, shop request dispatch, manual adjustment) are immutably logged in `StockLedger`. Sales (online orders and POS) draw from the branch's `shop_inventories` only — they decrement `shop_inventories.quantity` and are **not** written to `StockLedger` (warehouse stock is consumed at stocking/dispatch time, not at sale time).
 - **Stock Dispatch & Invoice Registry**: Official Janmitram PDF and printable invoices are generated for all completed stock requests and orders.
 
 ---
@@ -21,7 +21,7 @@ Under this architecture:
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────────────┐
 │ PHASE 1: MASTER PRODUCT CREATION & BULK WAREHOUSE SEEDING                               │
-│ Admin creates Master Product (master_product_id = null, is_stock_managed = true).       │
+│ Admin creates Master Product (is_stock_managed = true).                                 │
 │ → Initial stock quantity is allocated directly into Central/Regional Warehouse.         │
 │ → StockLedger entry created (reference_type = 'admin_addition').                        │
 └─────────────────────────────────────────────────────────────────────────────────────────┘
@@ -44,17 +44,16 @@ Under this architecture:
                                            │
                                            ▼
 ┌─────────────────────────────────────────────────────────────────────────────────────────┐
-│ PHASE 4: ADMIN APPROVAL, STOCK DISPATCH & INVOICE GENERATION                            │
+│ PHASE 4: ADMIN APPROVAL, STOCK DISPATCH & INVENTORY ALLOCATION                          │
 │ Admin reviews request in Admin Panel (admin/stock-request/{id}).                       │
 │ → Admin clicks "Approve & Fulfill Request". (Informs admin on inventory shortfall).    │
 │ → WarehouseService::fulfillStockRequest() executes in a DB Transaction:               │
 │    a) Finds matching WarehouseStock via findStock() (smart color/size fallback).       │
 │    b) Deducts available warehouse stock (deductQty = min(requested, available)).        │
 │    c) Decrements Central Master Product quantity ($masterProduct->quantity).           │
-│    d) Clones/Updates Shop Copy Product (cloneMasterToShop) for target shop_id.         │
-│    e) Increments Shop Copy Product by actual dispatched qty ($deductQty).              │
-│    f) Logs StockLedger entry with reference_type = 'shop_request' (actual qty).        │
-│ → On shortfall: only available stock is dispatched; ledger & shop increment match.
+│    d) Increments Branch Inventory in shop_inventories (firstOrCreate for shop_id).     │
+│    e) Logs StockLedger entry with reference_type = 'shop_request' (actual qty).        │
+│ → On shortfall: only available stock is dispatched; ledger & shop inventory match.      │
 └─────────────────────────────────────────────────────────────────────────────────────────┘
                                            │
                                            ▼
@@ -70,8 +69,9 @@ Under this architecture:
 ┌─────────────────────────────────────────────────────────────────────────────────────────┐
 │ PHASE 6: CUSTOMER ONLINE ORDER & POS SALES FULFILLMENT                                  │
 │ Customer places online order OR Vendor processes POS sale at Shop.                      │
-│ → Sale processes against local Shop Copy Product ($shopProduct->id).                   │
-│ → OrderRepository / PosCartRepository decrements $shopProduct->quantity.               │
+│ → Order routing engine selects nearest eligible candidate shop with stock in           │
+│    shop_inventories.                                                                    │
+│ → OrderRepository / PosCartRepository decrements shop_inventories.quantity for that shop│
 │ → No StockLedger entry is written for the sale (see §1 Strict Ledger Auditing).         │
 └─────────────────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -82,15 +82,16 @@ Under this architecture:
 
 | Model / Table | Key Attributes | Purpose & Architectural Role |
 | :--- | :--- | :--- |
-| `Product` (`products`) | `id`, `name`, `shop_id`, `master_product_id`, `is_digital`, `is_stock_managed`, `quantity`, `price` | **Master Products** (`master_product_id = null`): Central catalog items.<br>**Shop Copy Products** (`master_product_id = X`, `shop_id = Y`): Local shop sellable stock items. |
+| `Product` (`products`) | `id`, `name`, `shop_id`, `is_digital`, `is_stock_managed`, `quantity`, `price` | **Single Canonical Catalog**: Central product definitions (images, pricing, categories, variants). |
+| `ShopInventory` (`shop_inventories`) | `id`, `shop_id`, `product_id`, `quantity`, `is_active` | **Branch Shop Inventory**: Tracks available sellable stock and active visibility per branch shop. |
 | `Warehouse` (`warehouses`) | `id`, `name`, `code`, `is_default`, `status` | Physical Central or Regional Warehouse hubs storing bulk stock. |
 | `WarehouseStock` (`warehouse_stock` — **singular table name**; model sets `protected $table = 'warehouse_stock'`) | `id`, `warehouse_id`, `product_id`, `color_id`, `size_id`, `quantity` | Tracks exact physical stock quantities of products inside a specific warehouse. |
 | `StockRequest` (`stock_requests`) | `id`, `shop_id`, `warehouse_id`, `status` (`pending`, `completed`, `rejected`), `notes` | Order request submitted by vendor shop to receive physical inventory from warehouse. |
 | `StockRequestItem` (`stock_request_items`) | `id`, `stock_request_id`, `product_id`, `color_id`, `size_id`, `quantity` | Line items attached to a StockRequest. |
 | `WarehouseTransfer` (`warehouse_transfers`) | `id`, `transfer_no`, `from_warehouse_id`, `to_warehouse_id`, `status`, `notes` | Tracks inventory transfers between two central/regional warehouses. |
 | `WarehouseTransferItem` (`warehouse_transfer_items`) | `id`, `warehouse_transfer_id`, `product_id`, `color_id`, `size_id`, `quantity` | Line items attached to an inter-warehouse transfer. |
-| `StockLedger` (`stock_ledgers`) | `id`, `from_warehouse_id`, `to_warehouse_id`, `product_id`, `quantity`, `reference_type` | Immutable audit log of warehouse-level movements only (`admin_addition`, `warehouse_transfer`, `shop_request`, `manual_adjustment`). Sales are **not** ledgered — they decrement Shop Copy Product inventory. |
-| `Shop` (`shops`) | `id`, `name`, `user_id`, `warehouse_id` | Vendor shop profile bound to a specific Linked Warehouse. |
+| `StockLedger` (`stock_ledgers`) | `id`, `from_warehouse_id`, `to_warehouse_id`, `product_id`, `quantity`, `reference_type` | Immutable audit log of warehouse-level movements only (`admin_addition`, `warehouse_transfer`, `shop_request`, `manual_adjustment`). Sales are **not** ledgered — they decrement `shop_inventories`. |
+| `Shop` (`shops`) | `id`, `name`, `user_id`, `warehouse_id` | Vendor shop profile bound to a specific Linked Warehouse and linked to products via `shop_inventories`. |
 
 ---
 

@@ -5,6 +5,8 @@ Janmitram Laravel 11 multi-vendor ecommerce platform, plus a deep trace of the
 **consumer order placement workflow**. Dates range from a structural review on
 2026-08-05. Sections are ordered roughly by severity/criticality.
 
+> **Update (2026-08-20):** Catalog normalization completed. Eliminated product clone copies in `products` (11 rows total); branch stock permanently transitioned to dedicated `shop_inventories` table with zero data loss on 63 past `order_products` and active carts.
+>
 > **Update (2026-08-10/11):** issues **#1**, **#2**, and **#5** are now resolved
 > (commits `2468392` and `51a47ac`). Since this analysis a **membership card system**
 > (`b12c180`) and **discount-price hardening** (`87f74ee`) were also added; the dead

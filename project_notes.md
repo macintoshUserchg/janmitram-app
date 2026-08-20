@@ -29,7 +29,7 @@ Docs-vs-Reality" near the end._
 | **Auth** | Laravel Sanctum ^4 (token-based API) + web session (admin/seller) |
 | **RBAC** | spatie/laravel-permission ^6 |
 | **Modules** | nwidart/laravel-modules ^12 — **installed but the `purchase`/`report` modules are asset-only stubs (no PHP); see "Known Gaps"** |
-| **Warehouse Architecture** | Option A Strict Warehouse Architecture (central master catalog, warehouse stocks, shop-linked logistics hubs, immutable stock ledger auditing) |
+| **Warehouse Architecture** | Normalized Single Catalog Architecture (central canonical catalog in `products`, dedicated branch inventory in `shop_inventories`, logistics hubs in `warehouse_stock`, immutable stock ledger auditing) |
 | **Frontend (customer)** | Vue 3 + Vite + Tailwind CSS 3 + Pinia + vue-router + vue-i18n |
 | **Admin & seller UI** | Blade templates styled with **Bootstrap 5 + Tailwind CSS** (both loaded; persistent collapsed sidebar) |
 | **Mobile apps** | Flutter/Dart (external — API surface in `routes/api.php`) |
@@ -41,7 +41,7 @@ Docs-vs-Reality" near the end._
 | **Exports & Invoices** | maatwebsite/excel, mpdf (invoice PDF generation), milon/barcode, endroid/qr-code |
 | **DB** | MySQL (MAMP local: `janmitram`) via a single `mysql` connection |
 | **MLM** | Network-marketing payout engine (`PayoutService`) — referral codes, `parent_shop_id` tree, Phase-1 10% personal + Phase-2 tiered group-sales bonus, 90-day deactivation; added 2026-08-01 |
-| **Testing** | PHPUnit ^11 (13 feature test files, 56 test methods, 1 unit) + Laravel Dusk ^8 (21 test classes, 89 test methods) |
+| **Testing** | PHPUnit ^11 (170 automated feature test methods, 644 assertions) + Laravel Dusk ^8 (21 test classes, 89 test methods) |
 | **Code style** | Laravel Pint ^1 |
 
 ---
