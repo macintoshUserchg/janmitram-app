@@ -21,28 +21,61 @@
 <script setup>
 import { HomeIcon } from '@heroicons/vue/24/solid';
 import { onMounted, ref, watch } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import AddressEditForm from '../components/AddressEditForm.vue';
 import AuthPageHeader from '../components/AuthPageHeader.vue';
+import LoadingSpin from '../components/LoadingSpin.vue';
 import { useAuth } from "../stores/AuthStore";
 
 const route = useRoute();
+const router = useRouter();
 const authStore = useAuth();
 const address = ref({});
+const isLoading = ref(true);
 
 const loadAddress = async () => {
-    if (!authStore.addresses || authStore.addresses.length === 0) {
-        await authStore.fetchAddresses();
+    isLoading.value = true;
+    if (!authStore.token) {
+        authStore.showLoginModal();
+        router.push('/');
+        return;
     }
-    const found = authStore.getAddressById(route.params.id);
-    if (found) {
-        address.value = { ...found };
+    try {
+        if (!authStore.addresses || authStore.addresses.length === 0) {
+            await authStore.fetchAddresses();
+        }
+        const found = authStore.getAddressById(route.params.id);
+        if (found) {
+            address.value = { ...found };
+        } else {
+            // If address not found in cached list, try fetching fresh
+            await authStore.fetchAddresses();
+            const freshFound = authStore.getAddressById(route.params.id);
+            if (freshFound) {
+                address.value = { ...freshFound };
+            }
+        }
+    } catch (e) {
+        console.error("Error loading address:", e);
+    } finally {
+        isLoading.value = false;
     }
 };
 
 onMounted(() => {
     loadAddress();
 });
+
+watch(
+    () => authStore.addresses,
+    () => {
+        const found = authStore.getAddressById(route.params.id);
+        if (found) {
+            address.value = { ...found };
+        }
+    },
+    { deep: true }
+);
 
 watch(
     () => route.params.id,

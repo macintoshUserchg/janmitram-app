@@ -485,21 +485,16 @@ const addressFormSubmit = () => {
 
 const getAreaOptions = () => {
     axios
-        .get("/areas", formData.value, {
+        .get("/areas", {
             headers: {
                 Authorization: authStore.token,
             },
         })
         .then((response) => {
-            areaOptions.value = response.data.data.areas;
+            areaOptions.value = response.data.data?.areas || [];
         })
         .catch((error) => {
-            toast.error(error.response.data.message, {
-                position:
-                    masterStore.langDirection === "rtl"
-                        ? "bottom-right"
-                        : "bottom-left",
-            });
+            console.error("Error loading areas:", error);
         });
 };
 

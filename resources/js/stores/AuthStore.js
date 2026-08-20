@@ -45,7 +45,7 @@ export const useAuth = defineStore("authStore", {
         },
 
         fetchAddresses() {
-            axios
+            return axios
                 .get("/addresses", {
                     headers: {
                         Authorization: this.token,
@@ -62,14 +62,16 @@ export const useAuth = defineStore("authStore", {
                             basketStore.address = this.addresses[0];
                         }
                     });
+                    return this.addresses;
                 })
                 .catch((error) => {
-                    if (error.response.status === 401) {
+                    if (error.response?.status === 401) {
                         this.token = null;
                         this.user = null;
                         this.addresses = [];
                         this.favoriteProducts = 0;
                     }
+                    throw error;
                 });
         },
         fetchFavoriteProducts() {
