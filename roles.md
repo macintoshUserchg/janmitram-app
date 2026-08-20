@@ -89,3 +89,12 @@ For custom shop staff and store manager roles (`is_shop = true`):
 * **Interface URL**: `https://janmitram.com/admin/role/{role}/permission`
 * **Controller**: `App\Http\Controllers\Admin\RolePermissionController`
 * **Update Method**: `syncPermissions($request->permissions)` with automatic cache clearance (`role_permissions_{id}`).
+
+---
+
+## 5. Recent System Policy & Business Rule Updates (2026-08-20)
+
+* **Shop Commission Models**: Direct / Zero-Fee models bypass commission wallet debits while retaining full transaction records.
+* **Review Moderation**: Customer product reviews start in `pending` (`is_active = 0`) guarded by `ActiveScope` until reviewed under `admin.review.approve`.
+* **Direct Downline Capacity**: Enforced programmatically (10 direct downline partners maximum per standard franchise shop).
+* **First Stock Dispatch Minimum Threshold**: Enforced at ₹3,000 minimum aggregate value for initial shop stock transfer.

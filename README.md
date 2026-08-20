@@ -1,39 +1,76 @@
 # Janmitram App
 
-Laravel ecommerce SPA.
+Modern multi-vendor e-commerce platform with strict Option A warehouse inventory management, zero-permission IP geolocation, Google Maps integration, dual-phase MLM network marketing engine, Razorpay payments, and a high-performance Vue 3 customer SPA.
 
-## Setup
+---
 
-### MAMP
+## Key System Features
 
-1. Open MAMP → Preferences → Web Server
-2. Set **Document Root** to the project's `public/` folder:
-   ```
-   /Applications/MAMP/htdocs/janmitram-app/public
-   ```
-3. Apache restarts automatically. App loads at:
-   ```
-   http://localhost:8888/
-   ```
+* **Option A Strict Warehouse Architecture**: Central master catalog with centralized warehouse inventory deposits, immutable `StockLedger` auditing, and shop copy product cloning.
+* **Automated IP-First Geolocation**: Zero-permission customer City/PIN detection via IP geolocation, with graceful fallback to Central Hub Jaipur (`302013`) for overseas/non-Indian visitors.
+* **Multi-Shop Round-Robin Discovery**: Fair round-robin product distribution across local branch shops with zero product name duplication; strict exclusion of Main Janmitram Shop (Shop #1) from homepage discovery.
+* **Google Maps Platform**: Google Maps JavaScript SDK & Google Places API (New) with interactive draggable pins, doorstep reverse geocoding, and live driver GPS tracking.
+* **Flexible Shop Business Models**: Support for both Commission-Based and Direct / None Zero-Fee models.
+* **Streamlined Razorpay Integration**: Pre-selection of Razorpay when sole active online gateway; automatic popup window lifecycle synchronization.
+* **Dual-Phase MLM Payout Engine**: Automated monthly payout calculations with direct downline capacity enforcement (10 direct downlines max per standard partner shop).
+* **Enterprise Corporate Invoicing**: Unified 12mm printable page margins in mPDF with itemized GST percentages and dynamic QR codes.
 
-**Alternative (no MAMP config change):**
+---
+
+## Local Development Setup (MAMP)
+
+### 1. Document Root Configuration
+* **Document Root**: `/Applications/MAMP/htdocs/janmitram-app/public`
+* **Local App URL**: `http://localhost:8888/` or `http://localhost:8888/janmitram-app/`
+
+### 2. Environment Configuration
+Copy `.env.example` to `.env` and verify database credentials:
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=janmitram
+DB_USERNAME=root
+DB_PASSWORD=root
 ```
-http://localhost:8888/janmitram-app/public/
-```
 
-### Environment
-
-Copy `.env.example` to `.env` and configure:
-
-| Key | Value |
-|-----|-------|
-| `DB_DATABASE` | `janmitram` |
-| `DB_USERNAME` | `root` |
-| `DB_PASSWORD` | `root` |
-
-### Database
-
+### 3. Database Migration & Caches
 ```bash
 php artisan migrate
+php artisan optimize:clear
+php artisan view:cache
 ```
-Last update for deploy test: 2026-07-08T10:55:39
+
+### 4. Frontend Asset Compilation
+```bash
+# Development hot-reload
+npm run dev
+
+# Production build
+npm run build
+```
+
+---
+
+## Testing & Code Formatting
+
+```bash
+# Run full automated PHPUnit test suite (157 tests / 574 assertions)
+php artisan test --compact
+
+# Run specific feature test suites
+php artisan test --compact --filter=LocationResolutionTest
+php artisan test --compact --filter=GoogleMapsIntegrationTest
+php artisan test --compact --filter=ShopBusinessSettingTest
+
+# Format PHP code style
+vendor/bin/pint --dirty --format agent
+```
+
+---
+
+## Production Deployment
+
+* **Live Domain**: [https://janmitram.com](https://janmitram.com)
+* **Production Database**: `u939461333_app_janmitram`
+* _Last updated: 2026-08-20._

@@ -142,6 +142,21 @@ only printed `coupon_discount`, omitting `card_discount` and itemized GST percen
 and Discounts columns to `/admin/order`, comprehensive financial breakdowns to order views,
 and itemized GST percentages with bold units on PDF invoices.
 
+### 15. Razorpay popup window did not auto-close or sync on payment completion
+Payment completion in a popup window left the tab open and did not notify the parent checkout page.
+
+**Status:** ✅ **Resolved 2026-08-19** (`4cccd8e`) — Integrated `window.postMessage` and `localStorage` listener synchronization, auto-closing the popup and redirecting to the order confirmation page.
+
+### 16. Commission deductions on direct/zero-fee franchise models
+When shops operate on a zero-commission model, wallet deductions needed to be bypassed cleanly.
+
+**Status:** ✅ **Resolved 2026-08-19** (`5602c5e`, `6166ae6`) — Added Direct Zero-Fee model support in business settings and hardened wallet balance debit logic.
+
+### 17. Multi-shop catalog redundancy & single-shop order locking
+Homepage catalog in multi-branch cities showed products from only one shop, causing orders to always flow to that single shop.
+
+**Status:** ✅ **Resolved 2026-08-20** (`bb95720`) — Implemented round-robin product distribution across active local branches with strict deduplication (zero duplicate product names) and strict exclusion of Central Shop 1.
+
 ---
 
 ## Notes
@@ -150,4 +165,4 @@ and itemized GST percentages with bold units on PDF invoices.
   `OrderRepository::storeByRequestFromCart()` (~220 lines) that mixes
   allocation, pricing, stock, licensing, and mailing.
 - Findings marked "verified against code" in this file were re-checked against
-  the on-disk routes, migrations, and source during 2026-08-17.
+  the on-disk routes, migrations, and source during 2026-08-20.

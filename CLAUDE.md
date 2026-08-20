@@ -36,9 +36,15 @@ are not derivable from a fresh read of the code.
 ## Payment gateways
 - 11 pluggable gateways via `Gateway/PaymentGatewayController` + per-gateway `ProcessController.php`:
   AamarPay, Bkash, CashFree, JazzCash, PayPal, PayStack, PayTabs, PayU, QiCard, Razorpay, Stripe.
-- **Known gap:** `Gateway/PayPal|Bkash|PayTabs/ProcessController.php` reference `paypal.payment.success`,
-  `bkash.payment.execute`, `paytabs.payment.callback` named routes, but **those routes are not
-  registered** — PayPal capture / Bkash execute / PayTabs callback will throw "Route not defined".
+- Razorpay auto-selects and hides redundant gateway cards when it is the sole active online gateway. Payment popup windows synchronize via `window.postMessage` and `localStorage` to auto-close and return cleanly to order placement.
+
+## Mapping & Geolocation
+- Mapping infrastructure uses Google Maps JavaScript SDK and Google Places API (New) with `GoogleMapsService`.
+- Customer browsing location is resolved via automated zero-permission IP Geolocation (`LocationController`, `LocationStore.js`), gracefully defaulting international IPs to Central Hub Jaipur (`302013`).
+
+## Homepage Product Distribution
+- Popular Products uses a fair round-robin distribution across active local branch shops in the user's city with strict deduplication (zero repeated product names).
+- Main Janmitram Shop (`Shop ID: 1` / Central Warehouse) is strictly excluded from homepage Popular Products and Just For You sections.
 
 ## Repository pattern
 - `app/Repositories/*` extend `App\Support\Repositories\Repository` (static `model()`,
@@ -50,5 +56,6 @@ are not derivable from a fresh read of the code.
 
 ## Frontend / verification
 - If a frontend change isn't reflected, run `npm run build`, `npm run dev`, or `composer run dev`.
+- PHPUnit test suite (157 tests / 574 assertions): run with `php artisan test --compact`.
 - Dusk browser tests: `tests/Browser/` — run with `php artisan dusk --filter=testName`.
 - After PHP edits, run `vendor/bin/pint --dirty --format agent`.

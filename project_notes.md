@@ -569,26 +569,72 @@ source:
 * **Monthly Cycle**: Admin calculates monthly payouts once per month (on or after the 1st of the month for the prior calendar month) using `php artisan payout:monthly` or the Admin Payout dashboard (`/admin/payout`).
 * **Manual Withdrawals**: In addition to monthly payout calculations, franchise shop owners can submit withdrawal requests for their approved earnings at any time via `/shop/withdraw`.
 
-### 9. Ola Maps Geolocation, Places Autocomplete & Live Driver Tracking (Updated 2026-08-19)
-* **Ola Krutrim Cloud Integration**:
-  * Migrated mapping and geocoding stack from Leaflet/OSM to **Ola Maps (Krutrim Cloud Vector SDK & Places API)**.
-  * Configured `OLA_MAPS_API_KEY` and `OLA_MAPS_CLIENT_SECRET` in `config/services.php` and `.env`.
-  * `OlaMapsService` provides automatic OAuth 2.0 Token generation (`/auth/v1/token`), Places Autocomplete (`/places/v1/autocomplete`), Reverse Geocoding (`/places/v1/reverse-geocode`), and turn-by-turn Routing (`/routing/v1/directions`).
-  * Built-in multi-tier fallback ensures zero downtime or blank maps if keys are missing or during upstream maintenance.
+### 9. Google Maps JavaScript SDK & Google Places API (New) Integration (Updated 2026-08-19)
+* **Google Cloud Maps Platform Transition**:
+  * Fully transitioned mapping and geocoding stack to **Google Maps JavaScript SDK & Google Places API (New)**.
+  * Configured `GOOGLE_MAPS_API_KEY` in `config/services.php` and `.env`.
+  * `GoogleMapsService` provides Places Autocomplete (`/places/v1/autocomplete`), Details lookup, Doorstep Reverse Geocoding (`/geocode/json`), and turn-by-turn Directions.
+  * Built-in in-memory query caching, request cancellation, and multi-tier coordinate resolution guarantee zero map disruption.
 * **Frontend Vue 3 SPA Components**:
-  * `MapDisplay.vue`: 60fps vector map with Ola signature orange pin, instant autocomplete search, and HTML5 GPS auto-detection.
+  * `MapDisplay.vue`: Luxury vector map with interactive drag pin, satellite hybrid toggle, rich doorstep address banner, HTML5 GPS auto-detection, and modal ResizeObserver.
   * `RealTimeMapDisplay.vue`: Live order tracking with customer home pin, driver pin, dynamic route polyline, and Pusher WebSocket updates.
 * **Blade Dashboards**:
-  * `janmitram-map-helper.js`: Global helper for Franchise Registration (`/shop/register`), Admin Order Live Dispatch (`/admin/order/{id}`), and Admin Rider Fleet (`/admin/rider`).
-* Covered by `OlaMapsIntegrationTest` (5 tests, 24 assertions).
+  * Upgraded Admin and Shop order location modals to the Google Maps SDK (`admin/order/{id}`, `shop/order/{id}`).
+* Covered by `GoogleMapsIntegrationTest` (5 tests, 24 assertions).
+
+### 10. Automated Zero-Permission IP Geolocation & City Vicinity Resolution (Updated 2026-08-20)
+* **1st Priority: Automated IP Geolocation (Zero Permission Popups)**:
+  * Automatically detects customer IP (`CF-Connecting-IP`, `X-Real-IP`, `X-Forwarded-For`, `REMOTE_ADDR`) on page load via `LocationController@resolve` (`/api/location/resolve`).
+  * Resolves visitor's City, State, and Postal PIN without prompt-blocking browser permission dialogs.
+  * Matched shops in the customer's city/vicinity are automatically bound to the active session.
+* **Non-Indian / Overseas Visitor Handling**:
+  * When international visitors access the platform (`countryCode !== 'IN'`), the engine gracefully defaults their browsing session to Janmitram's Central Hub (`Jaipur, Rajasthan - 302013`).
+* **Frontend State & Components**:
+  * Managed by Pinia `LocationStore.js` with `localStorage` caching (`janmitram_user_location`).
+  * `LocationPickerModal.vue`: HeadlessUI modal for instant city switching, 6-digit postal PIN search, and branch store selection.
+  * `NavbarMiddle.vue`: Displays `📍 Delivering to: [City (Pincode)] ▾` with quick modal trigger.
+* Covered by `LocationResolutionTest` (4 tests, 15 assertions).
+
+### 11. Homepage Multi-Branch Shop Round-Robin Product Distribution & Main Shop Exclusion (Updated 2026-08-20)
+* **Fair Multi-Shop Round-Robin Distribution**:
+  * In `HomeController@index` (`/api/home`), products displayed in the **Popular Products** section are selected in a round-robin sequence across all active local branch shops in the user's city (Shop A ➔ item 1, Shop B ➔ item 2, Shop C ➔ item 3, etc.).
+  * **Zero Product Redundancy**: Strict automated deduplication guarantees that each product name appears only once across the entire section.
+* **Strict Exclusion of Main Janmitram Shop (Shop ID: 1 / Central Warehouse)**:
+  * Products belonging to `Shop ID: 1` (`rootShop`) are strictly excluded from both the homepage **Popular Products** and **Just For You** sections, focusing customer attention entirely on local franchise branches.
+* **Out-of-Area Fallback**:
+  * Visitors from cities without a dedicated branch shop receive a fair, randomized product assortment across active regional branch shops nationwide (excluding Shop 1).
+* **Catalog Synchronization**:
+  * `Products.vue` and `CategoryProduct.vue` dynamically pass `nearest_shop_id` or city to prioritize local branch inventory.
+
+### 12. Razorpay Payment Gateway Streamlining & Window Lifecycle Sync (Updated 2026-08-19)
+* **Single Gateway Auto-Selection**: When Razorpay is the sole active online gateway configured in the admin dashboard, the checkout flow automatically pre-selects Razorpay and hides redundant gateway selection cards.
+* **Popup Lifecycle & Auto-Close**: Integrated `window.postMessage` and `localStorage` listener synchronization in `Razorpay/ProcessController.php` so payment popup windows automatically close and return customers seamlessly to the order confirmation page.
+* **Route & Data Hardening**: Registered `order.payment` named route, sanitized customer phone payloads, and secured callback token capture.
+
+### 13. Shop Business Models: Direct / Zero-Fee Support (Updated 2026-08-19)
+* **Flexible Commission Schemes**: Under `Admin -> Business Settings -> Shop Settings`, admins can configure either the traditional **Commission-Based Model** or the new **Direct / None Zero-Fee Model**.
+* **Wallet Debit Safeguards**: For zero-fee shops, commission deductions are automatically bypassed on completed orders while maintaining comprehensive transaction logs.
+* Covered by `ShopBusinessSettingTest` (comprehensive assertions).
+
+### 14. Enterprise Corporate PDF Architecture (Updated 2026-08-19)
+* **Unified Printable Margin Boundary**: Standardized a consistent **12mm page margin boundary** in mPDF across all system PDFs (Tax Invoices, POS Receipts, Stock Transfer Invoices, and Payment Slips).
+* **Itemized GST & Discounts Breakdown**: PDFs feature clean tables with itemized GST percentages (`GST (5%)`, `GST (12%)`, etc.), product measurement units in bold, coupon/card discount breakdowns, and dynamic QR verification codes.
+
+### 15. Frontend UI/UX Modernization & Brand Unification (Updated 2026-08-19)
+* **Product Card In-Card Steppers**: Integrated quantity steppers directly inside `ProductCard.vue` allowing customers to add/adjust items with zero page jumps.
+* **Debounced Live Search Popup**: Rich search dropdown in `NavbarMiddle.vue` with category badges, instant product previews, and keyboard navigation.
+* **Mobile Sticky Action Bar**: Sticky floating add-to-cart and buy-now bar on mobile screens in `ProductDetails.vue`.
+* **System-wide Brand Favicon**: Replaced generic icons with the official Janmitram brand logo across all browser tabs, customer SPA, Blade layouts, and payment callback screens.
 
 ---
 
 ### Test coverage summary
 
-**Strong Test Coverage (149 Test Classes, 552 Assertions):**
-* **Ola Maps & Geolocation**: `OlaMapsIntegrationTest` (5 tests, 24 assertions)
+**Strong Test Coverage (157 Test Classes / 574 Assertions):**
+* **Location & Catalog Resolution**: `LocationResolutionTest` (4 tests, 15 assertions)
+* **Google Maps Integration**: `GoogleMapsIntegrationTest` (5 tests, 24 assertions)
 * **MLM & Network Payouts**: `PayoutTest` (15 tests), `PayoutNetworkTest`, `PayoutSlipTest`, `ShopPayoutTest`, `ShopWithdrawalPayoutIntegrationTest`
+* **Shop Business Models**: `ShopBusinessSettingTest` (comprehensive commission & zero-fee assertions)
 * **Downline Capacity & Recruitment**: `DownlineRecruitmentTest`, `AdminShopCreateTest`
 * **Shop KYC & Onboarding**: `AdminShopKycTest`, `ShopRegistrationVerificationTest`
 * **Stock & Warehouse Management**: `WarehouseTest`, `ProductWarehouseSyncTest`, `ShopInventoryAssignmentTest`, `FirstStockTransferThresholdTest` (6 tests)
@@ -600,4 +646,5 @@ source:
 
 ---
 
-_Last updated: 2026-08-19. Fully verified against the codebase and live production environment._
+_Last updated: 2026-08-20. Fully verified against the codebase and live production environment._
+

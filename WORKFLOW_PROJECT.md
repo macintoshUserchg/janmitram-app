@@ -270,15 +270,53 @@ The **Shop Vendor Sidebar** (`resources/views/layouts/partials/shop-menu.blade.p
 
 ---
 
-### 13. Automated Testing & Code Verification
+### 13. Automated Zero-Permission IP Geolocation & City Vicinity Engine
+- **IP-First Location Resolution**:
+  - Automatically resolves visitor IP on page load via `LocationController@resolve` (`/api/location/resolve`) into City, State, and PIN code with zero permission popups.
+  - Active franchise shops in the customer's city are matched and bound to the session.
+  - Non-Indian / international IPs (`countryCode !== 'IN'`) gracefully default to Central Hub (`Jaipur, Rajasthan - 302013`).
+- **Storefront & Delivery UI**:
+  - Pinia `LocationStore.js` with `localStorage` caching (`janmitram_user_location`).
+  - `LocationPickerModal.vue`: Allows switching destination city, entering 6-digit postal PIN codes, or picking from local branches.
+  - `NavbarMiddle.vue`: Prominent `📍 Delivering to: [City (Pincode)] ▾` indicator.
 
-To ensure system integrity across all warehouse transactions, stock request fulfillments, review moderation, and order allocation:
+### 14. Homepage Multi-Branch Shop Round-Robin Product Distribution
+- **Fair Round-Robin Catalog Sequence**:
+  - In `HomeController@index`, items in the **Popular Products** section are picked in a round-robin sequence across all active branch shops in the user's city (Shop A ➔ item 1, Shop B ➔ item 2, Shop C ➔ item 3, etc.).
+  - **Zero Duplicate Product Names**: Automated deduplication guarantees that each product name appears only once across the entire section.
+- **Strict Main Shop Exclusion**:
+  - Products from **Main Janmitram Shop (Shop ID: 1 / Central Warehouse)** are strictly excluded from both the homepage **Popular Products** and **Just For You** sections, driving customer orders directly to local franchise branches.
+- **Fallback for Non-Branch Cities**:
+  - Visitors from cities without a local branch receive a balanced, randomized assortment across all active regional branch shops nationwide.
+
+### 15. Google Maps Platform & Doorstep Geocoding SDK
+- **Google Maps JavaScript SDK & Google Places API (New)**:
+  - Transitioned mapping and geocoding stack to Google Maps JavaScript SDK and Places API (New) with `GOOGLE_MAPS_API_KEY`.
+  - `GoogleMapsService` provides Places Autocomplete, place details lookup, and doorstep reverse geocoding with in-memory query caching and multi-tier coordinate resolution.
+  - Upgraded `MapDisplay.vue` (interactive draggable pin, satellite hybrid layer, rich doorstep address banner) and `RealTimeMapDisplay.vue` (live driver GPS tracking).
+
+### 16. Razorpay Payment Gateway Optimization & Window Lifecycle Sync
+- **Single Gateway Pre-Selection**: Automatically pre-selects Razorpay and hides redundant gateway selection cards when Razorpay is the only active online gateway configured.
+- **Popup Lifecycle Management**: Integrated `window.postMessage` and `localStorage` listener synchronization in `Razorpay/ProcessController.php` so payment popup tabs automatically close upon transaction completion and smoothly return customers to the order confirmation screen.
+
+### 17. Shop Business Models: Direct / Zero-Fee Support
+- **Dual Business Model Support**: Under `Admin -> Business Settings -> Shop Settings`, admins can configure either the traditional **Commission-Based Model** or the **Direct / None Zero-Fee Model**.
+- **Wallet Debit Protection**: Commission deductions are automatically bypassed on zero-fee shop orders, while full audit logging is preserved.
+
+---
+
+### 18. Automated Testing & Code Verification
+
+To ensure system integrity across all warehouse transactions, stock request fulfillments, review moderation, geolocation, and order allocation:
 
 ```bash
-# Run all automated feature/unit tests compact (144 test classes / 528 assertions)
+# Run all automated feature/unit tests compact (157 test classes / 574 assertions)
 php artisan test --compact
 
 # Filter specific feature test suites
+php artisan test --compact --filter=LocationResolutionTest
+php artisan test --compact --filter=GoogleMapsIntegrationTest
+php artisan test --compact --filter=ShopBusinessSettingTest
 php artisan test --compact --filter=FirstStockTransferThresholdTest
 php artisan test --compact --filter=OrderShopFulfillmentModeTest
 php artisan test --compact --filter=ReviewApprovalAndModerationTest
@@ -295,4 +333,5 @@ vendor/bin/pint --dirty --format agent
 
 ---
 
-_Last updated: 2026-08-19. Option A Warehouse, First Stock Threshold (₹3,000), Fulfillment Mode Toggle, Review Approval & Moderation, and MLM Downline Capacity architecture fully verified._
+_Last updated: 2026-08-20. Option A Warehouse, IP Geolocation Engine, Round-Robin Multi-Shop Catalog, Google Maps SDK, First Stock Threshold (₹3,000), Fulfillment Mode Toggle, Review Approval & Moderation, and MLM Downline Capacity architecture fully verified._
+
