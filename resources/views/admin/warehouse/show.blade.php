@@ -42,19 +42,14 @@
 @endif
 
 @if(!$warehouse->isCentralHub())
-    <div class="alert alert-info border-0 shadow-sm rounded-12 mb-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
-        <div class="d-flex align-items-center gap-3">
-            <div class="p-2 bg-info-subtle rounded-circle text-info fs-4">
-                <i class="fas fa-network-wired"></i>
-            </div>
-            <div>
-                <div class="fw-bold text-dark">{{ __('Sub-Warehouse Stock Distribution Mode') }}</div>
-                <div class="small text-muted">{{ __('Sub-warehouses receive stock exclusively through Warehouse Transfers dispatched from Central Logistics Hub.') }}</div>
-            </div>
+    <div class="alert alert-info border-0 shadow-sm rounded-12 mb-4 d-flex align-items-center gap-3">
+        <div class="p-2 bg-info-subtle rounded-circle text-info fs-4">
+            <i class="fas fa-network-wired"></i>
         </div>
-        <a href="{{ route('admin.warehouse-transfer.create') }}" class="btn btn-sm btn-primary fw-bold">
-            <i class="fas fa-dolly me-1"></i> {{ __('New Stock Transfer') }}
-        </a>
+        <div>
+            <div class="fw-bold text-dark">{{ __('Sub-Warehouse Stock Distribution Mode') }}</div>
+            <div class="small text-muted">{{ __('Sub-warehouses receive stock exclusively through Warehouse Transfers dispatched from Central Logistics Hub.') }}</div>
+        </div>
     </div>
 @endif
 
