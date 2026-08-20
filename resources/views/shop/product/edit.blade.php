@@ -541,13 +541,16 @@
                     <div class="col-md-7 col-xl-9 mt-3 mt-md-0">
                         <div class="card h-100">
                             <div class="card-body">
-                                <div class="mb-2">
+                                <div class="mb-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
                                     <h5>
-                                        {{ __('Additional Thumbnail') }}
-                                        <span class="text-primary">(Ratio 1:1 (500 x 500 px))</span> *
+                                        {{ __('Additional Gallery Images') }}
+                                        <span class="text-primary">(Ratio 1:1 (500 x 500 px))</span>
                                     </h5>
+                                    <span class="badge bg-light text-dark border" id="galleryCountBadge">
+                                        {{ $product->medias->count() }} / 4 {{ __('gallery images (Total') }} {{ $product->medias->count() + ($product->media ? 1 : 0) }} / 5)
+                                    </span>
                                     @error('additionThumbnail')
-                                        <p class="text-danger">{{ $message }}</p>
+                                        <p class="text-danger w-100">{{ $message }}</p>
                                     @enderror
                                 </div>
 
@@ -562,7 +565,7 @@
                                             }
                                         @endphp
 
-                                        <div id="additionShow">
+                                        <div id="additionShow_{{ $media->id }}" class="existing-thumbnail-box">
                                             <label for="previousThumbnailShow{{ $media->id }}"
                                                 class="additionThumbnail">
                                                 <img src="{{ $source }}" id="previewShow{{ $media->id }}"
@@ -583,7 +586,7 @@
                                     @endforeach
 
                                     <!-- New additional thumbnail -->
-                                    <div id="addition">
+                                    <div id="addition" style="{{ $product->medias->count() >= 4 ? 'display: none;' : '' }}">
                                         <label for="additionThumbnail1" class="additionThumbnail">
                                             <img src="{{ asset('default/upload.png') }}" id="preview2" alt=""
                                                 width="100%" height="100%">
@@ -1234,55 +1237,112 @@
         setDefaultPrice();
     </script>
     <!-- additional thumbnail script -->
+    <!-- additional thumbnail script -->
     <script>
-        var thumbnailCount = 1;
+        const MAX_ADDITIONAL_IMAGES = 4;
+        var thumbnailCounter = 1;
+
+        const getTotalGalleryCount = () => {
+            const existingCount = document.querySelectorAll('.existing-thumbnail-box').length;
+            const newInputs = document.querySelectorAll('input[name="additionThumbnail[]"]');
+            let newCount = 0;
+            newInputs.forEach(input => {
+                if (input.files && input.files.length > 0) {
+                    newCount++;
+                }
+            });
+            return existingCount + newCount;
+        };
+
+        const updateGalleryBadge = () => {
+            const count = getTotalGalleryCount();
+            const badge = document.getElementById('galleryCountBadge');
+            if (badge) {
+                badge.innerText = `${count} / ${MAX_ADDITIONAL_IMAGES} gallery images (Total ${count + 1} / 5)`;
+            }
+
+            const additionBox = document.getElementById('addition');
+            if (additionBox) {
+                if (count >= MAX_ADDITIONAL_IMAGES) {
+                    additionBox.style.display = 'none';
+                } else {
+                    additionBox.style.display = '';
+                }
+            }
+        };
 
         const previewAdditionalFile = (event, id, removeId) => {
+            if (!event.target.files || !event.target.files[0]) return;
+
             var reader = new FileReader();
             reader.onload = function() {
                 var output = document.getElementById(id);
-                output.src = reader.result;
+                if (output) output.src = reader.result;
             };
             reader.readAsDataURL(event.target.files[0]);
 
-            // increment count
-            thumbnailCount++;
+            const removeBtn = document.getElementById(removeId);
+            if (removeBtn) removeBtn.style.display = 'block';
 
-            document.getElementById(removeId).style.display = 'block';
+            // Set onchange for replacing
+            event.target.setAttribute("onchange", `previewFile(event, '${id}')`);
 
-            // Create a new box dynamically
-            const newThumbnailId = `additionThumbnail${thumbnailCount + 1}`;
-            const newPreviewId = `preview${thumbnailCount + 1}`;
-            const mainId = 'addition' + thumbnailCount + 1;
+            thumbnailCounter++;
+            updateGalleryBadge();
 
-            // Add the new box
-            const newThumbnailBox = document.createElement('div');
-            newThumbnailBox.id = mainId;
+            // If total gallery images is still < 4, create next empty slot
+            if (getTotalGalleryCount() < MAX_ADDITIONAL_IMAGES) {
+                const newThumbnailId = `additionThumbnail${thumbnailCounter}`;
+                const newPreviewId = `preview${thumbnailCounter}`;
+                const mainId = 'addition' + thumbnailCounter;
 
-            newThumbnailBox.innerHTML = `
-            <label for="${newThumbnailId}" class="additionThumbnail">
-                <img src="{{ asset('default/upload.png') }}" id="${newPreviewId}" alt="" width="100%" height="100%">
-                <button onclick="removeThumbnail('${mainId}')" type="button" id="removeThumbnail${thumbnailCount + 1}" class="delete btn btn-sm btn-outline-danger circleIcon" style="display: none"><img src="{{ asset('assets/icons-admin/trash.svg') }}" loading="lazy" alt="trash" /></button>
-                <input id="${newThumbnailId}" accept="image/*" type="file" name="additionThumbnail[]" class="d-none" onchange="previewAdditionalFile(event, '${newPreviewId}', 'removeThumbnail${thumbnailCount +1 }')">
-            </label>
-        `;
-
-            document.getElementById('additionalElements').appendChild(newThumbnailBox);
-
-            // get current file
-            var inputElement = event.target;
-            var newOnchangeFunction = `previewFile(event, '${id}')`;
-            // Set the new onchange attribute
-            inputElement.setAttribute("onchange", newOnchangeFunction);
-
-        }
+                const newThumbnailBox = document.createElement('div');
+                newThumbnailBox.id = mainId;
+                newThumbnailBox.innerHTML = `
+                    <label for="${newThumbnailId}" class="additionThumbnail">
+                        <img src="{{ asset('default/upload.png') }}" id="${newPreviewId}" alt="" width="100%" height="100%">
+                        <button onclick="removeThumbnail('${mainId}')" type="button" id="removeThumbnail${thumbnailCounter}" class="delete btn btn-sm btn-outline-danger circleIcon" style="display: none"><img src="{{ asset('assets/icons-admin/trash.svg') }}" loading="lazy" alt="trash" /></button>
+                        <input id="${newThumbnailId}" accept="image/*" type="file" name="additionThumbnail[]" class="d-none" onchange="previewAdditionalFile(event, '${newPreviewId}', 'removeThumbnail${thumbnailCounter}')">
+                    </label>
+                `;
+                document.getElementById('additionalElements').appendChild(newThumbnailBox);
+            }
+        };
 
         const removeThumbnail = (thumbnailId) => {
             const thumbnailToRemove = document.getElementById(thumbnailId);
             if (thumbnailToRemove) {
-                thumbnailToRemove.parentNode.removeChild(thumbnailToRemove);
+                thumbnailToRemove.remove();
             }
-        }
+            updateGalleryBadge();
+
+            // Check if there is an empty upload slot available
+            const inputs = document.querySelectorAll('input[name="additionThumbnail[]"]');
+            let hasEmptySlot = false;
+            inputs.forEach(input => {
+                if (!input.files || input.files.length === 0) {
+                    hasEmptySlot = true;
+                }
+            });
+
+            if (!hasEmptySlot && getTotalGalleryCount() < MAX_ADDITIONAL_IMAGES) {
+                thumbnailCounter++;
+                const newThumbnailId = `additionThumbnail${thumbnailCounter}`;
+                const newPreviewId = `preview${thumbnailCounter}`;
+                const mainId = 'addition' + thumbnailCounter;
+
+                const newThumbnailBox = document.createElement('div');
+                newThumbnailBox.id = mainId;
+                newThumbnailBox.innerHTML = `
+                    <label for="${newThumbnailId}" class="additionThumbnail">
+                        <img src="{{ asset('default/upload.png') }}" id="${newPreviewId}" alt="" width="100%" height="100%">
+                        <button onclick="removeThumbnail('${mainId}')" type="button" id="removeThumbnail${thumbnailCounter}" class="delete btn btn-sm btn-outline-danger circleIcon" style="display: none"><img src="{{ asset('assets/icons-admin/trash.svg') }}" loading="lazy" alt="trash" /></button>
+                        <input id="${newThumbnailId}" accept="image/*" type="file" name="additionThumbnail[]" class="d-none" onchange="previewAdditionalFile(event, '${newPreviewId}', 'removeThumbnail${thumbnailCounter}')">
+                    </label>
+                `;
+                document.getElementById('additionalElements').appendChild(newThumbnailBox);
+            }
+        };
 
         const generateCode = () => {
             const code = document.getElementById('barcode');

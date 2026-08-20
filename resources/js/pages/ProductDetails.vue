@@ -19,11 +19,12 @@
                 <div class="flex flex-wrap lg:flex-nowrap gap-4 mt-6">
                     <div class="lg:w-[480px] w-full">
                         <div class="w-full">
-                            <div class="bg-slate-50 rounded-xl border border-slate-100 px-6">
-                                <swiper :spaceBetween="10" :thumbs="{ swiper: thumbsSwiper }" :modules="modules"
+                            <div class="bg-slate-50 rounded-xl border border-slate-100 px-6 pb-2 pt-2">
+                                <swiper :spaceBetween="10" :thumbs="{ swiper: thumbsSwiper }"
+                                    :pagination="{ clickable: true, dynamicBullets: true }" :modules="modules"
                                     class="product-details-slider">
                                     <swiper-slide v-for="thumbnail in product.thumbnails" :key="thumbnail.id"
-                                        class="max-h-[448px] h-auto">
+                                        class="max-h-[448px] h-auto mb-6">
                                         <div v-if="thumbnail.thumbnail" class="zoom-container h-full"
                                             @mousemove="handleMouseMove" @mouseleave="resetZoom"
                                             @touchstart="handleMouseMove" @touchmove="handleMouseMove"
@@ -528,7 +529,7 @@ import { useMaster } from "../stores/MasterStore";
 
 import { HeartIcon, HomeIcon, MinusIcon, PlusIcon, ShareIcon } from "@heroicons/vue/24/outline";
 import { HeartIcon as HeartIconFill, StarIcon } from "@heroicons/vue/24/solid";
-import { FreeMode, Navigation, Thumbs } from "swiper/modules";
+import { FreeMode, Navigation, Thumbs, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/vue";
 
 import { useToast } from "vue-toastification";
@@ -553,6 +554,7 @@ import "swiper/css";
 import "swiper/css/free-mode";
 import "swiper/css/navigation";
 import "swiper/css/thumbs";
+import "swiper/css/pagination";
 
 const toast = useToast();
 const route = useRoute();
@@ -562,7 +564,7 @@ const basketStore = useBasketStore();
 const authStore = useAuth();
 
 const thumbsSwiper = ref(null);
-const modules = [FreeMode, Navigation, Thumbs];
+const modules = [FreeMode, Navigation, Thumbs, Pagination];
 
 const setThumbsSwiper = (swiper) => {
     thumbsSwiper.value = swiper;
@@ -992,5 +994,17 @@ iframe {
 
 .product-details-thumbnail .swiper-slide-thumb-active {
     @apply border border-primary;
+}
+
+.product-details-slider .swiper-pagination {
+    bottom: 2px !important;
+}
+
+.product-details-slider .swiper-pagination-bullet {
+    @apply bg-slate-400 opacity-60 w-2.5 h-2.5 transition-all duration-300;
+}
+
+.product-details-slider .swiper-pagination-bullet-active {
+    @apply bg-primary opacity-100 w-5 rounded-full;
 }
 </style>

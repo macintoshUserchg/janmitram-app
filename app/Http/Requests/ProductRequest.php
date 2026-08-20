@@ -51,10 +51,10 @@ class ProductRequest extends FormRequest
             'meta_title' => 'nullable|string|max:191',
             'meta_description' => 'nullable|string|max:200',
             'thumbnail' => "$thumbnail|image|mimes:png,jpg,jpeg,webp|max:2048",
-            'additionThumbnail' => "$additionThumbnail|array",
-            'additionThumbnail.*' => 'image|mimes:png,jpg,jpeg,webp|max:2048',
+            'additionThumbnail' => "$additionThumbnail|array|max:4",
+            'additionThumbnail.*' => 'nullable|image|mimes:png,jpg,jpeg,webp|max:2048',
 
-            'previousThumbnail' => 'nullable|array',
+            'previousThumbnail' => 'nullable|array|max:4',
             'previousThumbnail.*.id' => 'nullable|exists:media,id',
             'previousThumbnail.*.file' => 'nullable|file|mimes:png,jpg,jpeg,webp|max:2048',
 

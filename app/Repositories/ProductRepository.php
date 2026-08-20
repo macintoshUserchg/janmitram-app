@@ -202,8 +202,10 @@ class ProductRepository extends Repository
         }
 
         foreach ($request->additionThumbnail ?? [] as $additionThumbnail) {
-            $thumbnail = MediaRepository::storeByRequest($additionThumbnail, 'products', 'thumbnail', 'image');
-            $product->medias()->attach($thumbnail->id);
+            if ($additionThumbnail) {
+                $thumbnail = MediaRepository::storeByRequest($additionThumbnail, 'products', 'image');
+                $product->medias()->attach($thumbnail->id);
+            }
         }
 
         foreach ($request->digitalAttachment ?? [] as $digitalAttachment) {
@@ -340,8 +342,10 @@ class ProductRepository extends Repository
             self::updateAdditionThumbnails($request->previousThumbnail, $product);
         } else {
             foreach ($request->additionThumbnail ?? [] as $additionThumbnail) {
-                $thumbnail = MediaRepository::storeByRequest($additionThumbnail, 'products', 'thumbnail', 'image');
-                $product->medias()->attach($thumbnail->id);
+                if ($additionThumbnail) {
+                    $thumbnail = MediaRepository::storeByRequest($additionThumbnail, 'products', 'image');
+                    $product->medias()->attach($thumbnail->id);
+                }
             }
 
             self::updatePreviousThumbnail($request->previousThumbnail);
@@ -674,7 +678,7 @@ class ProductRepository extends Repository
         foreach ($additionalThumbnails ?? [] as $additionThumbnail) {
             if (array_key_exists('file', $additionThumbnail) && $additionThumbnail['file'] != null) {
 
-                $media = MediaRepository::storeByRequest($additionThumbnail['file'], 'products', 'thumbnail', 'image');
+                $media = MediaRepository::storeByRequest($additionThumbnail['file'], 'products', 'image');
 
                 $ids[] = $media->id;
 
