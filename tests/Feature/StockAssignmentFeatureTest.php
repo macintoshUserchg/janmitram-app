@@ -165,4 +165,33 @@ class StockAssignmentFeatureTest extends TestCase
         $response->assertSee('Turmeric Powder 500g');
         $response->assertSee('25');
     }
+
+    public function test_admin_can_toggle_shop_product_status(): void
+    {
+        $this->actingAs($this->admin);
+
+        $inv = ShopInventory::create([
+            'shop_id' => $this->shop->id,
+            'product_id' => $this->product->id,
+            'quantity' => 10,
+            'is_active' => true,
+        ]);
+
+        $response = $this->get(route('admin.shop.product.status.toggle', [
+            'shop' => $this->shop->id,
+            'product' => $this->product->id,
+        ]));
+
+        $response->assertRedirect();
+        $this->assertFalse($inv->fresh()->is_active);
+
+        // Toggle back to active
+        $response2 = $this->get(route('admin.shop.product.status.toggle', [
+            'shop' => $this->shop->id,
+            'product' => $this->product->id,
+        ]));
+
+        $response2->assertRedirect();
+        $this->assertTrue($inv->fresh()->is_active);
+    }
 }

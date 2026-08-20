@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ShopCreateRequest;
 use App\Http\Requests\ShopPasswordResetRequest;
 use App\Models\Notification;
+use App\Models\Product;
 use App\Models\Review;
 use App\Models\Shop;
 use App\Models\ShopInventory;
