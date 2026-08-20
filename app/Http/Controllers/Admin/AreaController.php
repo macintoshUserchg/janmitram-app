@@ -26,7 +26,7 @@ class AreaController extends Controller
         AreaRepository::storeByRequest($request);
         $this->removeCache();
 
-        return to_route('admin.area.index')->withSuccess(__('Area created successfully'));
+        return to_route('admin.area.index')->withSuccess(__('City delivery rate created successfully'));
     }
 
     public function update(AreaRequest $request, Area $area)
@@ -34,19 +34,17 @@ class AreaController extends Controller
         AreaRepository::updateByRequest($request, $area);
         $this->removeCache();
 
-        return to_route('admin.area.index')->withSuccess(__('Area updated successfully'));
+        return to_route('admin.area.index')->withSuccess(__('City delivery rate updated successfully'));
     }
 
     public function destroy(Area $area)
     {
-        if (! $area->getAddresses->isEmpty()) {
-            return back()->withError(__('Area has addresses, cannot delete'));
-        }
+        $area->getAddresses()->update(['area_id' => null]);
 
         AreaRepository::destroyByRequest($area);
         $this->removeCache();
 
-        return to_route('admin.area.index')->withSuccess(__('Area deleted successfully'));
+        return to_route('admin.area.index')->withSuccess(__('City delivery rate deleted successfully'));
     }
 
     public function toggle(Area $area)
@@ -54,7 +52,7 @@ class AreaController extends Controller
         $area->update(['is_active' => ! $area->is_active]);
         $this->removeCache();
 
-        return back()->withSuccess('Area status updated successfully');
+        return back()->withSuccess(__('City delivery rate status updated successfully'));
     }
 
     private function removeCache()
