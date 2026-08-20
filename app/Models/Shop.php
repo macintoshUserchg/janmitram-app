@@ -67,6 +67,18 @@ class Shop extends Model
         return $this->hasMany(Gallery::class, 'shop_id');
     }
 
+    public function inventories(): HasMany
+    {
+        return $this->hasMany(ShopInventory::class, 'shop_id');
+    }
+
+    public function catalogProducts(): BelongsToMany
+    {
+        return $this->belongsToMany(Product::class, 'shop_inventories')
+            ->withPivot(['quantity', 'is_active'])
+            ->withTimestamps();
+    }
+
     /**
      * Get the logo for the Shop as an attribute.
      */

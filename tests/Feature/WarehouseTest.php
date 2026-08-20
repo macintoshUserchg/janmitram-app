@@ -8,6 +8,7 @@ use App\Models\Brand;
 use App\Models\Media;
 use App\Models\Product;
 use App\Models\Shop;
+use App\Models\ShopInventory;
 use App\Models\StockRequest;
 use App\Models\User;
 use App\Models\Warehouse;
@@ -95,10 +96,10 @@ class WarehouseTest extends TestCase
             'quantity' => 40,
         ]);
 
-        // Assert shop received local cloned product with quantity 10
-        $this->assertDatabaseHas('products', [
+        // Assert shop received branch inventory with quantity 10
+        $this->assertDatabaseHas('shop_inventories', [
             'shop_id' => $requestShop->id,
-            'master_product_id' => $masterProduct->id,
+            'product_id' => $masterProduct->id,
             'quantity' => 10,
         ]);
 
@@ -227,12 +228,12 @@ class WarehouseTest extends TestCase
         // Fulfill request (Approved 25 units for requestShop)
         WarehouseService::fulfillStockRequest($stockRequest);
 
-        // Shop receives 25 units in local product record
-        $shopProduct = Product::where('shop_id', $requestShop->id)->where('master_product_id', $masterProduct->id)->first();
-        $this->assertEquals(25, $shopProduct->quantity);
+        // Shop receives 25 units in branch inventory
+        $shopInv = ShopInventory::where('shop_id', $requestShop->id)->where('product_id', $masterProduct->id)->first();
+        $this->assertEquals(25, $shopInv->quantity);
 
         // Simulate customer order / POS sale of 5 units (shop stock decrements to 20)
-        $shopProduct->update(['quantity' => 20]);
+        $shopInv->update(['quantity' => 20]);
 
         auth()->login($user);
         $controller = new StockRequestController;

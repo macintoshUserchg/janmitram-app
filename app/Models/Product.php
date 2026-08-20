@@ -404,6 +404,29 @@ class Product extends Model
         return $this->hasMany(Product::class, 'master_product_id');
     }
 
+    public function shopInventories(): HasMany
+    {
+        return $this->hasMany(ShopInventory::class, 'product_id');
+    }
+
+    public function shops(): BelongsToMany
+    {
+        return $this->belongsToMany(Shop::class, 'shop_inventories')
+            ->withPivot(['quantity', 'is_active'])
+            ->withTimestamps();
+    }
+
+    public function getStockForShop(?int $shopId): int
+    {
+        if (! $shopId) {
+            return (int) $this->quantity;
+        }
+
+        $inv = $this->shopInventories()->where('shop_id', $shopId)->first();
+
+        return $inv ? (int) $inv->quantity : (int) $this->quantity;
+    }
+
     public function warehouseStocks(): HasMany
     {
         return $this->hasMany(WarehouseStock::class);
@@ -477,6 +500,15 @@ class Product extends Model
     {
         static::deleting(function (Product $product) {
             $product->warehouseStocks()->delete();
+            $product->shopInventories()->delete();
+        });
+
+        static::updated(function (Product $product) {
+            if ($product->wasChanged('quantity') && $product->shop_id) {
+                ShopInventory::where('shop_id', $product->shop_id)
+                    ->where('product_id', $product->id)
+                    ->update(['quantity' => $product->quantity]);
+            }
         });
     }
 }

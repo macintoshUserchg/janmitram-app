@@ -19,6 +19,7 @@ use App\Models\OrderVatTax;
 use App\Models\Payment;
 use App\Models\Product;
 use App\Models\Shop;
+use App\Models\ShopInventory;
 use App\Models\VatTax;
 use App\Services\NotificationServices;
 use App\Support\Repositories\Repository;
@@ -119,14 +120,16 @@ class OrderRepository extends Repository
             $cart = $line['cart'];
 
             if (! $isMultiVendor || ! $fulfillFromNearest) {
-                if ($cart->product->quantity < $cart->quantity) {
-                    $shopName = $cart->product->shop?->name ?? 'Selected Shop';
+                $shopStock = $cart->product->getStockForShop($cart->shop_id);
+                if ($shopStock < $cart->quantity) {
+                    $shop = Shop::find($cart->shop_id);
+                    $shopName = $shop?->name ?? 'Selected Shop';
                     throw new \RuntimeException(__(
                         'Sorry, this product is no longer available in the required quantity. The selected shop ":shop" does not have enough stock for ":product" (Available: :available units). Please reduce quantity or enable "Auto-deliver from nearest shop".',
                         [
                             'shop' => $shopName,
                             'product' => $cart->product->name,
-                            'available' => (int) $cart->product->quantity,
+                            'available' => (int) $shopStock,
                         ]
                     ));
                 }
@@ -136,20 +139,20 @@ class OrderRepository extends Repository
                 continue;
             }
 
-            $allocated = self::allocateNearestShop(
+            $allocatedShop = self::allocateNearestShop(
                 $cart->product,
                 (int) $cart->quantity,
                 $address,
                 $overrides?->get($cart->product_id)?->shop_id,
             );
 
-            if (! $allocated) {
+            if (! $allocatedShop) {
                 $unfulfillable[$cart->product_id] = self::candidateShopsForLine($cart->product, (int) $cart->quantity, $address);
 
                 continue;
             }
 
-            $shopLines[$allocated->shop_id][] = ['cart' => $cart, 'copy' => $allocated];
+            $shopLines[$allocatedShop->id][] = ['cart' => $cart, 'copy' => $cart->product];
         }
 
         if (! empty($unfulfillable)) {
@@ -186,10 +189,18 @@ class OrderRepository extends Repository
             $cart = $line['cart'];
             $product = $line['copy'];
 
-            $decremented = Product::query()
-                ->whereKey($product->id)
+            $decremented = ShopInventory::query()
+                ->where('shop_id', $shop->id)
+                ->where('product_id', $product->id)
                 ->where('quantity', '>=', $cart->quantity)
                 ->decrement('quantity', $cart->quantity);
+
+            if (! $decremented) {
+                $decremented = Product::query()
+                    ->whereKey($product->id)
+                    ->where('quantity', '>=', $cart->quantity)
+                    ->decrement('quantity', $cart->quantity);
+            }
 
             if (! $decremented) {
                 throw new \RuntimeException(__('Sorry, this product is no longer available in the required quantity'));
@@ -323,24 +334,35 @@ class OrderRepository extends Repository
      */
     public static function candidateShopsForLine(Product $product, int $qty, Address $address): Collection
     {
-        $masterId = $product->master_product_id ?? $product->id;
         $radius = (float) (GeneraleSetting::first()?->shop_allocation_radius_km ?? 50.0);
 
-        return Product::query()
-            ->where(fn ($q) => $q->where('id', $masterId)->orWhere('master_product_id', $masterId))
-            ->isActive()
+        $shopInventories = ShopInventory::query()
+            ->where('product_id', $product->id)
             ->where('quantity', '>=', $qty)
-            ->with('shop')
-            ->get()
-            ->map(fn (Product $copy) => self::candidateForCopy($copy, $address, $radius))
-            ->filter()
-            ->sortBy('distance_km')
-            ->values();
+            ->where('is_active', true)
+            ->with(['shop', 'product'])
+            ->get();
+
+        if ($shopInventories->isNotEmpty()) {
+            return $shopInventories
+                ->map(fn (ShopInventory $inv) => self::candidateForInventory($inv, $address, $radius))
+                ->filter()
+                ->sortBy('distance_km')
+                ->values();
+        }
+
+        if ($product->shop && $product->quantity >= $qty) {
+            $candidate = self::candidateForDirectProduct($product, $address, $radius);
+
+            return $candidate ? collect([$candidate]) : collect([]);
+        }
+
+        return collect([]);
     }
 
-    private static function candidateForCopy(Product $copy, Address $address, float $radius): ?object
+    private static function candidateForDirectProduct(Product $product, Address $address, float $radius): ?object
     {
-        $shop = $copy->shop;
+        $shop = $product->shop;
 
         if (! $shop || ! $shop->latitude || ! $shop->longitude) {
             return null;
@@ -349,31 +371,75 @@ class OrderRepository extends Repository
         $distance = haversineKm($address->latitude, $address->longitude, $shop->latitude, $shop->longitude);
 
         return (object) [
-            'product_id' => (int) $copy->id,
+            'product_id' => (int) $product->id,
             'shop_id' => (int) $shop->id,
             'name' => $shop->name,
             'logo' => $shop->logo,
             'distance_km' => round($distance, 2),
-            'available_quantity' => (int) $copy->quantity,
-            'price' => (float) ($copy->discount_price > 0 ? min($copy->discount_price, $copy->price) : $copy->price),
+            'available_quantity' => (int) $product->quantity,
+            'price' => (float) ($product->discount_price > 0 ? min($product->discount_price, $product->price) : $product->price),
             'delivery_charge' => (float) ($shop->delivery_charge ?? 0),
             'radius_eligible' => $distance <= $radius,
         ];
     }
 
-    private static function allocateNearestShop(Product $product, int $qty, Address $address, ?int $overrideShopId = null): ?Product
+    private static function candidateForInventory(ShopInventory $inv, Address $address, float $radius): ?object
+    {
+        $shop = $inv->shop;
+        $product = $inv->product;
+
+        if (! $shop || ! $shop->latitude || ! $shop->longitude || ! $product) {
+            return null;
+        }
+
+        $distance = haversineKm($address->latitude, $address->longitude, $shop->latitude, $shop->longitude);
+
+        return (object) [
+            'product_id' => (int) $product->id,
+            'shop_id' => (int) $shop->id,
+            'name' => $shop->name,
+            'logo' => $shop->logo,
+            'distance_km' => round($distance, 2),
+            'available_quantity' => (int) $inv->quantity,
+            'price' => (float) ($product->discount_price > 0 ? min($product->discount_price, $product->price) : $product->price),
+            'delivery_charge' => (float) ($shop->delivery_charge ?? 0),
+            'radius_eligible' => $distance <= $radius,
+        ];
+    }
+
+    private static function allocateNearestShop(Product $product, int $qty, Address $address, ?int $overrideShopId = null): ?Shop
     {
         $candidates = self::candidateShopsForLine($product, $qty, $address);
 
         if ($overrideShopId) {
             $pick = $candidates->first(fn ($c) => (int) $c->shop_id === (int) $overrideShopId);
 
-            return $pick ? Product::find($pick->product_id) : null;
+            if ($pick) {
+                $shop = Shop::find($pick->shop_id);
+                if ($shop) {
+                    $shop->shop_id = $shop->id;
+                    $shop->product_id = $product->id;
+                }
+
+                return $shop;
+            }
+
+            return null;
         }
 
         $nearest = $candidates->firstWhere('radius_eligible', true);
 
-        return $nearest ? Product::find($nearest->product_id) : null;
+        if ($nearest) {
+            $shop = Shop::find($nearest->shop_id);
+            if ($shop) {
+                $shop->shop_id = $shop->id;
+                $shop->product_id = $product->id;
+            }
+
+            return $shop;
+        }
+
+        return null;
     }
 
     private static function createNewOrder($request, $shop, $paymentMethod, $getCartAmounts)

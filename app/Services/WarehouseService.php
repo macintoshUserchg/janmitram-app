@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Exceptions\InsufficientStockException;
 use App\Models\Product;
 use App\Models\Shop;
+use App\Models\ShopInventory;
 use App\Models\StockLedger;
 use App\Models\StockRequest;
 use App\Models\Warehouse;
@@ -254,88 +255,20 @@ class WarehouseService
     }
 
     /**
-     * Deep clone a master product to a shop-local copy.
+     * Ensure shop inventory record exists for product.
      */
     public static function cloneMasterToShop(Product $master, Shop $shop): Product
     {
-        return DB::transaction(function () use ($master, $shop) {
-            $existing = Product::where('master_product_id', $master->id)
-                ->where('shop_id', $shop->id)
-                ->first();
+        ShopInventory::firstOrCreate(
+            ['shop_id' => $shop->id, 'product_id' => $master->id],
+            ['quantity' => 0, 'is_active' => true]
+        );
 
-            if ($existing) {
-                $existing->update([
-                    'name' => $master->name,
-                    'short_description' => $master->short_description,
-                    'description' => $master->description,
-                    'brand_id' => $master->brand_id,
-                    'unit_id' => $master->unit_id,
-                    'price' => (float) $master->price,
-                    'discount_price' => $master->discount_price !== null ? (float) $master->discount_price : null,
-                    'buy_price' => (float) ($master->buy_price ?? 0),
-                    'min_order_quantity' => (int) ($master->min_order_quantity ?? 1),
-                    'media_id' => $master->media_id,
-                    'video_id' => $master->video_id,
-                    'is_active' => (bool) $master->is_active,
-                    'is_approve' => (bool) $master->is_approve,
-                    'is_digital' => (bool) $master->is_digital,
-                    'is_stock_managed' => (bool) $master->is_stock_managed,
-                ]);
-
-                $existing->categories()->sync($master->categories->pluck('id'));
-                $existing->subcategories()->sync($master->subcategories->pluck('id'));
-
-                $colorData = [];
-                foreach ($master->colors as $color) {
-                    $colorData[$color->id] = ['price' => $color->pivot->price ?? 0];
-                }
-                $existing->colors()->sync($colorData);
-
-                $sizeData = [];
-                foreach ($master->sizes as $size) {
-                    $sizeData[$size->id] = ['price' => $size->pivot->price ?? 0];
-                }
-                $existing->sizes()->sync($sizeData);
-                $existing->vatTaxes()->sync($master->vatTaxes->pluck('id'));
-
-                return $existing;
-            }
-
-            $shopProduct = $master->replicate(['shop_id', 'master_product_id', 'quantity']);
-            $shopProduct->shop_id = $shop->id;
-            $shopProduct->master_product_id = $master->id;
-            $shopProduct->quantity = 0;
-            $shopProduct->save();
-
-            // Sync pivot relationships
-            $shopProduct->categories()->sync($master->categories->pluck('id'));
-            $shopProduct->subcategories()->sync($master->subcategories->pluck('id'));
-
-            foreach ($master->colors as $color) {
-                $shopProduct->colors()->attach($color->id, ['price' => $color->pivot->price ?? 0]);
-            }
-
-            foreach ($master->sizes as $size) {
-                $shopProduct->sizes()->attach($size->id, ['price' => $size->pivot->price ?? 0]);
-            }
-
-            $shopProduct->medias()->sync($master->medias->pluck('id'));
-
-            foreach ($master->translations as $translation) {
-                $shopProduct->translations()->create([
-                    'lang' => $translation->lang,
-                    'name' => $translation->name,
-                    'description' => $translation->description,
-                    'short_description' => $translation->short_description,
-                ]);
-            }
-
-            return $shopProduct;
-        });
+        return $master;
     }
 
     /**
-     * Fulfill a stock request: deduct from warehouse stock and increment shop product quantity.
+     * Fulfill a stock request: deduct from warehouse stock and increment shop inventory quantity.
      */
     public static function fulfillStockRequest(StockRequest $request): void
     {
@@ -359,16 +292,24 @@ class WarehouseService
                         $stock->decrement('quantity', $deductQty);
                     }
                 }
-                // No else branch creating dead zero-qty rows
 
                 // Sync master product table quantity (stock leaves central hub)
                 if ($item->product && $item->product->quantity > 0) {
                     $item->product->decrement('quantity', min($item->quantity, $item->product->quantity));
                 }
 
-                // Create or find shop copy of product and add quantity to shop
-                $shopProduct = self::cloneMasterToShop($item->product, $request->shop);
-                $shopProduct->increment('quantity', $deductQty);
+                // Increment branch inventory in shop_inventories
+                $shopInv = ShopInventory::firstOrCreate(
+                    [
+                        'shop_id' => $request->shop_id,
+                        'product_id' => $item->product_id,
+                    ],
+                    [
+                        'quantity' => 0,
+                        'is_active' => true,
+                    ]
+                );
+                $shopInv->increment('quantity', $deductQty);
 
                 // Record ledger entry
                 StockLedger::create([

@@ -100,12 +100,22 @@ class ProductController extends Controller
                 return $query->where('is_digital', true);
             })
             ->when($shop, function ($query) use ($shop) {
-                return $query->where('shop_id', $shop->id);
+                return $query->where(function ($q) use ($shop) {
+                    $q->where('shop_id', $shop->id)
+                        ->orWhereHas('shopInventories', function ($si) use ($shop) {
+                            $si->where('shop_id', $shop->id)->where('is_active', true);
+                        });
+                });
             })->when($shopID && ! $shop, function ($query) use ($shopID) {
-                return $query->where('shop_id', $shopID);
+                return $query->where(function ($q) use ($shopID) {
+                    $q->where('shop_id', $shopID)
+                        ->orWhereHas('shopInventories', function ($si) use ($shopID) {
+                            $si->where('shop_id', $shopID)->where('is_active', true);
+                        });
+                });
             })->when(! $shopID, function ($query) {
                 return $query->whereIn('id', function ($subQuery) {
-                    $subQuery->selectRaw('MAX(id)')
+                    $subQuery->selectRaw('MIN(id)')
                         ->from('products')
                         ->where('is_active', true)
                         ->where('is_approve', true)

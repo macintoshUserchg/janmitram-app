@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Shop;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StockRequestRequest;
 use App\Models\Product;
+use App\Models\ShopInventory;
 use App\Models\StockRequest;
 use App\Models\StockRequestItem;
 use App\Models\WarehouseStock;
@@ -52,9 +53,15 @@ class StockRequestController extends Controller
         $status = request('status');
         $search = request('search');
 
-        $query = Product::where('shop_id', $shop?->id)
-            ->where('is_digital', false)
-            ->with(['masterProduct', 'brand', 'categories']);
+        $query = Product::where('is_digital', false)
+            ->where(function ($q) use ($shop) {
+                if ($shop) {
+                    $q->where('shop_id', $shop->id)
+                        ->orWhereHas('shopInventories', function ($si) use ($shop) {
+                            $si->where('shop_id', $shop->id);
+                        });
+                }
+            });
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -63,15 +70,7 @@ class StockRequestController extends Controller
             });
         }
 
-        if ($status === 'low_stock') {
-            $query->where('quantity', '>', 0)->where('quantity', '<=', 10);
-        } elseif ($status === 'out_of_stock') {
-            $query->where('quantity', 0);
-        } elseif ($status === 'in_stock') {
-            $query->where('quantity', '>', 10);
-        }
-
-        $products = $query->latest()->paginate(15)->withQueryString();
+        $products = $query->latest('id')->paginate(15)->withQueryString();
 
         // Calculate total completed warehouse requested quantity per product for this shop
         $completedRequestedQuantities = StockRequestItem::whereHas('stockRequest', function ($q) use ($shop) {
@@ -80,23 +79,23 @@ class StockRequestController extends Controller
             ->groupBy('product_id')
             ->pluck('total_requested', 'product_id');
 
-        $products->getCollection()->transform(function ($product) use ($completedRequestedQuantities) {
-            $masterId = $product->master_product_id ?? $product->id;
-            $approvedQty = (int) ($completedRequestedQuantities->get($masterId) ?? $completedRequestedQuantities->get($product->id) ?? 0);
+        $products->getCollection()->transform(function ($product) use ($completedRequestedQuantities, $shop) {
+            $approvedQty = (int) ($completedRequestedQuantities->get($product->id) ?? 0);
+            $currentStock = $product->getStockForShop($shop?->id);
 
-            // Total requested stock is approved quantity from warehouse (or current quantity if direct shop product)
-            $product->total_requested_qty = max($approvedQty, $product->quantity);
-            $product->sold_qty = max(0, $product->total_requested_qty - $product->quantity);
+            $product->quantity = $currentStock;
+            $product->total_requested_qty = max($approvedQty, $currentStock);
+            $product->sold_qty = max(0, $product->total_requested_qty - $currentStock);
 
             return $product;
         });
 
         // Calculate shop inventory summary metrics
-        $allShopProducts = Product::where('shop_id', $shop?->id)->where('is_digital', false)->get();
-        $totalSkuLines = $allShopProducts->count();
-        $totalStockUnits = $allShopProducts->sum('quantity');
-        $totalInventoryValue = $allShopProducts->sum(fn ($p) => $p->quantity * $p->price);
-        $lowStockCount = $allShopProducts->filter(fn ($p) => $p->quantity <= 10)->count();
+        $allShopInventories = ShopInventory::where('shop_id', $shop?->id)->with('product')->get();
+        $totalSkuLines = $allShopInventories->count() ?: $products->total();
+        $totalStockUnits = $allShopInventories->sum('quantity');
+        $totalInventoryValue = $allShopInventories->sum(fn ($inv) => $inv->quantity * ($inv->product?->price ?? 0));
+        $lowStockCount = $allShopInventories->filter(fn ($inv) => $inv->quantity <= 10)->count();
 
         return view('shop.stock-request.inventory', compact(
             'products', 'warehouse', 'shop', 'totalSkuLines',

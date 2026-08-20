@@ -89,19 +89,23 @@ class HomeController extends Controller
             }
         }
 
-        // Just For You curated across active branch shops in vicinity without redundancy (excluding Shop 1)
+        // Just For You catalog items
         $justForYouQuery = ProductRepository::query()->isActive()
             ->when(! empty($targetShopIds), function ($query) use ($targetShopIds) {
-                return $query->whereIn('shop_id', $targetShopIds)
-                    ->whereIn('id', function ($subQuery) use ($targetShopIds) {
-                        $subQuery->selectRaw('MAX(id)')
-                            ->from('products')
-                            ->where('is_active', true)
-                            ->where('is_approve', true)
-                            ->whereNull('deleted_at')
-                            ->whereIn('shop_id', $targetShopIds)
-                            ->groupBy('name');
-                    });
+                return $query->where(function ($q) use ($targetShopIds) {
+                    $q->whereIn('shop_id', $targetShopIds)
+                        ->orWhereHas('shopInventories', function ($si) use ($targetShopIds) {
+                            $si->whereIn('shop_id', $targetShopIds)->where('is_active', true);
+                        });
+                });
+            })
+            ->whereIn('id', function ($subQuery) {
+                $subQuery->selectRaw('MIN(id)')
+                    ->from('products')
+                    ->where('is_active', true)
+                    ->where('is_approve', true)
+                    ->whereNull('deleted_at')
+                    ->groupBy('name');
             })
             ->latest('id');
 

@@ -13,6 +13,7 @@ use App\Models\OrderVatTax;
 use App\Models\PosCart;
 use App\Models\PosCartProduct;
 use App\Models\Product;
+use App\Models\ShopInventory;
 use App\Models\VatTax;
 use App\Support\Repositories\Repository;
 use Illuminate\Http\Request;
@@ -379,6 +380,10 @@ class PosCartRepository extends Repository
         ]);
 
         foreach ($posCart->products as $product) {
+            ShopInventory::where('shop_id', $shop->id)
+                ->where('product_id', $product->id)
+                ->decrement('quantity', $product->pivot->quantity);
+
             $quantity = $product->quantity - $product->pivot->quantity;
             $product->update([
                 'quantity' => ($quantity > 0) ? $quantity : 0,

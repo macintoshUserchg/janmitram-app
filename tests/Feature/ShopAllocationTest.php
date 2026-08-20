@@ -17,6 +17,7 @@ use App\Models\Order;
 use App\Models\Payment;
 use App\Models\Product;
 use App\Models\Shop;
+use App\Models\ShopInventory;
 use App\Models\Unit;
 use App\Models\User;
 use App\Models\Warehouse;
@@ -86,14 +87,22 @@ class ShopAllocationTest extends TestCase
             'is_active' => true,
             'is_approve' => true,
         ]);
-        $copy = Product::factory()->create([
-            'shop_id' => $farShop->id,
-            'master_product_id' => $master->id,
-            'unit_id' => $unit->id,
+
+        ShopInventory::create([
+            'shop_id' => $nearShop->id,
+            'product_id' => $master->id,
             'quantity' => 10,
             'is_active' => true,
-            'is_approve' => true,
         ]);
+
+        ShopInventory::create([
+            'shop_id' => $farShop->id,
+            'product_id' => $master->id,
+            'quantity' => 10,
+            'is_active' => true,
+        ]);
+
+        $copy = $master;
 
         return [$master, $copy, $nearShop, $farShop];
     }
