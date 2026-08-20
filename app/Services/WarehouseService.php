@@ -264,6 +264,40 @@ class WarehouseService
                 ->first();
 
             if ($existing) {
+                $existing->update([
+                    'name' => $master->name,
+                    'short_description' => $master->short_description,
+                    'description' => $master->description,
+                    'brand_id' => $master->brand_id,
+                    'unit_id' => $master->unit_id,
+                    'price' => (float) $master->price,
+                    'discount_price' => $master->discount_price !== null ? (float) $master->discount_price : null,
+                    'buy_price' => (float) ($master->buy_price ?? 0),
+                    'min_order_quantity' => (int) ($master->min_order_quantity ?? 1),
+                    'media_id' => $master->media_id,
+                    'video_id' => $master->video_id,
+                    'is_active' => (bool) $master->is_active,
+                    'is_approve' => (bool) $master->is_approve,
+                    'is_digital' => (bool) $master->is_digital,
+                    'is_stock_managed' => (bool) $master->is_stock_managed,
+                ]);
+
+                $existing->categories()->sync($master->categories->pluck('id'));
+                $existing->subcategories()->sync($master->subcategories->pluck('id'));
+
+                $colorData = [];
+                foreach ($master->colors as $color) {
+                    $colorData[$color->id] = ['price' => $color->pivot->price ?? 0];
+                }
+                $existing->colors()->sync($colorData);
+
+                $sizeData = [];
+                foreach ($master->sizes as $size) {
+                    $sizeData[$size->id] = ['price' => $size->pivot->price ?? 0];
+                }
+                $existing->sizes()->sync($sizeData);
+                $existing->vatTaxes()->sync($master->vatTaxes->pluck('id'));
+
                 return $existing;
             }
 

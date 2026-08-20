@@ -374,6 +374,10 @@ class ProductRepository extends Repository
             $product->vatTaxes()->sync([$request->vat_tax_id]);
         }
 
+        if (! $product->master_product_id) {
+            $product->syncShopCopies();
+        }
+
         return $product;
     }
 
@@ -576,6 +580,10 @@ class ProductRepository extends Repository
             $product->colors()->sync($colorIds);
             $product->sizes()->sync($sizeIds);
             $product->vatTaxes()->sync($vatTaxId ? [$vatTaxId] : []);
+
+            if (! $product->wasRecentlyCreated && ! $product->master_product_id) {
+                $product->syncShopCopies();
+            }
 
             return $product->wasRecentlyCreated ? 'imported' : 'updated';
         });
