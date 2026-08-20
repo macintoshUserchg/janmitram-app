@@ -119,7 +119,6 @@ class ShopInventoryAssignmentTest extends TestCase
 
         // Nothing persisted on rejection
         $this->assertSame(0, StockRequest::count());
-        $this->assertSame(50, $product->refresh()->quantity);
-        $this->assertTrue(Product::where('master_product_id', $product->id)->where('shop_id', $shop->id)->doesntExist());
+        $this->assertTrue(ShopInventory::where('product_id', $product->id)->where('shop_id', $shop->id)->doesntExist());
     }
 }

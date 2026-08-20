@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\GeneraleSetting;
 use App\Models\Product;
 use App\Models\Shop;
+use App\Models\ShopInventory;
 use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -94,6 +95,55 @@ class ProductCatalogDeduplicationTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertJsonPath('data.total', 2);
+    }
+
+    public function test_branch_shop_catalog_returns_allocated_shop_inventory_items(): void
+    {
+        $rootUser = User::factory()->create(['is_active' => true]);
+        $rootShop = Shop::factory()->create(['user_id' => $rootUser->id, 'status' => true]);
+
+        $branchUser = User::factory()->create(['is_active' => true]);
+        $branchShop = Shop::factory()->create(['user_id' => $branchUser->id, 'status' => true]);
+
+        $brand = Brand::create(['name' => 'Test Brand', 'slug' => 'test-brand']);
+        $unit = Unit::create(['name' => 'kg', 'shop_id' => $rootShop->id, 'is_active' => true]);
+
+        $p1 = Product::factory()->create([
+            'name' => 'Canonical Haldi Powder',
+            'shop_id' => $rootShop->id,
+            'unit_id' => $unit->id,
+            'is_active' => true,
+            'is_approve' => true,
+        ]);
+
+        $p2 = Product::factory()->create([
+            'name' => 'Canonical Lal Mirch Powder',
+            'shop_id' => $rootShop->id,
+            'unit_id' => $unit->id,
+            'is_active' => true,
+            'is_approve' => true,
+        ]);
+
+        // Branch shop has inventory for p1 (active) and p2 (inactive)
+        ShopInventory::create([
+            'shop_id' => $branchShop->id,
+            'product_id' => $p1->id,
+            'quantity' => 15,
+            'is_active' => true,
+        ]);
+
+        ShopInventory::create([
+            'shop_id' => $branchShop->id,
+            'product_id' => $p2->id,
+            'quantity' => 20,
+            'is_active' => false, // disabled for this shop
+        ]);
+
+        // When customer views branch shop storefront, only active inventory item (p1) is returned
+        $response = $this->getJson('/api/products?shop_id='.$branchShop->id);
+        $response->assertStatus(200);
+        $response->assertJsonPath('data.total', 1);
+        $response->assertJsonPath('data.products.0.name', 'Canonical Haldi Powder');
     }
 
     public function test_home_page_sections_deduplicate_products_with_same_name(): void
