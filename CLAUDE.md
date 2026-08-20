@@ -58,7 +58,7 @@ are not derivable from a fresh read of the code.
 
 ## Frontend / verification
 - If a frontend change isn't reflected, run `npm run build`, `npm run dev`, or `composer run dev`.
-- PHPUnit test suite (172 tests / 639 assertions): run with `php artisan test --compact`.
+- PHPUnit test suite (173 tests / 641 assertions): run with `php artisan test --compact`.
 - Dusk browser tests: `tests/Browser/` — run with `php artisan dusk --filter=testName`.
 - After PHP edits, run `vendor/bin/pint --dirty --format agent`.
 
