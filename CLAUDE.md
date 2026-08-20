@@ -46,6 +46,10 @@ are not derivable from a fresh read of the code.
 - Popular Products uses a fair round-robin distribution across active local branch shops in the user's city with strict deduplication (zero repeated product names).
 - Main Janmitram Shop (`Shop ID: 1` / Central Warehouse) is strictly excluded from homepage Popular Products and Just For You sections.
 
+## Master-to-Shop Pricing Synchronization
+- Editing a Master Product (`ProductRepository::updateByRequest`) or uploading bulk spreadsheets (`ProductRepository::importRows`) automatically cascades `price`, `discount_price`, `buy_price`, `unit_id`, `brand_id`, and variant extra prices (colors/sizes) to all child shop copies via `syncShopCopies()`.
+- `WarehouseService::cloneMasterToShop()` refreshes existing shop copies upon stock request fulfillments.
+
 ## Repository pattern
 - `app/Repositories/*` extend `App\Support\Repositories\Repository` (static `model()`,
   `query/create/find/update`), using `storeByRequest()`-style factories. Follow that pattern.
@@ -56,6 +60,6 @@ are not derivable from a fresh read of the code.
 
 ## Frontend / verification
 - If a frontend change isn't reflected, run `npm run build`, `npm run dev`, or `composer run dev`.
-- PHPUnit test suite (157 tests / 574 assertions): run with `php artisan test --compact`.
+- PHPUnit test suite (162 tests / 618 assertions): run with `php artisan test --compact`.
 - Dusk browser tests: `tests/Browser/` — run with `php artisan dusk --filter=testName`.
 - After PHP edits, run `vendor/bin/pint --dirty --format agent`.

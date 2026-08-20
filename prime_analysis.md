@@ -37,6 +37,10 @@ This document captures the strategic architecture, domain models, and key milest
 * **Unified PDF Architecture**: Standardized 12mm page margin boundary in mPDF with itemized GST percentages, product units in bold, and dynamic QR codes.
 * **Razorpay Optimization**: Auto-selects Razorpay when sole active online gateway and synchronizes popup window lifecycle via `window.postMessage` and `localStorage`.
 
+### G. Real-Time Master-to-Shop Price, Discount & Variant Synchronization
+* **Atomic Cascade Architecture**: Root Admin updates on Master Products (`master_product_id == null`) automatically synchronize `price` (Regular / MRP), `discount_price` (Offer Price), `buy_price` (Wholesale Cost), `unit_id`, `brand_id`, and variant extra prices (colors/sizes) to all child shop copies across all franchise branches.
+* **Bulk & Fulfillment Sync**: Full synchronization across single edit, bulk Excel imports, and stock request fulfillment cycles.
+
 ---
 
 _Last updated: 2026-08-20. Architecture verified against the codebase and live production environment._

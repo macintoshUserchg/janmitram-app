@@ -626,11 +626,23 @@ source:
 * **Mobile Sticky Action Bar**: Sticky floating add-to-cart and buy-now bar on mobile screens in `ProductDetails.vue`.
 * **System-wide Brand Favicon**: Replaced generic icons with the official Janmitram brand logo across all browser tabs, customer SPA, Blade layouts, and payment callback screens.
 
+### 16. Real-Time Master-to-Shop Price, Discount & Variant Synchronization (Updated 2026-08-20)
+* **Automated Real-Time Price Propagation (`syncShopCopies`)**:
+  * Added `Product::syncShopCopies()` to automatically synchronize child shop copies (`Product::where('master_product_id', $this->id)`) whenever Root Admin updates a Master Product.
+  * Propagates `price` (Regular / MRP), `discount_price` (Offer Price), `buy_price` (Wholesale Cost), `unit_id`, `brand_id`, `min_order_quantity`, `is_active`, and `is_approve`.
+  * Atomically synchronizes variant extra prices on `product_colors` and `product_sizes` pivot records so variant price additions (e.g. Size 1KG +₹50) stay uniform across all franchise branches.
+* **Bulk Excel Import Synchronization**:
+  * In `ProductRepository::importRows()`, bulk spreadsheet updates to Master Products automatically cascade to all existing child shop copies.
+* **Stock Request Fulfillment Price Refresh**:
+  * In `WarehouseService::cloneMasterToShop()`, fulfilling inventory dispatches refreshes existing shop copy prices, metadata, and variant pivot prices before returning.
+* Covered by `ProductPriceSynchronizationTest` (5 tests, 44 assertions).
+
 ---
 
 ### Test coverage summary
 
-**Strong Test Coverage (157 Test Classes / 574 Assertions):**
+**Strong Test Coverage (162 Test Classes / 618 Assertions):**
+* **Price & Discount Synchronization**: `ProductPriceSynchronizationTest` (5 tests, 44 assertions)
 * **Location & Catalog Resolution**: `LocationResolutionTest` (4 tests, 15 assertions)
 * **Google Maps Integration**: `GoogleMapsIntegrationTest` (5 tests, 24 assertions)
 * **MLM & Network Payouts**: `PayoutTest` (15 tests), `PayoutNetworkTest`, `PayoutSlipTest`, `ShopPayoutTest`, `ShopWithdrawalPayoutIntegrationTest`
@@ -647,4 +659,5 @@ source:
 ---
 
 _Last updated: 2026-08-20. Fully verified against the codebase and live production environment._
+
 

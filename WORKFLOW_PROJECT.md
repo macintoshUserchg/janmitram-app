@@ -303,17 +303,26 @@ The **Shop Vendor Sidebar** (`resources/views/layouts/partials/shop-menu.blade.p
 - **Dual Business Model Support**: Under `Admin -> Business Settings -> Shop Settings`, admins can configure either the traditional **Commission-Based Model** or the **Direct / None Zero-Fee Model**.
 - **Wallet Debit Protection**: Commission deductions are automatically bypassed on zero-fee shop orders, while full audit logging is preserved.
 
+### 18. Real-Time Master-to-Shop Price, Discount & Variant Synchronization
+- **Automated Price & Discount Cascade (`syncShopCopies`)**:
+  - Whenever Root Admin edits a Master Product (`master_product_id == null`) in `ProductRepository::updateByRequest()` or performs bulk spreadsheet updates via `ProductRepository::importRows()`, the system atomically synchronizes all child shop copies (`Product::where('master_product_id', $master->id)`).
+  - Updates `price` (Regular / MRP), `discount_price` (Offer Price), `buy_price` (Wholesale Cost), `unit_id`, `brand_id`, and `min_order_quantity`.
+  - Re-syncs variant extra price pivots (`product_colors.price` and `product_sizes.price`) so size/color price additions remain uniform across all franchise branches.
+- **Stock Fulfillment Price Refresh**:
+  - In `WarehouseService::cloneMasterToShop()`, fulfilling inventory dispatches refreshes existing shop copy prices, metadata, and variant pivot prices before returning.
+
 ---
 
-### 18. Automated Testing & Code Verification
+### 19. Automated Testing & Code Verification
 
-To ensure system integrity across all warehouse transactions, stock request fulfillments, review moderation, geolocation, and order allocation:
+To ensure system integrity across all warehouse transactions, stock request fulfillments, price synchronization, review moderation, geolocation, and order allocation:
 
 ```bash
-# Run all automated feature/unit tests compact (157 test classes / 574 assertions)
+# Run all automated feature/unit tests compact (162 test classes / 618 assertions)
 php artisan test --compact
 
 # Filter specific feature test suites
+php artisan test --compact --filter=ProductPriceSynchronizationTest
 php artisan test --compact --filter=LocationResolutionTest
 php artisan test --compact --filter=GoogleMapsIntegrationTest
 php artisan test --compact --filter=ShopBusinessSettingTest
@@ -333,5 +342,6 @@ vendor/bin/pint --dirty --format agent
 
 ---
 
-_Last updated: 2026-08-20. Option A Warehouse, IP Geolocation Engine, Round-Robin Multi-Shop Catalog, Google Maps SDK, First Stock Threshold (₹3,000), Fulfillment Mode Toggle, Review Approval & Moderation, and MLM Downline Capacity architecture fully verified._
+_Last updated: 2026-08-20. Option A Warehouse, Real-Time Master-to-Shop Price Synchronization, IP Geolocation Engine, Round-Robin Multi-Shop Catalog, Google Maps SDK, First Stock Threshold (₹3,000), Fulfillment Mode Toggle, Review Approval & Moderation, and MLM Downline Capacity architecture fully verified._
+
 

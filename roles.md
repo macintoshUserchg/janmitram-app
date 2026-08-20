@@ -94,6 +94,7 @@ For custom shop staff and store manager roles (`is_shop = true`):
 
 ## 5. Recent System Policy & Business Rule Updates (2026-08-20)
 
+* **Centralized Master Pricing Control**: Retail prices (`price`), discounts (`discount_price`), wholesale costs (`buy_price`), and variant prices are managed centrally by Root Admin on Master Products and automatically cascade to all franchise branch shop copies.
 * **Shop Commission Models**: Direct / Zero-Fee models bypass commission wallet debits while retaining full transaction records.
 * **Review Moderation**: Customer product reviews start in `pending` (`is_active = 0`) guarded by `ActiveScope` until reviewed under `admin.review.approve`.
 * **Direct Downline Capacity**: Enforced programmatically (10 direct downline partners maximum per standard franchise shop).

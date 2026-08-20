@@ -157,6 +157,11 @@ Homepage catalog in multi-branch cities showed products from only one shop, caus
 
 **Status:** ✅ **Resolved 2026-08-20** (`bb95720`) — Implemented round-robin product distribution across active local branches with strict deduplication (zero duplicate product names) and strict exclusion of Central Shop 1.
 
+### 18. Master product price & discount updates did not cascade to franchise shop copies
+When Root Admin updated prices, discounts, or wholesale costs on Master Products, cloned shop copies retained stale prices in the database, distorting storefront listings, cart calculations, POS billing, and GST invoices.
+
+**Status:** ✅ **Resolved 2026-08-20** (`7608b17`) — Implemented `Product::syncShopCopies()` and hooked it into `ProductRepository::updateByRequest()`, `ProductRepository::importRows()`, and `WarehouseService::cloneMasterToShop()`. Verified by 5 new feature tests (44 assertions).
+
 ---
 
 ## Notes

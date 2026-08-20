@@ -7,6 +7,7 @@ Modern multi-vendor e-commerce platform with strict Option A warehouse inventory
 ## Key System Features
 
 * **Option A Strict Warehouse Architecture**: Central master catalog with centralized warehouse inventory deposits, immutable `StockLedger` auditing, and shop copy product cloning.
+* **Real-Time Master-to-Shop Price Synchronization**: Instant propagation of master product prices, offer discounts, wholesale buy costs, and variant extra prices to all franchise branch copies.
 * **Automated IP-First Geolocation**: Zero-permission customer City/PIN detection via IP geolocation, with graceful fallback to Central Hub Jaipur (`302013`) for overseas/non-Indian visitors.
 * **Multi-Shop Round-Robin Discovery**: Fair round-robin product distribution across local branch shops with zero product name duplication; strict exclusion of Main Janmitram Shop (Shop #1) from homepage discovery.
 * **Google Maps Platform**: Google Maps JavaScript SDK & Google Places API (New) with interactive draggable pins, doorstep reverse geocoding, and live driver GPS tracking.
@@ -55,10 +56,11 @@ npm run build
 ## Testing & Code Formatting
 
 ```bash
-# Run full automated PHPUnit test suite (157 tests / 574 assertions)
+# Run full automated PHPUnit test suite (162 tests / 618 assertions)
 php artisan test --compact
 
 # Run specific feature test suites
+php artisan test --compact --filter=ProductPriceSynchronizationTest
 php artisan test --compact --filter=LocationResolutionTest
 php artisan test --compact --filter=GoogleMapsIntegrationTest
 php artisan test --compact --filter=ShopBusinessSettingTest
