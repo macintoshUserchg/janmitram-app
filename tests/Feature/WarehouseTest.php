@@ -5,13 +5,16 @@ namespace Tests\Feature;
 use App\Http\Controllers\Admin\InvoiceController;
 use App\Http\Controllers\Shop\StockRequestController;
 use App\Models\Brand;
+use App\Models\Color;
 use App\Models\Media;
 use App\Models\Product;
 use App\Models\Shop;
 use App\Models\ShopInventory;
+use App\Models\Size;
 use App\Models\StockRequest;
 use App\Models\User;
 use App\Models\Warehouse;
+use App\Models\WarehouseStock;
 use App\Services\WarehouseService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\RedirectResponse;
@@ -316,5 +319,97 @@ class WarehouseTest extends TestCase
 
         $this->assertInstanceOf(View::class, $viewResponse);
         $this->assertEquals('admin.invoice.index', $viewResponse->name());
+    }
+
+    public function test_warehouse_stock_aggregation_sums_all_variants_correctly(): void
+    {
+        $shop = Shop::factory()->create();
+        $brand = Brand::create(['name' => 'Brand Test']);
+        $media = Media::factory()->create();
+        $color1 = Color::create(['shop_id' => $shop->id, 'name' => 'Red', 'color_code' => '#ff0000']);
+        $color2 = Color::create(['shop_id' => $shop->id, 'name' => 'Blue', 'color_code' => '#0000ff']);
+        $size1 = Size::create(['shop_id' => $shop->id, 'name' => 'M']);
+
+        $warehouse = Warehouse::create([
+            'name' => 'Central Hub Test',
+            'is_default' => true,
+        ]);
+
+        $product = Product::create([
+            'shop_id' => $shop->id,
+            'brand_id' => $brand->id,
+            'media_id' => $media->id,
+            'name' => 'Multi Variant Shirt',
+            'price' => 250.00,
+            'quantity' => 0,
+            'is_stock_managed' => true,
+            'is_active' => true,
+            'is_approve' => true,
+        ]);
+
+        // Add 2 variant batches (30 units and 40 units)
+        WarehouseService::addStock($warehouse, $product, 30, $color1->id, $size1->id);
+        WarehouseService::addStock($warehouse, $product, 40, $color2->id, $size1->id);
+
+        // Assert hasSufficientStock correctly checks total sum (70 units)
+        $this->assertTrue(WarehouseService::hasSufficientStock($warehouse, $product, 70));
+        $this->assertTrue(WarehouseService::hasSufficientStock($warehouse, $product, 50));
+        $this->assertFalse(WarehouseService::hasSufficientStock($warehouse, $product, 75));
+    }
+
+    public function test_fulfill_stock_request_iteratively_deducts_across_multiple_variant_rows(): void
+    {
+        $shop = Shop::factory()->create();
+        $brand = Brand::create(['name' => 'Brand Test 2']);
+        $media = Media::factory()->create();
+        $color1 = Color::create(['shop_id' => $shop->id, 'name' => 'Spicy Red', 'color_code' => '#ff0011']);
+        $color2 = Color::create(['shop_id' => $shop->id, 'name' => 'Yellow Gold', 'color_code' => '#ffff00']);
+
+        $warehouse = Warehouse::create([
+            'name' => 'Central Logistics 2',
+            'is_default' => true,
+        ]);
+
+        $product = Product::create([
+            'shop_id' => $shop->id,
+            'brand_id' => $brand->id,
+            'media_id' => $media->id,
+            'name' => 'Spices Pack',
+            'price' => 80.00,
+            'quantity' => 0,
+            'is_stock_managed' => true,
+            'is_active' => true,
+            'is_approve' => true,
+        ]);
+
+        // Add 2 batches of 50 each (total 100)
+        WarehouseService::addStock($warehouse, $product, 50, $color1->id, null);
+        WarehouseService::addStock($warehouse, $product, 50, $color2->id, null);
+
+        // Shop requests 75 units (exceeds single row of 50, requires drawing across both rows)
+        $requestShop = Shop::factory()->create(['warehouse_id' => $warehouse->id]);
+        $stockRequest = StockRequest::create([
+            'shop_id' => $requestShop->id,
+            'warehouse_id' => $warehouse->id,
+            'status' => 'pending',
+        ]);
+
+        $stockRequest->items()->create([
+            'product_id' => $product->id,
+            'quantity' => 75,
+        ]);
+
+        WarehouseService::fulfillStockRequest($stockRequest);
+
+        // Total warehouse stock should be 100 - 75 = 25
+        $remainingStock = (int) WarehouseStock::where('warehouse_id', $warehouse->id)
+            ->where('product_id', $product->id)
+            ->sum('quantity');
+        $this->assertSame(25, $remainingStock);
+
+        // Shop inventory should be exactly 75
+        $shopInv = ShopInventory::where('shop_id', $requestShop->id)->where('product_id', $product->id)->first();
+        $this->assertNotNull($shopInv);
+        $this->assertSame(75, $shopInv->quantity);
     }
 }

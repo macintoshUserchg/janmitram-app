@@ -51,9 +51,9 @@ class StockRequestController extends Controller
                     $query->whereNull('size_id');
                 }
 
-                $available = $query->first()?->quantity ?? 0;
+                $available = (int) $query->first()?->quantity ?? 0;
             } else {
-                $available = $query->orderByDesc('quantity')->first()?->quantity ?? 0;
+                $available = (int) $query->sum('quantity');
             }
 
             $shortfall = max(0, $item->quantity - $available);

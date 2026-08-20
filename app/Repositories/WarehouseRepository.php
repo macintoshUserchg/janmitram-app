@@ -16,6 +16,6 @@ class WarehouseRepository extends Repository
 
     public static function getCentralWarehouse(): ?Warehouse
     {
-        return Warehouse::where('is_default', true)->first();
+        return Warehouse::where('is_default', true)->first() ?? Warehouse::first();
     }
 }

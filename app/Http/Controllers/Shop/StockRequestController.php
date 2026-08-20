@@ -117,7 +117,8 @@ class StockRequestController extends Controller
         // Get warehouse stock for products available in the shop's linked warehouse
         $warehouseStocks = WarehouseStock::where('warehouse_id', $warehouse->id)
             ->get()
-            ->keyBy('product_id');
+            ->groupBy('product_id')
+            ->map(fn ($group) => (int) $group->sum('quantity'));
 
         $query = Product::where('is_digital', false)
             ->with(['brand', 'categories']);
@@ -130,7 +131,7 @@ class StockRequestController extends Controller
         }
 
         $masterProducts = $query->latest()->get()->map(function ($product) use ($warehouseStocks) {
-            $stockInWh = $warehouseStocks->get($product->id)?->quantity ?? 0;
+            $stockInWh = $warehouseStocks->get($product->id) ?? 0;
             $product->warehouse_qty = $stockInWh;
 
             return $product;

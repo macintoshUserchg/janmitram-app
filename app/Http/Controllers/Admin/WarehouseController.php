@@ -93,12 +93,13 @@ class WarehouseController extends Controller
     {
         $warehouseStocks = WarehouseStock::where('warehouse_id', $warehouse->id)
             ->get()
-            ->keyBy('product_id');
+            ->groupBy('product_id')
+            ->map(fn ($group) => (int) $group->sum('quantity'));
 
         $products = Product::where('is_digital', false)
             ->get()
             ->map(function ($product) use ($warehouseStocks) {
-                $product->current_wh_qty = $warehouseStocks->get($product->id)?->quantity ?? 0;
+                $product->current_wh_qty = $warehouseStocks->get($product->id) ?? 0;
 
                 return $product;
             });

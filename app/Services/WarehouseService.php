@@ -276,53 +276,88 @@ class WarehouseService
             $request->load('items.product');
 
             foreach ($request->items as $item) {
-                $stock = self::findStock(
-                    $request->warehouse,
-                    $item->product,
-                    $item->quantity,
-                    $item->color_id,
-                    $item->size_id
-                );
+                $requestedQty = (int) $item->quantity;
+                $deductedTotal = 0;
 
-                // Deduct warehouse stock if available
-                $deductQty = 0;
-                if ($stock) {
-                    $deductQty = min($item->quantity, max(0, $stock->quantity));
-                    if ($deductQty > 0) {
+                if ($item->color_id !== null || $item->size_id !== null) {
+                    $stock = self::findStock(
+                        $request->warehouse,
+                        $item->product,
+                        $requestedQty,
+                        $item->color_id,
+                        $item->size_id
+                    );
+
+                    if ($stock && $stock->quantity > 0) {
+                        $deductQty = min($requestedQty, $stock->quantity);
                         $stock->decrement('quantity', $deductQty);
+                        $deductedTotal += $deductQty;
+
+                        StockLedger::create([
+                            'from_warehouse_id' => $request->warehouse_id,
+                            'to_warehouse_id' => null,
+                            'product_id' => $item->product_id,
+                            'color_id' => $item->color_id,
+                            'size_id' => $item->size_id,
+                            'quantity' => $deductQty,
+                            'reference_type' => 'shop_request',
+                            'reference_id' => $request->id,
+                            'notes' => "Fulfilled stock request #{$request->id} for shop #{$request->shop_id}",
+                        ]);
+                    }
+                } else {
+                    // Multi-row deduction across available stock rows in warehouse
+                    $stockRows = WarehouseStock::where('warehouse_id', $request->warehouse_id)
+                        ->where('product_id', $item->product_id)
+                        ->where('quantity', '>', 0)
+                        ->orderByDesc('quantity')
+                        ->lockForUpdate()
+                        ->get();
+
+                    $remainingToDeduct = $requestedQty;
+                    foreach ($stockRows as $row) {
+                        if ($remainingToDeduct <= 0) {
+                            break;
+                        }
+
+                        $take = min($remainingToDeduct, $row->quantity);
+                        $row->decrement('quantity', $take);
+                        $remainingToDeduct -= $take;
+                        $deductedTotal += $take;
+
+                        StockLedger::create([
+                            'from_warehouse_id' => $request->warehouse_id,
+                            'to_warehouse_id' => null,
+                            'product_id' => $item->product_id,
+                            'color_id' => $row->color_id,
+                            'size_id' => $row->size_id,
+                            'quantity' => $take,
+                            'reference_type' => 'shop_request',
+                            'reference_id' => $request->id,
+                            'notes' => "Fulfilled stock request #{$request->id} for shop #{$request->shop_id}",
+                        ]);
                     }
                 }
 
                 // Sync master product table quantity (stock leaves central hub)
-                if ($item->product && $item->product->quantity > 0) {
-                    $item->product->decrement('quantity', min($item->quantity, $item->product->quantity));
+                if ($item->product && $item->product->quantity > 0 && $deductedTotal > 0) {
+                    $item->product->decrement('quantity', min($deductedTotal, $item->product->quantity));
                 }
 
                 // Increment branch inventory in shop_inventories
-                $shopInv = ShopInventory::firstOrCreate(
-                    [
-                        'shop_id' => $request->shop_id,
-                        'product_id' => $item->product_id,
-                    ],
-                    [
-                        'quantity' => 0,
-                        'is_active' => true,
-                    ]
-                );
-                $shopInv->increment('quantity', $deductQty);
-
-                // Record ledger entry
-                StockLedger::create([
-                    'from_warehouse_id' => $request->warehouse_id,
-                    'to_warehouse_id' => null,
-                    'product_id' => $item->product_id,
-                    'color_id' => $item->color_id,
-                    'size_id' => $item->size_id,
-                    'quantity' => $deductQty,
-                    'reference_type' => 'shop_request',
-                    'reference_id' => $request->id,
-                    'notes' => "Fulfilled stock request #{$request->id} for shop #{$request->shop_id}",
-                ]);
+                if ($deductedTotal > 0) {
+                    $shopInv = ShopInventory::firstOrCreate(
+                        [
+                            'shop_id' => $request->shop_id,
+                            'product_id' => $item->product_id,
+                        ],
+                        [
+                            'quantity' => 0,
+                            'is_active' => true,
+                        ]
+                    );
+                    $shopInv->increment('quantity', $deductedTotal);
+                }
             }
 
             $request->update(['status' => 'completed']);
@@ -339,10 +374,16 @@ class WarehouseService
         ?int $colorId = null,
         ?int $sizeId = null
     ): bool {
-        // Delegate to findStock so the pre-check agrees with what fulfillStockRequest
-        // actually picks: exact variant first, then any sufficient row.
-        $stock = self::findStock($warehouse, $product, $qty, $colorId, $sizeId);
+        if ($colorId !== null || $sizeId !== null) {
+            $stock = self::findStock($warehouse, $product, $qty, $colorId, $sizeId);
 
-        return $stock !== null && $stock->quantity >= $qty;
+            return $stock !== null && $stock->quantity >= $qty;
+        }
+
+        $totalAvailable = (int) WarehouseStock::where('warehouse_id', $warehouse->id)
+            ->where('product_id', $product->id)
+            ->sum('quantity');
+
+        return $totalAvailable >= $qty;
     }
 }
