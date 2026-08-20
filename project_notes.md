@@ -137,6 +137,122 @@ janmitram-app/
 
 ---
 
+## Core Strategic Architecture Pillars
+
+### A. Strict Option A Warehouse Stock Management
+* **Central Master Catalog**: All physical merchandise is created centrally by Admins as Master Products (`master_product_id = null`).
+* **Warehouse Stock Ledgers**: Inventory deposits enter physical Central/Regional warehouses (`WarehouseStock`). All movements are immutably audited in `StockLedger`.
+* **Shop Copy Replication**: Franchise shops (`Shop`) do not create physical products from scratch. Products are cloned (`master_product_id = X`, `shop_id = Y`) upon stock transfer/request fulfillment.
+* **₹3,000 Minimum First Dispatch**: Newly registered or approved franchise shops must receive an initial inventory assignment of at least ₹3,000 aggregate value.
+
+### B. Automated Zero-Permission IP Geolocation
+* **Zero-Permission Detection**: `LocationController` inspects client IP headers (`CF-Connecting-IP`, `X-Real-IP`, `X-Forwarded-For`, `REMOTE_ADDR`) to resolve the customer's City, State, and PIN code on startup.
+* **Non-Indian / International Fallback**: International visitors (`countryCode !== 'IN'`) gracefully default to the Central Hub in Jaipur (`302013`).
+* **Seamless Override**: Customers can switch cities or type a 6-digit PIN code via `LocationPickerModal.vue`.
+
+### C. Multi-Shop Round-Robin Product Discovery
+* **Fair Branch Exposure**: In multi-branch cities, the **Popular Products** section picks 1 top-rated product from each local branch shop in turn (Shop A ➔ item 1, Shop B ➔ item 2, etc.).
+* **Zero Redundancy**: Automatic deduplication ensures every product name appears only once across the section.
+* **Strict Central Shop Exclusion**: Products from **Main Janmitram Shop (Shop ID: 1)** are strictly excluded from homepage discovery, driving retail orders directly to local franchise branches.
+
+### D. Dual-Phase MLM Network Marketing Engine
+* **Genealogy Structure**: Franchise shops maintain parent-child links (`shops.parent_shop_id`) via referral codes.
+* **Frontline Capacity**: Standard partner shops can sponsor a maximum of 10 direct downline shops (unlimited for Shop #1).
+* **Compensation Phases**:
+  * **Phase 1**: 10% direct commission on personal shop sales.
+  * **Phase 2**: Tiered group sales bonuses based on active downline team performance.
+* **Monthly Batch Execution**: Executed on or after the 1st of each month via `php artisan payout:monthly`.
+
+### E. Google Maps Platform & Doorstep Geocoding
+* **Google Maps JavaScript SDK & Google Places API (New)**: Multi-tier coordinate lookup, doorstep reverse geocoding, and live driver GPS tracking.
+
+### F. Enterprise Corporate Invoicing & Razorpay Streamlining
+* **Unified PDF Architecture**: Standardized 12mm page margin boundary in mPDF with itemized GST percentages, product units in bold, and dynamic QR codes.
+* **Razorpay Optimization**: Auto-selects Razorpay when sole active online gateway and synchronizes popup window lifecycle via `window.postMessage` and `localStorage`.
+
+### G. Real-Time Master-to-Shop Price, Discount & Variant Synchronization
+* **Atomic Cascade Architecture**: Root Admin updates on Master Products (`master_product_id == null`) automatically synchronize `price` (Regular / MRP), `discount_price` (Offer Price), `buy_price` (Wholesale Cost), `unit_id`, `brand_id`, and variant extra prices (colors/sizes) to all child shop copies across all franchise branches.
+* **Bulk & Fulfillment Sync**: Full synchronization across single edit, bulk Excel imports, and stock request fulfillment cycles.
+
+---
+
+## System Roles, RBAC Hierarchy & Permissions Matrix
+
+### 1. System Roles Overview
+
+| Role | Role Key (`name`) | Default Portal | Primary Scope & Responsibility |
+|---|---|---|---|
+| **Super Admin** | `root` | `/admin/*` | Full platform owner. Unrestricted master access, infrastructure & payment gateways, MLM payout engine batch execution, master warehouse transfers, and system governance. |
+| **System Admin** | `admin` | `/admin/*` | Operational administrator. Daily management of customer orders, stock approvals, customer and rider verifications, and support tickets. |
+| **Franchise Shop** | `shop` | `/shop/*` | Store partner / Kendra owner. Walk-in **POS counter billing**, fulfilling online local deliveries, requesting inventory from Central Logistics, managing downline MLM shop affiliate tree, and submitting wallet payout withdrawals. |
+| **Supplier** | `supplier` | Supplier Catalog / Inwarding | Bulk merchandise vendor supplying raw inventory and packaged goods into Central Logistics Warehouses. |
+| **Delivery Rider** | `driver` | Rider Mobile App / API | Dispatch rider assigned to deliver packed orders from local shops/hubs to customer doorsteps with live GPS tracking. |
+| **Customer** | `customer` | Customer Storefront / App | Registered shopper browsing catalog, placing orders, using Janmitram Health Cards, and tracking shipments. |
+| **Visitor** | `visitor` | Public Storefront | Unregistered guest browsing public products and landing pages. |
+
+### 2. Key Differences: `root` vs. `admin`
+
+```
+                  ┌─────────────────────────────────────┐
+                  │          ROOT (Super Admin)         │
+                  │  Full Access + Infrastructure & MLM │
+                  └──────────────────┬──────────────────┘
+                                     │ creates & manages
+                                     ▼
+                  ┌─────────────────────────────────────┐
+                  │         ADMIN (Sub-Admin)           │
+                  │    Operational & Day-to-Day Tasks   │
+                  └─────────────────────────────────────┘
+```
+
+| Dimension | `root` (Super Admin) | `admin` (System Administrator) |
+|---|---|---|
+| **Hierarchy** | Absolute highest system authority (`root@janmitram.com`). | Subordinate role created and delegated by `root`. |
+| **Role ID** | Role ID `#1` (protected from deletion/modification). | Role ID `#2` or custom admin roles. |
+| **Platform Anchor** | Owns the **Main Janmitram Shop** (`JAN-00001` / Shop #1), serving as the apex parent node in the MLM genealogy. | Does not own the platform apex node; acts as operational staff. |
+| **Infrastructure Controls** | Exclusive access to Payment Gateway API keys, SMS Gateways, Mail SMTP, Firebase Push, PWA, and system upgrades. | Restricted from core infrastructure settings unless explicitly granted permissions. |
+| **MLM Compensation** | Full authority to run, preview, and rollback monthly Dual-Phase Payout runs (`/admin/payout/run`). | Audits ledgers and downline trees without engine execution authority. |
+| **Financial Disbursals** | Final approval and execution of bank payout withdrawals (`/admin/withdraw`). | Reviews request receipts and KYC verification. |
+
+### 3. Granular Permissions Architecture (`config/acl.php`)
+
+The application contains **330 granular permission nodes** managed via Spatie Laravel-Permission:
+
+#### **A. Admin Scope Permissions (Platform Level)**
+* **Dashboard**: `admin.dashboard.index`, `admin.dashboard.notification`
+* **Shop Management**: `admin.shop.index`, `admin.shop.create`, `admin.shop.edit`, `admin.shop.show`, `admin.shop.status.toggle`, `admin.shop.orders`, `admin.shop.products`, `admin.shop.reset.password`
+* **Central Warehouses**: `admin.warehouse.index`, `admin.warehouse.create`, `admin.warehouse.edit`, `admin.warehouse.destroy`, `admin.warehouse.show`, `admin.warehouse.stock`, `admin.warehouse.stock.add`
+* **Warehouse Transfers**: `admin.warehouse-transfer.index`, `admin.warehouse-transfer.create`, `admin.warehouse-transfer.store`, `admin.warehouse-transfer.show`, `admin.warehouse-transfer.complete`, `admin.warehouse-transfer.cancel`
+* **Stock Requests**: `admin.stock-request.index`, `admin.stock-request.show`, `admin.stock-request.approve`, `admin.stock-request.reject`
+* **MLM Payout Engine**: `admin.payout.index`, `admin.payout.run`, `admin.payout.network`, `admin.payout.guide`, `admin.payout.slip`
+* **Withdrawal Disbursals**: `admin.withdraw.index`, `admin.withdraw.update`, `admin.withdraw.show`
+* **Order Processing**: `admin.order.index`, `admin.order.show`, `admin.order.status.change`, `admin.order.payment.status.toggle`, `admin.order.assign.rider`
+* **Customer Reviews**: `admin.review.index`, `admin.review.approve`, `admin.review.reject`, `admin.review.reply`, `admin.review.destroy`
+* **Product & Catalog**: `admin.product.index`, `admin.product.approve`, `admin.product.show`, `admin.product.destroy`, `admin.category.*`, `admin.subcategory.*`, `admin.brand.*`, `admin.unit.*`, `admin.size.*`, `admin.color.*`
+* **Customer & Riders**: `admin.customer.index`, `admin.customer.create`, `admin.customer.show`, `admin.customer.edit`, `admin.customer.destroy`, `admin.customer.toggle`, `admin.customer.reset.password`, `admin.rider.*`
+* **Health Cards & Coupons**: `admin.coupon.index`, `admin.coupon.create`, `admin.coupon.edit`, `admin.coupon.destroy`
+* **System Settings**: `admin.generale-setting.*`, `admin.business-setting.*`, `admin.paymentGateway.*`, `admin.sms-gateway.*`, `admin.mailConfig.*`, `admin.firebase.*`, `admin.vatTax.*`, `admin.deliveryCharge.*`
+* **RBAC Governance**: `admin.role.index`, `admin.role.create`, `admin.role.edit`, `admin.role.destroy`, `admin.role.permission`, `admin.employee.*`
+* **Support & Tickets**: `admin.supportTicket.index`, `admin.supportTicket.show`, `admin.supportTicket.sendMessage`, `admin.supportTicket.updateStatus`, `admin.supportTicket.pinMessage`
+
+#### **B. Shop Scope Permissions (Franchise Level)**
+* **POS Billing**: `shop.pos.index`, `shop.pos.sales`, `shop.pos.draft`
+* **Local Products**: `shop.product.index`, `shop.product.create`, `shop.product.show`, `shop.product.edit`, `shop.product.toggle`, `shop.product.destroy`, `shop.product.barcode`
+* **Stock Requests**: `shop.stock-request.index`, `shop.stock-request.create`, `shop.stock-request.store`, `shop.stock-request.show`
+* **MLM Downline Network**: `shop.payout.index`, `shop.payout.network`, `shop.payout.network.create`, `shop.payout.slip`
+* **Wallet Withdrawals**: `shop.withdraw.index`, `shop.withdraw.store`, `shop.withdraw.show`
+* **Store Orders**: `shop.order.index`, `shop.order.show`, `shop.order.status.change`
+* **Shop Profile & KYC**: `shop.profile.index`, `shop.profile.edit`, `shop.profile.change-password`
+
+### 4. Role & Permission Management Route
+* **Interface URL**: `https://janmitram.com/admin/role/{role}/permission`
+* **Controller**: `App\Http\Controllers\Admin\RolePermissionController`
+* **Update Method**: `syncPermissions($request->permissions)` with automatic cache clearance (`role_permissions_{id}`).
+
+---
+
+---
+
 ## Option A: Multi-Warehouse & Stock Management Architecture
 
 Janmitram operates on **Option A: Strict Warehouse-Only Architecture**, which centralizes physical product inventory control within warehouses and dispatches stock to vendor shops via formal requests.
