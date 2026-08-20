@@ -428,7 +428,7 @@ class Product extends Model
             return;
         }
 
-        $this->load(['colors', 'sizes', 'categories', 'subcategories', 'vatTaxes']);
+        $this->load(['colors', 'sizes', 'categories', 'subcategories', 'vatTaxes', 'medias']);
 
         $colorData = [];
         foreach ($this->colors as $color) {
@@ -443,6 +443,7 @@ class Product extends Model
         $categoryIds = $this->categories->pluck('id')->toArray();
         $subCategoryIds = $this->subcategories->pluck('id')->toArray();
         $vatTaxIds = $this->vatTaxes->pluck('id')->toArray();
+        $galleryMediaIds = $this->medias->pluck('id')->toArray();
 
         foreach ($copies as $copy) {
             $copy->update([
@@ -468,6 +469,7 @@ class Product extends Model
             $copy->colors()->sync($colorData);
             $copy->sizes()->sync($sizeData);
             $copy->vatTaxes()->sync($vatTaxIds);
+            $copy->medias()->sync($galleryMediaIds);
         }
     }
 

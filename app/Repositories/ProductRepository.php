@@ -380,6 +380,11 @@ class ProductRepository extends Repository
 
         if (! $product->master_product_id) {
             $product->syncShopCopies();
+        } else {
+            $master = $product->masterProduct;
+            if ($master) {
+                $master->syncShopCopies();
+            }
         }
 
         return $product;
