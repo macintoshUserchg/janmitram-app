@@ -430,33 +430,53 @@
                 <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
                     @if($totalDiscounts > 0)
                         <tr class="border-bottom">
-                            <td style="width: 45%; padding: 4px 8px; color: #1e293b;">Gross Amount</td>
+                            <td style="width: 45%; padding: 4px 8px; color: #1e293b;">Gross Total (MRP)</td>
                             <td style="width: 5%; text-align: center;">:</td>
                             <td style="width: 50%; text-align: right; padding: 4px 8px; font-weight: bold;">
                                 {{ formatIndianCurrency($grossTotal) }}
                             </td>
                         </tr>
-                        <tr class="border-bottom">
-                            <td style="padding: 4px 8px; color: #dc2626;">Discount</td>
-                            <td style="text-align: center; color: #dc2626;">:</td>
-                            <td style="text-align: right; padding: 4px 8px; font-weight: bold; color: #dc2626;">
-                                -{{ formatIndianCurrency($totalDiscounts) }}
-                            </td>
-                        </tr>
+                        @if($cardDiscount > 0)
+                            <tr class="border-bottom">
+                                <td style="padding: 4px 8px; color: #dc2626;">Card Discount</td>
+                                <td style="text-align: center; color: #dc2626;">:</td>
+                                <td style="text-align: right; padding: 4px 8px; font-weight: bold; color: #dc2626;">
+                                    -{{ formatIndianCurrency($cardDiscount) }}
+                                </td>
+                            </tr>
+                        @endif
+                        @if($couponDiscount > 0)
+                            <tr class="border-bottom">
+                                <td style="padding: 4px 8px; color: #dc2626;">Coupon Discount</td>
+                                <td style="text-align: center; color: #dc2626;">:</td>
+                                <td style="text-align: right; padding: 4px 8px; font-weight: bold; color: #dc2626;">
+                                    -{{ formatIndianCurrency($couponDiscount) }}
+                                </td>
+                            </tr>
+                        @endif
+                        @if($productDiscount > 0)
+                            <tr class="border-bottom">
+                                <td style="padding: 4px 8px; color: #dc2626;">Special Discount</td>
+                                <td style="text-align: center; color: #dc2626;">:</td>
+                                <td style="text-align: right; padding: 4px 8px; font-weight: bold; color: #dc2626;">
+                                    -{{ formatIndianCurrency($productDiscount) }}
+                                </td>
+                            </tr>
+                        @endif
                     @endif
                     <tr class="border-bottom">
-                        <td style="width: 45%; padding: 5px 8px; color: #1e293b;">Sub Total</td>
+                        <td style="width: 45%; padding: 5px 8px; color: #1e293b;">Net Subtotal</td>
                         <td style="width: 5%; text-align: center;">:</td>
                         <td style="width: 50%; text-align: right; padding: 5px 8px; font-weight: bold;">
-                            {{ formatIndianCurrency($subTotalAmount) }}
+                            {{ formatIndianCurrency($discountedSubtotal) }}
                         </td>
                     </tr>
                     @if($taxAmountTotal > 0)
                         <tr class="border-bottom">
-                            <td style="padding: 4px 8px; color: #1e293b;">GST ({{ number_format($defaultTaxRate, 1) }}%)</td>
+                            <td style="padding: 4px 8px; color: #1e293b; font-size: 10px;">Incl. GST ({{ number_format($defaultTaxRate, 1) }}%)</td>
                             <td style="text-align: center;">:</td>
-                            <td style="text-align: right; padding: 4px 8px; font-weight: bold;">
-                                +{{ formatIndianCurrency($taxAmountTotal) }}
+                            <td style="text-align: right; padding: 4px 8px; font-weight: normal; font-size: 10px; color: #475569;">
+                                [{{ formatIndianCurrency($taxAmountTotal) }}]
                             </td>
                         </tr>
                     @endif
