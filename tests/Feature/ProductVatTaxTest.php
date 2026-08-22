@@ -79,12 +79,12 @@ class ProductVatTaxTest extends TestCase
 
         $taxByName = collect($result['all_vat_taxes'])->keyBy('name');
 
-        // Only the default rate is applied to the unassigned product's subtotal.
-        $this->assertEquals(5.00, $taxByName['VAT 5%']['amount']);
-        // The overridden product pays exactly its assigned rate, not the default stack.
-        $this->assertEquals(12.00, $taxByName['VAT 12%']['amount']);
-        $this->assertEquals(17.00, $result['order_tax_amount']);
-        $this->assertEquals(217.00, $result['payable_amount']);
+        // Only the default rate is applied to the unassigned product (tax-inclusive 5% on 100 = 4.76)
+        $this->assertEquals(4.76, $taxByName['VAT 5%']['amount']);
+        // The overridden product pays its assigned rate (tax-inclusive 12% on 100 = 10.71)
+        $this->assertEquals(10.71, $taxByName['VAT 12%']['amount']);
+        $this->assertEquals(15.47, $result['order_tax_amount']);
+        $this->assertEquals(200.00, $result['payable_amount']);
     }
 
     public function test_discount_and_variant_pricing_are_taxed(): void
@@ -118,9 +118,10 @@ class ProductVatTaxTest extends TestCase
 
         $taxByName = collect($result['all_vat_taxes'])->keyBy('name');
 
-        $this->assertEquals(10.80, $taxByName['VAT 12%']['amount']);
-        $this->assertEquals(10.80, $result['order_tax_amount']);
-        $this->assertEquals(100.80, $result['payable_amount']);
+        // 12% tax-inclusive on 90 MRP = 9.64
+        $this->assertEquals(9.64, $taxByName['VAT 12%']['amount']);
+        $this->assertEquals(9.64, $result['order_tax_amount']);
+        $this->assertEquals(90.00, $result['payable_amount']);
     }
 
     public function test_zero_rate_override_excludes_product_and_skips_zero_row(): void
@@ -155,10 +156,10 @@ class ProductVatTaxTest extends TestCase
         // P1 (zero-rate override) is excluded from the global base and
         // contributes no tax; the zero-rate row itself is skipped.
         $this->assertFalse($taxByName->has('VAT 0%'));
-        $this->assertEquals(5.00, $taxByName['VAT 5%']['amount']);
-        $this->assertEquals(5.00, $result['order_tax_amount']);
+        $this->assertEquals(4.76, $taxByName['VAT 5%']['amount']);
+        $this->assertEquals(4.76, $result['order_tax_amount']);
         $this->assertEquals(200.0, $result['total_amount']);
-        $this->assertEquals(205.00, $result['payable_amount']);
+        $this->assertEquals(200.00, $result['payable_amount']);
     }
 
     public function test_admin_endpoint_assigns_per_product_tax(): void
