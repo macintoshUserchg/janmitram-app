@@ -1,22 +1,93 @@
 @php
     $directory = app()->getLocale() == 'ar' ? 'rtl' : 'ltr';
     $setting = generaleSetting('setting');
+
+    // Company & Branch Information
+    $companyName = 'JANMITRA UDYOG LLP S-15 Dwarika Tower Vidyadhar Nagar Jaipur Rajasthan (Unit Badharna Road Harmada Sabji Mandi Ke Pas Sikar Road)';
+    $companyHindi = '"जनमित्रम " शिव मंदिर के सामने बढ़ारना रोड सब्जी मंडी के पास सीकर रोड जयपुर';
+    $companyPhone = '9414057690';
+    $companyEmail = 'janmitraudyog@gmail.com';
+    $companyGstin = '08AAQFJ8465L1ZF';
+    $companyState = '08-Rajasthan';
+
+    // Bank Details
+    $bankName = 'Indian Overseas Bank, Vidhya Dhar Nagar Jaipur';
+    $bankAccountNo = '242702000000224';
+    $bankIfsc = 'IOBA0002427';
+    $bankHolder = 'JANMITRA UDYOG LLP';
+
+    // Destination / Receiving Shop Information
+    $shop = $stockRequest->shop;
+    $clientName = $shop?->name ?? 'PARTNER FRANCHISE STORE';
+    $clientAddress = $shop?->address ?? 'Jaipur, Rajasthan';
+    $placeOfSupply = $companyState;
+
+    // Line Items Computation
+    $items = [];
+    $totalQty = 0;
+    $totalGst = 0;
+    $totalTaxable = 0;
+    $totalGross = 0;
+
+    foreach ($stockRequest->items ?? [] as $idx => $item) {
+        $product = $item->product;
+        $price = (float)($product?->price ?? 0);
+        $qty = (int)($item->quantity ?? 1);
+        $rowGross = $price * $qty;
+        $unitStr = $product?->unit?->name ?? 'Pcs';
+        $hsn = $product?->hsn_code ?? $product?->sku ?? '0405';
+
+        $taxRate = 5.0;
+        $taxableUnit = $price / (1 + ($taxRate / 100));
+        $taxAmount = $rowGross - ($taxableUnit * $qty);
+        $taxableRow = $taxableUnit * $qty;
+
+        $totalQty += $qty;
+        $totalGst += $taxAmount;
+        $totalTaxable += $taxableRow;
+        $totalGross += $rowGross;
+
+        $items[] = [
+            'index' => $idx + 1,
+            'name' => $product?->name ?? 'Product Item',
+            'hsn' => $hsn,
+            'qty' => $qty,
+            'unit' => $unitStr,
+            'price_unit' => $price,
+            'tax_rate' => $taxRate,
+            'tax_amount' => $taxAmount,
+            'amount' => $rowGross,
+            'taxable_amount' => $taxableRow,
+        ];
+    }
+
+    $amountInWords = numberToIndianWords($totalGross);
 @endphp
 <!DOCTYPE html>
-<html lang="{{ app()->getLocale() }}" dir="{{ $directory }}">
+<html lang="en" dir="{{ $directory }}">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>{{ __('Stock Dispatch Invoice') }} - #INV-SR-{{ str_pad((string)$stockRequest->id, 5, '0', STR_PAD_LEFT) }}</title>
     <style>
+        @page {
+            margin: 8mm;
+        }
+
         body {
             font-family: "DejaVu Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
-            color: #1e293b;
+            color: #0f172a;
             background-color: #ffffff;
-            font-size: 12px;
-            line-height: 1.4;
+            font-size: 11px;
+            line-height: 1.35;
             margin: 0;
             padding: 0;
+        }
+
+        .invoice-box {
+            width: 100%;
+            border: 1.5px solid #334155;
+            background-color: #ffffff;
         }
 
         table {
@@ -24,192 +95,136 @@
             border-collapse: collapse;
         }
 
-        p, h1, h2, h3, h4, h5, h6 {
-            margin: 0;
-            padding: 0;
+        th, td {
+            padding: 5px 6px;
+            vertical-align: middle;
+        }
+
+        .border-bottom { border-bottom: 1px solid #334155; }
+        .border-top { border-top: 1px solid #334155; }
+        .border-left { border-left: 1px solid #334155; }
+        .border-right { border-right: 1px solid #334155; }
+
+        .bg-light-header {
+            background-color: #f8fafc;
+            font-weight: bold;
+            color: #1e293b;
         }
 
         .text-left { text-align: left; }
         .text-right { text-align: right; }
         .text-center { text-align: center; }
 
-        .text-muted { color: #64748b; }
-        .text-dark { color: #0f172a; }
-        .text-primary { color: #d97706; }
-        .text-success { color: #059669; }
-
-        .fw-normal { font-weight: normal; }
-        .fw-medium { font-weight: 500; }
         .fw-bold { font-weight: bold; }
 
-        /* Header */
-        .header-table {
-            margin-bottom: 18px;
-            border-bottom: 2px solid #f1f5f9;
-            padding-bottom: 14px;
-        }
-
         .company-logo {
-            max-height: 60px;
-            max-width: 150px;
+            width: 110px;
+            height: 110px;
             object-fit: contain;
+            display: block;
+            margin: 0 auto;
         }
 
-        .invoice-badge {
-            display: inline-block;
-            background-color: #0f172a;
-            color: #ffffff;
-            font-size: 15px;
-            font-weight: bold;
-            letter-spacing: 0.8px;
-            padding: 6px 14px;
-            border-radius: 6px;
-            margin-bottom: 6px;
-        }
-
-        .status-badge-dispatched {
-            display: inline-block;
-            background-color: #dcfce7;
-            color: #15803d;
-            font-size: 11px;
-            font-weight: bold;
-            padding: 3px 8px;
-            border-radius: 4px;
-            border: 1px solid #86efac;
-        }
-
-        /* Info Card */
-        .info-card {
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 12px 14px;
-            vertical-align: top;
-        }
-
-        .info-card-title {
-            font-size: 11px;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #64748b;
-            border-bottom: 1px solid #e2e8f0;
-            padding-bottom: 5px;
-            margin-bottom: 6px;
-        }
-
-        /* Line Items Table */
         .items-table {
-            margin-top: 16px;
-            margin-bottom: 14px;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            overflow: hidden;
+            width: 100%;
+            border-top: 1px solid #334155;
+            border-bottom: 1px solid #334155;
         }
 
         .items-table th {
-            background-color: #0f172a;
-            color: #ffffff;
+            background-color: #ffffff;
+            border: 1px solid #334155;
             font-size: 11px;
             font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            padding: 9px 10px;
+            padding: 6px 4px;
         }
 
         .items-table td {
-            padding: 8px 10px;
-            border-bottom: 1px solid #f1f5f9;
-            font-size: 11px;
-            color: #334155;
-            vertical-align: middle;
-        }
-
-        .items-table tr:nth-child(even) td {
-            background-color: #f8fafc;
-        }
-
-        .summary-total-row td {
-            border-top: 2px solid #0f172a;
-            border-bottom: 2px solid #0f172a;
-            background-color: #f8fafc;
-            padding: 8px;
-            font-size: 13px;
-            font-weight: bold;
-            color: #0f172a;
-        }
-
-        /* Footer */
-        .invoice-footer {
-            margin-top: 28px;
-            border-top: 1px solid #e2e8f0;
-            padding-top: 14px;
-            font-size: 10px;
-            color: #64748b;
-        }
-
-        .signature-box {
-            text-align: center;
-            float: right;
-            width: 180px;
-            border-top: 1px solid #94a3b8;
-            padding-top: 4px;
-            font-size: 10px;
-            font-weight: 500;
-            color: #475569;
+            border: 1px solid #334155;
+            font-size: 10.5px;
+            padding: 6px 5px;
         }
     </style>
 </head>
 <body>
 
-    <!-- Header Section -->
-    <table class="header-table">
+<div class="invoice-box">
+
+    <!-- 1. Top Header -->
+    <table>
         <tr>
-            <!-- Company Info Left -->
-            <td style="width: 55%; vertical-align: top;">
-                <table style="width: 100%;">
+            <td style="width: 130px; text-align: center; vertical-align: middle; border-right: 1px solid #334155; padding: 8px;">
+                @if ($setting?->logo)
+                    <img src="{{ $setting->logo }}" alt="Logo" class="company-logo" />
+                @else
+                    <img src="{{ public_path('assets/logo.png') }}" alt="Logo" class="company-logo" />
+                @endif
+            </td>
+
+            <td style="vertical-align: top; padding: 8px 12px;">
+                <h1 style="font-size: 15px; font-weight: bold; margin: 0 0 3px 0; color: #0f172a; line-height: 1.25;">
+                    {{ $companyName }}
+                </h1>
+                <div style="font-size: 10.5px; color: #334155; margin-bottom: 6px; font-weight: 500;">
+                    {{ $companyHindi }}
+                </div>
+                <table style="width: 100%; font-size: 10.5px;">
                     <tr>
-                        <td style="vertical-align: middle;">
-                            @if ($setting?->logo)
-                                <img src="{{ $setting->logo }}" alt="Logo" class="company-logo" />
-                            @else
-                                <h1 style="font-size: 22px; color: #0f172a; font-weight: bold; margin-bottom: 2px;">
-                                    {{ $setting?->name ?? 'Janmitram' }}
-                                </h1>
-                            @endif
-                        </td>
+                        <td style="padding: 1px 0; width: 48%;"><strong>Phone:</strong> {{ $companyPhone }}</td>
+                        <td style="padding: 1px 0; width: 52%;"><strong>Email:</strong> {{ $companyEmail }}</td>
                     </tr>
                     <tr>
-                        <td style="padding-top: 6px;">
-                            <p class="fw-bold text-dark" style="font-size: 12.5px;">{{ $setting?->name ?? 'Janmitram Central Logistics' }}</p>
-                            <p class="text-muted" style="font-size: 10.5px; max-width: 320px;">
-                                {{ $setting?->address ?? 'Central Hub, Rajasthan, India' }}
-                            </p>
-                            <p class="text-muted" style="font-size: 10.5px; margin-top: 2px;">
-                                @if($setting?->email)<strong>Email:</strong> {{ $setting->email }} @endif
-                                @if($setting?->mobile) &nbsp;|&nbsp; <strong>Phone:</strong> {{ $setting->mobile }} @endif
-                            </p>
-                        </td>
+                        <td style="padding: 1px 0;"><strong>GSTIN:</strong> {{ $companyGstin }}</td>
+                        <td style="padding: 1px 0;"><strong>State:</strong> {{ $companyState }}</td>
                     </tr>
                 </table>
             </td>
+        </tr>
+    </table>
 
-            <!-- Invoice Details Right -->
-            <td style="width: 45%; vertical-align: top;" class="text-right">
-                <div class="invoice-badge">{{ __('GOODS DISPATCH NOTE') }}</div>
-                <table style="width: 100%; margin-top: 4px;">
+    <!-- 2. Estimate / Invoice For & Details -->
+    <table class="border-top">
+        <tr class="bg-light-header border-bottom">
+            <td style="width: 50%; border-right: 1px solid #334155; font-size: 11px; padding: 4px 8px;">
+                <strong>Estimate For:</strong>
+            </td>
+            <td style="width: 50%; font-size: 11px; padding: 4px 8px;">
+                <strong>Estimate Details:</strong>
+            </td>
+        </tr>
+        <tr>
+            <td style="width: 50%; border-right: 1px solid #334155; vertical-align: top; padding: 8px;">
+                <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; margin-bottom: 3px; color: #0f172a;">
+                    {{ $clientName }}
+                </div>
+                <div style="font-size: 10.5px; color: #334155; line-height: 1.35;">
+                    {{ $clientAddress }}
+                </div>
+                @if($shop?->phone)
+                    <div style="font-size: 10px; color: #475569; margin-top: 3px;">
+                        <strong>Phone:</strong> {{ $shop->phone }}
+                    </div>
+                @endif
+            </td>
+
+            <td style="width: 50%; vertical-align: top; padding: 8px;">
+                <table style="width: 100%; font-size: 11px;">
                     <tr>
-                        <td class="text-right text-muted" style="font-size: 11px;">{{ __('Transfer Invoice #') }}:</td>
-                        <td class="text-right fw-bold text-dark" style="font-size: 11px; padding-left: 8px;">#INV-SR-{{ str_pad((string)$stockRequest->id, 5, '0', STR_PAD_LEFT) }}</td>
+                        <td style="width: 32%; padding: 2px 0; color: #475569;">No:</td>
+                        <td style="width: 68%; padding: 2px 0; font-weight: bold; color: #0f172a;">
+                            INV-SR-{{ str_pad((string)$stockRequest->id, 5, '0', STR_PAD_LEFT) }}
+                        </td>
                     </tr>
                     <tr>
-                        <td class="text-right text-muted" style="font-size: 11px;">{{ __('Dispatch Date') }}:</td>
-                        <td class="text-right fw-medium text-dark" style="font-size: 11px; padding-left: 8px;">{{ $stockRequest->updated_at ? $stockRequest->updated_at->format('d M Y, h:i A') : now()->format('d M Y') }}</td>
+                        <td style="padding: 2px 0; color: #475569;">Date:</td>
+                        <td style="padding: 2px 0; font-weight: bold; color: #0f172a;">
+                            {{ $stockRequest->updated_at ? $stockRequest->updated_at->format('d-m-Y') : now()->format('d-m-Y') }}
+                        </td>
                     </tr>
                     <tr>
-                        <td class="text-right text-muted" style="font-size: 11px;">{{ __('Status') }}:</td>
-                        <td class="text-right" style="padding-left: 8px;">
-                            <span class="status-badge-dispatched">{{ strtoupper($stockRequest->status) }}</span>
+                        <td style="padding: 2px 0; color: #475569;">Place of Supply:</td>
+                        <td style="padding: 2px 0; font-weight: bold; color: #0f172a;">
+                            {{ $placeOfSupply }}
                         </td>
                     </tr>
                 </table>
@@ -217,117 +232,200 @@
         </tr>
     </table>
 
-    <!-- Sender & Recipient Cards -->
-    <table style="margin-bottom: 14px;">
-        <tr>
-            <!-- Dispatching Warehouse -->
-            <td style="width: 49%; vertical-align: top;">
-                <div class="info-card">
-                    <div class="info-card-title">{{ __('Dispatching Hub (Source)') }}</div>
-                    <p class="fw-bold text-dark" style="font-size: 12px; margin-bottom: 2px;">{{ $stockRequest->warehouse?->name ?? 'Central Warehouse' }}</p>
-                    <p class="text-muted" style="font-size: 10.5px; line-height: 1.35;">
-                        {{ $stockRequest->warehouse?->address ?? 'Central Hub Warehouse, India' }}
-                    </p>
-                    <p class="text-muted" style="font-size: 10px; margin-top: 3px;">
-                        <strong>Type:</strong> Regional Logistics Hub
-                    </p>
-                </div>
-            </td>
-
-            <td style="width: 2%;"></td>
-
-            <!-- Receiving Shop -->
-            <td style="width: 49%; vertical-align: top;">
-                <div class="info-card">
-                    <div class="info-card-title">{{ __('Receiving Shop (Destination)') }}</div>
-                    <p class="fw-bold text-dark" style="font-size: 12px; margin-bottom: 2px;">{{ $stockRequest->shop?->name ?? 'Recipient Shop' }}</p>
-                    <p class="text-muted" style="font-size: 10.5px; line-height: 1.35;">
-                        {{ $stockRequest->shop?->address ?? 'Partner Retail Store, India' }}
-                    </p>
-                    <p class="text-muted" style="font-size: 10px; margin-top: 3px;">
-                        @if($stockRequest->shop?->phone)<strong>Phone:</strong> {{ $stockRequest->shop->phone }} @endif
-                    </p>
-                </div>
-            </td>
-        </tr>
-    </table>
-
-    <!-- Line Items Table -->
-    @php
-        $totalItems = 0;
-        $totalQuantity = 0;
-        $totalValuation = 0;
-    @endphp
+    <!-- 3. Line Items Table -->
     <table class="items-table">
         <thead>
             <tr>
-                <th style="width: 5%; text-align: center;">#</th>
-                <th style="width: 45%; text-align: left;">{{ __('Product Description') }}</th>
-                <th style="width: 15%; text-align: center;">{{ __('Variant / SKU') }}</th>
-                <th style="width: 10%; text-align: center;">{{ __('Req Qty') }}</th>
-                <th style="width: 10%; text-align: center;">{{ __('Sent Qty') }}</th>
-                <th style="width: 15%; text-align: right;">{{ __('Est. Rate') }}</th>
+                <th style="width: 5%;" class="text-center">#</th>
+                <th style="width: 35%;" class="text-left">Item Name</th>
+                <th style="width: 11%;" class="text-center">HSN/ SAC</th>
+                <th style="width: 9%;" class="text-center">Quantity</th>
+                <th style="width: 8%;" class="text-center">Unit</th>
+                <th style="width: 14%;" class="text-right">Price/ Unit (₹)</th>
+                <th style="width: 18%;" class="text-right">GST(₹)</th>
+                <th style="width: 15%;" class="text-right">Amount(₹)</th>
             </tr>
         </thead>
         <tbody>
-            @forelse($stockRequest->items as $item)
-                @php
-                    $qty = $item->quantity;
-                    $sentQty = $item->approved_quantity ?? $qty;
-                    $rate = $item->unit_cost ?? $item->product?->price ?? 0;
-                    $totalItems++;
-                    $totalQuantity += $sentQty;
-                    $totalValuation += ($rate * $sentQty);
-                @endphp
+            @forelse($items as $row)
                 <tr>
-                    <td class="text-center text-muted">{{ $loop->iteration }}</td>
-                    <td>
-                        <strong class="text-dark">{{ $item->product?->name ?? 'Product' }}</strong>
-                        @if($item->product?->brand)
-                            <div class="text-muted" style="font-size: 9.5px;">Brand: {{ $item->product->brand->name }}</div>
-                        @endif
+                    <td class="text-center fw-bold">{{ $row['index'] }}</td>
+                    <td class="text-left fw-bold" style="color: #0f172a;">{{ $row['name'] }}</td>
+                    <td class="text-center text-muted">{{ $row['hsn'] }}</td>
+                    <td class="text-center fw-bold">{{ $row['qty'] }}</td>
+                    <td class="text-center">{{ $row['unit'] }}</td>
+                    <td class="text-right">{{ formatIndianCurrency($row['price_unit']) }}</td>
+                    <td class="text-right">
+                        {{ formatIndianCurrency($row['tax_amount']) }}
+                        <span style="font-size: 9px; color: #475569;">({{ number_format($row['tax_rate'], 1) }}%)</span>
                     </td>
-                    <td class="text-center text-muted">
-                        @if($item->color || $item->size)
-                            {{ $item->color?->name ?? '' }} {{ $item->size?->name ? '('.$item->size->name.')' : '' }}
-                        @else
-                            Default
-                        @endif
-                    </td>
-                    <td class="text-center text-muted">{{ $qty }}</td>
-                    <td class="text-center fw-bold text-dark">{{ $sentQty }}</td>
-                    <td class="text-right fw-medium">{{ showCurrency($rate) }}</td>
+                    <td class="text-right fw-bold">{{ formatIndianCurrency($row['amount']) }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="6" class="text-center text-muted" style="padding: 16px;">{{ __('No items found in this dispatch note.') }}</td>
+                    <td colspan="8" class="text-center" style="padding: 15px;">{{ __('No products found') }}</td>
                 </tr>
             @endforelse
-            <tr class="summary-total-row">
-                <td colspan="4" class="text-right fw-bold" style="border-radius: 6px 0 0 6px;">{{ __('Total Dispatched Inventory Units') }}:</td>
-                <td class="text-center fw-bold">{{ $totalQuantity }}</td>
-                <td class="text-right text-primary fw-bold" style="border-radius: 0 6px 6px 0;">{{ showCurrency($totalValuation) }}</td>
+
+            <tr style="background-color: #ffffff; font-weight: bold;">
+                <td class="border-top border-bottom"></td>
+                <td class="text-left border-top border-bottom fw-bold" style="font-size: 11.5px;">Total</td>
+                <td class="border-top border-bottom"></td>
+                <td class="text-center border-top border-bottom fw-bold" style="font-size: 11.5px;">{{ $totalQty }}</td>
+                <td class="border-top border-bottom"></td>
+                <td class="border-top border-bottom"></td>
+                <td class="text-right border-top border-bottom fw-bold" style="font-size: 11px;">
+                    {{ formatIndianCurrency($totalGst) }}
+                </td>
+                <td class="text-right border-top border-bottom fw-bold" style="font-size: 11.5px;">
+                    {{ formatIndianCurrency($totalGross) }}
+                </td>
             </tr>
         </tbody>
     </table>
 
-    <!-- Footer & Signatures -->
-    <table class="invoice-footer">
+    <!-- 4. Tax Summary & Totals / In Words -->
+    <table>
         <tr>
-            <td style="width: 50%; vertical-align: top;">
-                <div style="border-top: 1px dashed #94a3b8; width: 80%; padding-top: 4px;">
-                    <p class="fw-bold text-dark">{{ __('Dispatched By (Warehouse Logistics)') }}</p>
-                    <p class="text-muted" style="font-size: 9px;">Signature & Verification Stamp</p>
+            <td style="width: 60%; vertical-align: top; padding: 0; border-right: 1px solid #334155;">
+                <div class="bg-light-header" style="padding: 4px 8px; border-bottom: 1px solid #334155; font-size: 11px;">
+                    <strong>Tax Summary:</strong>
                 </div>
+                <table style="width: 100%;">
+                    <thead>
+                        <tr style="font-size: 10px; font-weight: bold; border-bottom: 1px solid #334155;">
+                            <th style="width: 25%; text-align: center; border-right: 1px solid #334155;">HSN/ SAC</th>
+                            <th style="width: 30%; text-align: right; border-right: 1px solid #334155;">Taxable Amount (₹)</th>
+                            <th colspan="2" style="width: 45%; text-align: center;">IGST</th>
+                            <th style="width: 30%; text-align: right; border-left: 1px solid #334155;">Total Tax(₹)</th>
+                        </tr>
+                        <tr style="font-size: 9.5px; border-bottom: 1px solid #334155;">
+                            <th style="border-right: 1px solid #334155;"></th>
+                            <th style="border-right: 1px solid #334155;"></th>
+                            <th style="width: 18%; text-align: center; border-right: 1px solid #334155;">Rate (%)</th>
+                            <th style="width: 27%; text-align: right;">Amt (₹)</th>
+                            <th style="border-left: 1px solid #334155;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="text-center" style="border-right: 1px solid #334155; font-size: 10px;">0405</td>
+                            <td class="text-right" style="border-right: 1px solid #334155; font-size: 10px;">{{ formatIndianCurrency($totalTaxable, false) }}</td>
+                            <td class="text-center" style="border-right: 1px solid #334155; font-size: 10px;">5.0</td>
+                            <td class="text-right" style="font-size: 10px;">{{ formatIndianCurrency($totalGst, false) }}</td>
+                            <td class="text-right" style="border-left: 1px solid #334155; font-size: 10px;">{{ formatIndianCurrency($totalGst, false) }}</td>
+                        </tr>
+                        <tr style="font-weight: bold; border-top: 1px solid #334155;">
+                            <td class="text-center fw-bold" style="border-right: 1px solid #334155; font-size: 10.5px;">TOTAL</td>
+                            <td class="text-right fw-bold" style="border-right: 1px solid #334155; font-size: 10.5px;">{{ formatIndianCurrency($totalTaxable, false) }}</td>
+                            <td style="border-right: 1px solid #334155;"></td>
+                            <td class="text-right fw-bold" style="font-size: 10.5px;">{{ formatIndianCurrency($totalGst, false) }}</td>
+                            <td class="text-right fw-bold" style="border-left: 1px solid #334155; font-size: 10.5px;">{{ formatIndianCurrency($totalGst, false) }}</td>
+                        </tr>
+                    </tbody>
+                </table>
             </td>
-            <td style="width: 50%; vertical-align: top;" class="text-right">
-                <div class="signature-box" style="float: right;">
-                    <p class="fw-bold text-dark">{{ __('Received By (Shop Manager)') }}</p>
-                    <p class="text-muted" style="font-size: 9px;">Signature & Store Seal</p>
+
+            <td style="width: 40%; vertical-align: top; padding: 0;">
+                <table style="width: 100%; font-size: 11px;">
+                    <tr class="border-bottom">
+                        <td style="width: 45%; padding: 5px 8px; color: #1e293b;">Sub Total</td>
+                        <td style="width: 5%; text-align: center;">:</td>
+                        <td style="width: 50%; text-align: right; padding: 5px 8px; font-weight: bold;">
+                            {{ formatIndianCurrency($totalGross) }}
+                        </td>
+                    </tr>
+                    <tr class="border-bottom" style="background-color: #f8fafc;">
+                        <td style="padding: 6px 8px; font-weight: bold; font-size: 11.5px;">Total</td>
+                        <td style="text-align: center; font-weight: bold;">:</td>
+                        <td style="text-align: right; padding: 6px 8px; font-weight: bold; font-size: 12px; color: #0f172a;">
+                            {{ formatIndianCurrency($totalGross) }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="3" style="padding: 6px 8px;">
+                            <div style="font-weight: bold; font-size: 10.5px; color: #334155; margin-bottom: 2px;">
+                                Estimate Amount In Words :
+                            </div>
+                            <div style="font-size: 10px; color: #0f172a; font-weight: 600; line-height: 1.3;">
+                                {{ $amountInWords }}
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <!-- 5. Description & Terms -->
+    <table class="border-top">
+        <tr class="bg-light-header border-bottom">
+            <td style="width: 50%; border-right: 1px solid #334155; font-size: 11px; padding: 4px 8px;">
+                <strong>Description:</strong>
+            </td>
+            <td style="width: 50%; font-size: 11px; padding: 4px 8px;">
+                <strong>Terms And Conditions:</strong>
+            </td>
+        </tr>
+        <tr>
+            <td style="width: 50%; border-right: 1px solid #334155; vertical-align: top; padding: 6px 8px; font-size: 10px; line-height: 1.35; color: #334155;">
+                {{ $stockRequest->notes ?? 'logistic charge extra as per transport cow ghee Rs 600 per ltr and butter oil Rs 807 per ltr can is 210ltr cow ghee can is 15 ltr' }}
+            </td>
+
+            <td style="width: 50%; vertical-align: top; padding: 6px 8px; font-size: 10px; line-height: 1.35; color: #334155;">
+                Thank you for doing business with us.
+            </td>
+        </tr>
+    </table>
+
+    <!-- 6. Bank Details & Authorized Signatory -->
+    <table class="border-top">
+        <tr class="bg-light-header border-bottom">
+            <td style="width: 50%; border-right: 1px solid #334155; font-size: 11px; padding: 4px 8px;">
+                <strong>Bank Details:</strong>
+            </td>
+            <td style="width: 50%; font-size: 10px; padding: 4px 8px; line-height: 1.25;">
+                <strong>For {{ $companyName }}:</strong>
+            </td>
+        </tr>
+        <tr>
+            <td style="width: 50%; border-right: 1px solid #334155; vertical-align: top; padding: 8px; font-size: 10.5px;">
+                <table style="width: 100%;">
+                    <tr>
+                        <td style="padding: 1px 0; width: 35%; color: #475569;">Name:</td>
+                        <td style="padding: 1px 0; width: 65%; font-weight: bold; color: #0f172a;">{{ $bankName }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 1px 0; color: #475569;">Account No.:</td>
+                        <td style="padding: 1px 0; font-weight: bold; color: #0f172a;">{{ $bankAccountNo }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 1px 0; color: #475569;">IFSC code:</td>
+                        <td style="padding: 1px 0; font-weight: bold; color: #0f172a;">{{ $bankIfsc }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 1px 0; color: #475569;">Account Holder's Name:</td>
+                        <td style="padding: 1px 0; font-weight: bold; color: #0f172a;">{{ $bankHolder }}</td>
+                    </tr>
+                </table>
+            </td>
+
+            <td style="width: 50%; vertical-align: bottom; text-align: center; padding: 12px 8px 8px 8px;">
+                <div style="display: inline-block; margin-bottom: 2px;">
+                    <svg width="130" height="40" viewBox="0 0 130 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 25C20 10 35 30 45 15C55 5 60 35 75 20C85 10 90 28 105 18C115 12 120 22 125 15" stroke="#0f172a" stroke-width="1.8" stroke-linecap="round"/>
+                        <path d="M25 28C40 28 80 26 115 24" stroke="#0f172a" stroke-width="1.2" stroke-linecap="round"/>
+                        <path d="M40 32C60 30 90 29 110 28" stroke="#0f172a" stroke-width="1" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <div style="font-size: 10.5px; font-weight: 500; color: #334155;">
+                    Authorized Signatory
                 </div>
             </td>
         </tr>
     </table>
+
+</div>
 
 </body>
 </html>

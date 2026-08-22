@@ -383,3 +383,99 @@ if (! function_exists('renderStarRating')) {
         return $html;
     }
 }
+
+if (! function_exists('formatIndianCurrency')) {
+    /**
+     * Format a number using Indian currency numbering (e.g. ₹ 72,50,040.00).
+     */
+    function formatIndianCurrency(float|int|string|null $number, bool $withSymbol = true): string
+    {
+        $number = (float) ($number ?? 0);
+        $isNegative = $number < 0;
+        $number = abs($number);
+
+        $exploded = explode('.', number_format($number, 2, '.', ''));
+        $integerPart = $exploded[0];
+        $decimalPart = $exploded[1];
+
+        $lastThree = substr($integerPart, -3);
+        $otherNumbers = substr($integerPart, 0, -3);
+        if ($otherNumbers !== '') {
+            $lastThree = ','.$lastThree;
+        }
+        $formattedInteger = preg_replace('/\B(?=(\d{2})+(?!\d))/', ',', $otherNumbers).$lastThree;
+
+        $result = $formattedInteger.'.'.$decimalPart;
+        if ($isNegative) {
+            $result = '-'.$result;
+        }
+
+        return $withSymbol ? '₹ '.$result : $result;
+    }
+}
+
+if (! function_exists('numberToIndianWords')) {
+    /**
+     * Convert numeric amount to Indian currency words (e.g. Seventy Two Lakh Fifty Thousand and Forty Rupees only).
+     */
+    function numberToIndianWords(float|int|string|null $number): string
+    {
+        $number = (float) ($number ?? 0);
+        if ($number <= 0) {
+            return 'Zero Rupees only';
+        }
+
+        $no = (int) floor($number);
+        $decimal = (int) round(($number - $no) * 100);
+
+        $words = [
+            0 => '', 1 => 'One', 2 => 'Two', 3 => 'Three', 4 => 'Four', 5 => 'Five',
+            6 => 'Six', 7 => 'Seven', 8 => 'Eight', 9 => 'Nine', 10 => 'Ten',
+            11 => 'Eleven', 12 => 'Twelve', 13 => 'Thirteen', 14 => 'Fourteen', 15 => 'Fifteen',
+            16 => 'Sixteen', 17 => 'Seventeen', 18 => 'Eighteen', 19 => 'Nineteen', 20 => 'Twenty',
+            30 => 'Thirty', 40 => 'Forty', 50 => 'Fifty', 60 => 'Sixty', 70 => 'Seventy',
+            80 => 'Eighty', 90 => 'Ninety',
+        ];
+
+        $convertGroup = function ($n) use (&$convertGroup, $words) {
+            if ($n < 20) {
+                return $words[$n] ?? '';
+            }
+            if ($n < 100) {
+                return trim(($words[(int) (floor($n / 10) * 10)] ?? '').' '.($words[$n % 10] ?? ''));
+            }
+
+            return trim(($words[(int) floor($n / 100)] ?? '').' Hundred '.$convertGroup($n % 100));
+        };
+
+        $crores = (int) floor($no / 10000000);
+        $no %= 10000000;
+        $lakhs = (int) floor($no / 100000);
+        $no %= 100000;
+        $thousands = (int) floor($no / 1000);
+        $no %= 1000;
+        $hundreds = $no;
+
+        $str = [];
+        if ($crores > 0) {
+            $str[] = $convertGroup($crores).' Crore';
+        }
+        if ($lakhs > 0) {
+            $str[] = $convertGroup($lakhs).' Lakh';
+        }
+        if ($thousands > 0) {
+            $str[] = $convertGroup($thousands).' Thousand';
+        }
+        if ($hundreds > 0) {
+            $str[] = $convertGroup($hundreds);
+        }
+
+        $result = implode(' ', array_filter($str)).' Rupees';
+
+        if ($decimal > 0) {
+            $result .= ' and '.$convertGroup($decimal).' Paise';
+        }
+
+        return trim($result).' only';
+    }
+}
