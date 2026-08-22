@@ -59,7 +59,9 @@ class PayoutTest extends TestCase
         return Order::factory()->create([
             'shop_id' => $shop->id,
             'customer_id' => $this->customer->id,
-            'coupon_id' => $this->coupon->id,
+            'coupon_id' => null,
+            'coupon_discount' => 0,
+            'card_discount' => 0,
             'address_id' => $this->address->id,
             'total_amount' => $amount,
             'order_status' => OrderStatus::DELIVERED->value,
@@ -368,5 +370,52 @@ class PayoutTest extends TestCase
         $this->assertSame(10, $partnerShop->directDownlinesCount());
         $this->assertSame(0, $partnerShop->availableDirectDownlineSlots());
         $this->assertFalse($partnerShop->canAcceptDirectDownline());
+    }
+
+    public function test_payout_sales_calculation_deducts_discounts(): void
+    {
+        $shop = $this->shop();
+
+        // Order 1: 30,000 gross with 3,000 card discount -> 27,000 net sales
+        $createdAt = Carbon::create(2026, 7, 15, 12, 0, 0);
+        Order::factory()->create([
+            'shop_id' => $shop->id,
+            'customer_id' => $this->customer->id,
+            'coupon_id' => null,
+            'coupon_discount' => 0,
+            'card_discount' => 3000,
+            'address_id' => $this->address->id,
+            'total_amount' => 30000,
+            'order_status' => OrderStatus::DELIVERED->value,
+            'created_at' => $createdAt,
+            'updated_at' => $createdAt,
+        ]);
+
+        // Order 2: 10,000 gross with 1,000 coupon discount -> 9,000 net sales
+        Order::factory()->create([
+            'shop_id' => $shop->id,
+            'customer_id' => $this->customer->id,
+            'coupon_id' => null,
+            'coupon_discount' => 1000,
+            'card_discount' => 0,
+            'address_id' => $this->address->id,
+            'total_amount' => 10000,
+            'order_status' => OrderStatus::DELIVERED->value,
+            'created_at' => $createdAt,
+            'updated_at' => $createdAt,
+        ]);
+
+        $personal = PayoutService::personalSales($shop, 2026, 7);
+        // Net sales: 27,000 + 9,000 = 36,000
+        $this->assertEquals(36000, $personal);
+
+        $result = PayoutService::payoutMonth(2026, 7);
+        $this->assertSame(1, $result['processed']);
+
+        $payout = ShopMonthlyPayout::where('shop_id', $shop->id)->where('year', 2026)->where('month', 7)->first();
+        $this->assertNotNull($payout);
+        $this->assertEquals(36000, $payout->personal_sales);
+        // Phase 1 (10% of personal sales): 10% of 36,000 = 3,600
+        $this->assertEquals(3600, $payout->phase1_amount);
     }
 }

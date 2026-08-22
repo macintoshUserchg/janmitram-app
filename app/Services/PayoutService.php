@@ -72,7 +72,7 @@ class PayoutService
         return self::money((float) $shop->orders()
             ->where('order_status', OrderStatus::DELIVERED->value)
             ->whereBetween('created_at', [$start, $end])
-            ->sum('total_amount'));
+            ->sum(DB::raw('total_amount - COALESCE(coupon_discount, 0) - COALESCE(card_discount, 0)')));
     }
 
     /**
@@ -116,7 +116,7 @@ class PayoutService
         $shops = Shop::isActive()->select(['id', 'user_id', 'parent_shop_id'])->get()->keyBy('id');
         $orders = Order::whereBetween('created_at', [$start, $end])
             ->where('order_status', OrderStatus::DELIVERED->value)
-            ->selectRaw('shop_id, SUM(total_amount) as sales')
+            ->selectRaw('shop_id, SUM(total_amount - COALESCE(coupon_discount, 0) - COALESCE(card_discount, 0)) as sales')
             ->groupBy('shop_id')
             ->pluck('sales', 'shop_id');
 
@@ -262,7 +262,7 @@ class PayoutService
         $shops = Shop::isActive()->select(['id', 'user_id', 'parent_shop_id', 'name'])->get()->keyBy('id');
         $orders = Order::whereBetween('created_at', [$start, $end])
             ->where('order_status', OrderStatus::DELIVERED->value)
-            ->selectRaw('shop_id, SUM(total_amount) as sales')
+            ->selectRaw('shop_id, SUM(total_amount - COALESCE(coupon_discount, 0) - COALESCE(card_discount, 0)) as sales')
             ->groupBy('shop_id')
             ->pluck('sales', 'shop_id');
 

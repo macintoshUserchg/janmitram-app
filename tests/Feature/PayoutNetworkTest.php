@@ -64,7 +64,9 @@ class PayoutNetworkTest extends TestCase
         return Order::factory()->create([
             'shop_id' => $shop->id,
             'customer_id' => $this->customer->id,
-            'coupon_id' => $this->coupon->id,
+            'coupon_id' => null,
+            'coupon_discount' => 0,
+            'card_discount' => 0,
             'address_id' => $this->address->id,
             'total_amount' => $amount,
             'order_status' => OrderStatus::DELIVERED->value,
