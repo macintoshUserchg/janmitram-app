@@ -215,14 +215,14 @@
         </tr>
     </table>
 
-    <!-- 2. Estimate / Invoice For & Details (2 Columns) -->
+    <!-- 2. Invoice For & Details (2 Columns) -->
     <table class="border-top">
         <tr class="bg-light-header border-bottom">
             <td style="width: 50%; border-right: 1px solid #334155; font-size: 11px; padding: 4px 8px;">
-                <strong>Estimate For:</strong>
+                <strong>Invoice For:</strong>
             </td>
             <td style="width: 50%; font-size: 11px; padding: 4px 8px;">
-                <strong>Estimate Details:</strong>
+                <strong>Invoice Details:</strong>
             </td>
         </tr>
         <tr>
@@ -401,7 +401,7 @@
                     <tr>
                         <td colspan="3" style="padding: 6px 8px;">
                             <div style="font-weight: bold; font-size: 10.5px; color: #334155; margin-bottom: 2px;">
-                                Estimate Amount In Words :
+                                Invoice Amount In Words :
                             </div>
                             <div style="font-size: 10px; color: #0f172a; font-weight: 600; line-height: 1.3;">
                                 {{ $amountInWords }}
