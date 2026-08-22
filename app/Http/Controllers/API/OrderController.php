@@ -142,10 +142,18 @@ class OrderController extends Controller
         }
 
         $shopIds = array_filter((array) ($request->shop_ids ?? []));
-        if ($isBuyNow && empty($shopIds)) {
+        if ($isBuyNow) {
             $carts = userCart(request())->where('is_buy_now', true)->get();
+            if (! empty($shopIds) && $carts->isNotEmpty()) {
+                $requestedShopId = reset($shopIds);
+                foreach ($carts as $c) {
+                    if ($c->shop_id != $requestedShopId) {
+                        $c->update(['shop_id' => $requestedShopId]);
+                    }
+                }
+            }
         } else {
-            $carts = userCart(request())->whereIn('shop_id', $shopIds)->where('is_buy_now', $isBuyNow)->get();
+            $carts = userCart(request())->whereIn('shop_id', $shopIds)->where('is_buy_now', false)->get();
         }
 
         if ($carts->isEmpty()) {

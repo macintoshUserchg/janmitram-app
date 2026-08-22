@@ -430,16 +430,13 @@ const orderData = ref({
 
 onMounted(() => {
     coupon.value = basketStore.coupon_code;
-
-    if (!basketStore.isLoadingCart) {
-        fetchBuyNowCartCheckout();
-    }
+    fetchBuyNowCartCheckout();
 });
 
 watch(
     () => basketStore.isLoadingCart,
-    () => {
-        if (!basketStore.isLoadingCart) {
+    (loading) => {
+        if (!loading) {
             fetchBuyNowCartCheckout();
         }
     }
