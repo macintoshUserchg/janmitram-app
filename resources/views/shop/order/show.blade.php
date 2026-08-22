@@ -144,10 +144,10 @@
                         $discountFactor = $totalAmount > 0 ? ($discountedItems / $totalAmount) : 1.0;
 
                         $grossTax = $discountFactor > 0 ? ($taxAmount / $discountFactor) : $taxAmount;
-                        $preTaxable = max(0, $totalAmount - $grossTax);
-                        $netTaxable = max(0, $discountedItems - $taxAmount);
-                        $baseDiscount = max(0, $preTaxable - $netTaxable);
-                        $taxSavings = max(0, $grossTax - $taxAmount);
+                        $preTaxable = number_format(max(0, $totalAmount - $grossTax), 2, '.', '');
+                        $netTaxable = number_format(max(0, $discountedItems - $taxAmount), 2, '.', '');
+                        $baseDiscount = number_format(max(0, (float)$preTaxable - (float)$netTaxable), 2, '.', '');
+                        $taxSavings = number_format(max(0, $grossTax - $taxAmount), 2, '.', '');
                     @endphp
 
                     <div class="max-300 ms-auto d-flex flex-column gap-1">
