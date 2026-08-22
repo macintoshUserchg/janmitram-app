@@ -247,22 +247,29 @@
                 <div class="card mb-4">
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-lg-4 col-md-6">
+                            <div class="col-lg-3 col-md-6">
                                 <x-input type="text" name="buy_price" label="Buying / Cost Price" placeholder="Buying Price"
                                     required="true" onlyNumber="true" />
                                 <small class="text-muted d-block mt-1">{{ __('Procurement cost from supplier/distributor') }}</small>
                             </div>
 
-                            <div class="col-lg-4 col-md-6">
-                                <x-input type="text" name="price" label="Selling Price / MRP" placeholder="Selling Price (MRP)"
+                            <div class="col-lg-3 col-md-6">
+                                <x-input type="text" name="price" id="price" label="Selling Price / MRP" placeholder="Selling Price (MRP)"
                                     required="true" onlyNumber="true" value="10" />
                                 <small class="text-muted d-block mt-1">{{ __('Printed packet MRP (Inclusive of all GST/Taxes)') }}</small>
                             </div>
 
-                            <div class="col-lg-4 col-md-6 mt-3 mt-md-0">
-                                <x-input type="text" name="discount_price" label="Offer / Discounted Price"
-                                    placeholder="Discount Price" onlyNumber="true" value="0" />
-                                <small class="text-muted d-block mt-1">{{ __('Leave 0 if selling at full printed MRP') }}</small>
+                            <div class="col-lg-3 col-md-6 mt-3 mt-md-0">
+                                <x-input type="text" name="discount_percentage" id="discount_percentage"
+                                    label="Offer / Discounted Percentage" placeholder="0" onlyNumber="true"
+                                    value="{{ old('discount_percentage', '0') }}" required="true" />
+                                <small class="text-muted d-block mt-1">{{ __('Enter discount % (e.g. 10 for 10% off, 0 for full MRP)') }}</small>
+                            </div>
+
+                            <div class="col-lg-3 col-md-6 mt-3 mt-md-0">
+                                <x-input type="text" name="discount_price" id="discount_price" label="Offer / Discounted Price"
+                                    placeholder="Discount Price" onlyNumber="true" value="0" readonly="true" />
+                                <small class="text-muted d-block mt-1">{{ __('Auto-calculated selling price after discount') }}</small>
                                 <small id="discountInfo" class="form-text d-block"></small>
                             </div>
 
@@ -710,31 +717,39 @@
                 var productPrice = $('#price').val() ?? 0;
                 var productDiscountPrice = $(this).val() ?? 0;
                 var mainPrice = productDiscountPrice > 0 ? productDiscountPrice : productPrice;
-                $('.mainProductPrice').text(mainPrice);
-            });
-
             var discountCurrency = @json(generaleSetting('setting')?->currency ?? '₹');
 
             function updateDiscountInfo() {
                 var price = parseFloat($('#price').val()) || 0;
-                var discount = parseFloat($('#discount_price').val()) || 0;
+                var pct = parseFloat($('#discount_percentage').val()) || 0;
                 var $info = $('#discountInfo');
 
-                if (discount > 0 && price > 0 && discount < price) {
-                    var pct = Math.round((price - discount) * 100 / price);
-                    $info.text('Discount: ' + pct + '% (' + discountCurrency + (price - discount).toFixed(2) + ' off)')
-                        .removeClass('text-danger').addClass('text-success');
-                } else if (discount > price) {
-                    $info.text('Discount price can\'t be more than the selling price')
-                        .removeClass('text-success').addClass('text-danger');
-                } else {
-                    $info.text('').removeClass('text-success text-danger');
+                if (pct < 0) {
+                    pct = 0;
+                    $('#discount_percentage').val(0);
+                } else if (pct >= 100) {
+                    pct = 99.99;
+                    $('#discount_percentage').val(99.99);
                 }
 
-                $('button[type="submit"]').prop('disabled', discount > price);
+                if (pct > 0 && price > 0) {
+                    var discountAmount = (price * pct) / 100;
+                    var discountedPrice = Math.max(0, price - discountAmount);
+                    $('#discount_price').val(discountedPrice.toFixed(2));
+                    $info.text(pct + '% off (' + discountCurrency + discountAmount.toFixed(2) + ' off)')
+                        .removeClass('text-danger text-muted').addClass('text-success');
+                } else {
+                    $('#discount_price').val(0);
+                    $info.text('0% off (Selling at full MRP)')
+                        .removeClass('text-danger text-success').addClass('text-muted');
+                }
+
+                var mainPrice = parseFloat($('#discount_price').val()) > 0 ? $('#discount_price').val() : $('#price').val();
+                $('.mainProductPrice').text(mainPrice);
             }
+
             $('#price').on('input', updateDiscountInfo);
-            $('#discount_price').on('input', updateDiscountInfo);
+            $('#discount_percentage').on('input', updateDiscountInfo);
             updateDiscountInfo();
 
             $('.sizeSelector').on('change', function() {
