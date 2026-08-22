@@ -568,18 +568,21 @@ class OrderRepository extends Repository
 
             if ($assignedActive->isNotEmpty()) {
                 foreach ($assignedActive as $rate) {
-                    $perProduct[$rate->id] = ($perProduct[$rate->id] ?? 0) + round($lineTotal * ($rate->percentage / 100), 2);
+                    $taxable = $lineTotal / (1 + ($rate->percentage / 100));
+                    $taxIncluded = $lineTotal - $taxable;
+                    $perProduct[$rate->id] = ($perProduct[$rate->id] ?? 0) + $taxIncluded;
                 }
             } else {
                 $globalBase += $lineTotal;
             }
         }
 
-        // order vat taxes: one default rate on the global base, plus per-product overrides
+        // order vat taxes: back-calculate tax included inside prices
         $defaultVatTax = VatTaxRepository::getDefaultVatTax();
 
         if ($defaultVatTax?->name && $defaultVatTax->percentage > 0) {
-            $amount = round($globalBase * ($defaultVatTax->percentage / 100), 2) + ($perProduct[$defaultVatTax->id] ?? 0);
+            $defaultTaxable = $globalBase / (1 + ($defaultVatTax->percentage / 100));
+            $amount = ($globalBase - $defaultTaxable) + ($perProduct[$defaultVatTax->id] ?? 0);
 
             if ($amount > 0) {
                 $allVatTaxes[] = (object) [
@@ -637,7 +640,7 @@ class OrderRepository extends Repository
 
         // calculate payable amount: discounts apply strictly to product subtotal (excluding delivery charges)
         $discountedItems = max(0, (float) $totalAmount - (float) $discount);
-        $payableAmount = $discountedItems + (float) $deliveryCharge + (float) $totalTaxAmount;
+        $payableAmount = $discountedItems + (float) $deliveryCharge;
 
         // return array
         return [

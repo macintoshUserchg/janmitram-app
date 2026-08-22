@@ -318,7 +318,9 @@ class PosCartRepository extends Repository
 
             if ($assignedActive->isNotEmpty()) {
                 foreach ($assignedActive as $rate) {
-                    $perProduct[$rate->id] = ($perProduct[$rate->id] ?? 0) + round($lineTotal * ($rate->percentage / 100), 2);
+                    $taxable = $lineTotal / (1 + ($rate->percentage / 100));
+                    $taxIncluded = $lineTotal - $taxable;
+                    $perProduct[$rate->id] = ($perProduct[$rate->id] ?? 0) + $taxIncluded;
                 }
             } else {
                 $globalBase += $lineTotal;
@@ -326,7 +328,8 @@ class PosCartRepository extends Repository
         }
 
         if ($defaultVatTax?->name && $defaultVatTax->percentage > 0) {
-            $amount = round($globalBase * ($defaultVatTax->percentage / 100), 2) + ($perProduct[$defaultVatTax->id] ?? 0);
+            $defaultTaxable = $globalBase / (1 + ($defaultVatTax->percentage / 100));
+            $amount = ($globalBase - $defaultTaxable) + ($perProduct[$defaultVatTax->id] ?? 0);
 
             if ($amount > 0) {
                 $allVatTaxes[] = (object) [
@@ -372,7 +375,7 @@ class PosCartRepository extends Repository
             'coupon_discount' => $posCart->coupon_id ? $posCart->discount : 0,
             'card_discount' => $posCart->card_id ? $posCart->discount : 0,
             'tax_amount' => $totalTaxAmount,
-            'payable_amount' => $total + $totalTaxAmount,
+            'payable_amount' => $total,
             'payment_method' => $paymentMethod,
             'order_status' => OrderStatus::DELIVERED->value,
             'instruction' => $request->note,

@@ -98,7 +98,7 @@
                 class="p-3 bg-slate-100 text-black rounded-lg mb-2"
             >
                 <h2 class="text-sm sm:text-base font-medium mb-2">
-                    {{ $t("VAT & Taxes Summary") }}
+                    {{ $t("GST & Taxes (Included in Prices)") }}
                 </h2>
 
                 <div class="space-y-2">
@@ -119,7 +119,7 @@
 
                 <div class="mt-4 p-3 bg-slate-200 rounded-lg">
                     <h3 class="text-sm sm:text-base font-medium">
-                        {{ $t("Total Tax Amount") }}:
+                        {{ $t("Total GST Included") }}:
                     </h3>
                     <p class="text-base font-bold">
                         {{ master.showCurrency(basketStore.order_tax_amount) }}

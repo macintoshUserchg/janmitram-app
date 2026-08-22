@@ -252,7 +252,9 @@ class CartRepository extends Repository
 
             if ($assignedActive->isNotEmpty()) {
                 foreach ($assignedActive as $rate) {
-                    $perProduct[$rate->id] = ($perProduct[$rate->id] ?? 0) + round($lineTotal * ($rate->percentage / 100), 2);
+                    $taxable = $lineTotal / (1 + ($rate->percentage / 100));
+                    $taxIncluded = $lineTotal - $taxable;
+                    $perProduct[$rate->id] = ($perProduct[$rate->id] ?? 0) + $taxIncluded;
                 }
             } else {
                 $globalBase += $lineTotal;
@@ -318,11 +320,12 @@ class CartRepository extends Repository
         $discountedItems = max(0, (float) $totalAmount - $couponDiscount - $cardDiscount);
         $payableAmount = $discountedItems + (float) $deliveryCharge;
 
-        // get order base tax: one default rate on the global base, plus per-product overrides
+        // get order base tax: back-calculate tax included inside prices
         $defaultVatTax = VatTaxRepository::getDefaultVatTax();
 
         if ($defaultVatTax && $defaultVatTax->name && $defaultVatTax->percentage > 0) {
-            $amount = round($globalBase * ($defaultVatTax->percentage / 100), 2) + ($perProduct[$defaultVatTax->id] ?? 0);
+            $defaultTaxable = $globalBase / (1 + ($defaultVatTax->percentage / 100));
+            $amount = ($globalBase - $defaultTaxable) + ($perProduct[$defaultVatTax->id] ?? 0);
 
             if ($amount > 0) {
                 $vatTaxesArray[] = [
@@ -352,8 +355,6 @@ class CartRepository extends Repository
         }
 
         $totalOrderTaxAmount = array_sum(array_column($vatTaxesArray, 'amount'));
-
-        $payableAmount += $totalOrderTaxAmount;
 
         return [
             'total_amount' => (float) round($totalAmount, 2),

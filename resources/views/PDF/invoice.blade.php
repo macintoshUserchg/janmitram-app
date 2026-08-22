@@ -50,7 +50,7 @@
     }
 
     foreach ($order->products ?? [] as $idx => $product) {
-        $unitPrice = (float)($product->discount_price > 0 ? $product->discount_price : $product->price);
+        $mrpUnit = (float)($product->discount_price > 0 ? $product->discount_price : $product->price);
         $qty = (int)($product->pivot->quantity ?? 1);
         $unitStr = $product->pivot->unit ?? $product->unit?->name ?? '-';
         $sizeStr = $product->pivot->size ?? '';
@@ -61,9 +61,10 @@
             $taxRate = (float)$product->vatTaxes->first()->percentage;
         }
 
-        $taxableRow = $unitPrice * $qty;
-        $taxAmount = round($taxableRow * ($taxRate / 100), 2);
-        $rowGross = $taxableRow + $taxAmount;
+        $rowGross = $mrpUnit * $qty;
+        $taxableRow = round($rowGross / (1 + ($taxRate / 100)), 2);
+        $taxAmount = round($rowGross - $taxableRow, 2);
+        $taxableUnit = round($taxableRow / $qty, 2);
 
         $totalQty += $qty;
         $totalGst += $taxAmount;
@@ -76,7 +77,8 @@
             'hsn' => $hsn,
             'qty' => $qty,
             'unit' => $unitStr,
-            'price_unit' => $unitPrice,
+            'price_unit' => $taxableUnit,
+            'mrp_unit' => $mrpUnit,
             'tax_rate' => $taxRate,
             'tax_amount' => $taxAmount,
             'taxable_amount' => $taxableRow,
@@ -103,7 +105,8 @@
     $subTotalAmount = (float)($order->total_amount > 0 ? $order->total_amount : ($grossTotal - $totalDiscounts));
     $taxAmountTotal = (float)($order->tax_amount > 0 ? $order->tax_amount : $totalGst);
     $deliveryCharge = (float)($order->delivery_charge ?? 0);
-    $payableTotal = (float)($order->payable_amount > 0 ? $order->payable_amount : ($subTotalAmount + $taxAmountTotal + $deliveryCharge));
+    $discountedSubtotal = max(0, $subTotalAmount - $orderLevelDiscount);
+    $payableTotal = (float)($order->payable_amount > 0 ? $order->payable_amount : ($discountedSubtotal + $deliveryCharge));
 
     $amountInWords = numberToIndianWords($payableTotal);
 @endphp

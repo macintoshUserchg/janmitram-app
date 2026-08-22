@@ -38,9 +38,13 @@
         $hsn = $product?->hsn_code ?? $product?->sku ?? '0405';
 
         $taxRate = 5.0;
-        $taxableUnit = $price / (1 + ($taxRate / 100));
-        $taxAmount = $rowGross - ($taxableUnit * $qty);
-        $taxableRow = $taxableUnit * $qty;
+        if ($product?->vatTaxes && $product->vatTaxes->count() > 0) {
+            $taxRate = (float)$product->vatTaxes->first()->percentage;
+        }
+
+        $taxableRow = round($rowGross / (1 + ($taxRate / 100)), 2);
+        $taxAmount = round($rowGross - $taxableRow, 2);
+        $taxableUnit = round($taxableRow / $qty, 2);
 
         $totalQty += $qty;
         $totalGst += $taxAmount;
@@ -53,7 +57,8 @@
             'hsn' => $hsn,
             'qty' => $qty,
             'unit' => $unitStr,
-            'price_unit' => $price,
+            'price_unit' => $taxableUnit,
+            'mrp_unit' => $price,
             'tax_rate' => $taxRate,
             'tax_amount' => $taxAmount,
             'amount' => $rowGross,

@@ -295,7 +295,9 @@ class POSController extends Controller
 
             if ($assignedActive->isNotEmpty()) {
                 foreach ($assignedActive as $rate) {
-                    $perProduct[$rate->id] = ($perProduct[$rate->id] ?? 0) + round($lineTotal * ($rate->percentage / 100), 2);
+                    $taxable = $lineTotal / (1 + ($rate->percentage / 100));
+                    $taxIncluded = $lineTotal - $taxable;
+                    $perProduct[$rate->id] = ($perProduct[$rate->id] ?? 0) + $taxIncluded;
                 }
             } else {
                 $globalBase += $lineTotal;
@@ -303,7 +305,8 @@ class POSController extends Controller
         }
 
         if ($defaultVatTax?->name && $defaultVatTax->percentage > 0) {
-            $amount = round($globalBase * ($defaultVatTax->percentage / 100), 2) + ($perProduct[$defaultVatTax->id] ?? 0);
+            $defaultTaxable = $globalBase / (1 + ($defaultVatTax->percentage / 100));
+            $amount = ($globalBase - $defaultTaxable) + ($perProduct[$defaultVatTax->id] ?? 0);
 
             if ($amount > 0) {
                 $allVatTaxes[] = (object) [
@@ -339,7 +342,7 @@ class POSController extends Controller
             'subtotal' => $postCart?->subtotal ?? 0,
             'discount' => $postCart?->discount ?? 0,
             'total_tax_amount' => $totalTaxAmount,
-            'total' => (float) round($totalTaxAmount + $total, 2),
+            'total' => (float) round($total, 2),
             'taxes' => $allVatTaxes,
             'user' => $postCart?->user ? UserResource::make($postCart->user) : null,
             'name' => $postCart?->name ?? null,
