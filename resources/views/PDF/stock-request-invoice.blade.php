@@ -125,24 +125,43 @@
             margin: 0 auto;
         }
 
+        /* Items Table */
         .items-table {
             width: 100%;
+            table-layout: fixed;
             border-top: 1px solid #334155;
             border-bottom: 1px solid #334155;
+        }
+
+        .items-table thead {
+            display: table-header-group;
+        }
+
+        .items-table tr {
+            page-break-inside: avoid;
         }
 
         .items-table th {
             background-color: #ffffff;
             border: 1px solid #334155;
-            font-size: 11px;
+            font-size: 10.5px;
             font-weight: bold;
-            padding: 6px 4px;
+            padding: 5px 3px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
 
         .items-table td {
             border: 1px solid #334155;
-            font-size: 10.5px;
-            padding: 6px 5px;
+            font-size: 10px;
+            padding: 4px 4px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            line-height: 1.25;
+        }
+
+        .avoid-break {
+            page-break-inside: avoid;
         }
     </style>
 </head>
@@ -151,7 +170,7 @@
 <div class="invoice-box">
 
     <!-- 1. Top Header -->
-    <table>
+    <table class="avoid-break">
         <tr>
             <td style="width: 130px; text-align: center; vertical-align: middle; border-right: 1px solid #334155; padding: 8px;">
                 @if ($setting?->logo)
@@ -183,7 +202,7 @@
     </table>
 
     <!-- 2. Invoice For & Details -->
-    <table class="border-top">
+    <table class="border-top avoid-break">
         <tr class="bg-light-header border-bottom">
             <td style="width: 50%; border-right: 1px solid #334155; font-size: 11px; padding: 4px 8px;">
                 <strong>Invoice For:</strong>
@@ -285,10 +304,10 @@
     </table>
 
     <!-- 4. Tax Summary & Totals / In Words -->
-    <table>
+    <table class="avoid-break">
         <tr>
             <td style="width: 58%; vertical-align: top; padding: 0; border-right: 1px solid #334155;">
-                <table style="width: 100%; border-collapse: collapse;">
+                <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
                     <thead>
                         <tr class="bg-light-header">
                             <td colspan="5" style="padding: 5px 8px; border-bottom: 1px solid #334155; font-size: 11px; font-weight: bold; color: #0f172a;">
@@ -384,7 +403,7 @@
     </table>
 
     <!-- 5. Description & Terms -->
-    <table class="border-top">
+    <table class="border-top avoid-break">
         <tr class="bg-light-header border-bottom">
             <td style="width: 50%; border-right: 1px solid #334155; font-size: 11px; padding: 4px 8px;">
                 <strong>Description:</strong>
@@ -408,7 +427,7 @@
     </table>
 
     <!-- 6. Bank Details & Authorized Signatory -->
-    <table class="border-top">
+    <table class="border-top avoid-break">
         <tr class="bg-light-header border-bottom">
             <td style="width: 50%; border-right: 1px solid #334155; font-size: 11px; padding: 4px 8px;">
                 <strong>Bank Details:</strong>
