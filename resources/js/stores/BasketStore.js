@@ -17,6 +17,10 @@ export const useBasketStore = defineStore("basketStore", {
         checkoutProducts: [],
         selectedShopIds: [],
         total_amount: 0,
+        taxable_base: 0,
+        base_discount: 0,
+        tax_savings: 0,
+        net_taxable_base: 0,
         delivery_charge: 0,
         coupon_discount: 0,
         card_discount: 0,
@@ -400,13 +404,19 @@ export const useBasketStore = defineStore("basketStore", {
                         'X-Guest-Token': authStore.access_token
                     },
                 }).then((response) => {
+                    const checkout = response.data.data.checkout;
                     this.checkoutProducts = response.data.data.checkout_items;
-                    this.total_amount = response.data.data.checkout.total_amount;
-                    this.delivery_charge = response.data.data.checkout.delivery_charge;
-                    this.coupon_discount = response.data.data.checkout.coupon_discount;
-                    this.payable_amount = response.data.data.checkout.payable_amount;
-                    this.order_tax_amount = response.data.data.checkout.order_tax_amount;
-                    this.all_vat_taxes = response.data.data.checkout.all_vat_taxes;
+                    this.total_amount = checkout.total_amount;
+                    this.taxable_base = checkout.taxable_base || 0;
+                    this.base_discount = checkout.base_discount || 0;
+                    this.tax_savings = checkout.tax_savings || 0;
+                    this.net_taxable_base = checkout.net_taxable_base || 0;
+                    this.delivery_charge = checkout.delivery_charge;
+                    this.coupon_discount = checkout.coupon_discount;
+                    this.card_discount = checkout.card_discount || 0;
+                    this.payable_amount = checkout.payable_amount;
+                    this.order_tax_amount = checkout.order_tax_amount;
+                    this.all_vat_taxes = checkout.all_vat_taxes;
                     if (this.checkoutProducts.length === 0) {
                         this.selectedShopIds = [];
                     }

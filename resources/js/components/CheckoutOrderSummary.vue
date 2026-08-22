@@ -832,16 +832,19 @@ const fetchCouponApply = () => {
         )
         .then((response) => {
             hasCoupon.value = response.data.data.apply_coupon;
-            basketStore.total_amount = response.data.data.checkout.total_amount;
-            basketStore.delivery_charge =
-                response.data.data.checkout.delivery_charge;
-            basketStore.coupon_discount =
-                response.data.data.checkout.coupon_discount;
-            basketStore.card_discount =
-                response.data.data.checkout.card_discount || 0;
-            basketStore.payable_amount =
-                response.data.data.checkout.payable_amount;
-            cardError.value = response.data.data.checkout.card_error || "";
+            const checkout = response.data.data.checkout;
+            basketStore.total_amount = checkout.total_amount;
+            basketStore.taxable_base = checkout.taxable_base || 0;
+            basketStore.base_discount = checkout.base_discount || 0;
+            basketStore.tax_savings = checkout.tax_savings || 0;
+            basketStore.net_taxable_base = checkout.net_taxable_base || 0;
+            basketStore.delivery_charge = checkout.delivery_charge;
+            basketStore.coupon_discount = checkout.coupon_discount;
+            basketStore.card_discount = checkout.card_discount || 0;
+            basketStore.payable_amount = checkout.payable_amount;
+            basketStore.order_tax_amount = checkout.order_tax_amount;
+            basketStore.all_vat_taxes = checkout.all_vat_taxes;
+            cardError.value = checkout.card_error || "";
 
             if (hasCoupon.value) {
                 card.value = "";
@@ -895,10 +898,16 @@ const fetchCardApply = () => {
         .then((response) => {
             const checkout = response.data.data.checkout;
             basketStore.total_amount = checkout.total_amount;
+            basketStore.taxable_base = checkout.taxable_base || 0;
+            basketStore.base_discount = checkout.base_discount || 0;
+            basketStore.tax_savings = checkout.tax_savings || 0;
+            basketStore.net_taxable_base = checkout.net_taxable_base || 0;
             basketStore.delivery_charge = checkout.delivery_charge;
             basketStore.coupon_discount = checkout.coupon_discount;
             basketStore.card_discount = checkout.card_discount || 0;
             basketStore.payable_amount = checkout.payable_amount;
+            basketStore.order_tax_amount = checkout.order_tax_amount;
+            basketStore.all_vat_taxes = checkout.all_vat_taxes;
             cardError.value = checkout.card_error || "";
 
             if (cardError.value) {
