@@ -172,17 +172,18 @@
 
                             <div class="col-md-6 col-lg-4 mt-4">
                                 <label class="form-label">
-                                    {{ __('VAT & Tax') }}
+                                    {{ __('GST / VAT Rate') }}
                                     <span class="text-danger">*</span>
                                 </label>
                                 <select name="vat_tax_id" class="form-control select2" style="width: 100%" required>
-                                    <option value="" disabled>{{ __('Select VAT & Tax') }}</option>
+                                    <option value="" disabled>{{ __('Select GST / VAT Rate') }}</option>
                                     @foreach ($vatTaxes as $vatTax)
                                         <option value="{{ $vatTax->id }}" @selected(old('vat_tax_id', $productVatTaxIds[0] ?? null) == $vatTax->id)>
                                             {{ $vatTax->name }} ({{ $vatTax->percentage }}%)
                                         </option>
                                     @endforeach
                                 </select>
+                                <small class="text-muted d-block mt-1">{{ __('Applicable GST slab (tax is included in MRP)') }}</small>
                                 @error('vat_tax_id')
                                     <p class="text text-danger m-0">{{ $message }}</p>
                                 @enderror
@@ -360,18 +361,21 @@
                         </div>
                         <div class="row mt-3">
                             <div class="col-lg-4 col-md-6">
-                                <x-input type="text" name="buy_price" label="Buying Price" placeholder="Buying Price"
+                                <x-input type="text" name="buy_price" label="Buying / Cost Price" placeholder="Buying Price"
                                     required="true" onlyNumber="true" :value="$product->buy_price" />
+                                <small class="text-muted d-block mt-1">{{ __('Procurement cost from supplier/distributor') }}</small>
                             </div>
 
                             <div class="col-lg-4 col-md-6">
-                                <x-input type="text" name="price" label="Selling Price" placeholder="Selling Price"
+                                <x-input type="text" name="price" label="Selling Price / MRP" placeholder="Selling Price (MRP)"
                                     required="true" onlyNumber="true" :value="$product->price" />
+                                <small class="text-muted d-block mt-1">{{ __('Printed packet MRP (Inclusive of all GST/Taxes)') }}</small>
                             </div>
 
                             <div class="col-lg-4 col-md-6 mt-3 mt-md-0">
-                                <x-input type="text" name="discount_price" label="Discount Price"
+                                <x-input type="text" name="discount_price" label="Offer / Discounted Price"
                                     placeholder="Discount Price" onlyNumber="true" :value="$product->discount_price" />
+                                <small class="text-muted d-block mt-1">{{ __('Leave 0 if selling at full printed MRP') }}</small>
                                 <small id="discountInfo" class="form-text d-block"></small>
                             </div>
                             <div class="col-lg-4 col-md-6 mt-3 {{ $product->is_digital ? 'd-block' : 'd-none' }}">
