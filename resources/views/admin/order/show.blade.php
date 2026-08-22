@@ -135,57 +135,109 @@
                         $couponDisc = (float)($order->coupon_discount ?? 0);
                         $cardDisc = (float)($order->card_discount ?? 0);
                         $otherDisc = max(0, (float)($order->discount ?? 0) - $couponDisc - $cardDisc);
+                        $totalDisc = $couponDisc + $cardDisc + $otherDisc;
+
+                        $taxAmount = (float)($order->tax_amount ?? 0);
+                        $totalAmount = (float)($order->total_amount ?? 0);
+                        $discountedItems = max(0, $totalAmount - $totalDisc);
+                        $discountFactor = $totalAmount > 0 ? ($discountedItems / $totalAmount) : 1.0;
+
+                        $grossTax = $discountFactor > 0 ? ($taxAmount / $discountFactor) : $taxAmount;
+                        $preTaxable = max(0, $totalAmount - $grossTax);
+                        $netTaxable = max(0, $discountedItems - $taxAmount);
+                        $baseDiscount = max(0, $preTaxable - $netTaxable);
+                        $taxSavings = max(0, $grossTax - $taxAmount);
                     @endphp
 
                     <div class="max-300 ms-auto d-flex flex-column gap-1 order-total-summary">
                         <div class="d-flex align-items-center justify-content-between gap-2">
-                            <div>{{ __('Sub Total') }}</div>
-                            <div>{{ showCurrency($order->total_amount) }}</div>
+                            <div>{{ __('Item Total (MRP)') }}</div>
+                            <div class="fw-semibold">{{ showCurrency($order->total_amount) }}</div>
                         </div>
 
-                        @if ($couponDisc > 0)
-                            <div class="d-flex align-items-center justify-content-between gap-2 text-danger">
-                                <div>{{ __('Coupon Discount') }} {{ $order->coupon ? '(' . $order->coupon->code . ')' : '' }}</div>
-                                <div>-{{ showCurrency($couponDisc) }}</div>
+                        @if ($preTaxable > 0)
+                            <div class="d-flex align-items-center justify-content-between gap-2 text-muted" style="font-size: 12px;">
+                                <div>{{ __('Price Without GST (Taxable Base)') }}</div>
+                                <div>{{ showCurrency($preTaxable) }}</div>
                             </div>
                         @endif
 
                         @if ($cardDisc > 0)
                             <div class="d-flex align-items-center justify-content-between gap-2 text-primary">
-                                <div>{{ __('Card Discount') }} {{ $order->card ? '(' . $order->card->card_number . ')' : '' }}</div>
-                                <div>-{{ showCurrency($cardDisc) }}</div>
+                                <div>
+                                    <div>{{ __('Card Discount') }} {{ $order->card ? '(' . $order->card->card_number . ')' : '' }}</div>
+                                    @if ($baseDiscount > 0)
+                                        <div class="text-muted" style="font-size: 11px;">({{ showCurrency($baseDiscount) }} base + {{ showCurrency($taxSavings) }} GST saved)</div>
+                                    @endif
+                                </div>
+                                <div class="fw-semibold">-{{ showCurrency($cardDisc) }}</div>
+                            </div>
+                        @endif
+
+                        @if ($couponDisc > 0)
+                            <div class="d-flex align-items-center justify-content-between gap-2 text-danger">
+                                <div>{{ __('Coupon Discount') }} {{ $order->coupon ? '(' . $order->coupon->code . ')' : '' }}</div>
+                                <div class="fw-semibold">-{{ showCurrency($couponDisc) }}</div>
                             </div>
                         @endif
 
                         @if ($otherDisc > 0)
                             <div class="d-flex align-items-center justify-content-between gap-2 text-warning">
                                 <div>{{ __('Special Discount') }}</div>
-                                <div>-{{ showCurrency($otherDisc) }}</div>
+                                <div class="fw-semibold">-{{ showCurrency($otherDisc) }}</div>
+                            </div>
+                        @endif
+
+                        @if ($netTaxable > 0 && $totalDisc > 0)
+                            <div class="d-flex align-items-center justify-content-between gap-2 text-muted border-top border-dashed pt-1" style="font-size: 12px;">
+                                <div>{{ __('Net Taxable Value (After Discount)') }}</div>
+                                <div class="fw-medium text-dark">{{ showCurrency($netTaxable) }}</div>
+                            </div>
+                        @endif
+
+                        @if ($totalDisc > 0)
+                            <div class="d-flex align-items-center justify-content-between gap-2">
+                                <div>{{ __('Subtotal After Discount') }}</div>
+                                <div class="fw-bold">{{ showCurrency($discountedItems) }}</div>
                             </div>
                         @endif
 
                         <div class="d-flex align-items-center justify-content-between gap-2">
                             <div>{{ __('Delivery Charge') }}</div>
-                            <div>{{ showCurrency($order->delivery_charge) }}</div>
+                            <div>
+                                @if ($order->delivery_charge == 0)
+                                    <span class="text-success fw-medium">FREE</span>
+                                @else
+                                    {{ showCurrency($order->delivery_charge) }}
+                                @endif
+                            </div>
                         </div>
 
                         @if ($order->vatTaxes && $order->vatTaxes->count() > 0)
-                            @foreach ($order->vatTaxes as $vatTax)
-                                <div class="d-flex align-items-center justify-content-between gap-2 text-muted">
-                                    <div>{{ $vatTax->name }} ({{ $vatTax->percentage }}%)</div>
-                                    <div>+{{ showCurrency($vatTax->amount) }}</div>
+                            <div class="p-2 my-1 rounded bg-light border">
+                                <div class="d-flex align-items-center justify-content-between gap-2 text-success fw-medium" style="font-size: 12px;">
+                                    <span>🛡️ {{ __('GST & Taxes (Included in Prices)') }}</span>
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle">{{ showCurrency($taxAmount) }}</span>
                                 </div>
-                            @endforeach
+                                @foreach ($order->vatTaxes as $vatTax)
+                                    <div class="d-flex align-items-center justify-content-between gap-2 text-muted mt-1 pt-1 border-top" style="font-size: 11px;">
+                                        <div>{{ $vatTax->name }} ({{ $vatTax->percentage }}%):</div>
+                                        <div>{{ showCurrency($vatTax->amount) }}</div>
+                                    </div>
+                                @endforeach
+                            </div>
                         @elseif ($order->tax_amount > 0)
-                            <div class="d-flex align-items-center justify-content-between gap-2">
-                                <div>{{ __('VAT & Tax') }}</div>
-                                <div>+{{ showCurrency($order->tax_amount) }}</div>
+                            <div class="p-2 my-1 rounded bg-light border">
+                                <div class="d-flex align-items-center justify-content-between gap-2 text-success fw-medium" style="font-size: 12px;">
+                                    <span>🛡️ {{ __('GST & Taxes (Included in Prices)') }}</span>
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle">{{ showCurrency($order->tax_amount) }}</span>
+                                </div>
                             </div>
                         @endif
 
-                        <div class="d-flex align-items-center justify-content-between gap-2 border-top pt-1 mt-1">
-                            <div class="fw-bold">{{ __('Grand Total') }}</div>
-                            <div class="fw-bold">{{ showCurrency($order->payable_amount) }}</div>
+                        <div class="d-flex align-items-center justify-content-between gap-2 border-top pt-2 mt-1">
+                            <div class="fw-bold" style="font-size: 15px;">{{ __('Grand Total') }}</div>
+                            <div class="fw-bold text-primary" style="font-size: 15px;">{{ showCurrency($order->payable_amount) }}</div>
                         </div>
                     </div>
                 </div>
