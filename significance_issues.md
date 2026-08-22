@@ -5,6 +5,8 @@ Janmitram Laravel 11 multi-vendor ecommerce platform, plus a deep trace of the
 **consumer order placement workflow**. Dates range from a structural review on
 2026-08-05. Sections are ordered roughly by severity/criticality.
 
+> **Update (2026-08-22):** Statutory GST calculation on net discounted base implemented across all checkout, POS (`PosCartRepository`), order detail, and PDF invoice flows. Fixed Buy-Now dual-token cart isolation in `userCart()` helper. Aligned MLM Payouts & Commissions to strictly compute on Net Product Sales volume (`total_amount - coupon_discount - card_discount`).
+>
 > **Update (2026-08-20):** Catalog normalization completed. Eliminated product clone copies in `products` (11 rows total); branch stock permanently transitioned to dedicated `shop_inventories` table with zero data loss on 63 past `order_products` and active carts.
 >
 > **Update (2026-08-10/11):** issues **#1**, **#2**, and **#5** are now resolved

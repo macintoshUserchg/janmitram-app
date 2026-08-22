@@ -48,6 +48,17 @@ are not derivable from a fresh read of the code.
 - Editing a product updates 1 record in 1 query, immediately visible to all branches with 0 cascading delay.
 - Warehouse dispatches increment `shop_inventories` directly.
 
+## Statutory GST & Discount Calculation
+- Under Indian GST, customer discounts (Card / Coupon) apply to the base price before tax. Line GST and tax summaries must be calculated on the **Net Taxable Base** (`Net Subtotal / (1 + Rate)`).
+- When generating invoices or rendering order details, lock to historical order pivot prices (`product->pivot->price`) and output transparent base/GST savings.
+
+## Buy-Now & Cart Token Handling
+- The `userCart()` helper in `app/helpers.php` handles dual tokens by matching `customer_id` OR `access_token` when both tokens exist in request headers.
+- Buy Now persistence stores `buyNowShopId` in `localStorage` (`BasketStore.js`) and passes dynamic quantity steppers from `ProductDetails.vue`.
+
+## MLM Payouts & Commissions
+- `PayoutService.php` aggregates monthly sales based strictly on **Net Product Sales** (`total_amount - COALESCE(coupon_discount, 0) - COALESCE(card_discount, 0)`), excluding delivery charges and customer discounts.
+
 ## Repository pattern
 - `app/Repositories/*` extend `App\Support\Repositories\Repository` (static `model()`,
   `query/create/find/update`), using `storeByRequest()`-style factories. Follow that pattern.
@@ -58,7 +69,7 @@ are not derivable from a fresh read of the code.
 
 ## Frontend / verification
 - If a frontend change isn't reflected, run `npm run build`, `npm run dev`, or `composer run dev`.
-- PHPUnit test suite (173 tests / 641 assertions): run with `php artisan test --compact`.
+- PHPUnit test suite (174 tests / 646 assertions): run with `php artisan test --compact`.
 - Dusk browser tests: `tests/Browser/` — run with `php artisan dusk --filter=testName`.
 - After PHP edits, run `vendor/bin/pint --dirty --format agent`.
 

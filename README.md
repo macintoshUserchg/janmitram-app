@@ -13,8 +13,8 @@ Modern multi-vendor e-commerce platform with strict Option A warehouse inventory
 * **Google Maps Platform**: Google Maps JavaScript SDK & Google Places API (New) with interactive draggable pins, doorstep reverse geocoding, and live driver GPS tracking.
 * **Flexible Shop Business Models**: Support for both Commission-Based and Direct / None Zero-Fee models.
 * **Streamlined Razorpay Integration**: Pre-selection of Razorpay when sole active online gateway; automatic popup window lifecycle synchronization.
-* **Dual-Phase MLM Payout Engine**: Automated monthly payout calculations with direct downline capacity enforcement (10 direct downlines max per standard partner shop).
-* **Enterprise Corporate Invoicing**: Unified 12mm printable page margins in mPDF with itemized GST percentages and dynamic QR codes.
+* **Dual-Phase MLM Payout Engine**: Automated monthly payout calculations based strictly on Net Product Sales volume, with direct downline capacity enforcement (10 direct downlines max per standard partner shop).
+* **Enterprise Corporate Invoicing & Statutory Tax Compliance**: GST calculated accurately on Net Taxable Base post-discount across checkout, POS, order management, and printable mPDF invoices with dynamic QR codes.
 
 ---
 
@@ -56,7 +56,7 @@ npm run build
 ## Testing & Code Formatting
 
 ```bash
-# Run full automated PHPUnit test suite (173 tests / 641 assertions)
+# Run full automated PHPUnit test suite (174 tests / 646 assertions)
 php artisan test --compact
 
 # Run specific feature test suites
@@ -64,6 +64,7 @@ php artisan test --compact --filter=StockAssignmentFeatureTest
 php artisan test --compact --filter=ShopAllocationTest
 php artisan test --compact --filter=WarehouseTest
 php artisan test --compact --filter=ProductCatalogDeduplicationTest
+php artisan test --compact --filter=PayoutTest
 
 # Format PHP code style
 vendor/bin/pint --dirty --format agent
@@ -75,4 +76,4 @@ vendor/bin/pint --dirty --format agent
 
 * **Live Domain**: [https://janmitram.com](https://janmitram.com)
 * **Production Database**: `u939461333_app_janmitram`
-* _Last updated: 2026-08-20._
+* _Last updated: 2026-08-22._

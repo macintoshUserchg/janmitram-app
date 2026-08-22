@@ -312,14 +312,28 @@ The **Shop Vendor Sidebar** (`resources/views/layouts/partials/shop-menu.blade.p
 - **Stock Fulfillment Price Refresh**:
   - In `WarehouseService::cloneMasterToShop()`, fulfilling inventory dispatches refreshes existing shop copy prices, metadata, and variant pivot prices before returning.
 
+### 19. Statutory GST on Net Taxable Base, Buy-Now Flow, and MLM Net-Sales Alignment
+- **Statutory GST Calculation on Discounted Base**:
+  - When customer discounts (Card Discounts, Coupon Discounts) reduce the payable product subtotal, Indian GST accounting requires line taxes to be computed on the **Net Taxable Base** rather than gross MRP.
+  - Formula:
+    $$\text{Discount Factor} = \frac{\text{Net Product Subtotal}}{\text{Gross Total (MRP)}}$$
+    $$\text{Net Tax Amount} = \text{Gross Tax} \times \text{Discount Factor}$$
+    $$\text{Net Taxable Base} = \text{Net Product Subtotal} - \text{Net Tax Amount}$$
+  - Implemented across checkout, POS orders (`PosCartRepository`), customer order histories, admin/seller order detail views, and PDF invoices (`PDF/invoice.blade.php`).
+- **Hardened Buy-Now Flow**:
+  - `userCart()` helper dynamically matches `customer_id` OR `access_token` when both tokens exist in request headers.
+  - Multi-item steppers in `ProductDetails.vue` pass real-time quantities directly into `buyNow()` with persistent shop tracking in Pinia `BasketStore.js`.
+- **MLM Payouts Aligned to Net Product Revenue**:
+  - `PayoutService.php` calculates personal and multi-level group sales strictly on **Net Product Revenue** (`total_amount - COALESCE(coupon_discount, 0) - COALESCE(card_discount, 0)`), preventing commissions from being calculated on customer discounts or delivery fees.
+
 ---
 
-### 19. Automated Testing & Code Verification
+### 20. Automated Testing & Code Verification
 
-To ensure system integrity across all warehouse transactions, stock request fulfillments, price synchronization, review moderation, geolocation, and order allocation:
+To ensure system integrity across all warehouse transactions, stock request fulfillments, price synchronization, review moderation, geolocation, statutory tax calculations, and order allocation:
 
 ```bash
-# Run all automated feature/unit tests compact (162 test classes / 618 assertions)
+# Run all automated feature/unit tests compact (163 test classes / 643 assertions)
 php artisan test --compact
 
 # Filter specific feature test suites
@@ -343,6 +357,7 @@ vendor/bin/pint --dirty --format agent
 
 ---
 
-_Last updated: 2026-08-20. Option A Warehouse, Real-Time Master-to-Shop Price Synchronization, IP Geolocation Engine, Round-Robin Multi-Shop Catalog, Google Maps SDK, First Stock Threshold (₹3,000), Fulfillment Mode Toggle, Review Approval & Moderation, and MLM Downline Capacity architecture fully verified._
+_Last updated: 2026-08-22. Option A Warehouse, Real-Time Master-to-Shop Price Synchronization, IP Geolocation Engine, Round-Robin Multi-Shop Catalog, Google Maps SDK, First Stock Threshold (₹3,000), Fulfillment Mode Toggle, Review Approval & Moderation, Statutory GST on Net Base, and MLM Net-Sales Payout architecture fully verified._
+
 
 

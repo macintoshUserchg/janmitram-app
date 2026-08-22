@@ -753,15 +753,35 @@ source:
   * In `WarehouseService::cloneMasterToShop()`, fulfilling inventory dispatches refreshes existing shop copy prices, metadata, and variant pivot prices before returning.
 * Covered by `ProductPriceSynchronizationTest` (5 tests, 44 assertions).
 
+### 17. Statutory GST, Discount-on-Base Alignment, Buy-Now Hardening & Net-Sales Payouts (Updated 2026-08-22)
+* **Statutory GST Calculation on Net Discounted Base**:
+  * In Indian GST accounting, when discounts (Card / Coupon) are applied to MRP-inclusive catalog prices, taxes are levied on the **Net Taxable Base** rather than gross undiscounted MRP.
+  * Formula:
+    $$\text{Discount Factor} = \frac{\text{Net Product Subtotal}}{\text{Gross Total (MRP)}}$$
+    $$\text{Net Tax Amount} = \text{Gross Tax} \times \text{Discount Factor}$$
+    $$\text{Net Taxable Base} = \text{Net Product Subtotal} - \text{Net Tax Amount}$$
+    $$\text{Tax Savings from Discount} = \text{Gross Tax} - \text{Net Tax Amount}$$
+  * Applied across: `CartRepository`, `OrderRepository`, `PosCartRepository`, `OrderDetailsResource`, `PDF/invoice.blade.php`, `admin/order/show.blade.php`, `shop/order/show.blade.php`, and customer Vue 3 Pinia basket & order summary components (`CheckoutOrderSummery.vue`, `BuyNowCheckoutOrderSummary.vue`, `OrderDetailsSummery.vue`).
+* **Buy-Now Flow & Dual-Token Cart Isolation Hardening**:
+  * **Dual-Token Conflict Resolution**: Updated `userCart()` in `app/helpers.php` to match `customer_id` OR `access_token` when both tokens are passed in API request headers, avoiding empty cart fallbacks for logged-in customers.
+  * **Dynamic Quantity Stepper**: `ProductDetails.vue` now passes the live stepper quantity (`cartProduct.quantity`) to `buyNow()`, with responsive item display (`{{ quantity }} X {{ price }}`) in `BuyNowCheckoutProduct.vue`.
+  * **Shop Persistence**: `BasketStore.js` persists `buyNowShopId` in `localStorage` to ensure instant summary loading on refresh.
+* **MLM Payout & Commission Net-Sales Alignment**:
+  * Updated `PayoutService.php` (`personalSales`, `payoutMonth`, `networkData`) to calculate personal and downline group sales volume on **Net Product Sales Revenue** (`total_amount - COALESCE(coupon_discount, 0) - COALESCE(card_discount, 0)`), preventing shop commission payouts on customer discounts or delivery fees.
+* **Tax Invoice & Order Details Precision**:
+  * Standardized 2-decimal currency formatting (`number_format(..., 2, '.', '')`) across admin/seller order detail views.
+  * Fixed `PDF/invoice.blade.php` to lock to the order's historical purchase price (`product->pivot->price`) and output transparent statutory tax breakdowns (Taxable Base, Net Taxable Value, GST breakdown by HSN/SAC).
+* Covered by `CardTest`, `ProductVatTaxTest`, `PayoutTest` (with `test_payout_sales_calculation_deducts_discounts`), `PayoutNetworkTest`, and `PayoutSlipTest`.
+
 ---
 
 ### Test coverage summary
 
-**Strong Test Coverage (162 Test Classes / 618 Assertions):**
+**Strong Test Coverage (163 Test Classes / 643 Assertions):**
 * **Price & Discount Synchronization**: `ProductPriceSynchronizationTest` (5 tests, 44 assertions)
 * **Location & Catalog Resolution**: `LocationResolutionTest` (4 tests, 15 assertions)
 * **Google Maps Integration**: `GoogleMapsIntegrationTest` (5 tests, 24 assertions)
-* **MLM & Network Payouts**: `PayoutTest` (15 tests), `PayoutNetworkTest`, `PayoutSlipTest`, `ShopPayoutTest`, `ShopWithdrawalPayoutIntegrationTest`
+* **MLM & Network Payouts**: `PayoutTest` (16 tests), `PayoutNetworkTest`, `PayoutSlipTest`, `ShopPayoutTest`, `ShopWithdrawalPayoutIntegrationTest` (34 tests, 114 assertions)
 * **Shop Business Models**: `ShopBusinessSettingTest` (comprehensive commission & zero-fee assertions)
 * **Downline Capacity & Recruitment**: `DownlineRecruitmentTest`, `AdminShopCreateTest`
 * **Shop KYC & Onboarding**: `AdminShopKycTest`, `ShopRegistrationVerificationTest`
@@ -774,6 +794,7 @@ source:
 
 ---
 
-_Last updated: 2026-08-20. Fully verified against the codebase and live production environment._
+_Last updated: 2026-08-22. Fully verified against the codebase and live production environment._
+
 
 
