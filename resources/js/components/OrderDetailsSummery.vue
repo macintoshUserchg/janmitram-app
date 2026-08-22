@@ -17,33 +17,73 @@
                 {{ $t("Order Summary") }}
             </div>
 
-            <!-- Subtotal -->
+            <!-- Items Count -->
             <div class="my-3 flex justify-between gap-4">
                 <div class="text-slate-950 text-sm sm:text-base font-normal">
                     {{ $t("Items") }}
                 </div>
-                <div class="text-slate-950 text-sm sm:text-base font-normal">
+                <div class="text-slate-950 text-sm sm:text-base font-normal font-semibold">
                     {{ order.quantity }}
                 </div>
             </div>
 
-            <!-- Subtotal -->
+            <!-- Subtotal (MRP) -->
             <div class="my-3 flex justify-between gap-4">
                 <div class="text-slate-950 text-sm sm:text-base font-normal">
-                    {{ $t("Subtotal") }}
+                    {{ $t("Item Total (MRP)") }}
                 </div>
                 <div class="text-slate-950 text-sm sm:text-base font-normal">
                     {{ master.showCurrency(order?.total_amount) }}
                 </div>
             </div>
 
-            <!-- Discount -->
-            <div class="my-3 flex justify-between gap-4">
+            <!-- Taxable Base (Without GST) -->
+            <div v-if="order?.taxable_base && order?.taxable_base > 0" class="my-1 flex justify-between gap-4 text-xs text-slate-500">
+                <div>
+                    {{ $t("Price Without GST (Taxable Base)") }}
+                </div>
+                <div>
+                    {{ master.showCurrency(order?.taxable_base) }}
+                </div>
+            </div>
+
+            <!-- Card Discount -->
+            <div v-if="order?.card_discount > 0" class="my-3 flex justify-between gap-4">
+                <div>
+                    <div class="text-red-500 text-sm sm:text-base font-normal">
+                        {{ $t("Card Discount") }}
+                    </div>
+                    <div v-if="order?.base_discount > 0" class="text-[11px] text-slate-500">
+                        ({{ master.showCurrency(order?.base_discount) }} base + {{ master.showCurrency(order?.tax_savings) }} GST saved)
+                    </div>
+                </div>
+                <div class="text-slate-950 text-sm sm:text-base font-normal">
+                    -{{ master.showCurrency(order?.card_discount) }}
+                </div>
+            </div>
+
+            <!-- Coupon Discount -->
+            <div v-if="order?.coupon_discount > 0" class="my-3 flex justify-between gap-4">
                 <div class="text-red-500 text-sm sm:text-base font-normal">
-                    {{ $t("Discount") }}
+                    {{ $t("Coupon Discount") }}
                 </div>
                 <div class="text-slate-950 text-sm sm:text-base font-normal">
                     -{{ master.showCurrency(order?.coupon_discount) }}
+                </div>
+            </div>
+
+            <div
+                v-if="order?.card_discount > 0 || order?.coupon_discount > 0"
+                class="w-full h-[0px] border-t border-dashed border-slate-300 my-2"
+            ></div>
+
+            <!-- Net Taxable Base -->
+            <div v-if="order?.net_taxable_base && order?.net_taxable_base > 0 && (order?.card_discount > 0 || order?.coupon_discount > 0)" class="my-1 flex justify-between gap-4 text-xs text-slate-600">
+                <div>
+                    {{ $t("Net Taxable Value (After Discount)") }}
+                </div>
+                <div class="font-medium text-slate-800">
+                    {{ master.showCurrency(order?.net_taxable_base) }}
                 </div>
             </div>
 
@@ -53,41 +93,38 @@
                     {{ $t("Shipping Charge") }}
                 </div>
                 <div class="text-slate-950 text-sm sm:text-base font-normal">
-                    {{ master.showCurrency(order?.delivery_charge) }}
+                    <span v-if="order?.delivery_charge == 0" class="text-emerald-600 font-medium">FREE</span>
+                    <span v-else>{{ master.showCurrency(order?.delivery_charge) }}</span>
                 </div>
             </div>
 
+            <!-- GST & Taxes Info (Included in Prices) -->
             <div
-                v-if="order.all_vat_taxes?.length > 0 || order?.tax_amount > 0"
-                class="p-3 bg-slate-100 text-black rounded-lg mb-2"
+                v-if="
+                    order.all_vat_taxes?.length > 0 ||
+                    order?.tax_amount > 0
+                "
+                class="my-3 p-3 bg-slate-50 border border-slate-200 rounded-xl"
             >
-                <h2 class="text-sm sm:text-base font-medium mb-2">
-                    {{ $t("VAT & Taxes Summary") }}
-                </h2>
+                <div class="flex items-center justify-between text-xs text-slate-600 font-medium">
+                    <span class="flex items-center gap-1.5">
+                        <span class="text-emerald-600">🛡️</span>
+                        <span>{{ $t("GST & Taxes (Included in Prices)") }}</span>
+                    </span>
+                    <span class="text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                        {{ master.showCurrency(order?.tax_amount) }}
+                    </span>
+                </div>
 
-                <div class="space-y-2">
+                <div v-if="order.all_vat_taxes?.length > 0" class="mt-2 pt-2 border-t border-slate-200/60 space-y-1">
                     <div
                         v-for="vatTax in order.all_vat_taxes"
                         :key="vatTax.id"
-                        class="flex justify-between bg-slate-200 p-2 rounded-lg"
+                        class="flex justify-between text-xs text-slate-500"
                     >
-                        <span class="font-medium">
-                            {{ vatTax.name }}
-                            <small>({{ vatTax.percentage }}%)</small>
-                        </span>
-                        <span class="font-medium">
-                            {{ master.showCurrency(vatTax.amount) }}
-                        </span>
+                        <span>{{ vatTax.name }} ({{ vatTax.percentage }}%):</span>
+                        <span class="font-medium text-slate-700">{{ master.showCurrency(vatTax.amount) }}</span>
                     </div>
-                </div>
-
-                <div class="mt-2 p-3 flex justify-between bg-slate-200 rounded-lg">
-                    <h3 class="text-sm sm:text-base font-medium">
-                        {{ $t("Total Tax Amount") }}:
-                    </h3>
-                    <p class="text-base font-bold">
-                        {{ master.showCurrency(order?.tax_amount) }}
-                    </p>
                 </div>
             </div>
 

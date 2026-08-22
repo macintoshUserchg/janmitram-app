@@ -46,6 +46,20 @@ class OrderDetailsResource extends JsonResource
             $riderLocation = $this->driverOrder ? OrderRiderResource::make($this->driverOrder) : [];
         }
 
+        $taxAmount = (float) ($this->tax_amount ?? 0);
+        $totalAmount = (float) ($this->total_amount ?? 0);
+        $cardDiscount = (float) ($this->card_discount ?? 0);
+        $couponDiscount = (float) ($this->coupon_discount ?? 0);
+        $totalDiscount = $cardDiscount + $couponDiscount + (float) ($this->discount ?? 0);
+        $discountedItems = max(0, $totalAmount - $totalDiscount);
+        $discountFactor = $totalAmount > 0 ? ($discountedItems / $totalAmount) : 1.0;
+
+        $grossTax = $discountFactor > 0 ? ($taxAmount / $discountFactor) : $taxAmount;
+        $preTaxable = max(0, $totalAmount - $grossTax);
+        $netTaxable = max(0, $discountedItems - $taxAmount);
+        $baseDiscount = max(0, $preTaxable - $netTaxable);
+        $taxSavings = max(0, $grossTax - $taxAmount);
+
         return [
             'id' => $this->id,
             'order_code' => (string) '#'.$this->prefix.''.$this->order_code,
@@ -56,9 +70,14 @@ class OrderDetailsResource extends JsonResource
             'payment_method' => $paymentMethod,
             'payment_status' => $this->payment_status->value,
             'total_amount' => (float) number_format($this->total_amount, 2, '.', ''),
+            'taxable_base' => (float) number_format($preTaxable, 2, '.', ''),
+            'base_discount' => (float) number_format($baseDiscount, 2, '.', ''),
+            'tax_savings' => (float) number_format($taxSavings, 2, '.', ''),
+            'net_taxable_base' => (float) number_format($netTaxable, 2, '.', ''),
             'tax_amount' => (float) number_format($this->tax_amount, 2, '.', ''),
             'discount' => (float) number_format($this->discount, 2, '.', ''),
             'coupon_discount' => (float) number_format($this->coupon_discount, 2, '.', ''),
+            'card_discount' => (float) number_format($cardDiscount, 2, '.', ''),
             'payable_amount' => (float) number_format($this->payable_amount, 2, '.', ''),
             'quantity' => (int) $this->products->sum('pivot.quantity'),
             'delivery_charge' => (float) number_format(($this->delivery_charge ?? 0), 2, '.', ''),
