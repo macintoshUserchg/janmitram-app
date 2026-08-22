@@ -304,6 +304,11 @@ class PosCartRepository extends Repository
         $globalBase = 0;
         $perProduct = [];
 
+        $discountAmount = (float) ($posCart->discount ?? 0);
+        $subtotal = (float) ($posCart->subtotal ?? 0);
+        $discountedItems = max(0, $subtotal - $discountAmount);
+        $discountFactor = $subtotal > 0 ? ($discountedItems / $subtotal) : 1.0;
+
         foreach ($posCart->products as $product) {
             $price = $product->discount_price > 0 ? $product->discount_price : $product->price;
 
@@ -312,7 +317,7 @@ class PosCartRepository extends Repository
 
             $price += ($color?->pivot?->price ?? 0) + ($size?->pivot?->price ?? 0);
 
-            $lineTotal = $price * $product->pivot->quantity;
+            $lineTotal = ($price * $product->pivot->quantity) * $discountFactor;
 
             $assignedActive = $product->vatTaxes()->where('is_active', true)->get();
 
