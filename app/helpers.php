@@ -305,9 +305,11 @@ if (! function_exists('userCart')) {
     {
         $tokens = cartAccessToken($request);
         $query = Cart::query();
-        if ($tokens['access_token'] && $tokens['customer_id']) {
-            // if both exist prefer guest cart via access_token
-            $query->where('access_token', $tokens['access_token']);
+        if ($tokens['customer_id'] && $tokens['access_token']) {
+            $query->where(function ($q) use ($tokens) {
+                $q->where('customer_id', $tokens['customer_id'])
+                    ->orWhere('access_token', $tokens['access_token']);
+            });
         } elseif ($tokens['customer_id']) {
             $query->where('customer_id', $tokens['customer_id']);
         } elseif ($tokens['access_token']) {
