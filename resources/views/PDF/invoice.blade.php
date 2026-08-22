@@ -92,7 +92,8 @@
     $subTotalAmount = (float)($order->total_amount > 0 ? $order->total_amount : $totalTaxable);
     $taxAmountTotal = (float)($order->tax_amount > 0 ? $order->tax_amount : $totalGst);
     $deliveryCharge = (float)($order->delivery_charge ?? 0);
-    $payableTotal = (float)($order->payable_amount > 0 ? $order->payable_amount : ($subTotalAmount + $taxAmountTotal + $deliveryCharge - $totalDiscounts));
+    $discountedSubtotal = max(0, $subTotalAmount - $totalDiscounts);
+    $payableTotal = (float)($order->payable_amount > 0 ? $order->payable_amount : ($discountedSubtotal + $taxAmountTotal + $deliveryCharge));
 
     $amountInWords = numberToIndianWords($payableTotal);
 @endphp

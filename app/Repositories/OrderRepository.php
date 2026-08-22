@@ -635,8 +635,9 @@ class OrderRepository extends Repository
             }
         }
 
-        // calculate payable amount
-        $payableAmount = ($totalAmount + $deliveryCharge + $totalTaxAmount) - $discount;
+        // calculate payable amount: discounts apply strictly to product subtotal (excluding delivery charges)
+        $discountedItems = max(0, (float) $totalAmount - (float) $discount);
+        $payableAmount = $discountedItems + (float) $deliveryCharge + (float) $totalTaxAmount;
 
         // return array
         return [

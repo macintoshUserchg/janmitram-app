@@ -314,7 +314,9 @@ class CartRepository extends Repository
             }
         }
 
-        $payableAmount = $totalAmount + $deliveryCharge - $couponDiscount - $cardDiscount;
+        // Discounts apply strictly to product subtotal (never deducting from delivery charges)
+        $discountedItems = max(0, (float) $totalAmount - $couponDiscount - $cardDiscount);
+        $payableAmount = $discountedItems + (float) $deliveryCharge;
 
         // get order base tax: one default rate on the global base, plus per-product overrides
         $defaultVatTax = VatTaxRepository::getDefaultVatTax();
