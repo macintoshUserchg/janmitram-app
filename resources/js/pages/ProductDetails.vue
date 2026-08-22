@@ -656,21 +656,21 @@ const calculateProductPrice = () => {
 }
 
 const buyNow = () => {
-    // if (authStore.token === null) {
-    //     return (authStore.loginModal = true);
-    // }
+    const shopId = product.value?.shop?.id || formData.value.shop_id || Number(route.query.shop_id) || 1;
+    basketStore.buyNowShopId = shopId;
+    try {
+        localStorage.setItem('buyNowShopId', shopId);
+    } catch (e) {}
+
     basketStore.addToCart({
-        product_id: formData.value.product_id,
-        shop_id: product.value?.shop?.id || formData.value.shop_id,
+        product_id: formData.value.product_id || route.params.id,
+        shop_id: shopId,
         is_buy_now: true,
         quantity: 1,
         size: formData.value.size,
         color: formData.value.color,
         unit: null
     }, product.value);
-
-    basketStore.buyNowShopId = product.value?.shop?.id;
-    // router.push({ name: "buynow" });
 };
 
 watch(route, async () => {

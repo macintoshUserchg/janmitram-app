@@ -198,9 +198,13 @@ class CartController extends Controller
         $isBuyNow = $request->is_buy_now ?? false;
         $tokens = cartAccessToken(request());
 
-        $shopIds = $request->shop_ids ?? [];
+        $shopIds = array_filter((array) ($request->shop_ids ?? []));
 
-        $carts = userCart(request())->whereIn('shop_id', $shopIds)->where('is_buy_now', $isBuyNow)->get();
+        if ($isBuyNow && empty($shopIds)) {
+            $carts = userCart(request())->where('is_buy_now', true)->get();
+        } else {
+            $carts = userCart(request())->whereIn('shop_id', $shopIds)->where('is_buy_now', $isBuyNow)->get();
+        }
 
         $checkout = CartRepository::checkoutByRequest($request, $carts);
 

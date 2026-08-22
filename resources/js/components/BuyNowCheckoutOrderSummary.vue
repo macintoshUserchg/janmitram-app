@@ -452,12 +452,17 @@ watch(
     }
 );
 
+const getBuyNowShopIds = () => {
+    const sid = basketStore.buyNowShopId || (typeof localStorage !== 'undefined' && localStorage.getItem('buyNowShopId') ? Number(localStorage.getItem('buyNowShopId')) : null);
+    return sid ? [sid] : [];
+};
+
 const fetchBuyNowCartCheckout = () => {
     axios
         .post(
             "/cart/checkout",
             {
-                shop_ids: [basketStore.buyNowShopId],
+                shop_ids: getBuyNowShopIds(),
                 is_buy_now: true,
                 coupon_code: coupon.value,
                 address_id: basketStore.address ? basketStore.address.id : null ,
@@ -567,7 +572,7 @@ const processOrderConfirm = () => {
             .post(
                 "/place-order",
                 {
-                    shop_ids: [basketStore.buyNowShopId],
+                    shop_ids: getBuyNowShopIds(),
                     address_id: basketStore.address.id,
                     payment_method: props.paymentMethod,
                     coupon_code: coupon.value,
@@ -657,7 +662,7 @@ const processGuestOrderConfirm = () => {
                 "/place-order",
                 {
                     currency_id: master.selectedCurrency.id,
-                    shop_ids: [basketStore.buyNowShopId],
+                    shop_ids: getBuyNowShopIds(),
                     payment_method: props.paymentMethod,
                     coupon_code: coupon.value,
                     card_number: card.value,
@@ -873,7 +878,7 @@ const fetchCardApply = () => {
         .post(
             "/cart/checkout",
             {
-                shop_ids: [basketStore.buyNowShopId],
+                shop_ids: getBuyNowShopIds(),
                 is_buy_now: true,
                 card_number: card.value,
                 address_id: basketStore.address ? basketStore.address.id : null,

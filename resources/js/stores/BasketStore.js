@@ -148,9 +148,12 @@ export const useBasketStore = defineStore("basketStore", {
                             });
                         }
                     } else {
-                        // changing the route
-                        router.push({ name: 'buynow' })
-
+                        const sid = data.shop_id || product?.shop?.id || 1;
+                        this.buyNowShopId = sid;
+                        try {
+                            localStorage.setItem('buyNowShopId', sid);
+                        } catch (e) {}
+                        router.push({ name: 'buynow' });
                     }
                 }).catch((error) => {
                     this.isLoadingCart = false;

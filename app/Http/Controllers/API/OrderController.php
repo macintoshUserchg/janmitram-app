@@ -141,7 +141,12 @@ class OrderController extends Controller
             return $this->json('Please verify your account first. without verify account you can not place order', [], 422);
         }
 
-        $carts = userCart(request())->whereIn('shop_id', $request->shop_ids)->where('is_buy_now', $isBuyNow)->get();
+        $shopIds = array_filter((array) ($request->shop_ids ?? []));
+        if ($isBuyNow && empty($shopIds)) {
+            $carts = userCart(request())->where('is_buy_now', true)->get();
+        } else {
+            $carts = userCart(request())->whereIn('shop_id', $shopIds)->where('is_buy_now', $isBuyNow)->get();
+        }
 
         if ($carts->isEmpty()) {
             return $this->json('Sorry shop cart is empty', [], 422);

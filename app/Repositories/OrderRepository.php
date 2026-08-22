@@ -95,7 +95,12 @@ class OrderRepository extends Repository
         ]);
 
         $isBuyNow = $request->is_buy_now ?? false;
-        userCart(request())->whereIn('shop_id', $request->shop_ids)->where('is_buy_now', $isBuyNow)->delete();
+        $shopIds = array_filter((array) ($request->shop_ids ?? []));
+        if ($isBuyNow && empty($shopIds)) {
+            userCart(request())->where('is_buy_now', true)->delete();
+        } else {
+            userCart(request())->whereIn('shop_id', $shopIds)->where('is_buy_now', $isBuyNow)->delete();
+        }
 
         CartAccessToken::where('access_token', $tokens['access_token'])->delete();
 
