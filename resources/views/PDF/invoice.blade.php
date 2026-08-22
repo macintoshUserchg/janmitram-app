@@ -84,16 +84,26 @@
         ];
     }
 
-    // Discounts
+    // Discounts computation (Catalog MRP discounts + Order level Coupon/Card discounts)
+    $catalogGrossTotal = 0;
+    foreach ($order->products ?? [] as $product) {
+        $qty = (int)($product->pivot->quantity ?? 1);
+        $catalogPrice = (float)($product->price > 0 ? $product->price : ($product->discount_price > 0 ? $product->discount_price : 0));
+        $catalogGrossTotal += ($catalogPrice * $qty);
+    }
+
     $couponDiscount = (float)($order->coupon_discount ?? 0);
     $cardDiscount = (float)($order->card_discount ?? 0);
-    $totalDiscounts = $couponDiscount + $cardDiscount + $otherDiscount;
+    $otherDiscount = max(0, (float)($order->discount ?? 0) - $couponDiscount - $cardDiscount);
+    $orderLevelDiscount = $couponDiscount + $cardDiscount + $otherDiscount;
+    $productDiscount = max(0, $catalogGrossTotal - (float)$order->total_amount);
+    $totalDiscounts = $productDiscount + $orderLevelDiscount;
 
-    $subTotalAmount = (float)($order->total_amount > 0 ? $order->total_amount : $totalTaxable);
+    $grossTotal = max($catalogGrossTotal, (float)$order->total_amount + $orderLevelDiscount);
+    $subTotalAmount = (float)($order->total_amount > 0 ? $order->total_amount : ($grossTotal - $totalDiscounts));
     $taxAmountTotal = (float)($order->tax_amount > 0 ? $order->tax_amount : $totalGst);
     $deliveryCharge = (float)($order->delivery_charge ?? 0);
-    $discountedSubtotal = max(0, $subTotalAmount - $totalDiscounts);
-    $payableTotal = (float)($order->payable_amount > 0 ? $order->payable_amount : ($discountedSubtotal + $taxAmountTotal + $deliveryCharge));
+    $payableTotal = (float)($order->payable_amount > 0 ? $order->payable_amount : ($subTotalAmount + $taxAmountTotal + $deliveryCharge));
 
     $amountInWords = numberToIndianWords($payableTotal);
 @endphp
@@ -382,7 +392,7 @@
                             <td style="width: 45%; padding: 4px 8px; color: #1e293b;">Gross Amount</td>
                             <td style="width: 5%; text-align: center;">:</td>
                             <td style="width: 50%; text-align: right; padding: 4px 8px; font-weight: bold;">
-                                {{ formatIndianCurrency($subTotalAmount + $totalDiscounts) }}
+                                {{ formatIndianCurrency($grossTotal) }}
                             </td>
                         </tr>
                         <tr class="border-bottom">
