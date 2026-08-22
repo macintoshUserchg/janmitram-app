@@ -388,6 +388,7 @@
                     <tbody>
                         @php
                             $hsnGroups = [];
+                            $discountRatio = $subTotalAmount > 0 ? ($discountedSubtotal / $subTotalAmount) : 1.0;
                             foreach ($items as $item) {
                                 $h = !empty($item['hsn']) ? $item['hsn'] : '0405';
                                 if (!isset($hsnGroups[$h])) {
@@ -398,9 +399,11 @@
                                         'tax_amount' => 0,
                                     ];
                                 }
-                                $hsnGroups[$h]['taxable_amount'] += $item['taxable_amount'];
-                                $hsnGroups[$h]['tax_amount'] += $item['tax_amount'];
+                                $hsnGroups[$h]['taxable_amount'] += ($item['taxable_amount'] * $discountRatio);
+                                $hsnGroups[$h]['tax_amount'] += ($item['tax_amount'] * $discountRatio);
                             }
+                            $taxSummaryTaxableTotal = array_sum(array_column($hsnGroups, 'taxable_amount'));
+                            $taxSummaryTaxTotal = array_sum(array_column($hsnGroups, 'tax_amount'));
                         @endphp
                         @foreach($hsnGroups as $group)
                             <tr>
@@ -413,10 +416,10 @@
                         @endforeach
                         <tr style="font-weight: bold; background-color: #ffffff;">
                             <td class="text-center fw-bold" style="border-right: 1px solid #334155; font-size: 10px; padding: 5px 2px;">TOTAL</td>
-                            <td class="text-right fw-bold" style="border-right: 1px solid #334155; font-size: 10px; padding: 5px 6px;">{{ formatIndianCurrency($subTotalAmount, false) }}</td>
+                            <td class="text-right fw-bold" style="border-right: 1px solid #334155; font-size: 10px; padding: 5px 6px;">{{ formatIndianCurrency($taxSummaryTaxableTotal, false) }}</td>
                             <td style="border-right: 1px solid #334155; padding: 5px 2px;"></td>
-                            <td class="text-right fw-bold" style="border-right: 1px solid #334155; font-size: 10px; padding: 5px 6px;">{{ formatIndianCurrency($taxAmountTotal, false) }}</td>
-                            <td class="text-right fw-bold" style="font-size: 10px; padding: 5px 6px;">{{ formatIndianCurrency($taxAmountTotal, false) }}</td>
+                            <td class="text-right fw-bold" style="border-right: 1px solid #334155; font-size: 10px; padding: 5px 6px;">{{ formatIndianCurrency($taxSummaryTaxTotal, false) }}</td>
+                            <td class="text-right fw-bold" style="font-size: 10px; padding: 5px 6px;">{{ formatIndianCurrency($taxSummaryTaxTotal, false) }}</td>
                         </tr>
                     </tbody>
                 </table>

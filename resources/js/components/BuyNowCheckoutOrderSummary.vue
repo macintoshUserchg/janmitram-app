@@ -90,40 +90,33 @@
                 </div>
             </div>
 
+            <!-- GST & Taxes Info (Included in Prices) -->
             <div
                 v-if="
                     orderData.all_vat_taxes?.length > 0 ||
                     orderData.order_tax_amount > 0
                 "
-                class="p-3 bg-slate-100 text-black rounded-lg mb-2"
+                class="my-3 p-3 bg-slate-50 border border-slate-200 rounded-xl"
             >
-                <h2 class="text-sm sm:text-base font-medium mb-2">
-                    {{ $t("GST & Taxes (Included in Prices)") }}
-                </h2>
+                <div class="flex items-center justify-between text-xs text-slate-600 font-medium">
+                    <span class="flex items-center gap-1.5">
+                        <span class="text-emerald-600">🛡️</span>
+                        <span>{{ $t("GST & Taxes (Included in Prices)") }}</span>
+                    </span>
+                    <span class="text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                        {{ master.showCurrency(orderData.order_tax_amount) }}
+                    </span>
+                </div>
 
-                <div class="space-y-2">
+                <div v-if="orderData.all_vat_taxes?.length > 0" class="mt-2 pt-2 border-t border-slate-200/60 space-y-1">
                     <div
                         v-for="vatTax in orderData.all_vat_taxes"
                         :key="vatTax.id"
-                        class="flex justify-between bg-slate-200 p-2 rounded-lg"
+                        class="flex justify-between text-xs text-slate-500"
                     >
-                        <span class="font-medium">
-                            {{ vatTax.name }}
-                            <small>({{ vatTax.percentage }}%)</small>
-                        </span>
-                        <span class="font-medium">
-                            {{ master.showCurrency(vatTax.amount) }}
-                        </span>
+                        <span>{{ vatTax.name }} ({{ vatTax.percentage }}%):</span>
+                        <span class="font-medium text-slate-700">{{ master.showCurrency(vatTax.amount) }}</span>
                     </div>
-                </div>
-
-                <div class="mt-4 p-3 bg-slate-200 rounded-lg">
-                    <h3 class="text-sm sm:text-base font-medium">
-                        {{ $t("Total GST Included") }}:
-                    </h3>
-                    <p class="text-base font-bold">
-                        {{ master.showCurrency(orderData.order_tax_amount) }}
-                    </p>
                 </div>
             </div>
 

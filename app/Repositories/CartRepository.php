@@ -320,12 +320,17 @@ class CartRepository extends Repository
         $discountedItems = max(0, (float) $totalAmount - $couponDiscount - $cardDiscount);
         $payableAmount = $discountedItems + (float) $deliveryCharge;
 
-        // get order base tax: back-calculate tax included inside prices
+        // Under GST statutory rules, tax is levied on net transaction value post-discount
+        $discountFactor = $totalAmount > 0 ? ($discountedItems / $totalAmount) : 1.0;
+        $effectiveGlobalBase = $globalBase * $discountFactor;
+
+        // get order base tax: back-calculate tax included inside net discounted prices
         $defaultVatTax = VatTaxRepository::getDefaultVatTax();
 
         if ($defaultVatTax && $defaultVatTax->name && $defaultVatTax->percentage > 0) {
-            $defaultTaxable = $globalBase / (1 + ($defaultVatTax->percentage / 100));
-            $amount = ($globalBase - $defaultTaxable) + ($perProduct[$defaultVatTax->id] ?? 0);
+            $defaultTaxable = $effectiveGlobalBase / (1 + ($defaultVatTax->percentage / 100));
+            $perProductTax = ($perProduct[$defaultVatTax->id] ?? 0) * $discountFactor;
+            $amount = ($effectiveGlobalBase - $defaultTaxable) + $perProductTax;
 
             if ($amount > 0) {
                 $vatTaxesArray[] = [
@@ -345,11 +350,12 @@ class CartRepository extends Repository
             $rate = VatTax::find($rateId);
 
             if ($rate?->name && $rate->percentage > 0) {
+                $effectiveAmount = $amount * $discountFactor;
                 $vatTaxesArray[] = [
                     'id' => $rate->id,
                     'name' => $rate->name,
                     'percentage' => $rate->percentage,
-                    'amount' => round($amount, 2),
+                    'amount' => round($effectiveAmount, 2),
                 ];
             }
         }

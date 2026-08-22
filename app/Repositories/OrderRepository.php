@@ -577,42 +577,6 @@ class OrderRepository extends Repository
             }
         }
 
-        // order vat taxes: back-calculate tax included inside prices
-        $defaultVatTax = VatTaxRepository::getDefaultVatTax();
-
-        if ($defaultVatTax?->name && $defaultVatTax->percentage > 0) {
-            $defaultTaxable = $globalBase / (1 + ($defaultVatTax->percentage / 100));
-            $amount = ($globalBase - $defaultTaxable) + ($perProduct[$defaultVatTax->id] ?? 0);
-
-            if ($amount > 0) {
-                $allVatTaxes[] = (object) [
-                    'name' => $defaultVatTax->name,
-                    'percentage' => $defaultVatTax->percentage,
-                    'amount' => round($amount, 2),
-                ];
-
-                $totalTaxAmount += $amount;
-            }
-        }
-
-        foreach ($perProduct as $rateId => $amount) {
-            if ($rateId == $defaultVatTax?->id || $amount <= 0) {
-                continue;
-            }
-
-            $rate = VatTax::find($rateId);
-
-            if ($rate?->name && $rate->percentage > 0) {
-                $allVatTaxes[] = (object) [
-                    'name' => $rate->name,
-                    'percentage' => $rate->percentage,
-                    'amount' => round($amount, 2),
-                ];
-
-                $totalTaxAmount += $amount;
-            }
-        }
-
         // a valid card discount takes precedence over coupons (instead-of)
         $card = null;
         $cardDiscount = 0;
@@ -641,6 +605,48 @@ class OrderRepository extends Repository
         // calculate payable amount: discounts apply strictly to product subtotal (excluding delivery charges)
         $discountedItems = max(0, (float) $totalAmount - (float) $discount);
         $payableAmount = $discountedItems + (float) $deliveryCharge;
+
+        // Under GST statutory rules, tax is levied on net transaction value post-discount
+        $discountFactor = $totalAmount > 0 ? ($discountedItems / $totalAmount) : 1.0;
+        $effectiveGlobalBase = $globalBase * $discountFactor;
+
+        // order vat taxes: back-calculate tax included inside net discounted prices
+        $defaultVatTax = VatTaxRepository::getDefaultVatTax();
+
+        if ($defaultVatTax?->name && $defaultVatTax->percentage > 0) {
+            $defaultTaxable = $effectiveGlobalBase / (1 + ($defaultVatTax->percentage / 100));
+            $perProductTax = ($perProduct[$defaultVatTax->id] ?? 0) * $discountFactor;
+            $amount = ($effectiveGlobalBase - $defaultTaxable) + $perProductTax;
+
+            if ($amount > 0) {
+                $allVatTaxes[] = (object) [
+                    'name' => $defaultVatTax->name,
+                    'percentage' => $defaultVatTax->percentage,
+                    'amount' => round($amount, 2),
+                ];
+
+                $totalTaxAmount += round($amount, 2);
+            }
+        }
+
+        foreach ($perProduct as $rateId => $amount) {
+            if ($rateId == $defaultVatTax?->id || $amount <= 0) {
+                continue;
+            }
+
+            $rate = VatTax::find($rateId);
+
+            if ($rate?->name && $rate->percentage > 0) {
+                $effectiveAmount = $amount * $discountFactor;
+                $allVatTaxes[] = (object) [
+                    'name' => $rate->name,
+                    'percentage' => $rate->percentage,
+                    'amount' => round($effectiveAmount, 2),
+                ];
+
+                $totalTaxAmount += round($effectiveAmount, 2);
+            }
+        }
 
         // return array
         return [
