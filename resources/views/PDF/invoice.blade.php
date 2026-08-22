@@ -43,26 +43,27 @@
     $totalTaxable = 0;
     $totalGross = 0;
 
+    // Determine overall tax rate from vatTaxes or default 5%
+    $defaultTaxRate = 5.0;
+    if ($order->vatTaxes && $order->vatTaxes->count() > 0) {
+        $defaultTaxRate = (float)$order->vatTaxes->first()->percentage;
+    }
+
     foreach ($order->products ?? [] as $idx => $product) {
-        $price = (float)($product->discount_price > 0 ? $product->discount_price : $product->price);
+        $unitPrice = (float)($product->discount_price > 0 ? $product->discount_price : $product->price);
         $qty = (int)($product->pivot->quantity ?? 1);
-        $rowGross = $price * $qty;
         $unitStr = $product->pivot->unit ?? $product->unit?->name ?? '-';
         $sizeStr = $product->pivot->size ?? '';
         $hsn = $product->hsn_code ?? $product->sku ?? ($product->pivot->sku ?? '0405');
 
-        // Tax calculation: Default GST rate 5% or product specific vat tax
-        $taxRate = 5.0;
-        if ($order->vatTaxes && $order->vatTaxes->count() > 0) {
-            $taxRate = (float)$order->vatTaxes->first()->percentage;
-        } elseif ($product->vatTaxes && $product->vatTaxes->count() > 0) {
+        $taxRate = $defaultTaxRate;
+        if ($product->vatTaxes && $product->vatTaxes->count() > 0) {
             $taxRate = (float)$product->vatTaxes->first()->percentage;
         }
 
-        // Tax inclusive / exclusive separation
-        $taxableUnit = $price / (1 + ($taxRate / 100));
-        $taxAmount = $rowGross - ($taxableUnit * $qty);
-        $taxableRow = $taxableUnit * $qty;
+        $taxableRow = $unitPrice * $qty;
+        $taxAmount = round($taxableRow * ($taxRate / 100), 2);
+        $rowGross = $taxableRow + $taxAmount;
 
         $totalQty += $qty;
         $totalGst += $taxAmount;
@@ -75,15 +76,24 @@
             'hsn' => $hsn,
             'qty' => $qty,
             'unit' => $unitStr,
-            'price_unit' => $price,
+            'price_unit' => $unitPrice,
             'tax_rate' => $taxRate,
             'tax_amount' => $taxAmount,
-            'amount' => $rowGross,
             'taxable_amount' => $taxableRow,
+            'amount' => $rowGross,
         ];
     }
 
-    $payableTotal = (float)($order->payable_amount ?? $totalGross);
+    // Discounts
+    $couponDiscount = (float)($order->coupon_discount ?? 0);
+    $cardDiscount = (float)($order->card_discount ?? 0);
+    $totalDiscounts = $couponDiscount + $cardDiscount + $otherDiscount;
+
+    $subTotalAmount = (float)($order->total_amount > 0 ? $order->total_amount : $totalTaxable);
+    $taxAmountTotal = (float)($order->tax_amount > 0 ? $order->tax_amount : $totalGst);
+    $deliveryCharge = (float)($order->delivery_charge ?? 0);
+    $payableTotal = (float)($order->payable_amount > 0 ? $order->payable_amount : ($subTotalAmount + $taxAmountTotal + $deliveryCharge - $totalDiscounts));
+
     $amountInWords = numberToIndianWords($payableTotal);
 @endphp
 <!DOCTYPE html>
@@ -370,24 +380,33 @@
                         <td style="width: 45%; padding: 5px 8px; color: #1e293b;">Sub Total</td>
                         <td style="width: 5%; text-align: center;">:</td>
                         <td style="width: 50%; text-align: right; padding: 5px 8px; font-weight: bold;">
-                            {{ formatIndianCurrency($totalGross) }}
+                            {{ formatIndianCurrency($subTotalAmount) }}
                         </td>
                     </tr>
-                    @if(($order->coupon_discount ?? 0) > 0 || ($order->discount ?? 0) > 0)
+                    @if($taxAmountTotal > 0)
+                        <tr class="border-bottom">
+                            <td style="padding: 4px 8px; color: #1e293b;">GST ({{ number_format($defaultTaxRate, 1) }}%)</td>
+                            <td style="text-align: center;">:</td>
+                            <td style="text-align: right; padding: 4px 8px; font-weight: bold;">
+                                +{{ formatIndianCurrency($taxAmountTotal) }}
+                            </td>
+                        </tr>
+                    @endif
+                    @if($totalDiscounts > 0)
                         <tr class="border-bottom">
                             <td style="padding: 4px 8px; color: #dc2626;">Discount</td>
                             <td style="text-align: center; color: #dc2626;">:</td>
                             <td style="text-align: right; padding: 4px 8px; font-weight: bold; color: #dc2626;">
-                                -{{ formatIndianCurrency(($order->coupon_discount ?? 0) + $otherDiscount) }}
+                                -{{ formatIndianCurrency($totalDiscounts) }}
                             </td>
                         </tr>
                     @endif
-                    @if(($order->delivery_charge ?? 0) > 0)
+                    @if($deliveryCharge > 0)
                         <tr class="border-bottom">
                             <td style="padding: 4px 8px; color: #1e293b;">Delivery Charge</td>
                             <td style="text-align: center;">:</td>
                             <td style="text-align: right; padding: 4px 8px; font-weight: bold;">
-                                {{ formatIndianCurrency($order->delivery_charge) }}
+                                +{{ formatIndianCurrency($deliveryCharge) }}
                             </td>
                         </tr>
                     @endif
