@@ -287,54 +287,80 @@
     <!-- 4. Tax Summary & Totals / In Words -->
     <table>
         <tr>
-            <td style="width: 60%; vertical-align: top; padding: 0; border-right: 1px solid #334155;">
-                <div class="bg-light-header" style="padding: 4px 8px; border-bottom: 1px solid #334155; font-size: 11px;">
-                    <strong>Tax Summary:</strong>
-                </div>
-                <table style="width: 100%;">
+            <td style="width: 58%; vertical-align: top; padding: 0; border-right: 1px solid #334155;">
+                <table style="width: 100%; border-collapse: collapse;">
                     <thead>
-                        <tr style="font-size: 10px; font-weight: bold; border-bottom: 1px solid #334155;">
-                            <th style="width: 25%; text-align: center; border-right: 1px solid #334155;">HSN/ SAC</th>
-                            <th style="width: 30%; text-align: right; border-right: 1px solid #334155;">Taxable Amount (₹)</th>
-                            <th colspan="2" style="width: 45%; text-align: center;">IGST</th>
-                            <th style="width: 30%; text-align: right; border-left: 1px solid #334155;">Total Tax(₹)</th>
+                        <tr class="bg-light-header">
+                            <td colspan="5" style="padding: 5px 8px; border-bottom: 1px solid #334155; font-size: 11px; font-weight: bold; color: #0f172a;">
+                                Tax Summary:
+                            </td>
                         </tr>
-                        <tr style="font-size: 9.5px; border-bottom: 1px solid #334155;">
-                            <th style="border-right: 1px solid #334155;"></th>
-                            <th style="border-right: 1px solid #334155;"></th>
-                            <th style="width: 18%; text-align: center; border-right: 1px solid #334155;">Rate (%)</th>
-                            <th style="width: 27%; text-align: right;">Amt (₹)</th>
-                            <th style="border-left: 1px solid #334155;"></th>
+                        <tr style="font-size: 9.5px; font-weight: bold; background-color: #ffffff; border-bottom: 1px solid #334155;">
+                            <th rowspan="2" style="width: 20%; text-align: center; border-right: 1px solid #334155; border-bottom: 1px solid #334155; padding: 4px 2px; vertical-align: middle;">HSN/ SAC</th>
+                            <th rowspan="2" style="width: 28%; text-align: right; border-right: 1px solid #334155; border-bottom: 1px solid #334155; padding: 4px 6px; vertical-align: middle;">Taxable Amount (₹)</th>
+                            <th colspan="2" style="width: 32%; text-align: center; border-right: 1px solid #334155; border-bottom: 1px solid #334155; padding: 3px 2px;">IGST</th>
+                            <th rowspan="2" style="width: 20%; text-align: right; border-bottom: 1px solid #334155; padding: 4px 6px; vertical-align: middle;">Total Tax (₹)</th>
+                        </tr>
+                        <tr style="font-size: 9px; font-weight: bold; background-color: #ffffff; border-bottom: 1px solid #334155;">
+                            <th style="width: 12%; text-align: center; border-right: 1px solid #334155; border-bottom: 1px solid #334155; padding: 3px 2px;">Rate (%)</th>
+                            <th style="width: 20%; text-align: right; border-right: 1px solid #334155; border-bottom: 1px solid #334155; padding: 3px 4px;">Amt (₹)</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td class="text-center" style="border-right: 1px solid #334155; font-size: 10px;">0405</td>
-                            <td class="text-right" style="border-right: 1px solid #334155; font-size: 10px;">{{ formatIndianCurrency($totalTaxable, false) }}</td>
-                            <td class="text-center" style="border-right: 1px solid #334155; font-size: 10px;">5.0</td>
-                            <td class="text-right" style="font-size: 10px;">{{ formatIndianCurrency($totalGst, false) }}</td>
-                            <td class="text-right" style="border-left: 1px solid #334155; font-size: 10px;">{{ formatIndianCurrency($totalGst, false) }}</td>
-                        </tr>
-                        <tr style="font-weight: bold; border-top: 1px solid #334155;">
-                            <td class="text-center fw-bold" style="border-right: 1px solid #334155; font-size: 10.5px;">TOTAL</td>
-                            <td class="text-right fw-bold" style="border-right: 1px solid #334155; font-size: 10.5px;">{{ formatIndianCurrency($totalTaxable, false) }}</td>
-                            <td style="border-right: 1px solid #334155;"></td>
-                            <td class="text-right fw-bold" style="font-size: 10.5px;">{{ formatIndianCurrency($totalGst, false) }}</td>
-                            <td class="text-right fw-bold" style="border-left: 1px solid #334155; font-size: 10.5px;">{{ formatIndianCurrency($totalGst, false) }}</td>
+                        @php
+                            $hsnGroups = [];
+                            foreach ($items as $item) {
+                                $h = !empty($item['hsn']) ? $item['hsn'] : '0405';
+                                if (!isset($hsnGroups[$h])) {
+                                    $hsnGroups[$h] = [
+                                        'hsn' => $h,
+                                        'taxable_amount' => 0,
+                                        'tax_rate' => $item['tax_rate'],
+                                        'tax_amount' => 0,
+                                    ];
+                                }
+                                $hsnGroups[$h]['taxable_amount'] += $item['taxable_amount'];
+                                $hsnGroups[$h]['tax_amount'] += $item['tax_amount'];
+                            }
+                        @endphp
+                        @foreach($hsnGroups as $group)
+                            <tr>
+                                <td class="text-center" style="border-right: 1px solid #334155; border-bottom: 1px solid #334155; font-size: 9.5px; padding: 4px 2px;">{{ $group['hsn'] }}</td>
+                                <td class="text-right" style="border-right: 1px solid #334155; border-bottom: 1px solid #334155; font-size: 9.5px; padding: 4px 6px;">{{ formatIndianCurrency($group['taxable_amount'], false) }}</td>
+                                <td class="text-center" style="border-right: 1px solid #334155; border-bottom: 1px solid #334155; font-size: 9.5px; padding: 4px 2px;">{{ number_format($group['tax_rate'], 1) }}</td>
+                                <td class="text-right" style="border-right: 1px solid #334155; border-bottom: 1px solid #334155; font-size: 9.5px; padding: 4px 6px;">{{ formatIndianCurrency($group['tax_amount'], false) }}</td>
+                                <td class="text-right" style="border-bottom: 1px solid #334155; font-size: 9.5px; padding: 4px 6px;">{{ formatIndianCurrency($group['tax_amount'], false) }}</td>
+                            </tr>
+                        @endforeach
+                        <tr style="font-weight: bold; background-color: #ffffff;">
+                            <td class="text-center fw-bold" style="border-right: 1px solid #334155; font-size: 10px; padding: 5px 2px;">TOTAL</td>
+                            <td class="text-right fw-bold" style="border-right: 1px solid #334155; font-size: 10px; padding: 5px 6px;">{{ formatIndianCurrency($totalTaxable, false) }}</td>
+                            <td style="border-right: 1px solid #334155; padding: 5px 2px;"></td>
+                            <td class="text-right fw-bold" style="border-right: 1px solid #334155; font-size: 10px; padding: 5px 6px;">{{ formatIndianCurrency($totalGst, false) }}</td>
+                            <td class="text-right fw-bold" style="font-size: 10px; padding: 5px 6px;">{{ formatIndianCurrency($totalGst, false) }}</td>
                         </tr>
                     </tbody>
                 </table>
             </td>
 
-            <td style="width: 40%; vertical-align: top; padding: 0;">
-                <table style="width: 100%; font-size: 11px;">
+            <td style="width: 42%; vertical-align: top; padding: 0;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
                     <tr class="border-bottom">
                         <td style="width: 45%; padding: 5px 8px; color: #1e293b;">Sub Total</td>
                         <td style="width: 5%; text-align: center;">:</td>
                         <td style="width: 50%; text-align: right; padding: 5px 8px; font-weight: bold;">
-                            {{ formatIndianCurrency($totalGross) }}
+                            {{ formatIndianCurrency($totalTaxable) }}
                         </td>
                     </tr>
+                    @if($totalGst > 0)
+                        <tr class="border-bottom">
+                            <td style="padding: 4px 8px; color: #1e293b;">GST (5.0%)</td>
+                            <td style="text-align: center;">:</td>
+                            <td style="text-align: right; padding: 4px 8px; font-weight: bold;">
+                                +{{ formatIndianCurrency($totalGst) }}
+                            </td>
+                        </tr>
+                    @endif
                     <tr class="border-bottom" style="background-color: #f8fafc;">
                         <td style="padding: 6px 8px; font-weight: bold; font-size: 11.5px;">Total</td>
                         <td style="text-align: center; font-weight: bold;">:</td>
