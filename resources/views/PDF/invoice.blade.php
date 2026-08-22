@@ -377,6 +377,22 @@
             <!-- Right Sub-Table: Totals & Amount in Words -->
             <td style="width: 40%; vertical-align: top; padding: 0;">
                 <table style="width: 100%; font-size: 11px;">
+                    @if($totalDiscounts > 0)
+                        <tr class="border-bottom">
+                            <td style="width: 45%; padding: 4px 8px; color: #1e293b;">Gross Amount</td>
+                            <td style="width: 5%; text-align: center;">:</td>
+                            <td style="width: 50%; text-align: right; padding: 4px 8px; font-weight: bold;">
+                                {{ formatIndianCurrency($subTotalAmount + $totalDiscounts) }}
+                            </td>
+                        </tr>
+                        <tr class="border-bottom">
+                            <td style="padding: 4px 8px; color: #dc2626;">Discount</td>
+                            <td style="text-align: center; color: #dc2626;">:</td>
+                            <td style="text-align: right; padding: 4px 8px; font-weight: bold; color: #dc2626;">
+                                -{{ formatIndianCurrency($totalDiscounts) }}
+                            </td>
+                        </tr>
+                    @endif
                     <tr class="border-bottom">
                         <td style="width: 45%; padding: 5px 8px; color: #1e293b;">Sub Total</td>
                         <td style="width: 5%; text-align: center;">:</td>
@@ -393,18 +409,9 @@
                             </td>
                         </tr>
                     @endif
-                    @if($totalDiscounts > 0)
-                        <tr class="border-bottom">
-                            <td style="padding: 4px 8px; color: #dc2626;">Discount</td>
-                            <td style="text-align: center; color: #dc2626;">:</td>
-                            <td style="text-align: right; padding: 4px 8px; font-weight: bold; color: #dc2626;">
-                                -{{ formatIndianCurrency($totalDiscounts) }}
-                            </td>
-                        </tr>
-                    @endif
                     @if($deliveryCharge > 0)
                         <tr class="border-bottom">
-                            <td style="padding: 4px 8px; color: #1e293b;">Delivery Charge</td>
+                            <td style="padding: 4px 8px; color: #1e293b;">Delivery Charges</td>
                             <td style="text-align: center;">:</td>
                             <td style="text-align: right; padding: 4px 8px; font-weight: bold;">
                                 +{{ formatIndianCurrency($deliveryCharge) }}
@@ -445,12 +452,15 @@
         </tr>
         <tr>
             <!-- Left Notes -->
-            <td style="width: 50%; border-right: 1px solid #334155; vertical-align: top; padding: 6px 8px; font-size: 10px; line-height: 1.35; color: #334155;">
-                {{ $order->notes ?? 'logistic charge extra as per transport cow ghee Rs 600 per ltr and butter oil Rs 807 per ltr can is 210ltr cow ghee can is 15 ltr' }}
+            <td style="width: 50%; border-right: 1px solid #334155; vertical-align: top; padding: 8px; font-size: 10.5px; line-height: 1.4; color: #1e293b;">
+                Whether the tax is payable on reverse charge - No
+                @if(!empty($order->notes))
+                    <div style="font-size: 9.5px; color: #64748b; margin-top: 4px;">{{ $order->notes }}</div>
+                @endif
             </td>
 
             <!-- Right Terms -->
-            <td style="width: 50%; vertical-align: top; padding: 6px 8px; font-size: 10px; line-height: 1.35; color: #334155;">
+            <td style="width: 50%; vertical-align: top; padding: 8px; font-size: 10px; line-height: 1.35; color: #334155;">
                 Thank you for doing business with us.
             </td>
         </tr>

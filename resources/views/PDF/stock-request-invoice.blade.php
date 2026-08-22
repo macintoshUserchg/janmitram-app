@@ -368,11 +368,14 @@
             </td>
         </tr>
         <tr>
-            <td style="width: 50%; border-right: 1px solid #334155; vertical-align: top; padding: 6px 8px; font-size: 10px; line-height: 1.35; color: #334155;">
-                {{ $stockRequest->notes ?? 'logistic charge extra as per transport cow ghee Rs 600 per ltr and butter oil Rs 807 per ltr can is 210ltr cow ghee can is 15 ltr' }}
+            <td style="width: 50%; border-right: 1px solid #334155; vertical-align: top; padding: 8px; font-size: 10.5px; line-height: 1.4; color: #1e293b;">
+                Whether the tax is payable on reverse charge - No
+                @if(!empty($stockRequest->notes))
+                    <div style="font-size: 9.5px; color: #64748b; margin-top: 4px;">{{ $stockRequest->notes }}</div>
+                @endif
             </td>
 
-            <td style="width: 50%; vertical-align: top; padding: 6px 8px; font-size: 10px; line-height: 1.35; color: #334155;">
+            <td style="width: 50%; vertical-align: top; padding: 8px; font-size: 10px; line-height: 1.35; color: #334155;">
                 Thank you for doing business with us.
             </td>
         </tr>
