@@ -662,11 +662,13 @@ const buyNow = () => {
         localStorage.setItem('buyNowShopId', shopId);
     } catch (e) {}
 
+    const selectedQty = cartProduct.value?.quantity ? Number(cartProduct.value.quantity) : 1;
+
     basketStore.addToCart({
         product_id: formData.value.product_id || route.params.id,
         shop_id: shopId,
         is_buy_now: true,
-        quantity: 1,
+        quantity: selectedQty,
         size: formData.value.size,
         color: formData.value.color,
         unit: null
