@@ -50,7 +50,9 @@
     }
 
     foreach ($order->products ?? [] as $idx => $product) {
-        $mrpUnit = (float)($product->discount_price > 0 ? $product->discount_price : $product->price);
+        $mrpUnit = (float)($product->pivot->price > 0
+            ? $product->pivot->price
+            : ($product->discount_price > 0 ? $product->discount_price : $product->price));
         $qty = (int)($product->pivot->quantity ?? 1);
         $unitStr = $product->pivot->unit ?? $product->unit?->name ?? '-';
         $sizeStr = $product->pivot->size ?? '';
@@ -86,26 +88,23 @@
         ];
     }
 
-    // Discounts computation (Catalog MRP discounts + Order level Coupon/Card discounts)
-    $catalogGrossTotal = 0;
-    foreach ($order->products ?? [] as $product) {
-        $qty = (int)($product->pivot->quantity ?? 1);
-        $catalogPrice = (float)($product->price > 0 ? $product->price : ($product->discount_price > 0 ? $product->discount_price : 0));
-        $catalogGrossTotal += ($catalogPrice * $qty);
-    }
-
     $couponDiscount = (float)($order->coupon_discount ?? 0);
     $cardDiscount = (float)($order->card_discount ?? 0);
     $otherDiscount = max(0, (float)($order->discount ?? 0) - $couponDiscount - $cardDiscount);
     $orderLevelDiscount = $couponDiscount + $cardDiscount + $otherDiscount;
-    $productDiscount = max(0, $catalogGrossTotal - (float)$order->total_amount);
-    $totalDiscounts = $productDiscount + $orderLevelDiscount;
 
-    $grossTotal = max($catalogGrossTotal, (float)$order->total_amount + $orderLevelDiscount);
-    $subTotalAmount = (float)($order->total_amount > 0 ? $order->total_amount : ($grossTotal - $totalDiscounts));
-    $taxAmountTotal = (float)($order->tax_amount > 0 ? $order->tax_amount : $totalGst);
+    $grossTotal = (float)($order->total_amount > 0 ? $order->total_amount : $totalGross);
+    $discountedSubtotal = max(0, $grossTotal - $orderLevelDiscount);
+    $discountFactor = $grossTotal > 0 ? ($discountedSubtotal / $grossTotal) : 1.0;
+
+    $taxAmountTotal = (float)($order->tax_amount > 0 ? $order->tax_amount : round($totalGst * $discountFactor, 2));
+    $grossTax = $discountFactor > 0 ? round($taxAmountTotal / $discountFactor, 2) : $taxAmountTotal;
+    $preTaxable = max(0, $grossTotal - $grossTax);
+    $netTaxable = max(0, $discountedSubtotal - $taxAmountTotal);
+    $baseDiscount = max(0, $preTaxable - $netTaxable);
+    $taxSavings = max(0, $grossTax - $taxAmountTotal);
+
     $deliveryCharge = (float)($order->delivery_charge ?? 0);
-    $discountedSubtotal = max(0, $subTotalAmount - $orderLevelDiscount);
     $payableTotal = (float)($order->payable_amount > 0 ? $order->payable_amount : ($discountedSubtotal + $deliveryCharge));
 
     $amountInWords = numberToIndianWords($payableTotal);
@@ -388,7 +387,7 @@
                     <tbody>
                         @php
                             $hsnGroups = [];
-                            $discountRatio = $subTotalAmount > 0 ? ($discountedSubtotal / $subTotalAmount) : 1.0;
+                            $discountRatio = $grossTotal > 0 ? ($discountedSubtotal / $grossTotal) : 1.0;
                             foreach ($items as $item) {
                                 $h = !empty($item['hsn']) ? $item['hsn'] : '0405';
                                 if (!isset($hsnGroups[$h])) {
@@ -428,46 +427,62 @@
             <!-- Right Sub-Table: Totals & Amount in Words -->
             <td style="width: 42%; vertical-align: top; padding: 0;">
                 <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
-                    @if($totalDiscounts > 0)
+                    <tr class="border-bottom">
+                        <td style="width: 50%; padding: 4px 8px; color: #1e293b;">Gross Total (MRP)</td>
+                        <td style="width: 4%; text-align: center;">:</td>
+                        <td style="width: 46%; text-align: right; padding: 4px 8px; font-weight: bold;">
+                            {{ formatIndianCurrency($grossTotal) }}
+                        </td>
+                    </tr>
+                    @if($preTaxable > 0)
                         <tr class="border-bottom">
-                            <td style="width: 45%; padding: 4px 8px; color: #1e293b;">Gross Total (MRP)</td>
-                            <td style="width: 5%; text-align: center;">:</td>
-                            <td style="width: 50%; text-align: right; padding: 4px 8px; font-weight: bold;">
-                                {{ formatIndianCurrency($grossTotal) }}
+                            <td style="padding: 3px 8px; color: #64748b; font-size: 10px;">Price Without GST (Taxable Base)</td>
+                            <td style="text-align: center; color: #64748b;">:</td>
+                            <td style="text-align: right; padding: 3px 8px; color: #475569; font-size: 10px;">
+                                {{ formatIndianCurrency($preTaxable) }}
                             </td>
                         </tr>
-                        @if($cardDiscount > 0)
-                            <tr class="border-bottom">
-                                <td style="padding: 4px 8px; color: #dc2626;">Card Discount</td>
-                                <td style="text-align: center; color: #dc2626;">:</td>
-                                <td style="text-align: right; padding: 4px 8px; font-weight: bold; color: #dc2626;">
-                                    -{{ formatIndianCurrency($cardDiscount) }}
-                                </td>
-                            </tr>
-                        @endif
-                        @if($couponDiscount > 0)
-                            <tr class="border-bottom">
-                                <td style="padding: 4px 8px; color: #dc2626;">Coupon Discount</td>
-                                <td style="text-align: center; color: #dc2626;">:</td>
-                                <td style="text-align: right; padding: 4px 8px; font-weight: bold; color: #dc2626;">
-                                    -{{ formatIndianCurrency($couponDiscount) }}
-                                </td>
-                            </tr>
-                        @endif
-                        @if($productDiscount > 0)
-                            <tr class="border-bottom">
-                                <td style="padding: 4px 8px; color: #dc2626;">Special Discount</td>
-                                <td style="text-align: center; color: #dc2626;">:</td>
-                                <td style="text-align: right; padding: 4px 8px; font-weight: bold; color: #dc2626;">
-                                    -{{ formatIndianCurrency($productDiscount) }}
-                                </td>
-                            </tr>
-                        @endif
+                    @endif
+                    @if($cardDiscount > 0)
+                        <tr class="border-bottom">
+                            <td style="padding: 4px 8px; color: #dc2626;">Card Discount</td>
+                            <td style="text-align: center; color: #dc2626;">:</td>
+                            <td style="text-align: right; padding: 4px 8px; font-weight: bold; color: #dc2626;">
+                                -{{ formatIndianCurrency($cardDiscount) }}
+                            </td>
+                        </tr>
+                    @endif
+                    @if($couponDiscount > 0)
+                        <tr class="border-bottom">
+                            <td style="padding: 4px 8px; color: #dc2626;">Coupon Discount</td>
+                            <td style="text-align: center; color: #dc2626;">:</td>
+                            <td style="text-align: right; padding: 4px 8px; font-weight: bold; color: #dc2626;">
+                                -{{ formatIndianCurrency($couponDiscount) }}
+                            </td>
+                        </tr>
+                    @endif
+                    @if($otherDiscount > 0)
+                        <tr class="border-bottom">
+                            <td style="padding: 4px 8px; color: #dc2626;">Special Discount</td>
+                            <td style="text-align: center; color: #dc2626;">:</td>
+                            <td style="text-align: right; padding: 4px 8px; font-weight: bold; color: #dc2626;">
+                                -{{ formatIndianCurrency($otherDiscount) }}
+                            </td>
+                        </tr>
+                    @endif
+                    @if($orderLevelDiscount > 0 && $netTaxable > 0)
+                        <tr class="border-bottom">
+                            <td style="padding: 3px 8px; color: #047857; font-size: 10px; font-weight: 500;">Net Taxable Value (After Disc.)</td>
+                            <td style="text-align: center; color: #047857;">:</td>
+                            <td style="text-align: right; padding: 3px 8px; font-weight: bold; color: #047857; font-size: 10px;">
+                                {{ formatIndianCurrency($netTaxable) }}
+                            </td>
+                        </tr>
                     @endif
                     <tr class="border-bottom">
-                        <td style="width: 45%; padding: 5px 8px; color: #1e293b;">Net Subtotal</td>
-                        <td style="width: 5%; text-align: center;">:</td>
-                        <td style="width: 50%; text-align: right; padding: 5px 8px; font-weight: bold;">
+                        <td style="width: 50%; padding: 5px 8px; color: #1e293b; font-weight: bold;">Net Subtotal</td>
+                        <td style="width: 4%; text-align: center;">:</td>
+                        <td style="width: 46%; text-align: right; padding: 5px 8px; font-weight: bold;">
                             {{ formatIndianCurrency($discountedSubtotal) }}
                         </td>
                     </tr>
