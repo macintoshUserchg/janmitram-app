@@ -209,6 +209,7 @@ class CartRepository extends Repository
 
         $globalBase = 0;
         $perProduct = [];
+        $taxablePerProduct = [];
         $totalOrderTaxAmount = 0;
         $vatTaxesArray = [];
         $tokens = cartAccessToken(request());
@@ -255,6 +256,7 @@ class CartRepository extends Repository
                     $taxable = $lineTotal / (1 + ($rate->percentage / 100));
                     $taxIncluded = $lineTotal - $taxable;
                     $perProduct[$rate->id] = ($perProduct[$rate->id] ?? 0) + $taxIncluded;
+                    $taxablePerProduct[$rate->id] = ($taxablePerProduct[$rate->id] ?? 0) + $taxable;
                 }
             } else {
                 $globalBase += $lineTotal;
@@ -362,8 +364,21 @@ class CartRepository extends Repository
 
         $totalOrderTaxAmount = array_sum(array_column($vatTaxesArray, 'amount'));
 
+        // Pre-discount taxable base (Without-GST value)
+        $defaultTaxableGross = ($defaultVatTax && $defaultVatTax->percentage > 0)
+            ? ($globalBase / (1 + ($defaultVatTax->percentage / 100)))
+            : $globalBase;
+        $preTaxableBase = $defaultTaxableGross + (array_sum($taxablePerProduct ?? []));
+        $netTaxableBase = $preTaxableBase * $discountFactor;
+        $baseDiscount = max(0, $preTaxableBase - $netTaxableBase);
+        $taxSavings = max(0, ($totalAmount - $preTaxableBase) - $totalOrderTaxAmount);
+
         return [
             'total_amount' => (float) round($totalAmount, 2),
+            'taxable_base' => (float) round($preTaxableBase, 2),
+            'base_discount' => (float) round($baseDiscount, 2),
+            'tax_savings' => (float) round($taxSavings, 2),
+            'net_taxable_base' => (float) round($netTaxableBase, 2),
             'delivery_charge' => (float) round($deliveryCharge, 2),
             'coupon_discount' => (float) round($couponDiscount, 2),
             'card_discount' => (float) round($cardDiscount, 2),

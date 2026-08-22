@@ -5,65 +5,78 @@
                 {{ $t("Order Summary") }}
             </div>
 
-            <!-- Subtotal -->
-            <div class="my-4 flex justify-between gap-4">
-                <div
-                    class="text-slate-950 text-base font-normal leading-normal"
-                >
-                    {{ $t("Subtotal") }}
+            <!-- Subtotal (MRP) -->
+            <div class="my-3 flex justify-between gap-4">
+                <div class="text-slate-950 text-base font-normal leading-normal">
+                    {{ $t("Item Total (MRP)") }}
                 </div>
-                <div
-                    class="text-slate-950 text-base font-normal leading-normal"
-                >
+                <div class="text-slate-950 text-base font-normal leading-normal">
                     {{ master.showCurrency(basketStore.total_amount) }}
                 </div>
             </div>
 
-            <!-- Discount -->
-            <div
-                v-if="authStore.user && basketStore.coupon_discount > 0"
-                class="my-4 flex justify-between gap-4"
-            >
-                <div class="text-red-500 text-base font-normal leading-normal">
-                    {{ $t("Discount") }}
+            <!-- Taxable Base (Without GST) -->
+            <div v-if="basketStore.taxable_base && basketStore.taxable_base > 0" class="my-1 flex justify-between gap-4 text-xs text-slate-500">
+                <div>
+                    {{ $t("Price Without GST (Taxable Base)") }}
                 </div>
-                <div
-                    class="text-slate-950 text-base font-normal leading-normal"
-                >
-                    -{{ master.showCurrency(basketStore.coupon_discount) }}
+                <div>
+                    {{ master.showCurrency(basketStore.taxable_base) }}
                 </div>
             </div>
 
             <!-- Card Discount -->
             <div
                 v-if="authStore.user && basketStore.card_discount > 0"
-                class="my-4 flex justify-between gap-4"
+                class="my-3 flex justify-between gap-4"
+            >
+                <div>
+                    <div class="text-red-500 text-base font-normal leading-normal">
+                        {{ $t("Card Discount") }}
+                    </div>
+                    <div v-if="basketStore.base_discount > 0" class="text-[11px] text-slate-500">
+                        ({{ master.showCurrency(basketStore.base_discount) }} base + {{ master.showCurrency(basketStore.tax_savings) }} GST saved)
+                    </div>
+                </div>
+                <div class="text-slate-950 text-base font-normal leading-normal">
+                    -{{ master.showCurrency(basketStore.card_discount) }}
+                </div>
+            </div>
+
+            <!-- Coupon Discount -->
+            <div
+                v-if="authStore.user && basketStore.coupon_discount > 0"
+                class="my-3 flex justify-between gap-4"
             >
                 <div class="text-red-500 text-base font-normal leading-normal">
-                    {{ $t("Card Discount") }}
+                    {{ $t("Coupon Discount") }}
                 </div>
-                <div
-                    class="text-slate-950 text-base font-normal leading-normal"
-                >
-                    -{{ master.showCurrency(basketStore.card_discount) }}
+                <div class="text-slate-950 text-base font-normal leading-normal">
+                    -{{ master.showCurrency(basketStore.coupon_discount) }}
                 </div>
             </div>
 
             <div
                 v-if="authStore.user"
-                class="w-full h-[0px] border-t border-dashed border-slate-400"
+                class="w-full h-[0px] border-t border-dashed border-slate-300 my-2"
             ></div>
 
+            <!-- Net Taxable Base -->
+            <div v-if="basketStore.net_taxable_base && basketStore.net_taxable_base > 0 && (basketStore.card_discount > 0 || basketStore.coupon_discount > 0)" class="my-1 flex justify-between gap-4 text-xs text-slate-600">
+                <div>
+                    {{ $t("Net Taxable Value (After Discount)") }}
+                </div>
+                <div class="font-medium text-slate-800">
+                    {{ master.showCurrency(basketStore.net_taxable_base) }}
+                </div>
+            </div>
+
             <!-- Subtotal After Discount -->
-            <div v-if="authStore.user" class="my-4 flex justify-between gap-4">
-                <div
-                    class="text-slate-950 text-base font-normal leading-normal"
-                >
+            <div v-if="authStore.user && (basketStore.card_discount > 0 || basketStore.coupon_discount > 0)" class="my-3 flex justify-between gap-4">
+                <div class="text-slate-950 text-base font-normal leading-normal">
                     {{ $t("Subtotal After Discount") }}
                 </div>
-                <div
-                    class="text-slate-950 text-base font-normal leading-normal"
-                >
+                <div class="text-slate-950 text-base font-normal leading-normal font-semibold">
                     {{
                         master.showCurrency(
                             (
@@ -77,16 +90,13 @@
             </div>
 
             <!-- Shipping Charge -->
-            <div class="my-4 flex justify-between gap-4">
-                <div
-                    class="text-slate-950 text-base font-normal leading-normal"
-                >
+            <div class="my-3 flex justify-between gap-4">
+                <div class="text-slate-950 text-base font-normal leading-normal">
                     {{ $t("Shipping Charge") }}
                 </div>
-                <div
-                    class="text-slate-950 text-base font-normal leading-normal"
-                >
-                    {{ master.showCurrency(basketStore.delivery_charge) }}
+                <div class="text-slate-950 text-base font-normal leading-normal">
+                    <span v-if="basketStore.delivery_charge == 0" class="text-emerald-600 font-medium">FREE</span>
+                    <span v-else>{{ master.showCurrency(basketStore.delivery_charge) }}</span>
                 </div>
             </div>
 
